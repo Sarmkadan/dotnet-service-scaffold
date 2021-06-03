@@ -1,0 +1,265 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+# Caddy Configuration Example for dotnet-service-scaffold
+#
+# This file shows how to configure Caddy as a reverse proxy for
+# dotnet-service-scaffold with HTTPS, compression, and security headers.
+#
+# Usage:
+#   1. Copy this to /etc/caddy/Caddyfile
+#   2. Run: sudo systemctl reload caddy
+#   3. Access via: https://scaffold.example.com
+#
+# Reference: https://caddyserver.com/docs
+#
+
+# Basic configuration with automatic HTTPS
+scaffold.example.com {
+    reverse_proxy localhost:5000 {
+        # Header configuration for proxied requests
+        header_up X-Forwarded-For {http.request.remote.host}
+        header_up X-Forwarded-Proto {http.request.proto}
+        header_up X-Forwarded-Host {http.request.host}
+        header_up X-Real-IP {http.request.remote.host}
+
+        # Health check configuration
+        health_uri /health
+        health_interval 10s
+        health_timeout 5s
+        health_status 200
+
+        # Connection settings
+        timeout 30s
+        keepalive 60s
+    }
+
+    # Enable gzip compression
+    encode gzip
+
+    # Logging
+    log {
+        output file /var/log/caddy/scaffold.log {
+            roll_size 100mb
+            roll_keep 10
+            roll_keep_for 720h
+        }
+        level info
+        format json
+    }
+
+    # Security headers
+    header {
+        # Enforce HTTPS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+
+        # Prevent clickjacking
+        X-Frame-Options "DENY"
+
+        # XSS protection
+        X-XSS-Protection "1; mode=block"
+
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Permissions policy (formerly Feature-Policy)
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    }
+}
+
+# ============================================================================
+# ADVANCED CONFIGURATIONS
+# ============================================================================
+
+# Configuration with rate limiting
+# scaffold.example.com {
+#     # Rate limiting
+#     rate_limit "x-api-key" 60 {
+#         window 1m
+#         status 429
+#     }
+#
+#     reverse_proxy localhost:5000 {
+#         health_uri /health
+#         health_interval 10s
+#     }
+#
+#     encode gzip
+# }
+
+# Configuration with basic authentication
+# scaffold.example.com {
+#     basicauth / {
+#         # Password can be generated with: caddy hash-password
+#         admin $2a$14$abcdefghijklmnopqrstuvwxyz
+#     }
+#
+#     reverse_proxy localhost:5000 {
+#         health_uri /health
+#         health_interval 10s
+#     }
+#
+#     encode gzip
+# }
+
+# Configuration with multiple upstreams (load balancing)
+# scaffold.example.com {
+#     reverse_proxy localhost:5000 localhost:5001 localhost:5002 {
+#         policy round_robin
+#         health_uri /health
+#         health_interval 10s
+#     }
+#
+#     encode gzip
+# }
+
+# Configuration with request/response rewriting
+# scaffold.example.com {
+#     # Rewrite /api/* to /api/v1/*
+#     rewrite /api/* /api/v1{uri}
+#
+#     reverse_proxy localhost:5000 {
+#         health_uri /health
+#         health_interval 10s
+#     }
+#
+#     encode gzip
+# }
+
+# Configuration with path routing to multiple backends
+# scaffold.example.com {
+#     # Route different paths to different services
+#
+#     route /api/* {
+#         reverse_proxy localhost:5000 {
+#             health_uri /health
+#         }
+#     }
+#
+#     route /docs/* {
+#         reverse_proxy localhost:3000 {
+#             health_uri /health
+#         }
+#     }
+#
+#     route /admin/* {
+#         basicauth / {
+#             admin $2a$14$abcdefghijklmnopqrstuvwxyz
+#         }
+#         reverse_proxy localhost:5001 {
+#             health_uri /health
+#         }
+#     }
+# }
+
+# Configuration with SSL certificates from Let's Encrypt
+# scaffold.example.com {
+#     tls support@example.com {
+#         resolvers 8.8.8.8 8.8.4.4
+#     }
+#
+#     reverse_proxy localhost:5000 {
+#         health_uri /health
+#         health_interval 10s
+#     }
+#
+#     encode gzip
+# }
+
+# Configuration with custom certificate
+# scaffold.example.com {
+#     tls /etc/letsencrypt/live/scaffold.example.com/fullchain.pem \
+#         /etc/letsencrypt/live/scaffold.example.com/privkey.pem
+#
+#     reverse_proxy localhost:5000 {
+#         health_uri /health
+#         health_interval 10s
+#     }
+#
+#     encode gzip
+# }
+
+# ============================================================================
+# GLOBAL SETTINGS (uncomment and customize as needed)
+# ============================================================================
+
+# Global email for certificate registration
+# {
+#     email support@example.com
+# }
+
+# Global ACL for rate limiting
+# {
+#     acme_dns cloudflare {
+#         api_token YOUR_CLOUDFLARE_API_TOKEN
+#     }
+# }
+
+# ============================================================================
+# DEPLOYMENT INSTRUCTIONS
+# ============================================================================
+#
+# 1. Install Caddy on Ubuntu/Debian:
+#    sudo apt-get update
+#    sudo apt-get install -y caddy
+#
+# 2. Create backup of existing config:
+#    sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak
+#
+# 3. Copy this configuration:
+#    sudo cp caddy-example.txt /etc/caddy/Caddyfile
+#
+# 4. Edit the configuration:
+#    sudo nano /etc/caddy/Caddyfile
+#    - Change "scaffold.example.com" to your domain
+#    - Update email address
+#
+# 5. Test configuration:
+#    sudo caddy validate --config /etc/caddy/Caddyfile
+#
+# 6. Reload Caddy:
+#    sudo systemctl reload caddy
+#
+# 7. Check status:
+#    sudo systemctl status caddy
+#
+# 8. View logs:
+#    sudo journalctl -u caddy -f
+#
+# ============================================================================
+# MONITORING & TROUBLESHOOTING
+# ============================================================================
+#
+# Check if service is running:
+#   curl -v https://scaffold.example.com/health
+#
+# View Caddy logs:
+#   sudo journalctl -u caddy -n 50 -f
+#
+# Reload configuration (graceful restart):
+#   sudo systemctl reload caddy
+#
+# Completely restart:
+#   sudo systemctl restart caddy
+#
+# Check certificate expiration:
+#   openssl s_client -connect scaffold.example.com:443 -servername scaffold.example.com | grep -i "notAfter"
+#
+# ============================================================================
+# SECURITY CONSIDERATIONS
+# ============================================================================
+#
+# - Enable HSTS to enforce HTTPS
+# - Set appropriate X-Frame-Options to prevent clickjacking
+# - Configure CSP (Content-Security-Policy) header if serving web UI
+# - Use strong TLS settings (TLS 1.2+ recommended)
+# - Implement rate limiting for API endpoints
+# - Use authentication for sensitive endpoints
+# - Monitor logs for suspicious activity
+# - Keep Caddy updated: sudo apt-get update && sudo apt-get upgrade -y
+#
+# ============================================================================
