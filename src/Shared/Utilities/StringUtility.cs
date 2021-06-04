@@ -3,6 +3,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Buffers;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -53,75 +54,110 @@ public static class StringUtility
     }
 
     /// <summary>
-    /// Converts a string from camelCase to PascalCase or snake_case.
+    /// Converts a string from camelCase or PascalCase to snake_case.
+    /// Uses string.Create to write directly into the result buffer — zero intermediate allocations.
     /// </summary>
     public static string ToSnakeCase(string? text)
     {
         if (string.IsNullOrEmpty(text))
             return string.Empty;
 
-        var result = new StringBuilder();
-        for (int i = 0; i < text.Length; i++)
+        // Count uppercase chars after position 0 to know the exact output length upfront.
+        int extraChars = 0;
+        for (int i = 1; i < text.Length; i++)
+            if (char.IsUpper(text[i])) extraChars++;
+
+        if (extraChars == 0)
+            return text.ToLowerInvariant();
+
+        return string.Create(text.Length + extraChars, text, static (span, src) =>
         {
-            if (char.IsUpper(text[i]) && i > 0)
+            int pos = 0;
+            for (int i = 0; i < src.Length; i++)
             {
-                result.Append('_');
+                if (char.IsUpper(src[i]) && i > 0)
+                    span[pos++] = '_';
+                span[pos++] = char.ToLowerInvariant(src[i]);
             }
-            result.Append(char.ToLowerInvariant(text[i]));
-        }
-        return result.ToString();
+        });
     }
 
     /// <summary>
     /// Converts a string from snake_case to camelCase.
+    /// Uses string.Create to avoid intermediate StringBuilder allocation.
     /// </summary>
     public static string ToCamelCase(string? text)
     {
         if (string.IsNullOrEmpty(text))
             return string.Empty;
 
-        var parts = text.Split('_', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-            return string.Empty;
-
-        var result = new StringBuilder(parts[0].ToLowerInvariant());
-        for (int i = 1; i < parts.Length; i++)
+        // Output is never longer than input (underscores are removed).
+        return string.Create(text.Length, text, static (span, src) =>
         {
-            result.Append(char.ToUpperInvariant(parts[i][0]));
-            result.Append(parts[i][1..].ToLowerInvariant());
-        }
-        return result.ToString();
+            int pos = 0;
+            bool nextUpper = false;
+
+            for (int i = 0; i < src.Length; i++)
+            {
+                if (src[i] == '_')
+                {
+                    nextUpper = pos > 0; // skip leading underscores without capitalising
+                    continue;
+                }
+
+                span[pos++] = nextUpper
+                    ? char.ToUpperInvariant(src[i])
+                    : char.ToLowerInvariant(src[i]);
+
+                nextUpper = false;
+            }
+
+            // Trim the span to the actual written length if underscores were removed.
+            if (pos < span.Length)
+                span[pos..].Clear();
+        }).TrimEnd('\0');
     }
 
     /// <summary>
     /// Masks sensitive information in a string, keeping only the first and last characters visible.
     /// Useful for logging API keys, tokens, etc.
+    /// Uses string.Create — single allocation, no intermediate strings.
     /// </summary>
     public static string MaskSensitive(string? text, int visibleChars = 1)
     {
         if (string.IsNullOrEmpty(text) || text.Length <= visibleChars * 2)
             return new string('*', Math.Max(text?.Length ?? 0, 4));
 
-        var masked = text![..visibleChars] + new string('*', text.Length - visibleChars * 2) + text.Substring(text.Length - visibleChars);
-        return masked;
+        int maskLen = text.Length - visibleChars * 2;
+        return string.Create(text.Length, (text, visibleChars, maskLen), static (span, state) =>
+        {
+            var (src, visible, mask) = state;
+            src.AsSpan(0, visible).CopyTo(span);
+            span.Slice(visible, mask).Fill('*');
+            src.AsSpan(src.Length - visible).CopyTo(span.Slice(visible + mask));
+        });
     }
 
     /// <summary>
     /// Generates a random string of specified length using alphanumeric characters.
     /// Useful for generating tokens, session IDs, etc.
+    /// Uses ArrayPool&lt;char&gt; to avoid heap allocation for the working buffer.
     /// </summary>
     public static string GenerateRandomString(int length = 32)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        var random = Random.Shared; // Fix: use thread-safe shared Random instance
-        var result = new StringBuilder();
-
-        for (int i = 0; i < length; i++)
+        var buffer = ArrayPool<char>.Shared.Rent(length);
+        try
         {
-            result.Append(chars[random.Next(chars.Length)]);
+            var random = Random.Shared;
+            for (int i = 0; i < length; i++)
+                buffer[i] = chars[random.Next(chars.Length)];
+            return new string(buffer, 0, length);
         }
-
-        return result.ToString();
+        finally
+        {
+            ArrayPool<char>.Shared.Return(buffer);
+        }
     }
 
     /// <summary>
