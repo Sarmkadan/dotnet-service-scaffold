@@ -18,7 +18,7 @@ public class ExternalApiClient : IExternalApiClient
     private readonly ICustomHttpClientFactory _httpClientFactory;
     private readonly ILogger<ExternalApiClient> _logger;
 
-    public ExternalApiClient(IHttpClientFactory httpClientFactory, ILogger<ExternalApiClient> logger)
+    public ExternalApiClient(ICustomHttpClientFactory httpClientFactory, ILogger<ExternalApiClient> logger)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;

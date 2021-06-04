@@ -36,7 +36,7 @@ public interface ICacheService
     /// <summary>
     /// Gets a value from the cache, or sets it if it doesn't exist using the factory function.
     /// </summary>
-    ValueTask<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class;
+    ValueTask<T?> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class;
 
     /// <summary>
     /// Removes all cached values matching a pattern.

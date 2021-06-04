@@ -31,4 +31,5 @@ public interface IUserService
     Task UnlockUserAsync(Guid userId);
 
     Task<User?> GetUserWithApiKeysAsync(Guid userId);
+    Task<User?> ValidateApiKeyAsync(string apiKey);
 }

@@ -72,7 +72,7 @@ public static class CollectionUtility
     /// <summary>
     /// Checks if two collections have the same elements (order-independent).
     /// </summary>
-    public static bool ContainsSameElements<T>(this IEnumerable<T>? first, IEnumerable<T>? second)
+    public static bool ContainsSameElements<T>(this IEnumerable<T>? first, IEnumerable<T>? second) where T : notnull
     {
         if (first == null && second == null)
             return true;
