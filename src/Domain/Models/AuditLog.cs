@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Records audit trails for system actions performed by users.
 /// </summary>
-public class AuditLog
+public sealed class AuditLog
 {
     [Key]
     public Guid Id { get; set; }
@@ -66,7 +67,7 @@ public class AuditLog
     /// </summary>
     public bool WasSuccessful()
     {
-        return Status == "Success" || Status == null;
+        return Status == "Success" || Status is null;
     }
 
     /// <summary>

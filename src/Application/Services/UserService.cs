@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -40,7 +41,7 @@ public class UserService : IUserService
             throw new ServiceValidationException("Invalid email format");
 
         var existingUser = await _userRepository.GetByEmailAsync(email);
-        if (existingUser != null)
+        if (existingUser is not null)
             throw new ServiceValidationException("Email already registered");
 
         if (password.Length < 8)
@@ -69,7 +70,7 @@ public class UserService : IUserService
     public async Task<User?> AuthenticateUserAsync(string email, string password)
     {
         var user = await _userRepository.GetByEmailAsync(email);
-        if (user == null)
+        if (user is null)
         {
             _logger.LogWarning("Authentication failed: user not found {Email}", email);
             return null;
@@ -109,7 +110,7 @@ public class UserService : IUserService
     public async Task DeleteUserAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ServiceScaffoldException($"User {userId} not found", "USER_NOT_FOUND");
 
         await _userRepository.DeleteAsync(userId);
@@ -124,7 +125,7 @@ public class UserService : IUserService
     public async Task<bool> ValidatePasswordAsync(string email, string password)
     {
         var user = await _userRepository.GetByEmailAsync(email);
-        if (user == null)
+        if (user is null)
             return false;
 
         return VerifyPasswordHash(password, user.PasswordHash);
@@ -133,7 +134,7 @@ public class UserService : IUserService
     public async Task<bool> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ServiceScaffoldException($"User {userId} not found", "USER_NOT_FOUND");
 
         if (!VerifyPasswordHash(oldPassword, user.PasswordHash))
@@ -156,7 +157,7 @@ public class UserService : IUserService
     public async Task UnlockUserAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user is null)
             throw new ServiceScaffoldException($"User {userId} not found", "USER_NOT_FOUND");
 
         user.IsLocked = false;
@@ -183,7 +184,7 @@ public class UserService : IUserService
         var keyPrefix = apiKey.Substring(0, Math.Min(8, apiKey.Length)); // Use a reasonable prefix length
         var apiKeyEntity = await _apiKeyRepository.GetByKeyPrefixAsync(keyPrefix);
 
-        if (apiKeyEntity == null || !apiKeyEntity.IsValid())
+        if (apiKeyEntity is null || !apiKeyEntity.IsValid())
         {
             _logger.LogWarning("Invalid or expired API key attempt with prefix: {KeyPrefix}", keyPrefix);
             return null;

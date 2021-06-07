@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -40,7 +41,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
     public async Task DeleteByKeyAsync(string key, Guid? serviceId = null)
     {
         var config = await GetByKeyAsync(key, serviceId);
-        if (config != null)
+        if (config is not null)
         {
             _dbSet.Remove(config);
             await SaveChangesAsync();

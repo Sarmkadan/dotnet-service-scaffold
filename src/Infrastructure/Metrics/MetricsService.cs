@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -154,7 +155,7 @@ public class MetricsService : IMetricsService
     /// </summary>
     private static string BuildMetricKey(string metricName, IDictionary<string, string>? tags)
     {
-        if (tags == null || tags.Count == 0)
+        if (tags is null || tags.Count == 0)
             return metricName;
 
         // Pre-calculate the exact output length to avoid any buffer resizing.

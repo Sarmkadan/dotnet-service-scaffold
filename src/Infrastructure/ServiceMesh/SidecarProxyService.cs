@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -163,7 +164,7 @@ public class SidecarProxyService : ISidecarProxyService
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var clusters = JsonSerializer.Deserialize<EnvoyClustersResponse>(content, JsonOptions);
 
-            if (clusters?.ClusterStatuses == null)
+            if (clusters?.ClusterStatuses is null)
                 return Array.Empty<UpstreamCluster>();
 
             return clusters.ClusterStatuses
