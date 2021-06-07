@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+#nullable enable
+
 using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Infrastructure.Data;
 using DotnetServiceScaffold.Infrastructure.Data.Repository;
