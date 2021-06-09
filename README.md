@@ -1,231 +1,1077 @@
 # .NET Service Scaffold
 
-A production-grade template for self-hosted .NET services with built-in monitoring, health checks, SQLite database, and comprehensive service management.
+A production-grade template for self-hosted .NET services with built-in monitoring, health checks, SQLite database, and comprehensive service management. Deploy secure, observable, and maintainable services with minimal configuration.
 
-## Features
+## Overview
 
-- **Service Registration & Lifecycle Management**: Register services, track status, enable/disable monitoring
+**dotnet-service-scaffold** is a complete framework for building self-hosted .NET services that can be deployed on Linux servers using systemd and Caddy. It includes everything needed for production: health monitoring, security, auditing, metrics, and comprehensive API management.
+
+Perfect for:
+- Building internal service APIs
+- Creating microservices in self-hosted environments
+- Monitoring infrastructure health
+- Managing service lifecycles at scale
+- Implementing audit trails for compliance
+
+## Key Features
+
+### Service Management
+- **Service Registration & Lifecycle**: Register services, track status, enable/disable monitoring
 - **Health Checks**: HTTP-based health monitoring with configurable intervals and timeouts
+- **Status Tracking**: Real-time service state monitoring and historical tracking
+- **Success Rate Analytics**: Track service reliability over time
+- **Event Logging**: Capture significant service events and state transitions
+
+### Monitoring & Observability
 - **Performance Metrics**: Track CPU, memory, disk usage, and response times
+- **Health Check History**: Detailed records of all health check attempts
+- **Failure Analysis**: Identify patterns and root causes of service issues
+- **Structured Logging**: Serilog integration with console and file output
+- **Health Endpoints**: Standard `/health` and `/status` endpoints
+
+### Security & Access Control
 - **User Management**: Full authentication, password management, and account lockout protection
-- **Audit Logging**: Comprehensive audit trail for compliance and security
-- **Configuration Management**: Centralized configuration storage with type validation
 - **API Keys**: Secure API authentication with IP whitelisting and scope management
+- **Password Security**: BCrypt hashing with salt for maximum security
+- **Account Lockout**: Automatic lockout after failed login attempts
+- **Audit Logging**: Comprehensive audit trail for compliance and security
+
+### Data & Configuration
 - **SQLite Database**: Persistent storage with Entity Framework Core ORM
-- **Serilog Integration**: Structured logging to console and files
-- **ASP.NET Core Web API**: RESTful endpoints with Swagger documentation
+- **Configuration Management**: Centralized configuration storage with type validation
+- **Data Persistence**: Complete entity relationships and data consistency
+- **Database Migrations**: Entity Framework Core migrations support
+- **Backup Ready**: SQLite enables simple file-based backups
+
+### API & Integration
+- **ASP.NET Core Web API**: RESTful endpoints with proper HTTP semantics
+- **Swagger/OpenAPI**: Auto-generated API documentation
+- **Error Handling**: Comprehensive exception handling with custom exception types
+- **Content Negotiation**: Support for JSON and CSV response formats
+- **Webhook Integration**: HTTP-based external service integration
+
+### Architecture
 - **Clean Architecture**: Layered design with proper separation of concerns
+- **Domain-Driven Design**: Rich domain models and business logic
+- **Dependency Injection**: Built-in IoC container configuration
+- **Repository Pattern**: Abstracted data access layer
+- **Middleware Pipeline**: Request/response processing and cross-cutting concerns
 
 ## Technology Stack
 
-- **.NET 10.0** - Latest .NET framework
-- **Entity Framework Core 10.0** - ORM for data access
-- **SQLite** - Lightweight, self-contained database
-- **Serilog** - Structured logging
-- **Swagger/OpenAPI** - API documentation
-- **BCrypt.Net** - Secure password hashing
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| .NET | 10.0 | Runtime and framework |
+| Entity Framework Core | 10.0 | ORM and data access |
+| SQLite | 3.x | Lightweight database |
+| Serilog | 8.x | Structured logging |
+| Swagger/OpenAPI | 2.0 | API documentation |
+| BCrypt.Net | 4.x | Secure password hashing |
+| Swashbuckle | 6.x | Swagger integration |
 
-## Project Structure
+## Project Architecture
+
+### Directory Structure
 
 ```
 dotnet-service-scaffold/
 ├── src/
 │   ├── Application/
-│   │   └── Services/        # Business logic services
+│   │   └── Services/
+│   │       ├── IUserService.cs
+│   │       ├── UserService.cs
+│   │       ├── IHealthCheckService.cs
+│   │       ├── HealthCheckService.cs
+│   │       ├── IServiceManagementService.cs
+│   │       ├── ServiceManagementService.cs
+│   │       ├── IAuditService.cs
+│   │       ├── AuditService.cs
+│   │       ├── IConfigurationService.cs
+│   │       ├── ConfigurationService.cs
+│   │       └── FeatureFlagService.cs
 │   ├── Domain/
-│   │   ├── Models/          # Entity classes
-│   │   ├── Enums/           # Domain enumerations
-│   │   └── Exceptions/      # Custom exceptions
+│   │   ├── Models/
+│   │   │   ├── User.cs
+│   │   │   ├── ServiceRegistration.cs
+│   │   │   ├── HealthCheckResult.cs
+│   │   │   ├── ServiceMetric.cs
+│   │   │   ├── AuditLog.cs
+│   │   │   ├── ApiKey.cs
+│   │   │   └── ServiceConfiguration.cs
+│   │   ├── Enums/
+│   │   │   ├── HealthStatus.cs
+│   │   │   ├── ServiceStatus.cs
+│   │   │   └── ServiceEventType.cs
+│   │   ├── Events/
+│   │   │   ├── IDomainEvent.cs
+│   │   │   └── IDomainEventHandler.cs
+│   │   └── Exceptions/
+│   │       └── ServiceScaffoldException.cs
 │   ├── Infrastructure/
-│   │   └── Data/            # DbContext, repositories
+│   │   ├── Data/
+│   │   │   ├── ServiceScaffoldDbContext.cs
+│   │   │   └── Repository/
+│   │   │       ├── IRepository.cs
+│   │   │       ├── Repository.cs
+│   │   │       ├── IUserRepository.cs
+│   │   │       ├── UserRepository.cs
+│   │   │       ├── IServiceRepository.cs
+│   │   │       ├── ServiceRepository.cs
+│   │   │       ├── IHealthCheckRepository.cs
+│   │   │       ├── HealthCheckRepository.cs
+│   │   │       └── IAuditLogRepository.cs
+│   │   ├── Caching/
+│   │   │   ├── ICacheService.cs
+│   │   │   └── InMemoryCacheService.cs
+│   │   ├── Integration/
+│   │   │   ├── ExternalApiClient.cs
+│   │   │   ├── HttpClientFactory.cs
+│   │   │   └── WebhookClient.cs
+│   │   └── Configuration/
+│   │       └── DeploymentConfiguration.cs
 │   ├── Presentation/
-│   │   └── Controllers/     # API controllers
-│   └── Shared/              # Constants and utilities
-├── Program.cs               # Application entry point
-├── appsettings.json         # Configuration
-└── dotnet-service-scaffold.csproj
+│   │   ├── Controllers/
+│   │   │   ├── UserController.cs
+│   │   │   ├── ServiceController.cs
+│   │   │   ├── HealthCheckController.cs
+│   │   │   ├── AuditLogController.cs
+│   │   │   ├── MetricsController.cs
+│   │   │   └── ApiKeyController.cs
+│   │   ├── Middleware/
+│   │   │   ├── ApiKeyAuthenticationMiddleware.cs
+│   │   │   ├── ErrorHandlingMiddleware.cs
+│   │   │   ├── RateLimitingMiddleware.cs
+│   │   │   └── RequestLoggingMiddleware.cs
+│   │   └── Extensions/
+│   │       └── HttpContextExtensions.cs
+│   └── Shared/
+│       ├── Constants.cs
+│       ├── Models/
+│       │   └── Result.cs
+│       ├── Utilities/
+│       │   ├── StringUtility.cs
+│       │   ├── EncryptionUtility.cs
+│       │   ├── DateTimeUtility.cs
+│       │   ├── ValidationUtility.cs
+│       │   ├── JsonUtility.cs
+│       │   └── PerformanceUtility.cs
+│       └── Extensions/
+│           └── ExceptionExtensions.cs
+├── examples/
+│   ├── basic-service-setup.cs
+│   ├── health-check-monitor.cs
+│   ├── api-usage.cs
+│   ├── systemd-deployment.sh
+│   ├── caddy-config.txt
+│   └── docker-example.cs
+├── docs/
+│   ├── getting-started.md
+│   ├── architecture.md
+│   ├── api-reference.md
+│   ├── deployment.md
+│   └── faq.md
+├── Program.cs
+├── appsettings.json
+├── dotnet-service-scaffold.csproj
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── CHANGELOG.md
+├── LICENSE
+└── .editorconfig
 ```
 
-## Getting Started
+### Layered Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           PRESENTATION LAYER                            │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │         ASP.NET Core Controllers                │   │
+│   │  Users  Services  HealthChecks  Metrics  Audit  │   │
+│   └──────────────────────┬──────────────────────────┘   │
+└────────────────────────────────────────────────────────┘
+         ↓
+┌─────────────────────────────────────────────────────────┐
+│  MIDDLEWARE & CROSS-CUTTING CONCERNS                   │
+│  Authentication  Logging  Error Handling  Rate Limits  │
+└────────────────────────────────────────────────────────┘
+         ↓
+┌─────────────────────────────────────────────────────────┐
+│           APPLICATION LAYER                             │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │         Business Logic Services                 │   │
+│   │  UserService  HealthCheckService                │   │
+│   │  ServiceMgmt  AuditService  ConfigService       │   │
+│   └──────────────────────┬──────────────────────────┘   │
+└────────────────────────────────────────────────────────┘
+         ↓
+┌─────────────────────────────────────────────────────────┐
+│           DOMAIN LAYER                                  │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │      Core Business Models & Rules               │   │
+│   │  User  Service  HealthCheck  Metrics  Events   │   │
+│   └──────────────────────┬──────────────────────────┘   │
+└────────────────────────────────────────────────────────┘
+         ↓
+┌─────────────────────────────────────────────────────────┐
+│      INFRASTRUCTURE LAYER                              │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │   Repository Pattern & Data Access              │   │
+│   │  DbContext  Repositories  Caching  Integration  │   │
+│   └──────────────────────┬──────────────────────────┘   │
+└────────────────────────────────────────────────────────┘
+         ↓
+┌─────────────────────────────────────────────────────────┐
+│           DATA LAYER                                    │
+│              SQLite Database                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Installation & Setup
 
 ### Prerequisites
 
-- .NET 10.0 SDK or later
-- SQLite (included with most systems)
+- **.NET 10.0 SDK** or later - [Install from dotnet.microsoft.com](https://dotnet.microsoft.com/download)
+- **SQLite** (included with most systems)
+- **Git** for version control
+- **systemd** (for Linux deployments)
+- **Caddy** (optional, for reverse proxy)
 
-### Building
+### Quick Start
+
+#### 1. Clone the Repository
 
 ```bash
-dotnet build
+git clone https://github.com/sarmkadan/dotnet-service-scaffold.git
+cd dotnet-service-scaffold
 ```
 
-### Running
+#### 2. Restore Dependencies
+
+```bash
+dotnet restore
+```
+
+#### 3. Build the Project
+
+```bash
+dotnet build -c Release
+```
+
+#### 4. Run the Application
 
 ```bash
 dotnet run
 ```
 
-The API will be available at `http://localhost:5000` with Swagger UI at `/swagger`.
+The API will be available at:
+- **REST API**: `http://localhost:5000`
+- **Swagger UI**: `http://localhost:5000/swagger`
+- **Health Check**: `http://localhost:5000/health`
+- **Status**: `http://localhost:5000/status`
 
-### Database Setup
+#### 5. Verify Installation
 
-The database is automatically initialized on startup. SQLite creates a `scaffold.db` file in the working directory.
+```bash
+curl http://localhost:5000/health
+curl http://localhost:5000/status
+```
 
-## API Endpoints
+### Using Docker
 
-### Health Checks
-- `POST /api/healthcheck/{serviceId}/check` - Perform immediate health check
-- `GET /api/healthcheck/{serviceId}/status` - Get service status
-- `GET /api/healthcheck/{serviceId}/history` - Get health check history
-- `GET /api/healthcheck/{serviceId}/failures` - Get failed checks
+```bash
+docker build -t dotnet-service-scaffold .
+docker run -p 5000:5000 dotnet-service-scaffold
+```
 
-### Users
-- `POST /api/user/register` - Create new user
-- `POST /api/user/login` - Authenticate user
-- `GET /api/user/{userId}` - Get user information
-- `POST /api/user/{userId}/change-password` - Change password
-- `POST /api/user/{userId}/unlock` - Unlock locked account
+Or with docker-compose:
 
-### Services
-- `POST /api/service/register` - Register service
-- `GET /api/service` - List all services
-- `GET /api/service/{serviceId}` - Get service details
-- `GET /api/service/owner/{ownerId}` - Get services by owner
-- `POST /api/service/{serviceId}/disable` - Disable service
-- `POST /api/service/{serviceId}/enable` - Enable service
-- `GET /api/service/health/unhealthy` - Get unhealthy services
-
-### System
-- `GET /health` - Health check endpoint
-- `GET /status` - Service status
+```bash
+docker-compose up
+```
 
 ## Configuration
 
-Edit `appsettings.json` to customize:
+### Application Settings
+
+Edit `appsettings.json` to customize behavior:
 
 ```json
 {
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=scaffold.db"
+  },
   "ApplicationSettings": {
     "HealthCheckInterval": 60,
     "HealthCheckTimeout": 10,
     "MaxConcurrentHealthChecks": 5,
     "AuditLogRetentionDays": 90,
-    "HealthCheckResultRetentionDays": 30
+    "HealthCheckResultRetentionDays": 30,
+    "MaxFailedLoginAttempts": 5,
+    "AccountLockoutDurationMinutes": 30,
+    "PasswordMinimumLength": 8,
+    "EnableCors": false,
+    "AllowedOrigins": ["http://localhost:3000"],
+    "RateLimitPerMinute": 60
   }
 }
 ```
 
-## Services Overview
+#### Configuration Options Explained
 
-### UserService
-Handles user management, authentication, password changes, and account lockout.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| HealthCheckInterval | 60 | Seconds between health checks |
+| HealthCheckTimeout | 10 | Timeout in seconds for health check requests |
+| MaxConcurrentHealthChecks | 5 | Maximum parallel health checks |
+| AuditLogRetentionDays | 90 | Days to keep audit logs |
+| HealthCheckResultRetentionDays | 30 | Days to keep health check history |
+| MaxFailedLoginAttempts | 5 | Attempts before account lockout |
+| AccountLockoutDurationMinutes | 30 | Minutes to lock account |
+| PasswordMinimumLength | 8 | Minimum password length |
+| EnableCors | false | Enable CORS for cross-origin requests |
+| RateLimitPerMinute | 60 | API requests per minute per IP |
 
-### HealthCheckService
-Monitors service health via HTTP probes, tracks metrics, and manages health check history.
+## API Reference
 
-### ServiceManagementService
-Manages service registration, lifecycle, status tracking, and success rates.
+### Authentication
 
-### AuditService
-Logs all system actions for compliance and security auditing.
+All endpoints (except `/health` and `/status`) require authentication via:
+1. **API Key** (recommended for services)
+2. **User credentials** with JWT token (for users)
 
-### ConfigurationService
-Manages application settings with type validation and encryption support.
+#### Get API Key
 
-## Domain Models
-
-- **User**: System users with authentication and profile information
-- **ServiceRegistration**: Registered services with health check configuration
-- **HealthCheckResult**: Results of individual health check probes
-- **ServiceMetric**: Performance metrics (CPU, memory, response times)
-- **ServiceEvent**: Significant service events and status changes
-- **ApiKey**: Secure API authentication tokens
-- **AuditLog**: Compliance and activity audit trail
-- **ServiceConfiguration**: Centralized configuration storage
-
-## Error Handling
-
-The application uses custom exception types for better error handling:
-
-- `ServiceScaffoldException` - Base exception
-- `ServiceNotFoundException` - Service not found
-- `ServiceValidationException` - Validation failures
-- `UnauthorizedException` - Access denied
-- `InvalidApiKeyException` - Invalid API credentials
-- `DataAccessException` - Database errors
-
-## Security Features
-
-- **Password Security**: BCrypt hashing with salt
-- **Account Lockout**: Automatic lockout after failed login attempts
-- **API Key Management**: IP whitelisting and scope-based access control
-- **Audit Trail**: Complete logging of all actions
-- **Data Validation**: Input validation at all layers
-
-## Deployment
-
-### Systemd Service
-
-Create `/etc/systemd/system/dotnet-scaffold.service`:
-
-```ini
-[Unit]
-Description=DotNet Service Scaffold
-After=network.target
-
-[Service]
-Type=notify
-User=scaffold
-WorkingDirectory=/opt/scaffold
-ExecStart=/usr/bin/dotnet /opt/scaffold/dotnet-service-scaffold.dll
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable dotnet-scaffold
-sudo systemctl start dotnet-scaffold
+curl -X POST http://localhost:5000/api/apikey/create \
+  -H "Content-Type: application/json" \
+  -d '{"name": "MyService", "ipWhitelist": ["127.0.0.1"]}'
 ```
 
-### Caddy Reverse Proxy
-
-```caddy
-scaffold.example.com {
-    reverse_proxy localhost:5000
-    encode gzip
+Response:
+```json
+{
+  "apiKey": "sk_live_abc123xyz789",
+  "createdAt": "2026-05-04T10:00:00Z"
 }
 ```
 
-## Development
+### Service Management Endpoints
+
+#### Register a Service
+
+```bash
+curl -X POST http://localhost:5000/api/service/register \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: sk_live_abc123xyz789" \
+  -d '{
+    "name": "UserService",
+    "description": "User authentication service",
+    "healthCheckUrl": "https://users.internal/health",
+    "ownerId": "user-123",
+    "isEnabled": true
+  }'
+```
+
+#### List All Services
+
+```bash
+curl http://localhost:5000/api/service \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "svc-uuid",
+      "name": "UserService",
+      "description": "User authentication service",
+      "status": "Healthy",
+      "healthCheckUrl": "https://users.internal/health",
+      "successRate": 99.8,
+      "lastChecked": "2026-05-04T10:00:30Z",
+      "isEnabled": true
+    }
+  ]
+}
+```
+
+#### Get Service Details
+
+```bash
+curl http://localhost:5000/api/service/svc-uuid \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+#### Perform Health Check
+
+```bash
+curl -X POST http://localhost:5000/api/healthcheck/svc-uuid/check \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "serviceId": "svc-uuid",
+    "status": "Healthy",
+    "responseTime": 123,
+    "statusCode": 200,
+    "checkedAt": "2026-05-04T10:00:45Z"
+  }
+}
+```
+
+#### Get Health Check History
+
+```bash
+curl "http://localhost:5000/api/healthcheck/svc-uuid/history?days=7" \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+#### Get Failed Health Checks
+
+```bash
+curl "http://localhost:5000/api/healthcheck/svc-uuid/failures?limit=50" \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+### User Management Endpoints
+
+#### Register User
+
+```bash
+curl -X POST http://localhost:5000/api/user/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "email": "admin@example.com",
+    "password": "SecurePassword123!"
+  }'
+```
+
+#### Login
+
+```bash
+curl -X POST http://localhost:5000/api/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "SecurePassword123!"
+  }'
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "user-uuid",
+    "username": "admin",
+    "email": "admin@example.com",
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+#### Change Password
+
+```bash
+curl -X POST http://localhost:5000/api/user/user-uuid/change-password \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." \
+  -d '{
+    "oldPassword": "SecurePassword123!",
+    "newPassword": "NewSecurePassword456!"
+  }'
+```
+
+### Metrics & Monitoring Endpoints
+
+#### Get Service Metrics
+
+```bash
+curl http://localhost:5000/api/metrics/service/svc-uuid \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "serviceId": "svc-uuid",
+    "cpuUsage": 45.2,
+    "memoryUsage": 512,
+    "diskUsage": 2048,
+    "averageResponseTime": 125,
+    "requestsPerMinute": 450,
+    "errorRate": 0.2,
+    "lastUpdated": "2026-05-04T10:00:00Z"
+  }
+}
+```
+
+#### Get All Metrics
+
+```bash
+curl http://localhost:5000/api/metrics \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+### Audit Logging Endpoints
+
+#### Get Audit Logs
+
+```bash
+curl "http://localhost:5000/api/auditlog?limit=100&offset=0" \
+  -H "X-API-Key: sk_live_abc123xyz789"
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "audit-uuid",
+      "userId": "user-uuid",
+      "action": "ServiceRegistered",
+      "entityType": "Service",
+      "entityId": "svc-uuid",
+      "changes": {
+        "name": "UserService",
+        "status": "Active"
+      },
+      "timestamp": "2026-05-04T10:00:00Z",
+      "ipAddress": "192.168.1.100"
+    }
+  ]
+}
+```
+
+## Usage Examples
+
+### Example 1: Basic Service Setup
+
+Create a file `setup-service.sh`:
+
+```bash
+#!/bin/bash
+
+API_KEY="sk_live_your_api_key_here"
+BASE_URL="http://localhost:5000"
+
+# Register a service
+curl -X POST $BASE_URL/api/service/register \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "name": "PaymentService",
+    "description": "Handles payment processing",
+    "healthCheckUrl": "https://payments.internal/health",
+    "ownerId": "user-123",
+    "isEnabled": true
+  }'
+```
+
+### Example 2: Monitoring Multiple Services
+
+```bash
+#!/bin/bash
+
+API_KEY="sk_live_your_api_key_here"
+BASE_URL="http://localhost:5000"
+
+SERVICES=("UserService" "PaymentService" "NotificationService")
+
+for service in "${SERVICES[@]}"; do
+  response=$(curl -s "$BASE_URL/api/service?name=$service" \
+    -H "X-API-Key: $API_KEY")
+  
+  status=$(echo $response | jq -r '.data[0].status')
+  echo "$service: $status"
+done
+```
+
+### Example 3: Health Check Automation
+
+```bash
+#!/bin/bash
+
+API_KEY="sk_live_your_api_key_here"
+BASE_URL="http://localhost:5000"
+SERVICE_ID="svc-uuid"
+
+# Check health every 5 minutes
+while true; do
+  result=$(curl -s -X POST "$BASE_URL/api/healthcheck/$SERVICE_ID/check" \
+    -H "X-API-Key: $API_KEY")
+  
+  status=$(echo $result | jq -r '.data.status')
+  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  
+  echo "[$timestamp] Health check: $status"
+  
+  sleep 300  # 5 minutes
+done
+```
+
+### Example 4: API Key Management
+
+```bash
+#!/bin/bash
+
+API_KEY="sk_live_your_api_key_here"
+BASE_URL="http://localhost:5000"
+
+# Create new API key with IP whitelist
+curl -X POST "$BASE_URL/api/apikey/create" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "name": "CI/CD Pipeline",
+    "description": "Used for automated deployments",
+    "ipWhitelist": ["10.0.0.0/8", "172.16.0.0/12"],
+    "scopes": ["service:read", "service:write", "healthcheck:read"]
+  }'
+```
+
+### Example 5: Audit Log Analysis
+
+```bash
+#!/bin/bash
+
+API_KEY="sk_live_your_api_key_here"
+BASE_URL="http://localhost:5000"
+
+# Get audit logs for the last 7 days
+curl -s "$BASE_URL/api/auditlog?days=7" \
+  -H "X-API-Key: $API_KEY" | \
+  jq '.data[] | select(.action == "ServiceRegistered") | {timestamp, userId, entityId}'
+```
+
+### Example 6: Metrics Dashboard Data
+
+```bash
+#!/bin/bash
+
+API_KEY="sk_live_your_api_key_here"
+BASE_URL="http://localhost:5000"
+
+# Get system-wide metrics
+curl -s "$BASE_URL/api/metrics" \
+  -H "X-API-Key: $API_KEY" | \
+  jq '.data | map({
+    serviceId,
+    cpuUsage,
+    memoryUsage,
+    errorRate,
+    avgResponseTime: .averageResponseTime
+  })'
+```
+
+## Domain Models
+
+### User
+```csharp
+public class User
+{
+    public string Id { get; set; }
+    public string Username { get; set; }
+    public string Email { get; set; }
+    public string PasswordHash { get; set; }
+    public bool IsActive { get; set; }
+    public int FailedLoginAttempts { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+```
+
+### ServiceRegistration
+```csharp
+public class ServiceRegistration
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string HealthCheckUrl { get; set; }
+    public ServiceStatus Status { get; set; }
+    public bool IsEnabled { get; set; }
+    public decimal SuccessRate { get; set; }
+    public DateTime? LastCheckedAt { get; set; }
+    public string OwnerId { get; set; }
+}
+```
+
+### HealthCheckResult
+```csharp
+public class HealthCheckResult
+{
+    public string Id { get; set; }
+    public string ServiceId { get; set; }
+    public HealthStatus Status { get; set; }
+    public int ResponseTime { get; set; }
+    public int StatusCode { get; set; }
+    public string Message { get; set; }
+    public DateTime CheckedAt { get; set; }
+}
+```
+
+### ServiceMetric
+```csharp
+public class ServiceMetric
+{
+    public string Id { get; set; }
+    public string ServiceId { get; set; }
+    public decimal CpuUsage { get; set; }
+    public long MemoryUsage { get; set; }
+    public long DiskUsage { get; set; }
+    public int AverageResponseTime { get; set; }
+    public int RequestsPerMinute { get; set; }
+    public decimal ErrorRate { get; set; }
+    public DateTime RecordedAt { get; set; }
+}
+```
+
+## Deployment
+
+### Linux Systemd Deployment
+
+1. **Copy application files**:
+   ```bash
+   sudo mkdir -p /opt/dotnet-scaffold
+   sudo cp -r . /opt/dotnet-scaffold/
+   sudo chown -R scaffold:scaffold /opt/dotnet-scaffold
+   ```
+
+2. **Create systemd service** (`/etc/systemd/system/dotnet-scaffold.service`):
+   ```ini
+   [Unit]
+   Description=DotNet Service Scaffold
+   After=network.target
+
+   [Service]
+   Type=notify
+   User=scaffold
+   WorkingDirectory=/opt/dotnet-scaffold
+   ExecStart=/usr/bin/dotnet /opt/dotnet-scaffold/dotnet-service-scaffold.dll --urls http://localhost:5000
+   Restart=on-failure
+   RestartSec=10
+   StandardOutput=journal
+   StandardError=journal
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. **Enable and start**:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable dotnet-scaffold
+   sudo systemctl start dotnet-scaffold
+   ```
+
+4. **Check status**:
+   ```bash
+   sudo systemctl status dotnet-scaffold
+   sudo journalctl -u dotnet-scaffold -f
+   ```
+
+### Caddy Reverse Proxy
+
+Create `/etc/caddy/Caddyfile`:
+
+```caddy
+scaffold.example.com {
+    reverse_proxy localhost:5000 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-Host {host}
+        health_uri /health
+        health_interval 10s
+        health_timeout 5s
+    }
+    encode gzip
+    log {
+        output file /var/log/caddy/scaffold.log
+        level info
+    }
+}
+```
+
+Enable Caddy:
+```bash
+sudo systemctl enable caddy
+sudo systemctl restart caddy
+```
+
+### Docker Deployment
+
+```bash
+docker build -t dotnet-scaffold:latest .
+docker run -d \
+  --name dotnet-scaffold \
+  -p 5000:5000 \
+  -v /data/scaffold:/app/data \
+  -e "ASPNETCORE_ENVIRONMENT=Production" \
+  dotnet-scaffold:latest
+```
+
+### Kubernetes Deployment
+
+See `docs/deployment.md` for complete Kubernetes manifests.
+
+## Troubleshooting
+
+### Application won't start
+
+**Issue**: `dotnet: command not found` or `Unable to locate the .NET runtime`
+
+**Solution**:
+```bash
+# Install .NET 10.0 SDK
+curl https://dot.net/v1/dotnet-install.sh -O
+chmod +x dotnet-install.sh
+./dotnet-install.sh --version 10.0.0
+export PATH=$PATH:~/.dotnet
+```
+
+### Database errors
+
+**Issue**: `SQLite database is locked`
+
+**Solution**: This usually indicates another instance is running. Check:
+```bash
+ps aux | grep dotnet-service-scaffold
+lsof | grep scaffold.db
+```
+
+### Health checks timing out
+
+**Issue**: Services report as "Unhealthy" even though they're running
+
+**Solution**: Increase timeout in `appsettings.json`:
+```json
+{
+  "ApplicationSettings": {
+    "HealthCheckTimeout": 30,
+    "HealthCheckInterval": 120
+  }
+}
+```
+
+### High CPU usage
+
+**Issue**: Service consuming excessive CPU
+
+**Solution**:
+1. Check metrics: `curl http://localhost:5000/api/metrics`
+2. Review logs: `journalctl -u dotnet-scaffold -n 100`
+3. Consider reducing health check frequency
+
+### Memory leaks
+
+**Issue**: Memory usage grows over time
+
+**Solution**:
+1. Monitor metrics endpoint regularly
+2. Implement retention policies for logs and metrics
+3. Consider adding memory pressure monitoring
+
+## Performance Tuning
+
+### Database Optimization
+
+```csharp
+// Enable query logging to find slow queries
+options.LogTo(Console.WriteLine, LogLevel.Information);
+
+// Add database indexes for frequently queried fields
+modelBuilder.Entity<HealthCheckResult>()
+    .HasIndex(h => h.ServiceId)
+    .HasIndex(h => h.CheckedAt);
+```
+
+### Health Check Optimization
+
+```json
+{
+  "ApplicationSettings": {
+    "HealthCheckInterval": 120,
+    "MaxConcurrentHealthChecks": 10,
+    "HealthCheckTimeout": 15
+  }
+}
+```
+
+### Caching Strategy
+
+```csharp
+// Cache service list for 5 minutes
+var services = await _cacheService.GetOrSetAsync(
+    "all_services",
+    () => _repository.GetAllServicesAsync(),
+    TimeSpan.FromMinutes(5)
+);
+```
+
+## Security Best Practices
+
+1. **Always use HTTPS in production** with valid certificates via Caddy
+2. **Rotate API keys regularly** - delete old keys and create new ones
+3. **Enable IP whitelisting** for API keys when possible
+4. **Monitor audit logs** for suspicious activity
+5. **Keep secrets out of code** - use environment variables
+6. **Use strong passwords** - minimum 12 characters, mixed case, numbers, symbols
+7. **Enable account lockout** after failed login attempts
+8. **Implement rate limiting** to prevent brute force attacks
+
+## Monitoring & Alerting
+
+### Recommended Metrics to Monitor
+
+```bash
+# Service health status
+curl http://localhost:5000/api/service
+
+# System metrics
+curl http://localhost:5000/api/metrics
+
+# Recent audit activity
+curl http://localhost:5000/api/auditlog?limit=10
+
+# Health check history
+curl "http://localhost:5000/api/healthcheck/{serviceId}/history?days=1"
+```
+
+### Alert Thresholds
+
+- Service health check failure rate > 5%
+- API response time > 5 seconds
+- CPU usage > 80%
+- Memory usage > 85%
+- Disk usage > 90%
+- Audit log suspicious activities (failed logins, unauthorized access)
+
+## Development Guide
 
 ### Adding New Services
 
-1. Create interface in `src/Application/Services/I{Service}Service.cs`
-2. Implement in `src/Application/Services/{Service}Service.cs`
-3. Register in `Program.cs` dependency injection
-4. Create tests in test project
+1. **Create Interface**:
+   ```csharp
+   // src/Application/Services/IMyService.cs
+   public interface IMyService
+   {
+       Task<MyResult> DoSomethingAsync(string input);
+   }
+   ```
+
+2. **Implement Service**:
+   ```csharp
+   // src/Application/Services/MyService.cs
+   public class MyService : IMyService
+   {
+       public async Task<MyResult> DoSomethingAsync(string input)
+       {
+           // Implementation
+       }
+   }
+   ```
+
+3. **Register in Program.cs**:
+   ```csharp
+   builder.Services.AddScoped<IMyService, MyService>();
+   ```
 
 ### Database Migrations
 
 ```bash
-dotnet ef migrations add {MigrationName} -o src/Infrastructure/Migrations
+# Create migration
+dotnet ef migrations add MyMigration -o src/Infrastructure/Migrations
+
+# Apply migration
 dotnet ef database update
+
+# Remove last migration
+dotnet ef migrations remove
 ```
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
+### Code Quality
+
+```bash
+# Analyze code
+dotnet build /p:EnforceCodeStyleInBuild=true
+
+# Format code
+dotnet format
+```
+
+## Contributing
+
+We welcome contributions! Please:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+### Code Standards
+
+- Follow C# naming conventions (PascalCase for public members)
+- Write XML documentation for public APIs
+- Keep methods small and focused (< 20 lines)
+- Use dependency injection for all external dependencies
+- Write unit tests for business logic
+- Ensure HTTPS is used in production
 
 ## License
 
-MIT - Copyright 2026 Vladyslav Zaiets
+MIT License - Copyright 2026 Vladyslav Zaiets
 
-## Contact
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and subject to the Software being furnished to do so, subject to the following conditions:
 
-- Website: https://sarmkadan.com
-- GitHub: https://github.com/sarmkadan
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+## Support & Contact
+
+- **Website**: https://sarmkadan.com
+- **GitHub**: https://github.com/sarmkadan
+- **Issues**: https://github.com/sarmkadan/dotnet-service-scaffold/issues
+- **Email**: rutova2@gmail.com
+
+## Acknowledgments
+
+Built with best practices from:
+- Clean Architecture principles
+- Domain-Driven Design patterns
+- SOLID principles
+- Microsoft .NET documentation
 
 ---
 
-**This is a production-grade scaffold.** Customize and extend according to your specific needs.
+**Built by [Vladyslav Zaiets](https://sarmkadan.com) - CTO & Software Architect**
+
+[Portfolio](https://sarmkadan.com) | [GitHub](https://github.com/sarmkadan) | [Telegram](https://t.me/sarmkadan)
