@@ -1,3 +1,7 @@
+[![Build](https://github.com/sarmkadan/dotnet-service-scaffold/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/dotnet-service-scaffold/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
+
 # .NET Service Scaffold
 
 A production-grade template for self-hosted .NET services with built-in monitoring, health checks, SQLite database, and comprehensive service management. Deploy secure, observable, and maintainable services with minimal configuration.
