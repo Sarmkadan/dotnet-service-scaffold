@@ -9,6 +9,7 @@
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Template for self-hosted .NET services - SQLite, systemd, Caddy config, health checks</Description>
     <PackageProjectUrl>https://github.com/sarmkadan/dotnet-service-scaffold</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/dotnet-service-scaffold</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
