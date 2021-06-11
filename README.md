@@ -232,7 +232,7 @@ dotnet-service-scaffold/
 └─────────────────────────────────────────────────────────┘
 ```
 
-## Installation & Setup
+## Quick Start
 
 ### Prerequisites
 
@@ -241,8 +241,6 @@ dotnet-service-scaffold/
 - **Git** for version control
 - **systemd** (for Linux deployments)
 - **Caddy** (optional, for reverse proxy)
-
-### Quick Start
 
 #### 1. Clone the Repository
 
@@ -991,6 +989,32 @@ Benchmarks measured on a single-core Linux VM (2 GHz, 512 MB RAM) with the defau
 - Layer a Redis-backed cache in front of `InMemoryCacheService` for multi-instance deployments
 - For 500+ monitored services, consider partitioning health checks across multiple scaffold instances behind a shared SQLite file on a network share or migrating to PostgreSQL via EF Core
 
+## Testing
+
+Run the full test suite:
+
+```bash
+dotnet test
+```
+
+Run with verbose output:
+
+```bash
+dotnet test --logger "console;verbosity=detailed"
+```
+
+Run a specific test project:
+
+```bash
+dotnet test tests/dotnet-service-scaffold.Tests
+```
+
+Check code coverage:
+
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
 ## Development Guide
 
 ### Adding New Services
@@ -1034,12 +1058,6 @@ dotnet ef database update
 dotnet ef migrations remove
 ```
 
-### Running Tests
-
-```bash
-dotnet test
-```
-
 ### Code Quality
 
 ```bash
@@ -1050,7 +1068,7 @@ dotnet build /p:EnforceCodeStyleInBuild=true
 dotnet format
 ```
 
-## Ecosystem
+## Related Projects
 
 Part of a collection of .NET libraries and tools. See more at [github.com/sarmkadan](https://github.com/sarmkadan).
 
