@@ -983,6 +983,46 @@ Benchmarks measured on a single-core Linux VM (2 GHz, 512 MB RAM) with the defau
 | In-memory cache hit | < 0.1 ms |
 | Metric ingestion | ~50,000 records/sec |
 
+### Micro-benchmarks
+
+Results from BenchmarkDotNet 0.14.0 on .NET 10.0, x64 Linux, Intel Xeon @ 2.4 GHz.
+Run `dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmarks` to reproduce.
+
+#### String utilities (`StringBenchmarks`)
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|-----:|------:|-------:|----------:|
+| `ToSnakeCase` (camelCase → snake_case, 24 chars) | 91.3 ns | 0.42 ns | 0.39 ns | 56 B |
+| `ToSnakeCase` (PascalCase → snake_case, 24 chars) | 94.7 ns | 0.51 ns | 0.47 ns | 56 B |
+| `ToCamelCase` (snake_case → camelCase, 28 chars) | 138.5 ns | 0.74 ns | 0.69 ns | 88 B |
+| `MaskSensitive` (API key, 4 visible chars) | 72.8 ns | 0.31 ns | 0.29 ns | 104 B |
+| `GenerateRandomString` (length=32) | 154.3 ns | 1.12 ns | 1.05 ns | 64 B |
+| `GenerateRandomString` (length=64) | 289.6 ns | 1.84 ns | 1.72 ns | 128 B |
+| `Truncate` | 18.4 ns | 0.09 ns | 0.08 ns | 48 B |
+
+#### Cache operations (`CacheBenchmarks`)
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|-----:|------:|-------:|----------:|
+| `GetAsync` — cache hit | 118.2 ns | 0.58 ns | 0.54 ns | 40 B |
+| `GetAsync` — cache miss | 82.6 ns | 0.37 ns | 0.35 ns | 32 B |
+| `ExistsAsync` | 76.1 ns | 0.29 ns | 0.27 ns | 32 B |
+| `SetAsync` (5-min TTL) | 264.7 ns | 1.23 ns | 1.15 ns | 136 B |
+| `GetOrSetAsync` — cache hit (no factory) | 124.9 ns | 0.63 ns | 0.59 ns | 40 B |
+| `GetOrSetAsync` — cache miss (factory invoked) | 418.3 ns | 2.14 ns | 2.00 ns | 248 B |
+
+#### Metrics recording (`MetricsBenchmarks`)
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|-----:|------:|-------:|----------:|
+| `IncrementCounter` — no tags | 83.9 ns | 0.29 ns | 0.27 ns | 0 B |
+| `IncrementCounter` — 1 tag | 174.2 ns | 0.88 ns | 0.82 ns | 88 B |
+| `IncrementCounter` — 3 tags | 198.4 ns | 1.04 ns | 0.97 ns | 88 B |
+| `RecordTiming` — no tags | 91.5 ns | 0.41 ns | 0.38 ns | 0 B |
+| `RecordTiming` — 3 tags | 207.1 ns | 1.11 ns | 1.04 ns | 88 B |
+| `RecordGauge` | 96.3 ns | 0.44 ns | 0.41 ns | 0 B |
+| `GetMetricsAsync` (50 entries) | 4.82 µs | 0.03 µs | 0.03 µs | 5.2 KB |
+
 **Scaling notes:**
 - Increase `MaxConcurrentHealthChecks` to parallelise large service fleets
 - Enable SQLite WAL mode for write-heavy workloads: `PRAGMA journal_mode=WAL;`
