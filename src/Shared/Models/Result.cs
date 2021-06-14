@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Runtime.CompilerServices;
+
 namespace DotnetServiceScaffold.Shared.Models;
 
 /// <summary>
@@ -25,6 +27,7 @@ public class Result
     /// <summary>
     /// Creates a successful result.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Result Success() => new(true);
 
     /// <summary>
@@ -61,6 +64,7 @@ public class Result<T>
     /// <summary>
     /// Creates a successful result with a value.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Result<T> Success(T value) => new(true, value);
 
     /// <summary>
@@ -76,7 +80,7 @@ public class Result<T>
         new(false, default, exception.Message, exception.GetType().Name);
 
     /// <summary>
-    /// Converts a Result to a Result<T> if it was successful, otherwise fails with the error.
+    /// Converts a Result to a Result&lt;T&gt; if it was successful, otherwise fails with the error.
     /// </summary>
     public static Result<T> FromResult(Result result, T value)
     {

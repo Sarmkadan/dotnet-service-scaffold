@@ -75,6 +75,7 @@ public class RequestLoggingMiddleware
             finally
             {
                 // Copy response body back to original stream
+                responseBody.Position = 0; // Fix: reset position before copying to avoid empty response
                 await responseBody.CopyToAsync(originalBodyStream);
             }
         }
