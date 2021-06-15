@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -172,7 +173,7 @@ public class ExternalApiClient : IExternalApiClient
     /// </summary>
     private void AddHeaders(HttpRequestMessage request, Dictionary<string, string>? headers)
     {
-        if (headers == null)
+        if (headers is null)
             return;
 
         foreach (var header in headers)

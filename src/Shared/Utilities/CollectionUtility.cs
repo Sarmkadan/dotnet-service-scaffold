@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -74,10 +75,10 @@ public static class CollectionUtility
     /// </summary>
     public static bool ContainsSameElements<T>(this IEnumerable<T>? first, IEnumerable<T>? second) where T : notnull
     {
-        if (first == null && second == null)
+        if (first is null && second is null)
             return true;
 
-        if (first == null || second == null)
+        if (first is null || second is null)
             return false;
 
         var firstList = first.ToList();
@@ -206,7 +207,7 @@ public static class CollectionUtility
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrEmpty<T>(this IEnumerable<T>? source)
     {
-        return source == null || !source.Any();
+        return source is null || !source.Any();
     }
 
     /// <summary>
@@ -215,7 +216,7 @@ public static class CollectionUtility
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasItems<T>(this IEnumerable<T>? source)
     {
-        return source != null && source.Any();
+        return source is not null && source.Any();
     }
 
     /// <summary>

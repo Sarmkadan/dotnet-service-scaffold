@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -127,11 +128,11 @@ public class InMemoryCacheService : ICacheService, IDisposable
     public async ValueTask<T?> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
         var cached = await GetAsync<T>(key, cancellationToken);
-        if (cached != null)
+        if (cached is not null)
             return cached;
 
         var value = await factory();
-        if (value != null)
+        if (value is not null)
             await SetAsync(key, value, expiration, cancellationToken);
 
         return value;
