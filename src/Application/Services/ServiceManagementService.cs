@@ -33,6 +33,17 @@ public class ServiceManagementService : IServiceManagementService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Registers a new service with validation, uniqueness checks, and owner verification.
+    /// Creates an audit trail entry on success.
+    /// </summary>
+    /// <param name="serviceName">Unique name for the service.</param>
+    /// <param name="endpoint">Absolute URL of the service endpoint.</param>
+    /// <param name="healthCheckUrl">Absolute URL for health check polling.</param>
+    /// <param name="ownerId">ID of the user who owns this service.</param>
+    /// <returns>The newly created <see cref="ServiceRegistration"/>.</returns>
+    /// <exception cref="ServiceValidationException">Thrown when input validation fails or name is already taken.</exception>
+    /// <exception cref="ServiceScaffoldException">Thrown when the owner user is not found.</exception>
     public async Task<ServiceRegistration> RegisterServiceAsync(
         string serviceName,
         string endpoint,
@@ -123,6 +134,10 @@ public class ServiceManagementService : IServiceManagementService
         return updated;
     }
 
+    /// <summary>
+    /// Permanently removes a service registration and logs the action to the audit trail.
+    /// </summary>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service ID does not exist.</exception>
     public async Task UnregisterServiceAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -142,6 +157,10 @@ public class ServiceManagementService : IServiceManagementService
         return await _serviceRepository.GetUnhealthyServicesAsync();
     }
 
+    /// <summary>
+    /// Disables a service with a specified reason. Disabled services are excluded from routing
+    /// but their registration is preserved for re-enabling.
+    /// </summary>
     public async Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
