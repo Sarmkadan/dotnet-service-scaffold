@@ -50,9 +50,16 @@ public static class Constants
         public const string ValidationError = "VALIDATION_ERROR";
         public const string NotFound = "NOT_FOUND";
         public const string Unauthorized = "UNAUTHORIZED";
+        public const string Forbidden = "FORBIDDEN";
+        public const string Conflict = "CONFLICT";
+        public const string RateLimited = "RATE_LIMITED";
         public const string InternalError = "INTERNAL_ERROR";
         public const string ServiceDisabled = "SERVICE_DISABLED";
+        public const string ServiceUnavailable = "SERVICE_UNAVAILABLE";
         public const string HealthCheckFailed = "HEALTH_CHECK_FAILED";
+        public const string AccountLocked = "ACCOUNT_LOCKED";
+        public const string InvalidApiKey = "INVALID_API_KEY";
+        public const string ApiKeyExpired = "API_KEY_EXPIRED";
     }
 
     public static class ConfigurationKeys
