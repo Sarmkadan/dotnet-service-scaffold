@@ -130,10 +130,15 @@ public class ServiceScaffoldDbContext : DbContext
     }
 
     /// <summary>
-    /// Seeds initial configuration data if the database is empty.
+    /// Initializes the database schema and enables WAL journal mode for better
+    /// write concurrency under load.
     /// </summary>
     public async Task InitializeDatabaseAsync()
     {
         await Database.MigrateAsync();
+        // WAL mode allows concurrent reads during writes, preventing "database is locked"
+        // errors that occur with the default DELETE journal mode under concurrent load.
+        await Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;");
+        await Database.ExecuteSqlRawAsync("PRAGMA synchronous=NORMAL;");
     }
 }
