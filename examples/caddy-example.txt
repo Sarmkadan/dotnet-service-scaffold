@@ -4,16 +4,32 @@
 # =============================================================================
 # Caddy Configuration Example for dotnet-service-scaffold
 #
-# This file shows how to configure Caddy as a reverse proxy for
-# dotnet-service-scaffold with HTTPS, compression, and security headers.
+# Caddy obtains and renews TLS certificates from Let's Encrypt automatically
+# whenever you use a real domain name as the site address. No extra plugins or
+# manual certificate management are required.
 #
-# Usage:
-#   1. Copy this to /etc/caddy/Caddyfile
-#   2. Run: sudo systemctl reload caddy
-#   3. Access via: https://scaffold.example.com
+# QUICK START FOR AUTOMATIC HTTPS
+# --------------------------------
+# 1. Point your domain's A record to this server's IP address.
+# 2. Set the ACME_EMAIL environment variable (used for expiry notifications):
+#      export ACME_EMAIL="you@example.com"
+#    Or hard-code it in the global block below.
+# 3. Copy this file to /etc/caddy/Caddyfile, replace "scaffold.example.com"
+#    with your real domain, then run: sudo systemctl reload caddy
 #
-# Reference: https://caddyserver.com/docs
+# Caddy will automatically obtain a Let's Encrypt certificate on first request.
 #
+# Reference: https://caddyserver.com/docs/automatic-https
+#
+
+# ============================================================================
+# GLOBAL OPTIONS — configure ACME email here or via ACME_EMAIL env var
+# ============================================================================
+{
+    # Email address sent to Let's Encrypt for certificate expiry notifications.
+    # Can be set via environment variable: export ACME_EMAIL="you@example.com"
+    email {$ACME_EMAIL:admin@example.com}
+}
 
 # Basic configuration with automatic HTTPS
 scaffold.example.com {
@@ -184,18 +200,14 @@ scaffold.example.com {
 # }
 
 # ============================================================================
-# GLOBAL SETTINGS (uncomment and customize as needed)
+# GLOBAL SETTINGS — moved to the top of this file (active global block above)
 # ============================================================================
 
-# Global email for certificate registration
+# DNS-based ACME challenge (useful when port 80 is not reachable):
 # {
-#     email support@example.com
-# }
-
-# Global ACL for rate limiting
-# {
+#     email {$ACME_EMAIL:admin@example.com}
 #     acme_dns cloudflare {
-#         api_token YOUR_CLOUDFLARE_API_TOKEN
+#         api_token {$CLOUDFLARE_API_TOKEN}
 #     }
 # }
 
@@ -207,27 +219,35 @@ scaffold.example.com {
 #    sudo apt-get update
 #    sudo apt-get install -y caddy
 #
-# 2. Create backup of existing config:
+# 2. Set your ACME email (for Let's Encrypt expiry notifications):
+#    sudo systemctl edit caddy
+#    # Add under [Service]:
+#    # Environment="ACME_EMAIL=you@example.com"
+#
+# 3. Create backup of existing config:
 #    sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak
 #
-# 3. Copy this configuration:
+# 4. Copy this configuration:
 #    sudo cp caddy-example.txt /etc/caddy/Caddyfile
 #
-# 4. Edit the configuration:
+# 5. Edit the configuration:
 #    sudo nano /etc/caddy/Caddyfile
 #    - Change "scaffold.example.com" to your domain
-#    - Update email address
+#    - Update the ACME_EMAIL default value if not using the env var
 #
-# 5. Test configuration:
+# 6. Test configuration:
 #    sudo caddy validate --config /etc/caddy/Caddyfile
 #
-# 6. Reload Caddy:
+# 7. Reload Caddy:
 #    sudo systemctl reload caddy
 #
-# 7. Check status:
+# 8. Verify HTTPS is working (certificate may take a few seconds on first request):
+#    curl -v https://scaffold.example.com/health
+#
+# 9. Check status:
 #    sudo systemctl status caddy
 #
-# 8. View logs:
+# 10. View logs:
 #    sudo journalctl -u caddy -f
 #
 # ============================================================================
