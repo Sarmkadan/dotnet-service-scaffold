@@ -94,7 +94,7 @@ public static class EncryptionUtility
         using (var aes = new AesGcm(key, 16))
         {
             byte[] nonce = new byte[12]; // 96 bits for GCM
-            RandomNumberGenerator.GetBytes(nonce);
+            RandomNumberGenerator.Fill(nonce);
 
             var plainBytes = Encoding.UTF8.GetBytes(plaintext);
             var ciphertext = new byte[plainBytes.Length];

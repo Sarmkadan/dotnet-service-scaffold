@@ -50,7 +50,7 @@ public sealed class ServiceDiscoveryRecord
 
     /// <summary>
     /// Gets or sets the failover priority. Lower values are preferred when the
-    /// load-balancing strategy is <see cref="LoadBalancingStrategy.Priority"/>.
+    /// load-balancing strategy is priority-based.
     /// </summary>
     [Range(0, 65535)]
     public int Priority { get; set; }

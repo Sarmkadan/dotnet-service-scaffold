@@ -33,6 +33,15 @@ Perfect for:
 - **Structured Logging**: Serilog integration with console and file output
 - **Health Endpoints**: Standard `/health` and `/status` endpoints
 
+#### Docker Compose Generator
+Generate Docker Compose YAML programmatically through the API or infrastructure service. The generator supports application service definitions, named volumes, bridge networking, resource limits, and optional Caddy or Redis sidecars for deployment scaffolding.
+
+#### Prometheus Metrics Endpoint
+Expose in-memory application metrics through a Prometheus-compatible `/metrics` endpoint. Metrics are formatted using the Prometheus text exposition format, with support for counters, gauges, timer summaries, and tagged labels.
+
+#### Structured Logging with Correlation IDs
+Configure Serilog enrichment through `StructuredLogging` settings in `appsettings.json`. Incoming requests can automatically receive correlation IDs, request context properties, machine name, and environment metadata for traceable structured logs.
+
 ### Security & Access Control
 - **User Management**: Full authentication, password management, and account lockout protection
 - **API Keys**: Secure API authentication with IP whitelisting and scope management
