@@ -113,7 +113,7 @@ public static class StringUtility
     public static string GenerateRandomString(int length = 32)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        var random = new Random();
+        var random = Random.Shared; // Fix: use thread-safe shared Random instance
         var result = new StringBuilder();
 
         for (int i = 0; i < length; i++)
