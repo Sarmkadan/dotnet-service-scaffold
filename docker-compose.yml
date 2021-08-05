@@ -1,0 +1,247 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+# Docker Compose configuration for dotnet-service-scaffold
+#
+# Usage:
+#   docker-compose up -d          # Start services in background
+#   docker-compose logs -f        # View logs
+#   docker-compose down           # Stop and remove containers
+#   docker-compose down -v        # Stop and remove volumes too
+#
+
+version: '3.8'
+
+services:
+  # Main application service
+  scaffold:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dotnet-scaffold
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Data Source=/app/data/scaffold.db
+    volumes:
+      - scaffold-data:/app/data
+      - scaffold-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - scaffold-network
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Optional: Caddy reverse proxy
+  # Uncomment to enable and configure HTTPS
+  # caddy:
+  #   image: caddy:latest
+  #   container_name: scaffold-caddy
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./examples/caddy-example.txt:/etc/caddy/Caddyfile:ro
+  #     - caddy-data:/data
+  #     - caddy-config:/config
+  #   environment:
+  #     ACME_AGREE: "true"
+  #   networks:
+  #     - scaffold-network
+  #   depends_on:
+  #     - scaffold
+
+  # Optional: PostgreSQL database
+  # Use instead of SQLite for production deployments
+  # Uncomment to enable
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: scaffold-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: scaffold
+  #     POSTGRES_USER: scaffold
+  #     POSTGRES_PASSWORD: changeme  # Change this!
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - scaffold-network
+  #   # Only expose postgres to scaffold service, not to host
+  #   expose:
+  #     - "5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U scaffold -d scaffold"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # Optional: Redis for distributed caching
+  # Uncomment to enable
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: scaffold-redis
+  #   restart: unless-stopped
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - scaffold-network
+  #   expose:
+  #     - "6379"
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+
+volumes:
+  # Application data (SQLite database)
+  scaffold-data:
+    driver: local
+
+  # Application logs
+  scaffold-logs:
+    driver: local
+
+  # Optional volumes for other services
+  # caddy-data:
+  #   driver: local
+  # caddy-config:
+  #   driver: local
+  # postgres-data:
+  #   driver: local
+  # redis-data:
+  #   driver: local
+
+networks:
+  scaffold-network:
+    driver: bridge
+
+# =============================================================================
+# DEPLOYMENT INSTRUCTIONS
+# =============================================================================
+#
+# 1. Build and start services:
+#    docker-compose up -d
+#
+# 2. Verify services are running:
+#    docker-compose ps
+#
+# 3. View logs:
+#    docker-compose logs -f scaffold
+#
+# 4. Check health:
+#    curl http://localhost:5000/health
+#
+# 5. Access API:
+#    curl http://localhost:5000/status
+#
+# 6. Stop services:
+#    docker-compose down
+#
+# 7. Remove all data (volumes):
+#    docker-compose down -v
+#
+# =============================================================================
+# CONFIGURATION OPTIONS
+# =============================================================================
+#
+# Environment variables can be set:
+#   1. In docker-compose.yml (as shown above)
+#   2. In .env file (create .env in same directory)
+#   3. Via command line: docker-compose -e VAR=value up -d
+#
+# Example .env file:
+#   ASPNETCORE_ENVIRONMENT=Production
+#   DB_CONNECTION_STRING=Data Source=/app/data/scaffold.db
+#
+# =============================================================================
+# SCALING & LOAD BALANCING
+# =============================================================================
+#
+# Scale the application to multiple instances:
+#   docker-compose up -d --scale scaffold=3
+#
+# Then use a load balancer (Caddy/Nginx) to distribute traffic.
+#
+# =============================================================================
+# MONITORING & DEBUGGING
+# =============================================================================
+#
+# View real-time logs:
+#   docker-compose logs -f
+#
+# View logs for specific service:
+#   docker-compose logs -f scaffold
+#
+# Follow last 100 lines:
+#   docker-compose logs -f --tail=100 scaffold
+#
+# Execute command in container:
+#   docker-compose exec scaffold bash
+#
+# Inspect container:
+#   docker ps
+#   docker inspect dotnet-scaffold
+#
+# =============================================================================
+# PRODUCTION RECOMMENDATIONS
+# =============================================================================
+#
+# 1. Use dedicated database:
+#    - Uncomment and configure PostgreSQL service
+#    - Update ConnectionStrings__DefaultConnection
+#
+# 2. Use dedicated cache:
+#    - Uncomment and configure Redis service
+#    - Update IConfiguration for Redis
+#
+# 3. Add reverse proxy:
+#    - Uncomment and configure Caddy service
+#    - Set up proper domain and SSL
+#
+# 4. Configure resource limits:
+#    - Set cpus and memory limits (as shown above)
+#    - Monitor usage: docker stats
+#
+# 5. Implement logging:
+#    - Configure log driver (json-file, splunk, etc.)
+#    - Send logs to centralized service
+#
+# 6. Security:
+#    - Use environment file for secrets (.env)
+#    - Don't commit .env to version control
+#    - Use secrets for sensitive data
+#    - Run containers as non-root user
+#    - Limit network exposure
+#
+# 7. Backups:
+#    - Backup volumes regularly
+#    - Document recovery procedures
+#    - Test restore process
+#
+# Example backup command:
+#   docker run --rm -v scaffold-data:/data -v $(pwd):/backup \
+#     alpine tar czf /backup/scaffold-backup.tar.gz -C / data
+#
+# Example restore command:
+#   docker run --rm -v scaffold-data:/data -v $(pwd):/backup \
+#     alpine tar xzf /backup/scaffold-backup.tar.gz -C /
+#
+# =============================================================================
