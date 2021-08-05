@@ -20,7 +20,7 @@ public class WebhookClient : IWebhookClient
     private const int MaxRetries = 3;
     private const int InitialRetryDelayMs = 1000;
 
-    public WebhookClient(IHttpClientFactory httpClientFactory, ILogger<WebhookClient> logger)
+    public WebhookClient(ICustomHttpClientFactory httpClientFactory, ILogger<WebhookClient> logger)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
