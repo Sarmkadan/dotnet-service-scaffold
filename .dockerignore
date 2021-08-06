@@ -1,0 +1,60 @@
+# Common files and directories to ignore in Docker builds
+# =========================================================
+
+# Build output directories
+bin/
+obj/
+
+# Version control
+.git/
+.gitignore
+
+# Test files
+*.Tests/
+tests/
+
+# Documentation
+*.md
+docs/
+
+# IDE specific files
+.idea/
+.vscode/
+.vs/
+*.sln.user
+*.userosscache
+
+# Runtime data files
+*.db
+*.db-shm
+*.db-wal
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# User-specific files
+.DS_Store
+Thumbs.db
+
+# Docker cache
+.dockerignore
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Build artifacts
+*.pdb
+*.dll
+*.exe
+*.so
+*.cache
