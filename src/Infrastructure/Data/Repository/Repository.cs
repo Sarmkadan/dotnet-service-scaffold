@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -79,7 +80,7 @@ public class Repository<T> : IRepository<T> where T : class
         try
         {
             var entity = await GetByIdAsync(id);
-            if (entity != null)
+            if (entity is not null)
             {
                 _dbSet.Remove(entity);
                 await SaveChangesAsync();
@@ -95,7 +96,7 @@ public class Repository<T> : IRepository<T> where T : class
     {
         try
         {
-            return await _dbSet.FindAsync(id) != null;
+            return await _dbSet.FindAsync(id) is not null;
         }
         catch (Exception ex)
         {

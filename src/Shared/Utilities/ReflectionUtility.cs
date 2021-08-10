@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -45,7 +46,7 @@ public static class ReflectionUtility
             propertyName,
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
-        if (property == null || !property.CanWrite)
+        if (property is null || !property.CanWrite)
             return false;
 
         try
@@ -80,7 +81,7 @@ public static class ReflectionUtility
     /// </summary>
     public static bool HasAttribute<T>(MemberInfo member) where T : Attribute
     {
-        return member.GetCustomAttribute<T>() != null;
+        return member.GetCustomAttribute<T>() is not null;
     }
 
     /// <summary>
@@ -126,7 +127,7 @@ public static class ReflectionUtility
     public static object? InvokeMethod(object obj, string methodName, params object?[] parameters)
     {
         var method = GetMethod(obj.GetType(), methodName);
-        if (method == null)
+        if (method is null)
             return null;
 
         return method.Invoke(obj, parameters);
@@ -210,7 +211,7 @@ public static class ReflectionUtility
     /// </summary>
     public static object? ConvertValue(object? value, Type targetType)
     {
-        if (value == null)
+        if (value is null)
             return null;
 
         if (targetType.IsAssignableFrom(value.GetType()))

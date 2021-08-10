@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -59,11 +60,11 @@ public class ServiceManagementService : IServiceManagementService
             throw new ServiceValidationException(errors);
 
         var owner = await _userRepository.GetByIdAsync(ownerId);
-        if (owner == null)
+        if (owner is null)
             throw new ServiceScaffoldException("Service owner not found", "OWNER_NOT_FOUND");
 
         var existingService = await _serviceRepository.GetByNameAsync(serviceName);
-        if (existingService != null)
+        if (existingService is not null)
             throw new ServiceValidationException("Service name already registered");
 
         var service = new ServiceRegistration
@@ -125,7 +126,7 @@ public class ServiceManagementService : IServiceManagementService
     public async Task UnregisterServiceAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         await _serviceRepository.DeleteAsync(serviceId);
@@ -144,7 +145,7 @@ public class ServiceManagementService : IServiceManagementService
     public async Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         service.Disable(reason);
@@ -160,7 +161,7 @@ public class ServiceManagementService : IServiceManagementService
     public async Task<ServiceRegistration> EnableServiceAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         service.Enable();
@@ -176,7 +177,7 @@ public class ServiceManagementService : IServiceManagementService
     public async Task<decimal> GetServiceSuccessRateAsync(Guid serviceId, int minutesBack = 60)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         if (service.TotalRequests == 0)

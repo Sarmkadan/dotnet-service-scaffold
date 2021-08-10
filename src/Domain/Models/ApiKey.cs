@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -11,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// API authentication key for programmatic access to the scaffold system.
 /// </summary>
-public class ApiKey
+public sealed class ApiKey
 {
     [Key]
     public Guid Id { get; set; }

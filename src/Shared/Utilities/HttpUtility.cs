@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -79,7 +80,7 @@ public static class HttpUtility
     /// </summary>
     public static string BuildQueryString(Dictionary<string, string> parameters)
     {
-        if (parameters == null || parameters.Count == 0)
+        if (parameters is null || parameters.Count == 0)
             return string.Empty;
 
         var query = string.Join("&", parameters
@@ -212,7 +213,7 @@ public static class HttpUtility
     {
         var url = baseUrl.TrimEnd('/') + "/" + path.TrimStart('/');
 
-        if (queryParams != null && queryParams.Count > 0)
+        if (queryParams is not null && queryParams.Count > 0)
         {
             url += "?" + BuildQueryString(queryParams);
         }

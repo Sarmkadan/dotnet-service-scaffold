@@ -97,8 +97,9 @@ app.MapGet("/status", async (ServiceScaffoldDbContext context) =>
             version = "1.0.0"
         });
     }
-    catch
+    catch (Exception ex)
     {
+        Log.Error(ex, "Error while checking database status in /status endpoint.");
         return Results.StatusCode(503);
     }
 })

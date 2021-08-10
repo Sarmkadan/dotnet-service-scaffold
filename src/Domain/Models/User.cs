@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -73,7 +74,7 @@ public class User
         if (!IsLocked)
             return false;
 
-        if (LockedUntil == null)
+        if (LockedUntil is null)
             return true;
 
         if (DateTime.UtcNow >= LockedUntil)
