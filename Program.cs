@@ -8,15 +8,30 @@
 using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Infrastructure.Data;
 using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using DotnetServiceScaffold.Infrastructure.Extensions;
 using DotnetServiceScaffold.Infrastructure.HealthChecks;
+using DotnetServiceScaffold.Infrastructure.Logging;
+using DotnetServiceScaffold.Infrastructure.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
+var structuredLoggingOptions = builder.Configuration
+    .GetSection("StructuredLogging")
+    .Get<StructuredLoggingOptions>() ?? new StructuredLoggingOptions();
+
+var minimumLevel = Enum.TryParse<LogEventLevel>(
+    structuredLoggingOptions.MinimumLevel,
+    ignoreCase: true,
+    out var parsedMinimumLevel)
+    ? parsedMinimumLevel
+    : LogEventLevel.Information;
+
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
+    .MinimumLevel.Is(minimumLevel)
+    .EnrichFromOptions(structuredLoggingOptions)
     .WriteTo.Console(
         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .WriteTo.File(
@@ -48,6 +63,9 @@ builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
 builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddSingleton<IMetricsService, MetricsService>();
+builder.Services.AddSingleton<IPrometheusFormatter, PrometheusFormatter>();
 
 // Register HTTP Client for health checks
 builder.Services.AddHttpClient<IHealthCheckService, HealthCheckService>()
@@ -89,6 +107,11 @@ if (app.Environment.IsDevelopment())
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Service Scaffold API V1");
     });
+}
+
+if (structuredLoggingOptions.EnableCorrelationId)
+{
+    app.UseCorrelationId();
 }
 
 app.UseHttpsRedirection();
@@ -140,6 +163,16 @@ app.MapGet("/status", async (ServiceScaffoldDbContext context) =>
 .Produces(503)
 .WithName("Status")
 .WithDescription("Returns the current service status");
+
+app.MapGet("/metrics", async (IMetricsService metricsService, IPrometheusFormatter prometheusFormatter) =>
+{
+    var metrics = await metricsService.GetMetricsAsync();
+    var text = prometheusFormatter.Format(metrics, "scaffold");
+    return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+})
+.AllowAnonymous()
+.WithName("Prometheus Metrics")
+.WithDescription("Exposes metrics in Prometheus text format");
 
 // Initialize database
 using (var scope = app.Services.CreateScope())
