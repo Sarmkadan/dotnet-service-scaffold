@@ -575,124 +575,15 @@ Response:
 
 ## Usage Examples
 
-### Example 1: Basic Service Setup
+We provide several practical examples to help you get started with the scaffold API. You can find them in the `examples/` directory:
 
-Create a file `setup-service.sh`:
-
-```bash
-#!/bin/bash
-
-API_KEY="sk_live_your_api_key_here"
-BASE_URL="http://localhost:5000"
-
-# Register a service
-curl -X POST $BASE_URL/api/service/register \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $API_KEY" \
-  -d '{
-    "name": "PaymentService",
-    "description": "Handles payment processing",
-    "healthCheckUrl": "https://payments.internal/health",
-    "ownerId": "user-123",
-    "isEnabled": true
-  }'
-```
-
-### Example 2: Monitoring Multiple Services
-
-```bash
-#!/bin/bash
-
-API_KEY="sk_live_your_api_key_here"
-BASE_URL="http://localhost:5000"
-
-SERVICES=("UserService" "PaymentService" "NotificationService")
-
-for service in "${SERVICES[@]}"; do
-  response=$(curl -s "$BASE_URL/api/service?name=$service" \
-    -H "X-API-Key: $API_KEY")
-  
-  status=$(echo $response | jq -r '.data[0].status')
-  echo "$service: $status"
-done
-```
-
-### Example 3: Health Check Automation
-
-```bash
-#!/bin/bash
-
-API_KEY="sk_live_your_api_key_here"
-BASE_URL="http://localhost:5000"
-SERVICE_ID="svc-uuid"
-
-# Check health every 5 minutes
-while true; do
-  result=$(curl -s -X POST "$BASE_URL/api/healthcheck/$SERVICE_ID/check" \
-    -H "X-API-Key: $API_KEY")
-  
-  status=$(echo $result | jq -r '.data.status')
-  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-  
-  echo "[$timestamp] Health check: $status"
-  
-  sleep 300  # 5 minutes
-done
-```
-
-### Example 4: API Key Management
-
-```bash
-#!/bin/bash
-
-API_KEY="sk_live_your_api_key_here"
-BASE_URL="http://localhost:5000"
-
-# Create new API key with IP whitelist
-curl -X POST "$BASE_URL/api/apikey/create" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $API_KEY" \
-  -d '{
-    "name": "CI/CD Pipeline",
-    "description": "Used for automated deployments",
-    "ipWhitelist": ["10.0.0.0/8", "172.16.0.0/12"],
-    "scopes": ["service:read", "service:write", "healthcheck:read"]
-  }'
-```
-
-### Example 5: Audit Log Analysis
-
-```bash
-#!/bin/bash
-
-API_KEY="sk_live_your_api_key_here"
-BASE_URL="http://localhost:5000"
-
-# Get audit logs for the last 7 days
-curl -s "$BASE_URL/api/auditlog?days=7" \
-  -H "X-API-Key: $API_KEY" | \
-  jq '.data[] | select(.action == "ServiceRegistered") | {timestamp, userId, entityId}'
-```
-
-### Example 6: Metrics Dashboard Data
-
-```bash
-#!/bin/bash
-
-API_KEY="sk_live_your_api_key_here"
-BASE_URL="http://localhost:5000"
-
-# Get system-wide metrics
-curl -s "$BASE_URL/api/metrics" \
-  -H "X-API-Key: $API_KEY" | \
-  jq '.data | map({
-    serviceId,
-    cpuUsage,
-    memoryUsage,
-    errorRate,
-    avgResponseTime: .averageResponseTime
-  })'
-```
+- `BasicUsage.cs`: Shows a minimal setup to register a service.
+- `AdvancedUsage.cs`: Demonstrates configuration, custom options, and robust error handling.
+- `IntegrationExample.cs`: Illustrates how to wire the scaffold into ASP.NET Core Dependency Injection.
+- `api-usage.cs`: General API usage examples.
+- `health-check-monitor.cs`: Example for monitoring services.
+- `systemd-deployment.sh`: Deployment script for Linux.
+- `caddy-example.txt`: Example Caddy configuration.
 
 ## Domain Models
 
