@@ -13,10 +13,28 @@ namespace DotnetServiceScaffold.Application.Services;
 /// </summary>
 public interface IUserService
 {
+    /// <summary>
+    /// Creates a new user.
+    /// </summary>
+    /// <param name="email">User email</param>
+    /// <param name="fullName">User full name</param>
+    /// <param name="password">User password</param>
+    /// <returns>The created user</returns>
     Task<User> CreateUserAsync(string email, string fullName, string password);
 
+    /// <summary>
+    /// Retrieves a user by email.
+    /// </summary>
+    /// <param name="email">User email</param>
+    /// <returns>The user if found, otherwise null</returns>
     Task<User?> GetUserByEmailAsync(string email);
 
+    /// <summary>
+    /// Authenticates a user.
+    /// </summary>
+    /// <param name="email">User email</param>
+    /// <param name="password">User password</param>
+    /// <returns>The authenticated user, otherwise null</returns>
     Task<User?> AuthenticateUserAsync(string email, string password);
 
     Task<User> UpdateUserAsync(User user);

@@ -13,8 +13,19 @@ namespace DotnetServiceScaffold.Application.Services;
 /// </summary>
 public interface IHealthCheckService
 {
+    /// <summary>
+    /// Performs a health check for a specific service.
+    /// </summary>
+    /// <param name="serviceId">The ID of the service to check</param>
+    /// <returns>The result of the health check</returns>
     Task<HealthCheckResult> PerformHealthCheckAsync(Guid serviceId);
 
+    /// <summary>
+    /// Retrieves the health check history for a service.
+    /// </summary>
+    /// <param name="serviceId">The ID of the service</param>
+    /// <param name="count">The number of records to retrieve</param>
+    /// <returns>A collection of health check results</returns>
     Task<IEnumerable<HealthCheckResult>> GetServiceHealthHistoryAsync(Guid serviceId, int count = 20);
 
     Task<decimal> GetServiceSuccessRateAsync(Guid serviceId, int minutesBack = 60);
