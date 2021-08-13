@@ -57,13 +57,13 @@ public class CacheBenchmarks
         => _cache.ExistsAsync("services:all");
 
     [Benchmark(Description = "GetOrSetAsync — hot path (cache hit, no factory call)")]
-    public ValueTask<CachedServiceList> GetOrSetHit()
+    public ValueTask<CachedServiceList?> GetOrSetHit()
         => _cache.GetOrSetAsync("services:all",
             () => Task.FromResult(_serviceList),
             TimeSpan.FromMinutes(5));
 
     [Benchmark(Description = "GetOrSetAsync — cold path (cache miss, factory invoked)")]
-    public ValueTask<CachedServiceList> GetOrSetMiss()
+    public ValueTask<CachedServiceList?> GetOrSetMiss()
         => _cache.GetOrSetAsync($"services:cold:{Guid.NewGuid()}",
             () => Task.FromResult(_serviceList),
             TimeSpan.FromMinutes(5));

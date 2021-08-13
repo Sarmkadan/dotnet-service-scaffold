@@ -71,7 +71,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
 
         return await _dbSet
             .Where(s => s.IsEnabled &&
-                        (s.LastHealthCheckAt is null ||
+                        (s.LastHealthCheckAt == null ||
                          s.LastHealthCheckAt < threshold))
             .OrderBy(s => s.LastHealthCheckAt)
             .ToListAsync();

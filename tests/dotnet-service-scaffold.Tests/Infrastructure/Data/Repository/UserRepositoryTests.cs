@@ -4,17 +4,15 @@
 // CTO & Software Architect
 // =============================================================================
 
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using System;
-using System.Threading.Tasks;
-using dotnet_service_scaffold.Domain.Models;
-using dotnet_service_scaffold.Infrastructure.Data;
-using dotnet_service_scaffold.Infrastructure.Data.Repository;
 
-namespace dotnet_service_scaffold.Tests.Infrastructure.Data.Repository;
+namespace DotnetServiceScaffold.Tests.Infrastructure.Data.Repository;
 
 public class UserRepositoryTests : IDisposable
 {

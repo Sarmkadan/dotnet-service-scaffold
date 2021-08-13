@@ -4,20 +4,18 @@
 // CTO & Software Architect
 // =============================================================================
 
+using DotnetServiceScaffold.Shared.Utilities;
 using FluentAssertions;
 using Xunit;
-using System.Collections.Generic;
-using System.Linq;
-using dotnet_service_scaffold.Shared.Utilities;
 
-namespace dotnet_service_scaffold.Tests.Shared.Utilities;
+namespace DotnetServiceScaffold.Tests.Shared.Utilities;
 
 public class CollectionUtilityTests
 {
     [Fact]
     public void IsNullOrEmpty_ShouldReturnTrueForNullCollection()
     {
-        IEnumerable<string> collection = null;
+        IEnumerable<string>? collection = null;
         CollectionUtility.IsNullOrEmpty(collection).Should().BeTrue();
     }
 

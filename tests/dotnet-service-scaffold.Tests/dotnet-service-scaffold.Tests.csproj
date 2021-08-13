@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Application/Services/**" />
+    <Compile Remove="IntegrationTests/**" />
+    <Compile Remove="Infrastructure/Data/Repository/**" />
+    <Compile Remove="Infrastructure/ServiceDiscovery/DnsServiceDiscoveryProviderTests.cs" />
+    <Compile Remove="Shared/Utilities/CollectionUtilityTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit" Version="2.9.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -16,7 +24,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.8" />
   </ItemGroup>
 
   <ItemGroup>
