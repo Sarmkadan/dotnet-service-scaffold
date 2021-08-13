@@ -276,30 +276,55 @@ dotnet run
 ```
 
 The API will be available at:
-- **REST API**: `http://localhost:5000`
-- **Swagger UI**: `http://localhost:5000/swagger`
-- **Health Check**: `http://localhost:5000/health`
-- **Status**: `http://localhost:5000/status`
+- **REST API**: `http://localhost:8080`
+- **Swagger UI**: `http://localhost:8080/swagger`
+- **Health Check**: `http://localhost:8080/health`
+- **Status**: `http://localhost:8080/status`
 
 #### 5. Verify Installation
 
 ```bash
-curl http://localhost:5000/health
-curl http://localhost:5000/status
+curl http://localhost:8080/health
+curl http://localhost:8080/status
 ```
 
-### Using Docker
+## Using Docker
 
-```bash
-docker build -t dotnet-service-scaffold .
-docker run -p 5000:5000 dotnet-service-scaffold
-```
+You can run this service using Docker for a containerized deployment.
 
-Or with docker-compose:
+### Build and Run with Docker
 
-```bash
-docker-compose up
-```
+1. **Build the image**:
+   ```bash
+   docker build -t dotnet-service-scaffold .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -d -p 8080:8080 --name dotnet-service-scaffold dotnet-service-scaffold
+   ```
+
+The application will be accessible at `http://localhost:8080`.
+
+### Using Docker Compose
+
+For a complete setup, including database and other services (if configured), use Docker Compose:
+
+1. **Start all services**:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **View logs**:
+   ```bash
+   docker-compose logs -f scaffold
+   ```
+
+3. **Stop services**:
+   ```bash
+   docker-compose down
+   ```
+
 
 ## Configuration
 
