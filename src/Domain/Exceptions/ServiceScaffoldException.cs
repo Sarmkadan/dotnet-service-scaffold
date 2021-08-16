@@ -116,6 +116,17 @@ public class DataAccessException : ServiceScaffoldException
 }
 
 /// <summary>
+/// Thrown when configuration is invalid or missing.
+/// </summary>
+public class ConfigurationException : ServiceScaffoldException
+{
+    public ConfigurationException(string message)
+        : base(message, "CONFIGURATION_ERROR")
+    {
+    }
+}
+
+/// <summary>
 /// Thrown when an operation exceeds a resource limit.
 /// </summary>
 public class ResourceExhaustedException : ServiceScaffoldException
