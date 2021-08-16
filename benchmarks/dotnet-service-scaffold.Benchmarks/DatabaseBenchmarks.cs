@@ -6,6 +6,7 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
+using DotnetServiceScaffold.Domain.Enums;
 using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Data;
 using Microsoft.Data.Sqlite;
@@ -25,7 +26,6 @@ public class DatabaseBenchmarks : IDisposable
     private SqliteConnection _connection = default!;
     private User _testUser = default!;
     private ServiceRegistration _testService = default!;
-    private HealthCheckResult _testHealthCheck = default!;
 
     [GlobalSetup]
     public async Task Setup()
@@ -45,9 +45,9 @@ public class DatabaseBenchmarks : IDisposable
         // Create test data
         _testUser = new User
         {
-            Id = Guid.NewGuid().ToString(),
-            Username = "benchmark_user",
+            Id = Guid.NewGuid(),
             Email = "benchmark@example.com",
+            FullName = "Benchmark User",
             PasswordHash = "$2a$11$somehashedpassword",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
@@ -56,10 +56,12 @@ public class DatabaseBenchmarks : IDisposable
 
         _testService = new ServiceRegistration
         {
-            Id = Guid.NewGuid().ToString(),
-            Name = "BenchmarkService",
+            Id = Guid.NewGuid(),
+            ServiceName = "BenchmarkService",
             Description = "Service for benchmarking database operations",
             HealthCheckUrl = "http://localhost:8080/health",
+            Version = "1.0.0",
+            Endpoint = "http://localhost:8080",
             Status = ServiceStatus.Healthy,
             IsEnabled = true,
             OwnerId = _testUser.Id,
@@ -67,21 +69,9 @@ public class DatabaseBenchmarks : IDisposable
             UpdatedAt = DateTime.UtcNow
         };
 
-        _testHealthCheck = new HealthCheckResult
-        {
-            Id = Guid.NewGuid().ToString(),
-            ServiceId = _testService.Id,
-            Status = HealthStatus.Healthy,
-            ResponseTime = 42,
-            StatusCode = 200,
-            Message = "Healthy",
-            CheckedAt = DateTime.UtcNow
-        };
-
         // Seed initial data
         _dbContext.Users.Add(_testUser);
         _dbContext.ServiceRegistrations.Add(_testService);
-        _dbContext.HealthCheckResults.Add(_testHealthCheck);
         await _dbContext.SaveChangesAsync();
     }
 
@@ -92,14 +82,20 @@ public class DatabaseBenchmarks : IDisposable
         _connection.Dispose();
     }
 
+    public void Dispose()
+    {
+        _dbContext?.Dispose();
+        _connection?.Dispose();
+    }
+
     [Benchmark(Description = "User Create - insert new user")]
     public async Task CreateUser()
     {
         var user = new User
         {
-            Id = Guid.NewGuid().ToString(),
-            Username = "new_benchmark_user",
+            Id = Guid.NewGuid(),
             Email = "new_benchmark@example.com",
+            FullName = "New Benchmark User",
             PasswordHash = "$2a$11$anotherhashedpassword",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
@@ -122,7 +118,7 @@ public class DatabaseBenchmarks : IDisposable
     {
         var user = await _dbContext.Users
             .FirstAsync(u => u.Email == "benchmark@example.com");
-        user.Username = "updated_benchmark_user";
+        user.FullName = "Updated Benchmark User";
         user.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
     }
@@ -141,10 +137,12 @@ public class DatabaseBenchmarks : IDisposable
     {
         var service = new ServiceRegistration
         {
-            Id = Guid.NewGuid().ToString(),
-            Name = "NewBenchmarkService",
+            Id = Guid.NewGuid(),
+            ServiceName = "NewBenchmarkService",
             Description = "New service for benchmarking",
             HealthCheckUrl = "http://localhost:9090/health",
+            Version = "1.0.0",
+            Endpoint = "http://localhost:9090",
             Status = ServiceStatus.Healthy,
             IsEnabled = true,
             OwnerId = _testUser.Id,
@@ -162,81 +160,14 @@ public class DatabaseBenchmarks : IDisposable
         await _dbContext.ServiceRegistrations.ToListAsync();
     }
 
-    [Benchmark(Description = "HealthCheck Create - insert health check result")]
-    public async Task CreateHealthCheck()
-    {
-        var healthCheck = new HealthCheckResult
-        {
-            Id = Guid.NewGuid().ToString(),
-            ServiceId = _testService.Id,
-            Status = HealthStatus.Healthy,
-            ResponseTime = 100,
-            StatusCode = 200,
-            Message = "Healthy",
-            CheckedAt = DateTime.UtcNow
-        };
-
-        _dbContext.HealthCheckResults.Add(healthCheck);
-        await _dbContext.SaveChangesAsync();
-    }
-
-    [Benchmark(Description = "HealthCheck Query - get recent health checks for service")]
-    public async Task QueryHealthChecks()
-    {
-        await _dbContext.HealthCheckResults
-            .Where(h => h.ServiceId == _testService.Id)
-            .OrderByDescending(h => h.CheckedAt)
-            .Take(10)
-            .ToListAsync();
-    }
-
-    [Benchmark(Description = "Service Metrics Create - insert service metric")]
-    public async Task CreateServiceMetric()
-    {
-        var metric = new ServiceMetric
-        {
-            Id = Guid.NewGuid().ToString(),
-            ServiceId = _testService.Id,
-            CpuUsage = 45.2m,
-            MemoryUsage = 512,
-            DiskUsage = 2048,
-            AverageResponseTime = 125,
-            RequestsPerMinute = 450,
-            ErrorRate = 0.2m,
-            RecordedAt = DateTime.UtcNow
-        };
-
-        _dbContext.ServiceMetrics.Add(metric);
-        await _dbContext.SaveChangesAsync();
-    }
-
-    [Benchmark(Description = "AuditLog Create - insert audit log entry")]
-    public async Task CreateAuditLog()
-    {
-        var auditLog = new AuditLog
-        {
-            Id = Guid.NewGuid().ToString(),
-            UserId = _testUser.Id,
-            Action = "ServiceRegistered",
-            EntityType = "Service",
-            EntityId = _testService.Id,
-            Changes = "{\"name\":\"BenchmarkService\",\"status\":\"Healthy\"}",
-            Timestamp = DateTime.UtcNow,
-            IpAddress = "192.168.1.100"
-        };
-
-        _dbContext.AuditLogs.Add(auditLog);
-        await _dbContext.SaveChangesAsync();
-    }
-
     [Benchmark(Description = "Bulk Create - insert 100 users in batch")]
     public async Task BulkCreateUsers()
     {
         var users = Enumerable.Range(0, 100).Select(i => new User
         {
-            Id = Guid.NewGuid().ToString(),
-            Username = $"bulk_user_{i}",
+            Id = Guid.NewGuid(),
             Email = $"bulk_{i}@example.com",
+            FullName = $"Bulk User {i}",
             PasswordHash = "$2a$11$hashedpassword",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
@@ -256,9 +187,9 @@ public class DatabaseBenchmarks : IDisposable
         {
             var user = new User
             {
-                Id = Guid.NewGuid().ToString(),
-                Username = $"tx_user_{i}",
+                Id = Guid.NewGuid(),
                 Email = $"tx_{i}@example.com",
+                FullName = $"Transaction User {i}",
                 PasswordHash = "$2a$11$hashedpassword",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
@@ -270,20 +201,4 @@ public class DatabaseBenchmarks : IDisposable
         await _dbContext.SaveChangesAsync();
         await transaction.CommitAsync();
     }
-}
-
-public enum ServiceStatus
-{
-    Unknown,
-    Healthy,
-    Unhealthy,
-    Degraded
-}
-
-public enum HealthStatus
-{
-    Unknown,
-    Healthy,
-    Unhealthy,
-    Warning
 }

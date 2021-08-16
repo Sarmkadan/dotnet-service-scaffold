@@ -895,19 +895,25 @@ curl "http://localhost:5000/api/healthcheck/{serviceId}/history?days=1"
 
 ## Performance
 
-Benchmarks measured on a single-core Linux VM (2 GHz, 512 MB RAM) with the default configuration and SQLite in WAL mode.
+The scaffold includes comprehensive performance benchmarks using BenchmarkDotNet to measure critical operations. These benchmarks help identify performance bottlenecks and optimize the most frequently called code paths.
 
-| Operation | Throughput / Latency |
-|-----------|----------------------|
-| Health check dispatch | ~10,000 events/sec |
-| REST API median response time | < 5 ms |
-| SQLite record lookup (indexed) | < 2 ms |
-| 100-service health cycle | ~1.2 s |
-| Audit log write | < 3 ms |
-| In-memory cache hit | < 0.1 ms |
-| Metric ingestion | ~50,000 records/sec |
-| Database CRUD operations | < 5 ms per operation |
-| Service registration throughput | ~2,000 registrations/sec |
+### Running Benchmarks
+
+To run the benchmarks yourself:
+
+```bash
+# Build the benchmarks project
+dotnet build -c Release benchmarks/dotnet-service-scaffold.Benchmarks
+
+# Run benchmarks (takes several minutes)
+dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmarks
+```
+
+Results are displayed in the console with detailed statistics including:
+- Mean execution time
+- Standard deviation
+- Memory allocations
+- Throughput metrics
 
 ### Micro-benchmarks
 
