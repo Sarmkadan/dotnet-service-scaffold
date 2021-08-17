@@ -330,7 +330,7 @@ For a complete setup, including database and other services (if configured), use
 
 ### Application Settings
 
-Edit `appsettings.json` to customize behavior:
+Edit `appsettings.json` to customize behavior. All settings are optional and have sensible defaults.
 
 ```json
 {
@@ -348,6 +348,7 @@ Edit `appsettings.json` to customize behavior:
     "HealthCheckInterval": 60,
     "HealthCheckTimeout": 10,
     "MaxConcurrentHealthChecks": 5,
+    "MaintenanceMode": false,
     "AuditLogRetentionDays": 90,
     "HealthCheckResultRetentionDays": 30,
     "MaxFailedLoginAttempts": 5,
@@ -355,7 +356,22 @@ Edit `appsettings.json` to customize behavior:
     "PasswordMinimumLength": 8,
     "EnableCors": false,
     "AllowedOrigins": ["http://localhost:3000"],
-    "RateLimitPerMinute": 60
+    "RateLimitPerMinute": 60,
+    "MaxServiceRegistrations": 100,
+    "MaxResponseSize": 1048576,
+    "EnableDetailedErrors": true,
+    "DefaultPageSize": 50,
+    "MaxPageSize": 200,
+    "CacheDurationSeconds": 300,
+    "EnableRequestLogging": true,
+    "MaxCollectionSize": 1000,
+    "ApiKeyPrefix": "sk_live_",
+    "ApiKeyLength": 32,
+    "JwtTokenExpirationMinutes": 60,
+    "JwtSecret": "your-very-secure-jwt-secret-key-at-least-32-characters-long",
+    "DatabaseMigrationStrategy": "Auto",
+    "EnableDatabaseBackup": false,
+    "BackupDirectory": "/app/backups"
   }
 }
 ```
@@ -367,13 +383,34 @@ Edit `appsettings.json` to customize behavior:
 | HealthCheckInterval | 60 | Seconds between health checks |
 | HealthCheckTimeout | 10 | Timeout in seconds for health check requests |
 | MaxConcurrentHealthChecks | 5 | Maximum parallel health checks |
-| AuditLogRetentionDays | 90 | Days to keep audit logs |
-| HealthCheckResultRetentionDays | 30 | Days to keep health check history |
-| MaxFailedLoginAttempts | 5 | Attempts before account lockout |
-| AccountLockoutDurationMinutes | 30 | Minutes to lock account |
-| PasswordMinimumLength | 8 | Minimum password length |
+| MaintenanceMode | false | When true, health checks return maintenance status |
+| AuditLogRetentionDays | 90 | Days to keep audit logs before automatic cleanup |
+| HealthCheckResultRetentionDays | 30 | Days to keep health check history before automatic cleanup |
+| MaxFailedLoginAttempts | 5 | Failed login attempts before account lockout |
+| AccountLockoutDurationMinutes | 30 | Minutes to lock account after too many failed attempts |
+| PasswordMinimumLength | 8 | Minimum password length requirement |
 | EnableCors | false | Enable CORS for cross-origin requests |
-| RateLimitPerMinute | 60 | API requests per minute per IP |
+| AllowedOrigins | ["http://localhost:3000"] | List of allowed origins for CORS |
+| RateLimitPerMinute | 60 | API requests per minute per IP address |
+| MaxServiceRegistrations | 100 | Maximum number of service registrations allowed |
+| MaxResponseSize | 1048576 (1MB) | Maximum response size in bytes |
+| EnableDetailedErrors | true | Show detailed error pages in development |
+| DefaultPageSize | 50 | Default page size for paginated API responses |
+| MaxPageSize | 200 | Maximum page size for paginated API responses |
+| CacheDurationSeconds | 300 (5 min) | Cache duration for frequently accessed data |
+| EnableRequestLogging | true | Enable request logging for all endpoints |
+| MaxCollectionSize | 1000 | Maximum items to return in collection responses |
+| ApiKeyPrefix | "sk_live_" | Prefix for generated API keys |
+| ApiKeyLength | 32 | Length of generated API keys |
+| JwtTokenExpirationMinutes | 60 | JWT token expiration time in minutes |
+| JwtSecret | (required) | Secret key for JWT token signing - must be at least 32 characters |
+| DatabaseMigrationStrategy | "Auto" | Migration strategy: Auto, Manual, or None |
+| EnableDatabaseBackup | false | Enable automatic database backup on startup |
+| BackupDirectory | "/app/backups" | Directory for database backups |
+
+**Security Note:** The `JwtSecret` should be a long, random string (minimum 32 characters) and stored securely in production using environment variables or secret management tools. Never commit it to version control.
+
+**CORS Note:** Only enable CORS in production if you need cross-origin access. For production deployments, restrict `AllowedOrigins` to specific domains only.
 
 ## API Reference
 
