@@ -12,11 +12,18 @@ using DotnetServiceScaffold.Infrastructure.Extensions;
 using DotnetServiceScaffold.Infrastructure.HealthChecks;
 using DotnetServiceScaffold.Infrastructure.Logging;
 using DotnetServiceScaffold.Infrastructure.Metrics;
+using DotnetServiceScaffold.Shared.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure DotnetServiceScaffoldOptions with validation
+builder.Services.AddOptions<DotnetServiceScaffoldOptions>()
+    .Bind(builder.Configuration.GetSection("ApplicationSettings"))
+    .ValidateOnStart();
 
 var structuredLoggingOptions = builder.Configuration
     .GetSection("StructuredLogging")
