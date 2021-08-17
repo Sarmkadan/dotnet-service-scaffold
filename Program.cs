@@ -53,8 +53,10 @@ builder.Host.UseSerilog();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                       "Data Source=scaffold.db";
 
-builder.Services.AddDbContext<ServiceScaffoldDbContext>(options =>
-    options.UseSqlite(connectionString));
+builder.Services.AddDbContext<ServiceScaffoldDbContext>((provider, options) =>
+{
+	options.UseSqlite(connectionString);
+});
 
 // Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();

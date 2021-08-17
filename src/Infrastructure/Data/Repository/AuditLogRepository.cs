@@ -6,6 +6,7 @@
 
 using DotnetServiceScaffold.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 
@@ -14,7 +15,7 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
 {
-    public AuditLogRepository(ServiceScaffoldDbContext context) : base(context)
+    public AuditLogRepository(ServiceScaffoldDbContext context, ILogger<AuditLogRepository> logger) : base(context, logger)
     {
     }
 

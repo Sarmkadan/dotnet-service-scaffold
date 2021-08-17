@@ -7,6 +7,7 @@
 using DotnetServiceScaffold.Domain.Enums;
 using DotnetServiceScaffold.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 
@@ -15,7 +16,7 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public class ServiceRepository : Repository<ServiceRegistration>, IServiceRepository
 {
-    public ServiceRepository(ServiceScaffoldDbContext context) : base(context)
+    public ServiceRepository(ServiceScaffoldDbContext context, ILogger<ServiceRepository> logger) : base(context, logger)
     {
     }
 
