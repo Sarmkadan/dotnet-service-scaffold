@@ -11,6 +11,7 @@ using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DotnetServiceScaffold.Benchmarks;
 
@@ -38,7 +39,7 @@ public class DatabaseBenchmarks : IDisposable
             .UseSqlite(_connection)
             .Options;
 
-        _dbContext = new ServiceScaffoldDbContext(options);
+        _dbContext = new ServiceScaffoldDbContext(options, NullLogger<ServiceScaffoldDbContext>.Instance);
         await _dbContext.Database.EnsureCreatedAsync();
         await _dbContext.InitializeDatabaseAsync();
 

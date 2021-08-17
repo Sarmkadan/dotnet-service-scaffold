@@ -6,6 +6,7 @@
 
 using DotnetServiceScaffold.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 
@@ -14,7 +15,7 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public class ApiKeyRepository : Repository<ApiKey>, IApiKeyRepository
 {
-    public ApiKeyRepository(ServiceScaffoldDbContext context) : base(context)
+    public ApiKeyRepository(ServiceScaffoldDbContext context, ILogger<ApiKeyRepository> logger) : base(context, logger)
     {
     }
 
