@@ -57,3 +57,6 @@ TestResults/
 dist/
 build/
 publish/
+
+# aider internal state - never commit
+.aider*
