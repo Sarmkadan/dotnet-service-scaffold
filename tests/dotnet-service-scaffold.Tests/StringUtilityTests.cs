@@ -9,11 +9,17 @@ using FluentAssertions;
 
 namespace DotnetServiceScaffold.Tests;
 
+/// <summary>
+/// Contains tests for the StringUtility class.
+/// </summary>
 public class StringUtilityTests
 {
     [Fact]
     public void Truncate_StringLongerThanMaxLength_TruncatesAndAppendsSuffix()
     {
+        /// <summary>
+        /// Verifies that the Truncate method truncates a string longer than the specified maxLength and appends an ellipsis.
+        /// </summary>
         var result = StringUtility.Truncate("Hello, World!", 8);
 
         result.Should().Be("Hello...");
@@ -25,6 +31,10 @@ public class StringUtilityTests
     [InlineData("")]
     public void Truncate_NullOrEmptyInput_ReturnsEmptyString(string? input)
     {
+        /// <summary>
+        /// Verifies that the Truncate method returns an empty string when the input is null or empty.
+        /// </summary>
+        /// <param name="input">The input string to truncate.</param>
         StringUtility.Truncate(input, 10).Should().BeEmpty();
     }
 
@@ -35,12 +45,20 @@ public class StringUtilityTests
     public void ToSnakeCase_CamelCaseOrPascalInput_InsertsUnderscoresBeforeUpperCaseLetters(
         string input, string expected)
     {
+        /// <summary>
+        /// Verifies that the ToSnakeCase method converts camel case or pascal case input to snake case by inserting underscores before uppercase letters.
+        /// </summary>
+        /// <param name="input">The input string to convert.</param>
+        /// <param name="expected">The expected output string.</param>
         StringUtility.ToSnakeCase(input).Should().Be(expected);
     }
 
     [Fact]
     public void MaskSensitive_LongApiKey_KeepsEdgeCharactersAndMasksMiddle()
     {
+        /// <summary>
+        /// Verifies that the MaskSensitive method masks the middle characters of a long API key while keeping the edge characters.
+        /// </summary>
         const string key = "ABCDE12345FGHIJ"; // 15 chars
 
         var masked = StringUtility.MaskSensitive(key, visibleChars: 2);
@@ -60,6 +78,11 @@ public class StringUtilityTests
     public void IsValidEmail_VariousInputs_ReturnsExpectedValidationOutcome(
         string email, bool expected)
     {
+        /// <summary>
+        /// Verifies that the IsValidEmail method returns the expected validation outcome for various email inputs.
+        /// </summary>
+        /// <param name="email">The email to validate.</param>
+        /// <param name="expected">The expected validation outcome.</param>
         StringUtility.IsValidEmail(email).Should().Be(expected);
     }
 }
