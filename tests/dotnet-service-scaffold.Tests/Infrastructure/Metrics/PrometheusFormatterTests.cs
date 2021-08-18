@@ -8,12 +8,16 @@ using DotnetServiceScaffold.Infrastructure.Metrics;
 using FluentAssertions;
 using Xunit;
 
-namespace DotnetServiceScaffold.Tests.Infrastructure.Metrics;
-
+/// <summary>
+/// Tests for the PrometheusFormatter class.
+/// </summary>
 public class PrometheusFormatterTests
 {
     private readonly PrometheusFormatter _formatter = new();
 
+    /// <summary>
+    /// Verifies that the Format method emits a counter for a counter metric.
+    /// </summary>
     [Fact]
     public void Format_ShouldEmitCounter_ForCounterMetric()
     {
@@ -28,6 +32,9 @@ public class PrometheusFormatterTests
         result.Should().Contain("app_http_requests_total 42");
     }
 
+    /// <summary>
+    /// Verifies that the Format method emits a gauge for a gauge metric.
+    /// </summary>
     [Fact]
     public void Format_ShouldEmitGauge_ForGaugeMetric()
     {
@@ -42,6 +49,9 @@ public class PrometheusFormatterTests
         result.Should().Contain("app_memory_used");
     }
 
+    /// <summary>
+    /// Verifies that the Format method emits a timer series for a timer metric.
+    /// </summary>
     [Fact]
     public void Format_ShouldEmitTimerSeries_ForTimerMetric()
     {
@@ -58,6 +68,9 @@ public class PrometheusFormatterTests
         result.Should().Contain("app_db_query_max_ms");
     }
 
+    /// <summary>
+    /// Verifies that the Format method returns an empty string when no metrics are provided.
+    /// </summary>
     [Fact]
     public void Format_ShouldReturnEmpty_WhenNoMetrics()
     {
@@ -66,6 +79,9 @@ public class PrometheusFormatterTests
         result.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the Format method throws an ArgumentNullException when the metrics parameter is null.
+    /// </summary>
     [Fact]
     public void Format_ShouldThrow_WhenMetricsIsNull()
     {
@@ -74,6 +90,9 @@ public class PrometheusFormatterTests
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that the Format method sanitizes metric names with special characters.
+    /// </summary>
     [Fact]
     public void Format_ShouldSanitizeMetricNames_WithSpecialChars()
     {
@@ -88,6 +107,9 @@ public class PrometheusFormatterTests
         result.Should().NotContain("some-metric.path");
     }
 
+    /// <summary>
+    /// Verifies that the Format method handles tagged keys.
+    /// </summary>
     [Fact]
     public void Format_ShouldHandleTaggedKeys()
     {
