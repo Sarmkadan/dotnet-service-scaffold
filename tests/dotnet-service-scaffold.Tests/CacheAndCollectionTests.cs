@@ -12,8 +12,16 @@ using Moq;
 
 namespace DotnetServiceScaffold.Tests;
 
+/// <summary>
+/// Contains unit tests for cache and collection utilities.
+/// </summary>
 public class CacheAndCollectionTests
 {
+    /// <summary>
+    /// Tests the <see cref="ValidationUtility.IsPasswordStrong(string)"/> method with various passwords.
+    /// </summary>
+    /// <param name="password">The password to test.</param>
+    /// <param name="expected">The expected result.</param>
     [Theory]
     [InlineData("Passw0rd!", true)]
     [InlineData("password", false)]   // no uppercase, digit, or special char
@@ -25,6 +33,10 @@ public class CacheAndCollectionTests
         ValidationUtility.IsPasswordStrong(password).Should().Be(expected);
     }
 
+    /// <summary>
+    /// Tests that <see cref="ValidationUtility.ValidateRange(int, int, int, string)"/> throws an <see cref="ArgumentException"/>
+    /// when the value is above the upper bound.
+    /// </summary>
     [Fact]
     public void ValidateRange_ValueAboveUpperBound_ThrowsArgumentExceptionWithParamName()
     {
@@ -34,6 +46,9 @@ public class CacheAndCollectionTests
            .WithMessage("*pageSize*");
     }
 
+    /// <summary>
+    /// Tests that <see cref="Enumerable.Batch{T}(IEnumerable{T}, int)"/> produces the correct number of batches.
+    /// </summary>
     [Fact]
     public void Batch_TenElementsWithBatchSizeThree_ProducesFourBatchesWithCorrectSizes()
     {
@@ -48,6 +63,9 @@ public class CacheAndCollectionTests
         batches[3].Should().HaveCount(1); // remainder
     }
 
+    /// <summary>
+    /// Tests that <see cref="Enumerable.Partition{T}(IEnumerable{T}, Func{T, bool})"/> separates even and odd numbers correctly.
+    /// </summary>
     [Fact]
     public void Partition_IntegerCollection_SeparatesEvenAndOddNumbersCorrectly()
     {
@@ -59,6 +77,9 @@ public class CacheAndCollectionTests
         odds.Should().BeEquivalentTo(new[] { 1, 3, 5 });
     }
 
+    /// <summary>
+    /// Tests that <see cref="InMemoryCacheService.GetAsync{T}(string, CancellationToken)"/> returns the stored value.
+    /// </summary>
     [Fact]
     public async Task InMemoryCacheService_SetThenGetAsync_ReturnsStoredValue()
     {
@@ -71,6 +92,9 @@ public class CacheAndCollectionTests
         result.Should().Be("hello-world");
     }
 
+    /// <summary>
+    /// Tests that <see cref="InMemoryCacheService.RemoveAsync(string, CancellationToken)"/> deletes the entry from the cache.
+    /// </summary>
     [Fact]
     public async Task InMemoryCacheService_RemoveAsync_DeletesEntryFromCache()
     {
