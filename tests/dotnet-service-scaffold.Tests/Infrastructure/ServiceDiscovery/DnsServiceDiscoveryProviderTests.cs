@@ -13,12 +13,18 @@ using Moq;
 
 namespace DotnetServiceScaffold.Tests.Infrastructure.ServiceDiscovery;
 
+/// <summary>
+/// Tests for the DnsServiceDiscoveryProvider class.
+/// </summary>
 public class DnsServiceDiscoveryProviderTests
 {
     private DnsServiceDiscoveryProvider _provider;
     private Mock<IOptions<ServiceDiscoveryOptions>> _mockOptions;
     private Mock<ILogger<DnsServiceDiscoveryProvider>> _mockLogger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DnsServiceDiscoveryProviderTests"/> class.
+    /// </summary>
     public DnsServiceDiscoveryProviderTests()
     {
         _mockOptions = new Mock<IOptions<ServiceDiscoveryOptions>>();
@@ -40,6 +46,9 @@ public class DnsServiceDiscoveryProviderTests
         _provider = new DnsServiceDiscoveryProvider(_mockOptions.Object, _mockLogger.Object);
     }
 
+    /// <summary>
+    /// Tests that when resolving a service with no SRV records, the A-record fallback pathway is taken and the resulting records have their TTLs populated.
+    /// </summary>
     [Fact]
     public async Task ResolveAsync_ARecordFallback_DnsTtlSecondsIsPopulatedWithCacheTtl()
     {
