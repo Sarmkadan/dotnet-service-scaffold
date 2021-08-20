@@ -16,15 +16,24 @@ using DotnetServiceScaffold.Infrastructure.Data.Repository;
 
 namespace DotnetServiceScaffold.Tests.IntegrationTests;
 
+/// <summary>
+/// Tests for the ConfigurationRepository class.
+/// </summary>
 public class ConfigurationRepositoryTests : IntegrationTestBase
 {
     private readonly ConfigurationRepository _configurationRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConfigurationRepositoryTests"/> class.
+    /// </summary>
     public ConfigurationRepositoryTests()
     {
         _configurationRepository = new ConfigurationRepository(DbContext);
     }
 
+    /// <summary>
+    /// Tests that adding a configuration to the database works correctly.
+    /// </summary>
     [Fact]
     public async Task AddConfigurationAsync_ShouldAddConfigurationToDatabase()
     {
@@ -40,6 +49,9 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         addedConfig?.Key.Should().Be("TestConfig");
     }
 
+    /// <summary>
+    /// Tests that getting a configuration by ID works correctly when the configuration exists.
+    /// </summary>
     [Fact]
     public async Task GetConfigurationByIdAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
@@ -54,6 +66,9 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         result.Should().Be(config);
     }
 
+    /// <summary>
+    /// Tests that getting a configuration by ID returns null when the configuration does not exist.
+    /// </summary>
     [Fact]
     public async Task GetConfigurationByIdAsync_ShouldReturnNull_WhenConfigurationDoesNotExist()
     {
@@ -67,6 +82,9 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that getting a configuration by key works correctly when the configuration exists.
+    /// </summary>
     [Fact]
     public async Task GetConfigurationByKeyAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
@@ -81,6 +99,9 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         result.Should().Be(config);
     }
 
+    /// <summary>
+    /// Tests that getting a configuration by key returns null when the configuration does not exist.
+    /// </summary>
     [Fact]
     public async Task GetConfigurationByKeyAsync_ShouldReturnNull_WhenConfigurationDoesNotExist()
     {
@@ -94,6 +115,9 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that updating a configuration in the database works correctly.
+    /// </summary>
     [Fact]
     public async Task UpdateConfigurationAsync_ShouldUpdateConfigurationInDatabase()
     {
@@ -116,6 +140,9 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         updatedConfig?.Value.Should().Be("NewValue");
     }
 
+    /// <summary>
+    /// Tests that deleting a configuration from the database works correctly.
+    /// </summary>
     [Fact]
     public async Task DeleteConfigurationAsync_ShouldRemoveConfigurationFromDatabase()
     {
@@ -130,6 +157,4 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
         var deletedConfig = await DbContext.ServiceConfigurations.FirstOrDefaultAsync(c => c.Id == config.Id);
         deletedConfig.Should().BeNull();
     }
-
-
 }
