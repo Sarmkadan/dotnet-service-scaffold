@@ -12,13 +12,17 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace DotnetServiceScaffold.Tests.Infrastructure.Data.Repository;
-
+/// <summary>
+/// Tests for the UserRepository class.
+/// </summary>
 public class UserRepositoryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly DbContextOptions<ServiceScaffoldDbContext> _dbContextOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the UserRepositoryTests class.
+    /// </summary>
     public UserRepositoryTests()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
@@ -33,6 +37,9 @@ public class UserRepositoryTests : IDisposable
         context.Database.EnsureCreated();
     }
 
+    /// <summary>
+    /// Tests that adding a user to the database works correctly.
+    /// </summary>
     [Fact]
     public async Task AddUserAsync_ShouldAddUserToDatabase()
     {
@@ -50,6 +57,9 @@ public class UserRepositoryTests : IDisposable
         addedUser?.Username.Should().Be("testuser");
     }
 
+    /// <summary>
+    /// Tests that getting a user by ID works correctly when the user exists.
+    /// </summary>
     [Fact]
     public async Task GetUserByIdAsync_ShouldReturnUser_WhenUserExists()
     {
@@ -67,6 +77,9 @@ public class UserRepositoryTests : IDisposable
         result.Should().Be(user);
     }
 
+    /// <summary>
+    /// Tests that getting a user by ID returns null when the user does not exist.
+    /// </summary>
     [Fact]
     public async Task GetUserByIdAsync_ShouldReturnNull_WhenUserDoesNotExist()
     {
@@ -81,6 +94,9 @@ public class UserRepositoryTests : IDisposable
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that getting a user by username works correctly when the user exists.
+    /// </summary>
     [Fact]
     public async Task GetUserByUsernameAsync_ShouldReturnUser_WhenUserExists()
     {
@@ -98,6 +114,9 @@ public class UserRepositoryTests : IDisposable
         result.Should().Be(user);
     }
 
+    /// <summary>
+    /// Tests that getting a user by username returns null when the user does not exist.
+    /// </summary>
     [Fact]
     public async Task GetUserByUsernameAsync_ShouldReturnNull_WhenUserDoesNotExist()
     {
@@ -112,6 +131,9 @@ public class UserRepositoryTests : IDisposable
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that updating a user in the database works correctly.
+    /// </summary>
     [Fact]
     public async Task UpdateUserAsync_ShouldUpdateUserInDatabase()
     {
@@ -136,6 +158,9 @@ public class UserRepositoryTests : IDisposable
         updatedUser?.Email.Should().Be("updated@example.com");
     }
 
+    /// <summary>
+    /// Tests that deleting a user from the database works correctly.
+    /// </summary>
     [Fact]
     public async Task DeleteUserAsync_ShouldRemoveUserFromDatabase()
     {
@@ -154,6 +179,9 @@ public class UserRepositoryTests : IDisposable
         deletedUser.Should().BeNull();
     }
 
+    /// <summary>
+    /// Releases unmanaged resources and performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
         _connection.Close();
