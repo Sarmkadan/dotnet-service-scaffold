@@ -11,10 +11,16 @@ using System.Text.RegularExpressions;
 
 namespace DotnetServiceScaffold.Tests.Infrastructure.Configuration;
 
+/// <summary>
+/// Tests for the DeploymentConfiguration class.
+/// </summary>
 public class DeploymentConfigurationTests
 {
     private DeploymentOptions _defaultOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeploymentConfigurationTests"/> class.
+    /// </summary>
     public DeploymentConfigurationTests()
     {
         _defaultOptions = new DeploymentOptions
@@ -32,6 +38,9 @@ public class DeploymentConfigurationTests
         };
     }
 
+    /// <summary>
+    /// Verifies that the GenerateSystemdServiceUnit method contains all expected values.
+    /// </summary>
     [Fact]
     public void GenerateSystemdServiceUnit_ShouldContainAllExpectedValues()
     {
@@ -47,6 +56,9 @@ public class DeploymentConfigurationTests
         unitFileContent.Should().Contain($"ReadWritePaths={_defaultOptions.DataPath}");
     }
 
+    /// <summary>
+    /// Verifies that the GenerateCaddyConfiguration method contains all expected values.
+    /// </summary>
     [Fact]
     public void GenerateCaddyConfiguration_ShouldContainAllExpectedValues()
     {
@@ -60,6 +72,9 @@ public class DeploymentConfigurationTests
         caddyConfigContent.Should().Contain($"output file {_defaultOptions.LogPath}/caddy.log {{");
     }
 
+    /// <summary>
+    /// Verifies that the GenerateEnvironmentFile method contains all expected values.
+    /// </summary>
     [Fact]
     public void GenerateEnvironmentFile_ShouldContainAllExpectedValues()
     {
@@ -74,6 +89,9 @@ public class DeploymentConfigurationTests
         envFileContent.Should().Contain($"SERVICE_VERSION={_defaultOptions.ServiceVersion}");
     }
 
+    /// <summary>
+    /// Verifies that the GenerateDeploymentGuide method contains all expected values.
+    /// </summary>
     [Fact]
     public void GenerateDeploymentGuide_ShouldContainAllExpectedValues()
     {
@@ -88,6 +106,9 @@ public class DeploymentConfigurationTests
         guideContent.Should().Contain($"- Database files are stored in {_defaultOptions.DataPath}");
     }
 
+    /// <summary>
+    /// Verifies that the GenerateSystemdServiceUnit method has the correct security settings.
+    /// </summary>
     [Fact]
     public void GenerateSystemdServiceUnit_ShouldHaveCorrectSecuritySettings()
     {
@@ -101,6 +122,9 @@ public class DeploymentConfigurationTests
         unitFileContent.Should().Contain("ProtectHome=true");
     }
 
+    /// <summary>
+    /// Verifies that the GenerateCaddyConfiguration method includes health check settings.
+    /// </summary>
     [Fact]
     public void GenerateCaddyConfiguration_ShouldIncludeHealthCheckSettings()
     {
@@ -114,6 +138,9 @@ public class DeploymentConfigurationTests
         caddyConfigContent.Should().Contain("unhealthy_status 500 502 503");
     }
     
+    /// <summary>
+    /// Verifies that the GenerateEnvironmentFile method contains the production environment.
+    /// </summary>
     [Fact]
     public void GenerateEnvironmentFile_ShouldContainProductionEnvironment()
     {
