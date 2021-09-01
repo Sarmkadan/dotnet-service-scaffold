@@ -15,9 +15,9 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public class Repository<T> : IRepository<T> where T : class
 {
-	protected readonly ServiceScaffoldDbContext _context;
-	protected readonly DbSet<T> _dbSet;
-	protected readonly ILogger<Repository<T>> _logger;
+	protected internal readonly ServiceScaffoldDbContext _context;
+	protected internal readonly DbSet<T> _dbSet;
+	protected internal readonly ILogger<Repository<T>> _logger;
 
 	public Repository(ServiceScaffoldDbContext context, ILogger<Repository<T>> logger)
 	{
