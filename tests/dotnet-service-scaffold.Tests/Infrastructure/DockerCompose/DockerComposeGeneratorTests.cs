@@ -10,18 +10,25 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace DotnetServiceScaffold.Tests.Infrastructure.DockerCompose;
-
+/// <summary>
+/// Tests for the DockerComposeGenerator class.
+/// </summary>
 public class DockerComposeGeneratorTests
 {
     private readonly IDockerComposeGenerator _generator;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DockerComposeGeneratorTests"/> class.
+    /// </summary>
     public DockerComposeGeneratorTests()
     {
         var logger = Substitute.For<ILogger<DockerComposeGenerator>>();
         _generator = new DockerComposeGenerator(logger);
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML contains the service name when options are provided.
+    /// </summary>
     [Fact]
     public void Generate_ShouldContainServiceName_WhenOptionsProvided()
     {
@@ -40,6 +47,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("8080:8080");
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML includes a health check.
+    /// </summary>
     [Fact]
     public void Generate_ShouldIncludeHealthCheck()
     {
@@ -51,6 +61,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("http://localhost:5001/health");
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML includes Caddy when requested.
+    /// </summary>
     [Fact]
     public void Generate_ShouldIncludeCaddy_WhenRequested()
     {
@@ -68,6 +81,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("caddy-data:");
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML does not include Caddy when not requested.
+    /// </summary>
     [Fact]
     public void Generate_ShouldNotIncludeCaddy_WhenNotRequested()
     {
@@ -78,6 +94,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().NotContain("caddy:");
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML includes Redis when requested.
+    /// </summary>
     [Fact]
     public void Generate_ShouldIncludeRedis_WhenRequested()
     {
@@ -89,6 +108,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("redis:7-alpine");
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML includes extra environment variables when provided.
+    /// </summary>
     [Fact]
     public void Generate_ShouldIncludeExtraEnvVars_WhenProvided()
     {
@@ -103,6 +125,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("MY_VAR: hello");
     }
 
+    /// <summary>
+    /// Verifies that an <see cref="ArgumentNullException"/> is thrown when options are null.
+    /// </summary>
     [Fact]
     public void Generate_ShouldThrow_WhenOptionsIsNull()
     {
@@ -111,6 +136,9 @@ public class DockerComposeGeneratorTests
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML includes a Prometheus comment when requested.
+    /// </summary>
     [Fact]
     public void Generate_ShouldIncludePrometheusComment_WhenRequested()
     {
@@ -121,6 +149,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("metrics_path: /metrics");
     }
 
+    /// <summary>
+    /// Verifies that the generated YAML includes resource limits.
+    /// </summary>
     [Fact]
     public void Generate_ShouldIncludeResourceLimits()
     {
@@ -137,6 +168,9 @@ public class DockerComposeGeneratorTests
         yaml.Should().Contain("memory: 1G");
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="WriteToFileAsync"/> method writes the YAML file correctly.
+    /// </summary>
     [Fact]
     public async Task WriteToFileAsync_ShouldWriteYamlFile()
     {
