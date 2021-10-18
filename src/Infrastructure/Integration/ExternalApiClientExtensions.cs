@@ -28,6 +28,10 @@ public static class ExternalApiClientExtensions
     /// <param name="headers">Optional request headers</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deserialized response or null if not found</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
+    /// <exception cref="ArgumentException"><paramref name="url"/> is null or empty</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxRetries"/> or <paramref name="timeoutSeconds"/> is less than or equal to 0</exception>
+    /// <exception cref="HttpRequestException">Request failed after all retry attempts</exception>
     public static async Task<T?> GetWithRetryAsync<T>(
         this ExternalApiClient client,
         string url,
@@ -36,16 +40,13 @@ public static class ExternalApiClientExtensions
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
-        if (client is null)
-            throw new ArgumentNullException(nameof(client));
+        ArgumentNullException.ThrowIfNull(client);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
-        if (maxRetries <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxRetries), "maxRetries must be greater than 0");
-        if (timeoutSeconds <= 0)
-            throw new ArgumentOutOfRangeException(nameof(timeoutSeconds), "timeoutSeconds must be greater than 0");
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxRetries, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(timeoutSeconds, 0);
 
         var retryCount = 0;
-        var lastException = (Exception?)null;
+        Exception? lastException = null;
 
         while (retryCount <= maxRetries)
         {
@@ -54,7 +55,7 @@ public static class ExternalApiClientExtensions
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-                return await client.GetAsync<T>(url, headers, linkedCts.Token);
+                return await client.GetAsync<T>(url, headers, linkedCts.Token).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -64,8 +65,9 @@ public static class ExternalApiClientExtensions
                 if (retryCount > maxRetries)
                     break;
 
-                // Exponential backoff
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount - 1)), cancellationToken);
+                // Exponential backoff with jitter to avoid thundering herd
+                var delaySeconds = Math.Pow(2, retryCount - 1);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -86,6 +88,10 @@ public static class ExternalApiClientExtensions
     /// <param name="headers">Optional request headers</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deserialized response or null</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="payload"/> is null</exception>
+    /// <exception cref="ArgumentException"><paramref name="url"/> is null or empty</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxRetries"/> or <paramref name="timeoutSeconds"/> is less than or equal to 0</exception>
+    /// <exception cref="HttpRequestException">Request failed after all retry attempts</exception>
     public static async Task<T?> PostWithRetryAsync<T>(
         this ExternalApiClient client,
         string url,
@@ -95,18 +101,14 @@ public static class ExternalApiClientExtensions
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
-        if (client is null)
-            throw new ArgumentNullException(nameof(client));
+        ArgumentNullException.ThrowIfNull(client);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
-        if (payload is null)
-            throw new ArgumentNullException(nameof(payload));
-        if (maxRetries <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxRetries), "maxRetries must be greater than 0");
-        if (timeoutSeconds <= 0)
-            throw new ArgumentOutOfRangeException(nameof(timeoutSeconds), "timeoutSeconds must be greater than 0");
+        ArgumentNullException.ThrowIfNull(payload);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxRetries, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(timeoutSeconds, 0);
 
         var retryCount = 0;
-        var lastException = (Exception?)null;
+        Exception? lastException = null;
 
         while (retryCount <= maxRetries)
         {
@@ -115,7 +117,7 @@ public static class ExternalApiClientExtensions
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-                return await client.PostAsync<T>(url, payload, headers, linkedCts.Token);
+                return await client.PostAsync<T>(url, payload, headers, linkedCts.Token).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -125,8 +127,9 @@ public static class ExternalApiClientExtensions
                 if (retryCount > maxRetries)
                     break;
 
-                // Exponential backoff
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount - 1)), cancellationToken);
+                // Exponential backoff with jitter to avoid thundering herd
+                var delaySeconds = Math.Pow(2, retryCount - 1);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -147,6 +150,10 @@ public static class ExternalApiClientExtensions
     /// <param name="headers">Optional request headers</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deserialized response or null</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="payload"/> is null</exception>
+    /// <exception cref="ArgumentException"><paramref name="url"/> is null or empty</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxRetries"/> or <paramref name="timeoutSeconds"/> is less than or equal to 0</exception>
+    /// <exception cref="HttpRequestException">Request failed after all retry attempts</exception>
     public static async Task<T?> PutWithRetryAsync<T>(
         this ExternalApiClient client,
         string url,
@@ -156,18 +163,14 @@ public static class ExternalApiClientExtensions
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
-        if (client is null)
-            throw new ArgumentNullException(nameof(client));
+        ArgumentNullException.ThrowIfNull(client);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
-        if (payload is null)
-            throw new ArgumentNullException(nameof(payload));
-        if (maxRetries <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxRetries), "maxRetries must be greater than 0");
-        if (timeoutSeconds <= 0)
-            throw new ArgumentOutOfRangeException(nameof(timeoutSeconds), "timeoutSeconds must be greater than 0");
+        ArgumentNullException.ThrowIfNull(payload);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxRetries, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(timeoutSeconds, 0);
 
         var retryCount = 0;
-        var lastException = (Exception?)null;
+        Exception? lastException = null;
 
         while (retryCount <= maxRetries)
         {
@@ -176,7 +179,7 @@ public static class ExternalApiClientExtensions
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-                return await client.PutAsync<T>(url, payload, headers, linkedCts.Token);
+                return await client.PutAsync<T>(url, payload, headers, linkedCts.Token).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -186,8 +189,9 @@ public static class ExternalApiClientExtensions
                 if (retryCount > maxRetries)
                     break;
 
-                // Exponential backoff
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount - 1)), cancellationToken);
+                // Exponential backoff with jitter to avoid thundering herd
+                var delaySeconds = Math.Pow(2, retryCount - 1);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -206,6 +210,10 @@ public static class ExternalApiClientExtensions
     /// <param name="headers">Optional request headers</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if successful, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> is null</exception>
+    /// <exception cref="ArgumentException"><paramref name="url"/> is null or empty</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxRetries"/> or <paramref name="timeoutSeconds"/> is less than or equal to 0</exception>
+    /// <exception cref="HttpRequestException">Request failed after all retry attempts</exception>
     public static async Task<bool> DeleteWithRetryAsync(
         this ExternalApiClient client,
         string url,
@@ -214,16 +222,13 @@ public static class ExternalApiClientExtensions
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
-        if (client is null)
-            throw new ArgumentNullException(nameof(client));
+        ArgumentNullException.ThrowIfNull(client);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
-        if (maxRetries <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxRetries), "maxRetries must be greater than 0");
-        if (timeoutSeconds <= 0)
-            throw new ArgumentOutOfRangeException(nameof(timeoutSeconds), "timeoutSeconds must be greater than 0");
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxRetries, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(timeoutSeconds, 0);
 
         var retryCount = 0;
-        var lastException = (Exception?)null;
+        Exception? lastException = null;
 
         while (retryCount <= maxRetries)
         {
@@ -232,7 +237,7 @@ public static class ExternalApiClientExtensions
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-                return await client.DeleteAsync(url, headers, linkedCts.Token);
+                return await client.DeleteAsync(url, headers, linkedCts.Token).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -242,8 +247,9 @@ public static class ExternalApiClientExtensions
                 if (retryCount > maxRetries)
                     break;
 
-                // Exponential backoff
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount - 1)), cancellationToken);
+                // Exponential backoff with jitter to avoid thundering herd
+                var delaySeconds = Math.Pow(2, retryCount - 1);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken).ConfigureAwait(false);
             }
         }
 
