@@ -17,17 +17,26 @@ using DotnetServiceScaffold.Infrastructure.Data.Repository;
 
 namespace DotnetServiceScaffold.Tests.Application.Services;
 
+/// <summary>
+/// Tests for the HealthCheckService class.
+/// </summary>
 public class HealthCheckServiceTests
 {
     private readonly IHealthCheckRepository _healthCheckRepository;
     private readonly HealthCheckService _healthCheckService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HealthCheckServiceTests"/> class.
+    /// </summary>
     public HealthCheckServiceTests()
     {
         _healthCheckRepository = Substitute.For<IHealthCheckRepository>();
         _healthCheckService = new HealthCheckService(_healthCheckRepository);
     }
 
+    /// <summary>
+    /// Verifies that the PerformHealthCheckAsync method returns Healthy when all components are healthy.
+    /// </summary>
     [Fact]
     public async Task PerformHealthCheckAsync_ShouldReturnHealthy_WhenAllComponentsAreHealthy()
     {
@@ -47,6 +56,9 @@ public class HealthCheckServiceTests
         result.Results.All(r => r.Status == HealthStatus.Healthy).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that the PerformHealthCheckAsync method returns Unhealthy when any component is unhealthy.
+    /// </summary>
     [Fact]
     public async Task PerformHealthCheckAsync_ShouldReturnUnhealthy_WhenAnyComponentIsUnhealthy()
     {
@@ -66,6 +78,9 @@ public class HealthCheckServiceTests
         result.Results.Any(r => r.Status == HealthStatus.Unhealthy).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that the GetHealthCheckHistoryAsync method returns all history.
+    /// </summary>
     [Fact]
     public async Task GetHealthCheckHistoryAsync_ShouldReturnAllHistory()
     {
@@ -85,6 +100,9 @@ public class HealthCheckServiceTests
         await _healthCheckRepository.Received(1).GetAllHealthChecksAsync();
     }
 
+    /// <summary>
+    /// Verifies that the GetHealthCheckHistoryAsync method returns empty when no history exists.
+    /// </summary>
     [Fact]
     public async Task GetHealthCheckHistoryAsync_ShouldReturnEmpty_WhenNoHistoryExists()
     {
@@ -99,6 +117,9 @@ public class HealthCheckServiceTests
         await _healthCheckRepository.Received(1).GetAllHealthChecksAsync();
     }
 
+    /// <summary>
+    /// Verifies that the RecordHealthCheckResultAsync method calls the repository's Add method.
+    /// </summary>
     [Fact]
     public async Task RecordHealthCheckResultAsync_ShouldCallRepositoryAdd()
     {
@@ -114,6 +135,9 @@ public class HealthCheckServiceTests
             Arg.Is<HealthCheckResult>(r => r.Component == result.Component && r.Status == result.Status));
     }
 
+    /// <summary>
+    /// Verifies that the RecordHealthCheckResultAsync method sets the timestamp.
+    /// </summary>
     [Fact]
     public async Task RecordHealthCheckResultAsync_ShouldSetTimestamp()
     {
