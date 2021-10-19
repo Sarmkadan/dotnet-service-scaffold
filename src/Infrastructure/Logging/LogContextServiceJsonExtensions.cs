@@ -14,6 +14,9 @@ namespace DotnetServiceScaffold.Infrastructure.Logging;
 /// Provides System.Text.Json serialization and deserialization extensions for
 /// <see cref="LogContextService"/> to enable JSON conversion of log context properties.
 /// </summary>
+/// <remarks>
+/// This class cannot be inherited.
+/// </remarks>
 public static class LogContextServiceJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
@@ -29,6 +32,7 @@ public static class LogContextServiceJsonExtensions
     /// <param name="value">The log context service to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the log context service.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this LogContextService value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -47,9 +51,13 @@ public static class LogContextServiceJsonExtensions
     /// Deserializes a JSON string to a <see cref="LogContextService"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A new <see cref="LogContextService"/> instance populated with the deserialized properties, or null if the JSON is null or empty.</returns>
+    /// <returns>A new <see cref="LogContextService"/> instance populated with the deserialized properties, or null if the JSON is null, empty, or invalid.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed and cannot be deserialized.</exception>
     public static LogContextService? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         if (string.IsNullOrWhiteSpace(json))
         {
             return null;
@@ -76,8 +84,11 @@ public static class LogContextServiceJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized service if successful; otherwise, null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out LogContextService? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
