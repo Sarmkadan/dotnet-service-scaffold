@@ -21,16 +21,15 @@ public static class ResponseFormatterFactoryExtensions
     /// <param name="mediaType">The media type to get a formatter for.</param>
     /// <param name="fallbackFormatter">The formatter to use as fallback if no matching formatter is found.</param>
     /// <returns>The formatter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> or <paramref name="fallbackFormatter"/> is null.</exception>
     public static IResponseFormatter GetFormatterOrDefault(
         this ResponseFormatterFactory factory,
         string? mediaType,
         IResponseFormatter fallbackFormatter)
     {
-        if (factory is null)
-            throw new ArgumentNullException(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
-        if (fallbackFormatter is null)
-            throw new ArgumentNullException(nameof(fallbackFormatter));
+        ArgumentNullException.ThrowIfNull(fallbackFormatter);
 
         var formatter = factory.GetFormatter(mediaType);
         return formatter ?? fallbackFormatter;
@@ -43,19 +42,16 @@ public static class ResponseFormatterFactoryExtensions
     /// <param name="mediaType">The media type to get a formatter for.</param>
     /// <param name="formatter">When this method returns, contains the formatter instance if found; otherwise, null.</param>
     /// <returns>True if a formatter was found; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
     public static bool TryGetFormatter(
         this ResponseFormatterFactory factory,
         string? mediaType,
         out IResponseFormatter? formatter)
     {
-        if (factory is null)
-        {
-            formatter = null;
-            throw new ArgumentNullException(nameof(factory));
-        }
+        ArgumentNullException.ThrowIfNull(factory);
 
         formatter = factory.GetFormatter(mediaType);
-        return formatter != null;
+        return formatter is not null;
     }
 
     /// <summary>
@@ -65,16 +61,16 @@ public static class ResponseFormatterFactoryExtensions
     /// <param name="factory">The factory instance.</param>
     /// <param name="mediaType">The media type to get a formatter for.</param>
     /// <returns>The formatter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="mediaType"/> is null or whitespace.</exception>
     /// <exception cref="InvalidOperationException">Thrown when no formatter is found for the media type.</exception>
     public static IResponseFormatter GetFormatterRequired(
         this ResponseFormatterFactory factory,
         string mediaType)
     {
-        if (factory is null)
-            throw new ArgumentNullException(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
-        if (string.IsNullOrWhiteSpace(mediaType))
-            throw new ArgumentException("Media type cannot be null or empty", nameof(mediaType));
+        ArgumentException.ThrowIfNullOrWhiteSpace(mediaType, nameof(mediaType));
 
         var formatter = factory.GetFormatter(mediaType);
         if (formatter is null)
@@ -93,19 +89,22 @@ public static class ResponseFormatterFactoryExtensions
     /// <param name="factory">The factory instance.</param>
     /// <param name="formatter">The formatter to register.</param>
     /// <param name="mediaTypes">The media types to register the formatter for.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> or <paramref name="formatter"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="mediaTypes"/> is null or empty.</exception>
     public static void RegisterFormatter(
         this ResponseFormatterFactory factory,
         IResponseFormatter formatter,
         params string[] mediaTypes)
     {
-        if (factory is null)
-            throw new ArgumentNullException(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
-        if (formatter is null)
-            throw new ArgumentNullException(nameof(formatter));
+        ArgumentNullException.ThrowIfNull(formatter);
 
-        if (mediaTypes is null || mediaTypes.Length == 0)
+        ArgumentNullException.ThrowIfNull(mediaTypes);
+        if (mediaTypes.Length == 0)
+        {
             throw new ArgumentException("At least one media type must be provided", nameof(mediaTypes));
+        }
 
         foreach (var mediaType in mediaTypes)
         {
@@ -119,20 +118,24 @@ public static class ResponseFormatterFactoryExtensions
     /// <param name="factory">The factory instance.</param>
     /// <param name="mediaTypes">The media types to check.</param>
     /// <returns>True if any of the media types are supported; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
     public static bool AreAnyMediaTypesSupported(
         this ResponseFormatterFactory factory,
         params string[] mediaTypes)
     {
-        if (factory is null)
-            throw new ArgumentNullException(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
-        if (mediaTypes is null || mediaTypes.Length == 0)
+        if (mediaTypes is null or { Length: 0 })
+        {
             return true;
+        }
 
         foreach (var mediaType in mediaTypes)
         {
             if (factory.IsMediaTypeSupported(mediaType))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -143,11 +146,11 @@ public static class ResponseFormatterFactoryExtensions
     /// </summary>
     /// <param name="factory">The factory instance.</param>
     /// <returns>The default formatter instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
     public static IResponseFormatter GetDefaultFormatter(
         this ResponseFormatterFactory factory)
     {
-        if (factory is null)
-            throw new ArgumentNullException(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
         return factory.GetFormatter(null);
     }
