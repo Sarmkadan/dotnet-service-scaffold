@@ -25,13 +25,12 @@ public static class ServiceRepositoryExtensions
     /// <param name="serviceName">The name of the service to retrieve</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>The service registration or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="serviceName"/> is null or whitespace</exception>
     public static async Task<ServiceRegistration?> GetByNameAsync(this ServiceRepository repository, string serviceName, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
-
-        if (string.IsNullOrWhiteSpace(serviceName))
-            throw new ArgumentException("Service name cannot be null or whitespace", nameof(serviceName));
+        ArgumentNullException.ThrowIfNull(repository);
+        ArgumentException.ThrowIfNullOrEmpty(serviceName, nameof(serviceName));
 
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
         if (!tracking)
@@ -47,10 +46,10 @@ public static class ServiceRepositoryExtensions
     /// <param name="status">The service status to filter by</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of service registrations with the specified status</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<IEnumerable<ServiceRegistration>> GetByStatusAsync(this ServiceRepository repository, ServiceStatus status, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
         if (!tracking)
@@ -69,10 +68,10 @@ public static class ServiceRepositoryExtensions
     /// <param name="metricsCount">Number of recent metrics to include per service</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of enabled service registrations with metrics</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<IEnumerable<ServiceRegistration>> GetEnabledServicesWithMetricsAsync(this ServiceRepository repository, int metricsCount = 10, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
         if (!tracking)
@@ -93,10 +92,10 @@ public static class ServiceRepositoryExtensions
     /// <param name="status">Optional status to filter by</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of service registrations for the specified owner</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<IEnumerable<ServiceRegistration>> GetByOwnerAsync(this ServiceRepository repository, Guid ownerId, ServiceStatus? status = null, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
         if (!tracking)
@@ -119,10 +118,10 @@ public static class ServiceRepositoryExtensions
     /// <param name="ownerId">Optional owner identifier to filter by</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of unhealthy service registrations</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<IEnumerable<ServiceRegistration>> GetUnhealthyServicesAsync(this ServiceRepository repository, Guid? ownerId = null, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
         if (!tracking)
@@ -148,10 +147,10 @@ public static class ServiceRepositoryExtensions
     /// <param name="ownerId">Optional owner identifier to filter by</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of services without recent health checks</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<IEnumerable<ServiceRegistration>> GetServicesWithoutRecentHealthCheckAsync(this ServiceRepository repository, int minutesThreshold = 5, Guid? ownerId = null, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         var threshold = DateTime.UtcNow.AddMinutes(-minutesThreshold);
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
@@ -178,10 +177,10 @@ public static class ServiceRepositoryExtensions
     /// <param name="ownerId">Optional owner identifier to filter by</param>
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of services due for health check</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<IEnumerable<ServiceRegistration>> GetServicesDueForHealthCheckAsync(this ServiceRepository repository, int defaultIntervalMinutes = 5, Guid? ownerId = null, bool tracking = true)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         var threshold = DateTime.UtcNow.AddMinutes(-defaultIntervalMinutes);
         IQueryable<ServiceRegistration> query = repository._context.Set<ServiceRegistration>();
@@ -207,10 +206,10 @@ public static class ServiceRepositoryExtensions
     /// </summary>
     /// <param name="repository">The service repository instance</param>
     /// <returns>Dictionary mapping service status to count</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
     public static async Task<Dictionary<ServiceStatus, int>> GetServiceCountsByStatusAsync(this ServiceRepository repository)
     {
-        if (repository == null)
-            throw new ArgumentNullException(nameof(repository));
+        ArgumentNullException.ThrowIfNull(repository);
 
         return await repository._dbSet
             .GroupBy(s => s.Status)
