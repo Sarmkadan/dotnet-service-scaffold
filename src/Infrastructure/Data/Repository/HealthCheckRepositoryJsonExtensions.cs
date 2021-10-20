@@ -15,7 +15,7 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public static class HealthCheckRepositoryJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
@@ -28,17 +28,14 @@ public static class HealthCheckRepositoryJsonExtensions
     /// <param name="value">The repository instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>A JSON string representation of the repository.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static string ToJson(this HealthCheckRepository value, bool indented = false)
     {
-        if (value == null)
-        {
-            return "{}";
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented ? new JsonSerializerOptions(_jsonOptions)
-        {
-            WriteIndented = true
-        } : _jsonOptions;
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
     }
@@ -48,7 +45,8 @@ public static class HealthCheckRepositoryJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A deserialized HealthCheckRepository instance, or null if parsing fails.</returns>
-    public static HealthCheckRepository? FromJson(string json)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    public static HealthCheckRepository? FromJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -71,7 +69,8 @@ public static class HealthCheckRepositoryJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">The resulting repository instance, or null if parsing fails.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
-    public static bool TryFromJson(string json, out HealthCheckRepository? value)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    public static bool TryFromJson(string? json, out HealthCheckRepository? value)
     {
         value = null;
 
