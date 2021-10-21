@@ -9,7 +9,7 @@ namespace DotnetServiceScaffold.Infrastructure.DockerCompose;
 /// <summary>
 /// Provides System.Text.Json serialization extensions for <see cref="DockerComposeGenerator"/>.
 /// </summary>
-public static class DockerComposeGeneratorJsonExtensions
+public static class DockerComposeGeneratorExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
@@ -25,6 +25,7 @@ public static class DockerComposeGeneratorJsonExtensions
     /// <param name="value">The DockerComposeGenerator instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the DockerComposeGenerator.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this DockerComposeGenerator value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -44,6 +45,7 @@ public static class DockerComposeGeneratorJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A DockerComposeGenerator instance, or null if deserialization fails.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static DockerComposeGenerator? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
@@ -64,6 +66,7 @@ public static class DockerComposeGeneratorJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized DockerComposeGenerator instance, or null if deserialization fails.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out DockerComposeGenerator? value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
