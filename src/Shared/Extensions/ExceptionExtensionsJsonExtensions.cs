@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
 using System.Text.Json;
 
 namespace DotnetServiceScaffold.Shared.Extensions;
@@ -25,21 +26,17 @@ public static class ExceptionExtensionsJsonExtensions
     /// <summary>
     /// Serializes an exception to a JSON string.
     /// </summary>
-    /// <param name="exception">The exception to serialize</param>
+    /// <param name="exception">The exception to serialize. Cannot be null.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability</param>
     /// <returns>A JSON string representation of the exception</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
     public static string ToJson(this Exception exception, bool indented = false)
     {
-        if (exception is null)
-        {
-            return "{}";
-        }
+        ArgumentNullException.ThrowIfNull(exception);
 
         var options = indented
             ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
+            { WriteIndented = true }
             : _jsonSerializerOptions;
 
         return JsonSerializer.Serialize(exception, options);
@@ -49,14 +46,12 @@ public static class ExceptionExtensionsJsonExtensions
     /// Deserializes a JSON string to an Exception instance.
     /// Note: This creates a generic Exception with serialized properties, not the original exception type.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize</param>
-    /// <returns>An Exception instance with serialized properties, or null if deserialization fails</returns>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>An Exception instance with serialized properties, or null if deserialization fails.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null, empty, or whitespace.</exception>
     public static Exception? FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
@@ -72,17 +67,13 @@ public static class ExceptionExtensionsJsonExtensions
     /// Attempts to deserialize a JSON string to an Exception instance.
     /// Note: This creates a generic Exception with serialized properties, not the original exception type.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize</param>
-    /// <param name="exception">Output parameter containing the deserialized exception, or null if failed</param>
-    /// <returns>True if deserialization succeeded, false otherwise</returns>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="exception">Output parameter containing the deserialized exception, or null if failed.</param>
+    /// <returns>True if deserialization succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out Exception? exception)
     {
-        exception = null;
-
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return false;
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
@@ -91,6 +82,7 @@ public static class ExceptionExtensionsJsonExtensions
         }
         catch (JsonException)
         {
+            exception = null;
             return false;
         }
     }
