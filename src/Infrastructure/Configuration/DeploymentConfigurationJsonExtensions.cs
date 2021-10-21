@@ -12,8 +12,12 @@ using System.Text.Json.Serialization.Metadata;
 namespace DotnetServiceScaffold.Infrastructure.Configuration;
 
 /// <summary>
-/// Provides System.Text.Json serialization and deserialization extensions for DeploymentConfiguration.
+/// Provides System.Text.Json serialization and deserialization extensions for <see cref="DeploymentConfiguration"/>.
 /// </summary>
+/// <remarks>
+/// This class offers methods to convert between <see cref="DeploymentConfiguration"/> instances and JSON strings
+/// using camelCase property naming policy and case-insensitive deserialization.
+/// </remarks>
 public static class DeploymentConfigurationJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
@@ -26,17 +30,15 @@ public static class DeploymentConfigurationJsonExtensions
     };
 
     /// <summary>
-    /// Serializes the DeploymentConfiguration to a JSON string.
+    /// Serializes the <see cref="DeploymentConfiguration"/> to a JSON string.
     /// </summary>
-    /// <param name="value">The DeploymentConfiguration instance to serialize.</param>
+    /// <param name="value">The <see cref="DeploymentConfiguration"/> instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the DeploymentConfiguration.</returns>
+    /// <returns>A JSON string representation of the <see cref="DeploymentConfiguration"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this DeploymentConfiguration value, bool indented = false)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
             ? new JsonSerializerOptions(_jsonSerializerOptions)
@@ -49,10 +51,11 @@ public static class DeploymentConfigurationJsonExtensions
     }
 
     /// <summary>
-    /// Deserializes a JSON string to a DeploymentConfiguration instance.
+    /// Deserializes a JSON string to a <see cref="DeploymentConfiguration"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A DeploymentConfiguration instance, or null if the JSON is empty or whitespace.</returns>
+    /// <returns>A <see cref="DeploymentConfiguration"/> instance, or <see langword="null"/> if the JSON is empty or whitespace.</returns>
+    /// <exception cref="JsonException">Thrown when the JSON is malformed and cannot be deserialized.</exception>
     public static DeploymentConfiguration? FromJson(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -64,11 +67,11 @@ public static class DeploymentConfigurationJsonExtensions
     }
 
     /// <summary>
-    /// Attempts to deserialize a JSON string to a DeploymentConfiguration instance.
+    /// Attempts to deserialize a JSON string to a <see cref="DeploymentConfiguration"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The resulting DeploymentConfiguration instance, or null if deserialization fails.</param>
-    /// <returns>True if deserialization succeeds; otherwise, false.</returns>
+    /// <param name="value">The resulting <see cref="DeploymentConfiguration"/> instance, or <see langword="null"/> if deserialization fails.</param>
+    /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
     public static bool TryFromJson(string json, out DeploymentConfiguration? value)
     {
         value = null;
