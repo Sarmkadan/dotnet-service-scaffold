@@ -8,10 +8,14 @@ using DotnetServiceScaffold.Shared.Utilities;
 using FluentAssertions;
 using Xunit;
 
-namespace DotnetServiceScaffold.Tests.Shared.Utilities;
-
+/// <summary>
+/// Tests for the CollectionUtility class.
+/// </summary>
 public class CollectionUtilityTests
 {
+    /// <summary>
+    /// Tests the IsNullOrEmpty method when the collection is null.
+    /// </summary>
     [Fact]
     public void IsNullOrEmpty_ShouldReturnTrueForNullCollection()
     {
@@ -19,6 +23,9 @@ public class CollectionUtilityTests
         CollectionUtility.IsNullOrEmpty(collection).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests the IsNullOrEmpty method when the collection is empty.
+    /// </summary>
     [Fact]
     public void IsNullOrEmpty_ShouldReturnTrueForEmptyCollection()
     {
@@ -26,6 +33,9 @@ public class CollectionUtilityTests
         CollectionUtility.IsNullOrEmpty(collection).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests the IsNullOrEmpty method when the collection is not empty.
+    /// </summary>
     [Fact]
     public void IsNullOrEmpty_ShouldReturnFalseForNonEmptyCollection()
     {
@@ -33,6 +43,9 @@ public class CollectionUtilityTests
         CollectionUtility.IsNullOrEmpty(collection).Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests the GetOrDefault method when the index is valid.
+    /// </summary>
     [Fact]
     public void GetOrDefault_ShouldReturnElementIfIndexIsValid()
     {
@@ -40,6 +53,11 @@ public class CollectionUtilityTests
         CollectionUtility.GetOrDefault(list, 1).Should().Be(2);
     }
 
+    /// <summary>
+    /// Tests the GetOrDefault method when the index is negative.
+    /// </summary>
+    /// <param name="list">The list to get the element from.</param>
+    /// <param name="index">The index to get the element at.</param>
     [Fact]
     public void GetOrDefault_ShouldReturnDefaultValueIfIndexIsNegative()
     {
@@ -47,6 +65,11 @@ public class CollectionUtilityTests
         CollectionUtility.GetOrDefault(list, -1).Should().Be(default(int));
     }
 
+    /// <summary>
+    /// Tests the GetOrDefault method when the index is out of range.
+    /// </summary>
+    /// <param name="list">The list to get the element from.</param>
+    /// <param name="index">The index to get the element at.</param>
     [Fact]
     public void GetOrDefault_ShouldReturnDefaultValueIfIndexIsOutOfRange()
     {
@@ -54,6 +77,9 @@ public class CollectionUtilityTests
         CollectionUtility.GetOrDefault(list, 5).Should().Be(default(int));
     }
 
+    /// <summary>
+    /// Tests the Paginate method when the page number is valid.
+    /// </summary>
     [Fact]
     public void Paginate_ShouldReturnCorrectPage()
     {
@@ -68,6 +94,9 @@ public class CollectionUtilityTests
         paginated.Last().Should().Be(30);
     }
 
+    /// <summary>
+    /// Tests the Paginate method when the page number is out of range.
+    /// </summary>
     [Fact]
     public void Paginate_ShouldReturnEmptyListForOutOfRangePageNumber()
     {
