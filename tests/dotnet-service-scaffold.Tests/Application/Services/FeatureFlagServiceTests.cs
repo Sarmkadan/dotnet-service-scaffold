@@ -14,17 +14,26 @@ using DotnetServiceScaffold.Application.Services;
 
 namespace DotnetServiceScaffold.Tests.Application.Services;
 
+/// <summary>
+/// Tests for the FeatureFlagService class.
+/// </summary>
 public class FeatureFlagServiceTests
 {
     private readonly ILogger<FeatureFlagService> _logger;
     private readonly FeatureFlagService _featureFlagService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FeatureFlagServiceTests"/> class.
+    /// </summary>
     public FeatureFlagServiceTests()
     {
         _logger = Substitute.For<ILogger<FeatureFlagService>>();
         _featureFlagService = new FeatureFlagService(_logger);
     }
 
+    /// <summary>
+    /// Verifies that IsEnabled returns true when the feature is enabled.
+    /// </summary>
     [Fact]
     public void IsEnabled_ShouldReturnTrue_WhenFeatureIsEnabled()
     {
@@ -38,6 +47,9 @@ public class FeatureFlagServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsEnabled returns false when the feature is disabled.
+    /// </summary>
     [Fact]
     public void IsEnabled_ShouldReturnFalse_WhenFeatureIsDisabled()
     {
@@ -51,6 +63,9 @@ public class FeatureFlagServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsEnabled returns false when the feature is not found.
+    /// </summary>
     [Fact]
     public void IsEnabled_ShouldReturnFalse_WhenFeatureNotFound()
     {
@@ -62,6 +77,9 @@ public class FeatureFlagServiceTests
         _logger.Received(1).LogWarning("Feature flag '{FeatureName}' not found, defaulting to false", "non_existent_feature");
     }
 
+    /// <summary>
+    /// Verifies that EnableFeature sets the feature to enabled.
+    /// </summary>
     [Fact]
     public void EnableFeature_ShouldSetFeatureToEnabled()
     {
@@ -76,6 +94,9 @@ public class FeatureFlagServiceTests
         _logger.Received(1).LogInformation("Feature '{FeatureName}' enabled", "rate_limiting");
     }
 
+    /// <summary>
+    /// Verifies that DisableFeature sets the feature to disabled.
+    /// </summary>
     [Fact]
     public void DisableFeature_ShouldSetFeatureToDisabled()
     {
@@ -90,6 +111,9 @@ public class FeatureFlagServiceTests
         _logger.Received(1).LogInformation("Feature '{FeatureName}' disabled", "rate_limiting");
     }
 
+    /// <summary>
+    /// Verifies that SetRolloutPercentage updates the percentage.
+    /// </summary>
     [Fact]
     public void SetRolloutPercentage_ShouldUpdatePercentage()
     {
@@ -106,6 +130,10 @@ public class FeatureFlagServiceTests
         _logger.Received(1).LogInformation("Feature '{FeatureName}' rollout percentage set to {Percentage}%", featureName, 50);
     }
 
+    /// <summary>
+    /// Verifies that SetRolloutPercentage throws an ArgumentException for invalid percentages.
+    /// </summary>
+    /// <param name="invalidPercentage">The invalid percentage to test.</param>
     [Theory]
     [InlineData(-1)]
     [InlineData(101)]
@@ -122,6 +150,9 @@ public class FeatureFlagServiceTests
            .WithMessage("Rollout percentage must be between 0 and 100*");
     }
 
+    /// <summary>
+    /// Verifies that RegisterFeature adds a new feature.
+    /// </summary>
     [Fact]
     public void RegisterFeature_ShouldAddNewFeature()
     {
@@ -139,6 +170,9 @@ public class FeatureFlagServiceTests
         _logger.Received(1).LogInformation("Feature '{FeatureName}' registered (enabled: {Enabled})", newFeatureName, true);
     }
 
+    /// <summary>
+    /// Verifies that GetAllFlags returns all registered flags.
+    /// </summary>
     [Fact]
     public void GetAllFlags_ShouldReturnAllRegisteredFlags()
     {
