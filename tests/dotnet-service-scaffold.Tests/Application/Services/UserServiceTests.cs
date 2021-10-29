@@ -14,17 +14,26 @@ using DotnetServiceScaffold.Domain.Exceptions;
 
 namespace DotnetServiceScaffold.Tests.Application.Services;
 
+/// <summary>
+/// Tests for the UserService class.
+/// </summary>
 public class UserServiceTests
 {
     private readonly IUserRepository _userRepository;
     private readonly UserService _userService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserServiceTests"/> class.
+    /// </summary>
     public UserServiceTests()
     {
         _userRepository = Substitute.For<IUserRepository>();
         _userService = new UserService(_userRepository);
     }
 
+    /// <summary>
+    /// Tests that GetUserByIdAsync returns the user when the user exists.
+    /// </summary>
     [Fact]
     public async Task GetUserByIdAsync_ShouldReturnUser_WhenUserExists()
     {
@@ -41,6 +50,9 @@ public class UserServiceTests
         await _userRepository.Received(1).GetUserByIdAsync(userId);
     }
 
+    /// <summary>
+    /// Tests that GetUserByIdAsync returns null when the user does not exist.
+    /// </summary>
     [Fact]
     public async Task GetUserByIdAsync_ShouldReturnNull_WhenUserDoesNotExist()
     {
@@ -56,6 +68,9 @@ public class UserServiceTests
         await _userRepository.Received(1).GetUserByIdAsync(userId);
     }
 
+    /// <summary>
+    /// Tests that CreateUserAsync returns the user when the user is created successfully.
+    /// </summary>
     [Fact]
     public async Task CreateUserAsync_ShouldReturnUser_WhenUserIsCreatedSuccessfully()
     {
@@ -74,6 +89,9 @@ public class UserServiceTests
         await _userRepository.Received(1).AddUserAsync(Arg.Is<User>(u => u.Username == newUser.Username));
     }
 
+    /// <summary>
+    /// Tests that CreateUserAsync throws an exception when the username already exists.
+    /// </summary>
     [Fact]
     public async Task CreateUserAsync_ShouldThrowException_WhenUsernameAlreadyExists()
     {
@@ -90,6 +108,9 @@ public class UserServiceTests
         await _userRepository.DidNotReceive().AddUserAsync(Arg.Any<User>());
     }
 
+    /// <summary>
+    /// Tests that UpdateUserAsync updates the user when the user exists.
+    /// </summary>
     [Fact]
     public async Task UpdateUserAsync_ShouldUpdateUser_WhenUserExists()
     {
@@ -109,6 +130,9 @@ public class UserServiceTests
         await _userRepository.Received(1).UpdateUserAsync(Arg.Is<User>(u => u.Username == updatedUser.Username));
     }
 
+    /// <summary>
+    /// Tests that UpdateUserAsync throws an exception when the user does not exist.
+    /// </summary>
     [Fact]
     public async Task UpdateUserAsync_ShouldThrowException_WhenUserDoesNotExist()
     {
@@ -127,6 +151,9 @@ public class UserServiceTests
         await _userRepository.DidNotReceive().UpdateUserAsync(Arg.Any<User>());
     }
 
+    /// <summary>
+    /// Tests that DeleteUserAsync deletes the user when the user exists.
+    /// </summary>
     [Fact]
     public async Task DeleteUserAsync_ShouldDeleteUser_WhenUserExists()
     {
