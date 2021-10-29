@@ -14,17 +14,28 @@ using DotnetServiceScaffold.Domain.Exceptions;
 
 namespace DotnetServiceScaffold.Tests.Application.Services;
 
+/// <summary>
+/// Tests for the ConfigurationService class.
+/// </summary>
 public class ConfigurationServiceTests
 {
     private readonly IConfigurationRepository _configurationRepository;
     private readonly ConfigurationService _configurationService;
 
+    /// <summary>
+    /// Initializes a new instance of the ConfigurationServiceTests class.
+    /// </summary>
     public ConfigurationServiceTests()
     {
         _configurationRepository = Substitute.For<IConfigurationRepository>();
         _configurationService = new ConfigurationService(_configurationRepository);
     }
 
+    /// <summary>
+    /// Tests that GetConfigurationByIdAsync returns the configuration when it exists.
+    /// </summary>
+    /// <param name="configId">The ID of the configuration to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetConfigurationByIdAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
@@ -41,6 +52,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.Received(1).GetConfigurationByIdAsync(configId);
     }
 
+    /// <summary>
+    /// Tests that GetConfigurationByIdAsync returns null when the configuration does not exist.
+    /// </summary>
+    /// <param name="configId">The ID of the configuration to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetConfigurationByIdAsync_ShouldReturnNull_WhenConfigurationDoesNotExist()
     {
@@ -56,6 +72,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.Received(1).GetConfigurationByIdAsync(configId);
     }
 
+    /// <summary>
+    /// Tests that GetConfigurationByKeyAsync returns the configuration when it exists.
+    /// </summary>
+    /// <param name="configKey">The key of the configuration to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetConfigurationByKeyAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
@@ -72,6 +93,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.Received(1).GetConfigurationByKeyAsync(configKey);
     }
 
+    /// <summary>
+    /// Tests that GetConfigurationByKeyAsync returns null when the configuration does not exist.
+    /// </summary>
+    /// <param name="configKey">The key of the configuration to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetConfigurationByKeyAsync_ShouldReturnNull_WhenConfigurationDoesNotExist()
     {
@@ -87,6 +113,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.Received(1).GetConfigurationByKeyAsync(configKey);
     }
 
+    /// <summary>
+    /// Tests that CreateConfigurationAsync returns the created configuration when successful.
+    /// </summary>
+    /// <param name="newConfig">The new configuration to create.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task CreateConfigurationAsync_ShouldReturnConfiguration_WhenCreatedSuccessfully()
     {
@@ -105,6 +136,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.Received(1).AddConfigurationAsync(Arg.Is<ServiceConfiguration>(c => c.Key == newConfig.Key));
     }
 
+    /// <summary>
+    /// Tests that CreateConfigurationAsync throws an exception when the key already exists.
+    /// </summary>
+    /// <param name="existingConfig">The existing configuration with the same key.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task CreateConfigurationAsync_ShouldThrowException_WhenKeyAlreadyExists()
     {
@@ -121,6 +157,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.DidNotReceive().AddConfigurationAsync(Arg.Any<ServiceConfiguration>());
     }
 
+    /// <summary>
+    /// Tests that UpdateConfigurationAsync updates the configuration when it exists.
+    /// </summary>
+    /// <param name="updatedConfig">The updated configuration to update.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateConfigurationAsync_ShouldUpdateConfiguration_WhenConfigurationExists()
     {
@@ -141,6 +182,11 @@ public class ConfigurationServiceTests
         await _configurationRepository.Received(1).UpdateConfigurationAsync(Arg.Is<ServiceConfiguration>(c => c.Key == updatedConfig.Key));
     }
 
+    /// <summary>
+    /// Tests that UpdateConfigurationAsync throws an exception when the configuration does not exist.
+    /// </summary>
+    /// <param name="updatedConfig">The updated configuration to update.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateConfigurationAsync_ShouldThrowException_WhenConfigurationDoesNotExist()
     {
