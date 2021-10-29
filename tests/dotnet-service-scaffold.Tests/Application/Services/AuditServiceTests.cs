@@ -15,17 +15,27 @@ using DotnetServiceScaffold.Infrastructure.Data.Repository;
 
 namespace DotnetServiceScaffold.Tests.Application.Services;
 
+/// <summary>
+/// Tests for the AuditService class.
+/// </summary>
 public class AuditServiceTests
 {
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly AuditService _auditService;
 
+    /// <summary>
+    /// Initializes a new instance of the AuditServiceTests class.
+    /// </summary>
     public AuditServiceTests()
     {
         _auditLogRepository = Substitute.For<IAuditLogRepository>();
         _auditService = new AuditService(_auditLogRepository);
     }
 
+    /// <summary>
+    /// Tests that the LogAuditAsync method adds an audit log to the repository.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LogAuditAsync_ShouldAddAuditLogToRepository()
     {
@@ -51,6 +61,10 @@ public class AuditServiceTests
                 log.Details == details));
     }
 
+    /// <summary>
+    /// Tests that the LogAuditAsync method sets the CreatedAt timestamp.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LogAuditAsync_ShouldSetCreatedAtTimestamp()
     {
@@ -71,6 +85,11 @@ public class AuditServiceTests
             Arg.Is<AuditLog>(log => log.CreatedAt != default));
     }
 
+    /// <summary>
+    /// Tests that the GetAuditLogsForUserAsync method returns logs for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user to retrieve logs for.</param>
+    /// <returns>A task that represents the asynchronous operation and returns a list of audit logs.</returns>
     [Fact]
     public async Task GetAuditLogsForUserAsync_ShouldReturnLogsForUser()
     {
@@ -91,6 +110,11 @@ public class AuditServiceTests
         await _auditLogRepository.Received(1).GetAuditLogsByUserIdAsync(userId);
     }
 
+    /// <summary>
+    /// Tests that the GetAuditLogsForUserAsync method returns an empty list when there are no logs for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user to retrieve logs for.</param>
+    /// <returns>A task that represents the asynchronous operation and returns a list of audit logs.</returns>
     [Fact]
     public async Task GetAuditLogsForUserAsync_ShouldReturnEmpty_WhenNoLogsForUser()
     {
@@ -106,6 +130,12 @@ public class AuditServiceTests
         await _auditLogRepository.Received(1).GetAuditLogsByUserIdAsync(userId);
     }
 
+    /// <summary>
+    /// Tests that the GetAuditLogsForEntityAsync method returns logs for an entity.
+    /// </summary>
+    /// <param name="entityType">The type of the entity to retrieve logs for.</param>
+    /// <param name="entityId">The ID of the entity to retrieve logs for.</param>
+    /// <returns>A task that represents the asynchronous operation and returns a list of audit logs.</returns>
     [Fact]
     public async Task GetAuditLogsForEntityAsync_ShouldReturnLogsForEntity()
     {
@@ -127,6 +157,12 @@ public class AuditServiceTests
         await _auditLogRepository.Received(1).GetAuditLogsByEntityAsync(entityType, entityId);
     }
 
+    /// <summary>
+    /// Tests that the GetAuditLogsForEntityAsync method returns an empty list when there are no logs for an entity.
+    /// </summary>
+    /// <param name="entityType">The type of the entity to retrieve logs for.</param>
+    /// <param name="entityId">The ID of the entity to retrieve logs for.</param>
+    /// <returns>A task that represents the asynchronous operation and returns a list of audit logs.</returns>
     [Fact]
     public async Task GetAuditLogsForEntityAsync_ShouldReturnEmpty_WhenNoLogsForEntity()
     {
