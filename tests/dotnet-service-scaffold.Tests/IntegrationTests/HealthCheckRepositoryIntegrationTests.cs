@@ -16,15 +16,25 @@ using System.Linq;
 
 namespace DotnetServiceScaffold.Tests.IntegrationTests;
 
+/// <summary>
+/// Integration tests for the <see cref="HealthCheckRepository"/>.
+/// </summary>
 public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
 {
     private readonly HealthCheckRepository _healthCheckRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HealthCheckRepositoryIntegrationTests"/> class.
+    /// </summary>
     public HealthCheckRepositoryIntegrationTests()
     {
         _healthCheckRepository = new HealthCheckRepository(DbContext);
     }
 
+    /// <summary>
+    /// Tests that adding a health check result persists it to the database.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task AddHealthCheckResultAsync_ShouldAddResultToDatabase()
     {
@@ -50,6 +60,10 @@ public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
         savedResult.Details.Should().Be(result.Details);
     }
 
+    /// <summary>
+    /// Tests that retrieving health check results for a service returns the correct results.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetHealthCheckResultsForServiceAsync_ShouldReturnResultsForService()
     {
@@ -72,6 +86,10 @@ public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
         results.Should().NotContainEquivalentOf(result3);
     }
 
+    /// <summary>
+    /// Tests that retrieving health check results for a service returns an empty collection when no results exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetHealthCheckResultsForServiceAsync_ShouldReturnEmpty_WhenNoResults()
     {
@@ -85,6 +103,10 @@ public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
         results.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that retrieving the latest health check result for a service returns the most recent result.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetLatestHealthCheckResultForServiceAsync_ShouldReturnLatestResult()
     {
@@ -105,6 +127,10 @@ public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
         latestResult.Should().BeEquivalentTo(result3);
     }
 
+    /// <summary>
+    /// Tests that retrieving the latest health check result for a service returns null when no results exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetLatestHealthCheckResultForServiceAsync_ShouldReturnNull_WhenNoResults()
     {
@@ -118,6 +144,10 @@ public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
         latestResult.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that deleting a health check result removes it from the database.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task DeleteHealthCheckResultAsync_ShouldRemoveResultFromDatabase()
     {
