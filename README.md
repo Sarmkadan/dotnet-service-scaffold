@@ -1,4 +1,4 @@
-// ... (rest of the README.md content remains the same)
+# Service Scaffold
 
 ## ResultExtensions
 
@@ -64,3 +64,36 @@ var conditionResult = Result.FromCondition(
 ```
 
 These extensions provide a fluent API for handling success/failure scenarios while maintaining strong type safety and avoiding boilerplate error-checking code.
+
+## ServiceConfigurationExtensions
+
+The `ServiceConfigurationExtensions` class provides helper methods for retrieving and updating service configuration values with type safety and validation. It includes methods for common data types like `double`, `decimal`, `DateTime`, and `Guid`, as well as utilities for checking system configuration flags and updating values conditionally.
+
+### Usage Example
+
+```csharp
+var config = GetServiceConfiguration(); // Assume this retrieves a ServiceConfiguration instance
+
+// Retrieve a string value with a default
+var apiKey = config.GetValueOrDefault("API_KEY", "default123");
+
+// Check if this is a system-level configuration
+if (config.IsSystemConfiguration())
+{
+    // Safely retrieve an enum value
+    var mode = config.GetEnumValue<EnvironmentMode>("ENV_MODE");
+    
+    // Update a numeric value only if it has changed
+    config.UpdateValueIfChanged("MAX_RETRIES", 5);
+}
+else
+{
+    // Retrieve a Guid value with validation
+    var serviceId = config.GetGuidValue("SERVICE_ID");
+    
+    // Get a decimal value for a timeout setting
+    var timeout = config.GetDecimalValue("REQUEST_TIMEOUT");
+}
+```
+
+This example demonstrates retrieving configuration values of different types, checking system configuration status, and conditionally updating values while ensuring type safety.
