@@ -88,7 +88,7 @@ if (config.IsSystemConfiguration())
 }
 else
 {
-    // Retrieve a Guid value with validation
+    // Retrieve a Guid value
     var serviceId = config.GetGuidValue("SERVICE_ID");
     
     // Get a decimal value for a timeout setting
@@ -97,3 +97,40 @@ else
 ```
 
 This example demonstrates retrieving configuration values of different types, checking system configuration status, and conditionally updating values while ensuring type safety.
+
+## HealthCheckRepositoryIntegrationTestsExtensions
+
+`HealthCheckRepositoryIntegrationTestsExtensions` supplies a set of helper methods that make integration testing of the health‑check repository straightforward. The methods allow you to create single or multiple `HealthCheckResult` entries, retrieve them, count results for a specific service, and assert that a result matches expected values, all with async support.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Assume `repository` is an instance of the health‑check repository used in tests.
+var repository = GetHealthCheckRepository(); // placeholder for test setup
+var serviceId = Guid.NewGuid();
+
+// Create and add a single health‑check result
+var singleResult = await HealthCheckRepositoryIntegrationTestsExtensions
+    .CreateAndAddHealthCheckResultAsync(repository, serviceId);
+
+// Create several health‑check results at once
+var multipleResults = await HealthCheckRepositoryIntegrationTestsExtensions
+    .CreateMultipleHealthCheckResultsAsync(repository, serviceId, count: 3);
+
+// Verify that the created result matches the expected service identifier
+HealthCheckRepositoryIntegrationTestsExtensions.AssertHealthCheckResultMatches(singleResult, serviceId);
+
+// Retrieve all health‑check results from the repository
+List<HealthCheckResult> allResults = await HealthCheckRepositoryIntegrationTestsExtensions
+    .GetAllHealthCheckResultsAsync(repository);
+
+// Count how many results exist for a particular service
+int resultCount = await HealthCheckRepositoryIntegrationTestsExtensions
+    .CountHealthCheckResultsForServiceAsync(repository, serviceId);
+```
+
+These extension methods streamline the arrangement, execution, and verification phases of integration tests that involve health‑check data.
