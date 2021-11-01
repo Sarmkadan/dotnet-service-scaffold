@@ -12,17 +12,24 @@ using DotnetServiceScaffold.Infrastructure.Data.Repository;
 using FluentAssertions;
 using Xunit;
 
-namespace DotnetServiceScaffold.Tests.IntegrationTests;
-
+/// <summary>
+/// Integration tests for the ApiKeyRepository.
+/// </summary>
 public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
 {
     private readonly ApiKeyRepository _apiKeyRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiKeyRepositoryIntegrationTests"/> class.
+    /// </summary>
     public ApiKeyRepositoryIntegrationTests()
     {
         _apiKeyRepository = new ApiKeyRepository(DbContext);
     }
 
+    /// <summary>
+    /// Tests that adding an API key to the database works correctly.
+    /// </summary>
     [Fact]
     public async Task AddApiKey_ShouldAddApiKeyToDatabase()
     {
@@ -48,6 +55,9 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         retrievedApiKey!.KeyPrefix.Should().Be("prefix1");
     }
 
+    /// <summary>
+    /// Tests that getting an API key by ID works correctly.
+    /// </summary>
     [Fact]
     public async Task GetApiKeyById_ShouldReturnCorrectApiKey()
     {
@@ -73,6 +83,9 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         retrievedApiKey!.KeyPrefix.Should().Be("prefix2");
     }
 
+    /// <summary>
+    /// Tests that updating an API key in the database works correctly.
+    /// </summary>
     [Fact]
     public async Task UpdateApiKey_ShouldUpdateApiKeyInDatabase()
     {
@@ -106,6 +119,9 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         updatedApiKey!.KeyPrefix.Should().Be("updatedPrefix3");
     }
 
+    /// <summary>
+    /// Tests that deleting an API key from the database works correctly.
+    /// </summary>
     [Fact]
     public async Task DeleteApiKey_ShouldRemoveApiKeyFromDatabase()
     {
@@ -132,6 +148,9 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         deletedApiKey.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that getting all API keys from the database works correctly.
+    /// </summary>
     [Fact]
     public async Task GetAllApiKeys_ShouldReturnAllApiKeys()
     {
@@ -147,6 +166,9 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         apiKeys.Should().NotBeNull().And.HaveCount(2);
     }
 
+    /// <summary>
+    /// Tests that getting an API key by a non-existent ID returns null.
+    /// </summary>
     [Fact]
     public async Task GetApiKeyByNonExistentId_ShouldReturnNull()
     {
@@ -160,6 +182,9 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         retrievedApiKey.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that adding an API key with an existing prefix throws an exception.
+    /// </summary>
     [Fact]
     public async Task AddApiKey_WithExistingPrefix_ShouldThrowException()
     {
