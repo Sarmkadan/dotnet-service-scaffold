@@ -12,17 +12,22 @@ using DotnetServiceScaffold.Infrastructure.Data.Repository;
 using FluentAssertions;
 using Xunit;
 
-namespace DotnetServiceScaffold.Tests.IntegrationTests;
-
+/// <summary>
+/// Integration tests for the AuditLogRepository.
+/// </summary>
 public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
 {
-    private readonly AuditLogRepository _auditLogRepository;
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuditLogRepositoryIntegrationTests"/> class.
+    /// </summary>
     public AuditLogRepositoryIntegrationTests()
     {
         _auditLogRepository = new AuditLogRepository(DbContext);
     }
 
+    /// <summary>
+    /// Tests that adding an audit log to the repository results in the audit log being added to the database.
+    /// </summary>
     [Fact]
     public async Task AddAuditLog_ShouldAddAuditLogToDatabase()
     {
@@ -48,6 +53,9 @@ public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
         retrievedAuditLog!.Action.Should().Be("Login");
     }
 
+    /// <summary>
+    /// Tests that getting an audit log by ID from the repository results in the correct audit log being returned.
+    /// </summary>
     [Fact]
     public async Task GetAuditLogById_ShouldReturnCorrectAuditLog()
     {
@@ -73,6 +81,9 @@ public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
         retrievedAuditLog!.Action.Should().Be("Logout");
     }
 
+    /// <summary>
+    /// Tests that updating an audit log in the repository results in the audit log being updated in the database.
+    /// </summary>
     [Fact]
     public async Task UpdateAuditLog_ShouldUpdateAuditLogInDatabase()
     {
@@ -106,6 +117,9 @@ public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
         updatedAuditLog!.Details.Should().Be("Profile updated with new email");
     }
 
+    /// <summary>
+    /// Tests that deleting an audit log from the repository results in the audit log being removed from the database.
+    /// </summary>
     [Fact]
     public async Task DeleteAuditLog_ShouldRemoveAuditLogFromDatabase()
     {
@@ -132,6 +146,9 @@ public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
         deletedAuditLog.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that getting all audit logs from the repository results in all audit logs being returned.
+    /// </summary>
     [Fact]
     public async Task GetAllAuditLogs_ShouldReturnAllAuditLogs()
     {
@@ -147,6 +164,9 @@ public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
         auditLogs.Should().NotBeNull().And.HaveCount(2);
     }
 
+    /// <summary>
+    /// Tests that getting an audit log by a non-existent ID from the repository results in null being returned.
+    /// </summary>
     [Fact]
     public async Task GetAuditLogByNonExistentId_ShouldReturnNull()
     {
