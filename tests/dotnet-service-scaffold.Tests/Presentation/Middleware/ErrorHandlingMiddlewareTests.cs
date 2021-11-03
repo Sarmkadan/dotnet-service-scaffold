@@ -19,8 +19,9 @@ using DotnetServiceScaffold.Presentation.Middleware;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DotnetServiceScaffold.Tests.Presentation.Middleware;
-
+/// <summary>
+/// Tests for the ErrorHandlingMiddleware class.
+/// </summary>
 public class ErrorHandlingMiddlewareTests
 {
     private readonly RequestDelegate _next;
@@ -28,6 +29,9 @@ public class ErrorHandlingMiddlewareTests
     private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly ErrorHandlingMiddleware _middleware;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorHandlingMiddlewareTests"/> class.
+    /// </summary>
     public ErrorHandlingMiddlewareTests()
     {
         _next = Substitute.For<RequestDelegate>();
@@ -36,6 +40,11 @@ public class ErrorHandlingMiddlewareTests
         _middleware = new ErrorHandlingMiddleware(_next, _logger);
     }
 
+    /// <summary>
+    /// Creates a new HttpContext instance with the specified environment.
+    /// </summary>
+    /// <param name="isDevelopment">Whether the environment is development or not.</param>
+    /// <returns>A new HttpContext instance.</returns>
     private HttpContext CreateHttpContext(bool isDevelopment = false)
     {
         var context = new DefaultHttpContext();
@@ -51,6 +60,11 @@ public class ErrorHandlingMiddlewareTests
         return context;
     }
 
+    /// <summary>
+    /// Retrieves the response body of the specified HttpContext instance.
+    /// </summary>
+    /// <param name="context">The HttpContext instance.</param>
+    /// <returns>The response body as a string.</returns>
     private async Task<string> GetResponseBody(HttpContext context)
     {
         context.Response.Body.Seek(0, SeekOrigin.Begin);
@@ -58,6 +72,9 @@ public class ErrorHandlingMiddlewareTests
         return await reader.ReadToEndAsync();
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method catches a generic exception and returns a 500 status code.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldCatchGenericExceptionAndReturn500()
     {
@@ -75,6 +92,9 @@ public class ErrorHandlingMiddlewareTests
         responseBody.Should().Contain("An error occurred processing your request.");
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method catches a ServiceScaffoldException and returns a 400 status code.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldCatchServiceScaffoldExceptionAndReturn400()
     {
@@ -91,6 +111,9 @@ public class ErrorHandlingMiddlewareTests
         responseBody.Should().Contain("Bad request error");
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method catches an ArgumentNullException and returns a 400 status code.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldCatchArgumentNullExceptionAndReturn400()
     {
@@ -107,6 +130,9 @@ public class ErrorHandlingMiddlewareTests
         responseBody.Should().Contain("Argument null error");
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method catches an ArgumentException and returns a 400 status code.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldCatchArgumentExceptionAndReturn400()
     {
@@ -123,6 +149,9 @@ public class ErrorHandlingMiddlewareTests
         responseBody.Should().Contain("Invalid argument");
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method catches an InvalidOperationException and returns a 409 status code.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldCatchInvalidOperationExceptionAndReturn409()
     {
@@ -139,6 +168,9 @@ public class ErrorHandlingMiddlewareTests
         responseBody.Should().Contain("Operation not allowed");
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method catches a KeyNotFoundException and returns a 404 status code.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldCatchKeyNotFoundExceptionAndReturn404()
     {
@@ -155,6 +187,9 @@ public class ErrorHandlingMiddlewareTests
         responseBody.Should().Contain("Resource not found");
     }
 
+    /// <summary>
+    /// Tests that the InvokeAsync method returns a generic message in production environment.
+    /// </summary>
     [Fact]
     public async Task InvokeAsync_ShouldReturnGenericMessageInProduction()
     {
