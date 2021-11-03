@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace DotnetServiceScaffold.Shared.Utilities;
@@ -141,12 +142,10 @@ public static class JsonUtility
 
         try
         {
-            using (var doc1 = JsonDocument.Parse(json1))
-            using (var doc2 = JsonDocument.Parse(json2))
-            {
-                var merged = MergeElements(doc1.RootElement, doc2.RootElement);
-                return JsonSerializer.Serialize(merged, DefaultOptions);
-            }
+            var node1 = JsonNode.Parse(json1);
+            var node2 = JsonNode.Parse(json2);
+            var merged = MergeNodes(node1, node2);
+            return merged is null ? "null" : merged.ToJsonString(DefaultOptions);
         }
         catch (JsonException ex)
         {
@@ -216,29 +215,32 @@ public static class JsonUtility
     }
 
     /// <summary>
-    /// Recursively merges two JSON elements.
+    /// Recursively merges two JSON nodes. Object properties are merged key by key, with
+    /// values from <paramref name="second"/> overriding those in <paramref name="first"/>
+    /// (recursively for nested objects). Non-object values (including arrays) from
+    /// <paramref name="second"/> take precedence entirely.
     /// </summary>
-    private static JsonElement MergeElements(JsonElement first, JsonElement second)
+    private static JsonNode? MergeNodes(JsonNode? first, JsonNode? second)
     {
-        if (first.ValueKind == JsonValueKind.Object && second.ValueKind == JsonValueKind.Object)
+        if (first is JsonObject firstObject && second is JsonObject secondObject)
         {
-            var options = new JsonSerializerOptions { WriteIndented = false };
-            var result = JsonDocument.Parse("{}").RootElement;
+            var result = new JsonObject();
 
-            foreach (var property in first.EnumerateObject())
+            foreach (var property in firstObject)
             {
-                var merged = result.GetProperty(property.Name);
-                // In a real implementation, would need to actually merge the objects
+                result[property.Key] = property.Value?.DeepClone();
             }
 
-            foreach (var property in second.EnumerateObject())
+            foreach (var property in secondObject)
             {
-                // Override with second object's properties
+                result[property.Key] = result.TryGetPropertyValue(property.Key, out var existing)
+                    ? MergeNodes(existing, property.Value)
+                    : property.Value?.DeepClone();
             }
 
-            return second; // Simplified: just return second for now
+            return result;
         }
 
-        return second;
+        return second?.DeepClone();
     }
 }
