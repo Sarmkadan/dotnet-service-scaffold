@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Globalization;
 using System.Reflection;
 
 namespace DotnetServiceScaffold.Shared.Utilities;
@@ -225,7 +226,7 @@ public static class ReflectionUtility
             if (targetType.IsEnum)
                 return Enum.Parse(targetType, value.ToString() ?? string.Empty, ignoreCase: true);
 
-            return Convert.ChangeType(value, targetType);
+            return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
         }
         catch
         {

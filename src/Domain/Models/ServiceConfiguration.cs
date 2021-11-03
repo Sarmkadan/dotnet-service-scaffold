@@ -6,6 +6,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 
 namespace DotnetServiceScaffold.Domain.Models;
 
@@ -77,7 +78,7 @@ public class ServiceConfiguration
     /// </summary>
     public TimeSpan GetTimeSpanValue(TimeSpan? defaultValue = null)
     {
-        if (TimeSpan.TryParse(Value, out var result))
+        if (TimeSpan.TryParse(Value, CultureInfo.InvariantCulture, out var result))
             return result;
 
         return defaultValue ?? TimeSpan.Zero;
