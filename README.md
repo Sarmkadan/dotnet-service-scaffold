@@ -1,3 +1,8 @@
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =====================================================================
+
 # Service Scaffold
 
 ## ResultExtensions
@@ -134,3 +139,31 @@ int resultCount = await HealthCheckRepositoryIntegrationTestsExtensions
 ```
 
 These extension methods streamline the arrangement, execution, and verification phases of integration tests that involve health‑check data.
+
+## MetricsBenchmarks
+
+The `MetricsBenchmarks` class provides performance benchmarks for in-process metric collection. It measures the overhead of incrementing counters, recording timings, and retrieving metrics.
+
+### Usage Example
+
+```csharp
+var metrics = new MetricsService(NullLogger<MetricsService>.Instance);
+
+// Pre-populate some counters
+for (int i = 0; i < 50; i++)
+{
+    metrics.IncrementCounter("requests.total");
+    metrics.RecordTiming("request.duration_ms", 10 + i % 200);
+    metrics.RecordGauge("memory.mb", 128 + i * 0.5);
+}
+
+metrics.IncrementCounterNoTags();
+metrics.IncrementCounterOneTag();
+metrics.IncrementCounterThreeTags();
+metrics.RecordTimingNoTags();
+metrics.RecordTimingThreeTags();
+metrics.RecordGauge();
+var metricsSnapshot = metrics.GetMetricsAsync().Result;
+```
+
+This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection. Note that the actual usage may vary depending on your specific requirements and use cases.
