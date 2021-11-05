@@ -193,4 +193,58 @@ var metricsSnapshot = metrics.GetMetricsAsync().Result;
 ```
 
 This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection.
+
+## CacheBenchmarks
+
+`CacheBenchmarks` contains a set of BenchmarkDotNet benchmarks that also expose their public members for ad‑hoc usage. It demonstrates typical in‑memory cache operations such as reading, writing, checking existence, and the get‑or‑set pattern against an `InMemoryCacheService`.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Benchmarks;
+
+public static async Task Main()
+{
+    var benchmarks = new CacheBenchmarks();
+
+    // Initialise the in‑memory cache with some data
+    await benchmarks.Setup();
+
+    // Cache hit – should return the pre‑populated list
+    var hitResult = await benchmarks.CacheHit();
+    Console.WriteLine($"Cache hit returned {hitResult?.Services?.Count ?? 0} services.");
+
+    // Cache miss – returns null
+    var missResult = await benchmarks.CacheMiss();
+    Console.WriteLine($"Cache miss returned {(missResult == null ? "null" : "data")}.");
+
+    // Write a new entry
+    await benchmarks.CacheSet();
+
+    // Check if a key exists
+    bool exists = await benchmarks.Exists();
+    Console.WriteLine($"Key 'services:all' exists: {exists}");
+
+    // GetOrSet hot path (cache hit, factory not invoked)
+    var hotResult = await benchmarks.GetOrSetHit();
+
+    // GetOrSet cold path (cache miss, factory invoked)
+    var coldResult = await benchmarks.GetOrSetMiss();
+
+    // Example of iterating over the cached services
+    if (hitResult?.Services != null)
+    {
+        foreach (var svc in hitResult.Services)
+        {
+            Console.WriteLine($"{svc.Id} - {svc.Name} (Healthy: {svc.IsHealthy})");
+        }
+    }
+
+    // Clean up resources
+    benchmarks.Cleanup();
+}
 ```
+
+The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup`, `CacheHit`, `CacheMiss`, `CacheSet`, `Exists`, `GetOrSetHit`, `GetOrSetMiss`) and the `CachedService` properties (`Id`, `Name`, `IsHealthy`) to illustrate typical cache interactions.
