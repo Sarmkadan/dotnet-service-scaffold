@@ -248,3 +248,48 @@ public static async Task Main()
 ```
 
 The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup`, `CacheHit`, `CacheMiss`, `CacheSet`, `Exists`, `GetOrSetHit`, `GetOrSetMiss`) and the `CachedService` properties (`Id`, `Name`, `IsHealthy`) to illustrate typical cache interactions.
+
+
+## StringBenchmarks
+
+The `StringBenchmarks` class provides performance benchmarks for common string manipulation operations used throughout the application. It measures the execution time of case conversion, slug generation, sensitive data masking, and random string generation utilities that run on every request.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Benchmarks;
+
+var benchmarks = new StringBenchmarks();
+
+// Convert camelCase to snake_case
+string snakeCase = benchmarks.ToSnakeCase();
+Console.WriteLine(snakeCase); // "user_account_service_manager"
+
+// Convert PascalCase to snake_case
+string pascalSnake = benchmarks.ToSnakeCasePascal();
+Console.WriteLine(pascalSnake); // "user_account_service_manager"
+
+// Convert snake_case to camelCase
+string camelCase = benchmarks.ToCamelCase();
+Console.WriteLine(camelCase); // "userAccountServiceManager"
+
+// Mask sensitive data (keeps last 4 characters visible)
+string maskedKey = benchmarks.MaskSensitive();
+Console.WriteLine(maskedKey); // "***************beef"
+
+// Generate random strings of different lengths
+string random32 = benchmarks.GenerateRandomString32();
+string random64 = benchmarks.GenerateRandomString64();
+Console.WriteLine($"Random 32: {random32}");
+Console.WriteLine($"Random 64: {random64}");
+
+// Convert human-readable text to URL slug
+string slug = benchmarks.ToSlug();
+Console.WriteLine(slug); // "my-service-name-production-v2"
+
+// Truncate long strings with ellipsis
+string truncated = benchmarks.Truncate();
+Console.WriteLine(truncated); // "My Service Name - Produc..."
+```
+
+This example demonstrates how to use the `StringBenchmarks` class to benchmark and verify the behavior of string utility methods that are commonly used in web applications for URL routing, logging, and data processing.
