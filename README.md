@@ -250,6 +250,67 @@ public static async Task Main()
 The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup`, `CacheHit`, `CacheMiss`, `CacheSet`, `Exists`, `GetOrSetHit`, `GetOrSetMiss`) and the `CachedService` properties (`Id`, `Name`, `IsHealthy`) to illustrate typical cache interactions.
 
 
+## ExternalApiClient
+
+The `ExternalApiClient` is a generic HTTP client for calling external APIs. It handles JSON serialization, error responses, and provides a clean interface for common HTTP operations (GET, POST, PUT, DELETE) with built-in logging and validation. The client automatically deserializes responses into the requested type and throws appropriate exceptions for failed requests.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.Integration;
+
+public class ApiService
+{
+    private readonly IExternalApiClient _apiClient;
+
+    public ApiService(IExternalApiClient apiClient)
+    {
+        _apiClient = apiClient;
+    }
+
+    public async Task<User?> GetUserAsync(Guid userId)
+    {
+        var url = $"https://api.example.com/users/{userId}";
+        return await _apiClient.GetAsync<User>(url);
+    }
+
+    public async Task<Product> CreateProductAsync(Product product)
+    {
+        var url = "https://api.example.com/products";
+        return await _apiClient.PostAsync<Product>(url, product);
+    }
+
+    public async Task<Product> UpdateProductAsync(Guid productId, Product product)
+    {
+        var url = $"https://api.example.com/products/{productId}";
+        return await _apiClient.PutAsync<Product>(url, product);
+    }
+
+    public async Task<bool> DeleteProductAsync(Guid productId)
+    {
+        var url = $"https://api.example.com/products/{productId}";
+        return await _apiClient.DeleteAsync(url);
+    }
+}
+
+// Example usage
+var apiClient = new ExternalApiClient(httpClientFactory, logger);
+var user = await apiClient.GetAsync<User>("https://api.example.com/users/123");
+var createdProduct = await apiClient.PostAsync<Product>(
+    "https://api.example.com/products",
+    new { Name = "New Product", Price = 99.99 }
+);
+var updated = await apiClient.PutAsync<Product>(
+    "https://api.example.com/products/456",
+    new { Name = "Updated Product", Price = 129.99 }
+);
+var deleted = await apiClient.DeleteAsync("https://api.example.com/products/789");
+```
+
+This example demonstrates how to use the `ExternalApiClient` to perform common CRUD operations against external APIs with proper type safety and error handling.
+
 ## StringBenchmarks
 
 The `StringBenchmarks` class provides performance benchmarks for common string manipulation operations used throughout the application. It measures the execution time of case conversion, slug generation, sensitive data masking, and random string generation utilities that run on every request.
