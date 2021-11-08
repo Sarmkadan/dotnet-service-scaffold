@@ -250,6 +250,46 @@ public static async Task Main()
 The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup`, `CacheHit`, `CacheMiss`, `CacheSet`, `Exists`, `GetOrSetHit`, `GetOrSetMiss`) and the `CachedService` properties (`Id`, `Name`, `IsHealthy`) to illustrate typical cache interactions.
 
 
+## ServiceCollectionExtensions
+
+The `ServiceCollectionExtensions` class provides extension methods for registering infrastructure and application services in the dependency injection container. It centralizes service configuration for better maintainability and consistency across the application, including application services, integration services, caching, background services, and API authentication.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+
+// Setup service collection with all required services
+var services = new ServiceCollection();
+
+// Register application services
+services.AddApplicationServices();
+
+// Register integration services for external API calls and webhooks
+services.AddIntegrationServices();
+
+// Register caching services
+services.AddCachingServices();
+
+// Register background services for periodic tasks
+services.AddBackgroundServices();
+
+// Register API key authentication and rate limiting
+services.AddApiAuthentication();
+
+// Build service provider
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve registered services
+var domainEventPublisher = serviceProvider.GetRequiredService<IDomainEventPublisher>();
+var cacheService = serviceProvider.GetRequiredService<ICacheService>();
+var externalApiClient = serviceProvider.GetRequiredService<IExternalApiClient>();
+var httpClientFactory = serviceProvider.GetRequiredService<ICustomHttpClientFactory>();
+```
+
+This example demonstrates how to use the `ServiceCollectionExtensions` methods to configure the dependency injection container with all infrastructure and application services needed for a typical ASP.NET Core application.
+
 ## ExternalApiClient
 
 The `ExternalApiClient` is a generic HTTP client for calling external APIs. It handles JSON serialization, error responses, and provides a clean interface for common HTTP operations (GET, POST, PUT, DELETE) with built-in logging and validation. The client automatically deserializes responses into the requested type and throws appropriate exceptions for failed requests.
