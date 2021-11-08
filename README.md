@@ -272,7 +272,7 @@ public class ApiService
 
     public async Task<User?> GetUserAsync(Guid userId)
     {
-        var url = $"https://api.example.com/users/{userId}";
+        var url = "https://api.example.com/users/{userId}";
         return await _apiClient.GetAsync<User>(url);
     }
 
@@ -284,13 +284,13 @@ public class ApiService
 
     public async Task<Product> UpdateProductAsync(Guid productId, Product product)
     {
-        var url = $"https://api.example.com/products/{productId}";
+        var url = "https://api.example.com/products/{productId}";
         return await _apiClient.PutAsync<Product>(url, product);
     }
 
     public async Task<bool> DeleteProductAsync(Guid productId)
     {
-        var url = $"https://api.example.com/products/{productId}";
+        var url = "https://api.example.com/products/{productId}";
         return await _apiClient.DeleteAsync(url);
     }
 }
@@ -310,6 +310,48 @@ var deleted = await apiClient.DeleteAsync("https://api.example.com/products/789"
 ```
 
 This example demonstrates how to use the `ExternalApiClient` to perform common CRUD operations against external APIs with proper type safety and error handling.
+
+
+## HttpClientFactory
+
+The `HttpClientFactory` provides a centralized way to create configured `HttpClient` instances with standardized settings for timeouts, headers, and authentication. It wraps the default `IHttpClientFactory` from .NET's dependency injection system and adds convenience methods for common HTTP client configurations including authenticated clients with API keys, Bearer tokens, and custom base URLs.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.Integration;
+using Microsoft.Extensions.DependencyInjection;
+
+// Setup in DI container
+var services = new ServiceCollection();
+services.AddHttpClient();
+services.AddSingleton<ICustomHttpClientFactory, HttpClientFactory>();
+var serviceProvider = services.BuildServiceProvider();
+
+var factory = serviceProvider.GetRequiredService<ICustomHttpClientFactory>();
+
+// Create a basic HTTP client with default configuration
+var defaultClient = factory.CreateClient();
+
+// Create an authenticated client with API key
+var apiKeyClient = factory.CreateAuthenticatedClient("your-api-key-here");
+
+// Create a Bearer token authenticated client
+var bearerClient = factory.CreateBearerClient("your-bearer-token-here");
+
+// Create a client with custom base URL
+var customBaseClient = factory.CreateClientWithBaseUrl("https://api.example.com/v1");
+
+// Use the clients for HTTP requests
+var response = await defaultClient.GetAsync("/users/123");
+var authResponse = await apiKeyClient.GetAsync("/products");
+var bearerResponse = await bearerClient.PostAsync("/orders", new StringContent("{}"));
+```
+
+This example shows how to configure and use the `HttpClientFactory` to create different types of HTTP clients for various integration scenarios.
 
 ## StringBenchmarks
 
