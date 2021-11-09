@@ -351,6 +351,43 @@ var deleted = await apiClient.DeleteAsync("https://api.example.com/products/789"
 
 This example demonstrates how to use the `ExternalApiClient` to perform common CRUD operations against external APIs with proper type safety and error handling.
 
+## ResponseFormatterFactory
+
+The `ResponseFormatterFactory` creates and manages response formatters for different media types, implementing the Factory pattern to decouple formatter selection from usage. It maintains a registry of available formatters (JSON, CSV) and selects the appropriate formatter based on the requested media type, falling back to JSON for unsupported types. The factory also allows registering custom formatters at runtime.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Linq;
+using DotnetServiceScaffold.Infrastructure.Formatting;
+using DotnetServiceScaffold.Infrastructure.Integration;
+
+// Create the factory with built-in formatters
+var factory = new ResponseFormatterFactory();
+
+// Get a formatter for a specific media type
+var jsonFormatter = factory.GetFormatter("application/json");
+var csvFormatter = factory.GetFormatter("text/csv");
+
+// Check if a media type is supported
+bool supportsJson = factory.IsMediaTypeSupported("application/json"); // true
+bool supportsXml = factory.IsMediaTypeSupported("application/xml"); // false
+
+// Get all supported media types
+var supportedTypes = factory.GetSupportedMediaTypes().ToList();
+Console.WriteLine(string.Join(", ", supportedTypes));
+// Output: application/json, text/csv, application/csv
+
+// Register a custom formatter for XML responses
+factory.RegisterFormatter("application/xml", new XmlResponseFormatter());
+
+// Now XML is supported
+bool supportsXmlAfterRegistration = factory.IsMediaTypeSupported("application/xml"); // true
+```
+
+This example demonstrates creating a formatter factory, retrieving formatters for different media types, checking support for media types, and registering custom formatters.
+
 
 ## StructuredLoggingOptions
 
