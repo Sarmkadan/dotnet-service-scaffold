@@ -496,6 +496,94 @@ app.Run();
 
 This example demonstrates how to configure and use `ServiceMeshOptions` to integrate with a service mesh sidecar proxy, including registering services, checking mesh availability, and enabling header propagation middleware.
 
+## ISidecarProxyService
+
+The `ISidecarProxyService` interface provides a contract for interacting with local sidecar proxy admin APIs compatible with Envoy (such as those injected by Istio, Consul Connect, or Linkerd). It exposes methods for checking proxy readiness, retrieving cluster information, managing connection draining during shutdown, and detecting whether the application is running inside a service mesh environment.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.ServiceMesh;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+public class ServiceMeshHealthReporter
+{
+    private readonly ISidecarProxyService _sidecarProxy;
+    private readonly ILogger<ServiceMeshHealthReporter> _logger;
+
+    public ServiceMeshHealthReporter(
+        ISidecarProxyService sidecarProxy,
+        ILogger<ServiceMeshHealthReporter> logger)
+    {
+        _sidecarProxy = sidecarProxy;
+        _logger = logger;
+    }
+
+    public async Task ReportMeshStatusAsync()
+    {
+        // Check if service mesh integration is enabled and ready
+        bool isEnabled = await _sidecarProxy.IsServiceMeshEnabledAsync();
+        
+        if (!isEnabled)
+        {
+            _logger.LogInformation("Service mesh integration is disabled or not available");
+            return;
+        }
+
+        // Get detailed proxy information
+        var proxyInfo = await _sidecarProxy.GetProxyInfoAsync();
+        
+        _logger.LogInformation("Sidecar Proxy Status:");
+        _logger.LogInformation("- Version: {Version}", proxyInfo.ProxyVersion);
+        _logger.LogInformation("- Status: {Status}", proxyInfo.Status);
+        _logger.LogInformation("- Mesh: {MeshName}", proxyInfo.MeshName);
+        _logger.LogInformation("- Clusters: {ClusterCount}", proxyInfo.UpstreamClusters.Count);
+
+        // Check readiness status
+        bool isReady = await _sidecarProxy.CheckReadinessAsync();
+        _logger.LogInformation("Proxy readiness: {IsReady}", isReady);
+
+        // Get upstream clusters information
+        var clusters = await _sidecarProxy.GetUpstreamClustersAsync();
+        
+        foreach (var cluster in clusters)
+        {
+            _logger.LogInformation(
+                "Cluster: {Name} - Healthy: {Healthy}/{Total} hosts",
+                cluster.Name,
+                cluster.HealthyHosts,
+                cluster.TotalHosts);
+        }
+    }
+
+    public async Task PrepareForShutdownAsync()
+    {
+        // Gracefully drain connections before application shutdown
+        await _sidecarProxy.DrainConnectionsAsync(drainSeconds: 15);
+        _logger.LogInformation("Application shutdown sequence initiated with connection draining");
+    }
+}
+
+// Example usage in DI setup
+var services = new ServiceCollection();
+services.AddLogging(configure => configure.AddConsole());
+services.AddSidecarProxyIntegration(); // Registers ISidecarProxyService
+
+var serviceProvider = services.BuildServiceProvider();
+
+var reporter = serviceProvider.GetRequiredService<ServiceMeshHealthReporter>();
+await reporter.ReportMeshStatusAsync();
+
+// During graceful shutdown
+// await reporter.PrepareForShutdownAsync();
+```
+
+This example demonstrates how to use `ISidecarProxyService` to integrate with a service mesh sidecar proxy for health reporting, readiness checks, cluster monitoring, and graceful shutdown procedures.
+
+
 
 ## HttpClientFactory
 
