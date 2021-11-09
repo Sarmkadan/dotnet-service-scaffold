@@ -496,6 +496,86 @@ app.Run();
 
 This example demonstrates how to configure and use `ServiceMeshOptions` to integrate with a service mesh sidecar proxy, including registering services, checking mesh availability, and enabling header propagation middleware.
 
+
+## MetricsService
+
+The `MetricsService` provides in-process metrics collection for tracking application performance counters, gauges, and timing data. It's designed for lightweight, low-overhead metric collection within a single process and can be used to monitor application health, track request rates, measure operation durations, and expose metrics for debugging purposes. For production monitoring, integrate with Prometheus, Application Insights, or similar monitoring systems.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.Metrics;
+using Microsoft.Extensions.Logging;
+
+// Create metrics service with logger
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var metricsService = new MetricsService(loggerFactory.CreateLogger<MetricsService>());
+
+// Track request counts with different endpoints
+metricsService.IncrementCounter("api.requests.total");
+metricsService.IncrementCounter("api.requests.total", 1, new Dictionary<string, string> { { "endpoint", "/users" } });
+metricsService.IncrementCounter("api.requests.total", 1, new Dictionary<string, string> { { "endpoint", "/products" } });
+
+// Track current memory usage as a gauge
+metricsService.RecordGauge("system.memory.used_mb", 1024.5);
+metricsService.RecordGauge("system.memory.used_mb", 1536.2, new Dictionary<string, string> { { "process", "worker" } });
+
+// Measure operation duration
+var result = await metricsService.MeasureAsync("api.database.query.duration_ms", async () =>
+{
+    await Task.Delay(150); // Simulate database query
+    return "query completed";
+});
+
+// Record timing directly
+metricsService.RecordTiming("api.external_api.response_time_ms", 250, new Dictionary<string, string> { { "api", "payment" } });
+
+// Get all metrics for inspection or export
+var allMetrics = await metricsService.GetMetricsAsync();
+
+// Reset metrics when needed (e.g., during application restart)
+await metricsService.ResetAsync();
+
+// Example: Monitor HTTP request handling
+public class MetricsMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly MetricsService _metrics;
+
+    public MetricsMiddleware(RequestDelegate next, MetricsService metrics)
+    {
+        _next = next;
+        _metrics = metrics;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            await _next(context);
+        }
+        finally
+        {
+            sw.Stop();
+            _metrics.RecordTiming("http.request.duration_ms", sw.ElapsedMilliseconds,
+                new Dictionary<string, string>
+                {
+                    { "method", context.Request.Method },
+                    { "path", context.Request.Path },
+                    { "status", context.Response.StatusCode.ToString() }
+                });
+            _metrics.IncrementCounter("http.requests.total");
+        }
+    }
+}
+```
+
+This example demonstrates how to use `MetricsService` to track application performance metrics including counters for request counts, gauges for system resources, and timers for operation durations. The service supports tagging metrics with dimensions for detailed analysis and provides methods to retrieve and reset collected metrics.
+
 ## ISidecarProxyService
 
 The `ISidecarProxyService` interface provides a contract for interacting with local sidecar proxy admin APIs compatible with Envoy (such as those injected by Istio, Consul Connect, or Linkerd). It exposes methods for checking proxy readiness, retrieving cluster information, managing connection draining during shutdown, and detecting whether the application is running inside a service mesh environment.
