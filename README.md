@@ -497,6 +497,68 @@ app.Run();
 This example demonstrates how to configure and use `ServiceMeshOptions` to integrate with a service mesh sidecar proxy, including registering services, checking mesh availability, and enabling header propagation middleware.
 
 
+
+## DnsServiceDiscoveryProvider
+
+The `DnsServiceDiscoveryProvider` implements service discovery using DNS SRV records with automatic A-record fallback. It sends raw UDP DNS queries to query SRV records (not supported by `System.Net.Dns`) and falls back to standard DNS A-record lookups when SRV records are unavailable or return no results. The provider supports watching for service instance changes and automatically respects DNS TTL values for polling intervals.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup service collection with DNS service discovery
+var services = new ServiceCollection();
+services.AddLogging(configure => configure.AddConsole());
+services.Configure<ServiceDiscoveryOptions>(options =>
+{
+    options.Dns.PreferSrvRecords = true;
+    options.Dns.SearchDomain = "cluster.local";
+    options.Dns.DnsServerAddress = "8.8.8.8";
+    options.Dns.DefaultPort = 8080;
+    options.Dns.DefaultScheme = "https";
+});
+services.AddSingleton<IServiceDiscoveryProvider, DnsServiceDiscoveryProvider>();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve a service by name
+var dnsProvider = serviceProvider.GetRequiredService<IServiceDiscoveryProvider>();
+var resolutionResult = await dnsProvider.ResolveAsync("user-service");
+
+if (resolutionResult.IsSuccess && resolutionResult.Value is { } records)
+{
+    Console.WriteLine($"Found {records.Count} instances of user-service:");
+    foreach (var record in records)
+    {
+        var endpointUri = record.ToEndpointUri();
+        Console.WriteLine($"  - {endpointUri} (Weight: {record.Weight}, Priority: {record.Priority})");
+    }
+}
+
+// Watch for service instance changes (polls based on DNS TTL)
+await foreach (var currentRecords in dnsProvider.WatchAsync("product-service"))
+{
+    Console.WriteLine($"Service instances updated: {currentRecords.Count} instances");
+    foreach (var record in currentRecords)
+    {
+        Console.WriteLine($"  - {record.Host}:{record.Port}");
+    }
+}
+
+// Check if DNS provider is available
+bool isAvailable = await dnsProvider.IsAvailableAsync();
+Console.WriteLine($"DNS provider available: {isAvailable}");
+```
+
+This example demonstrates configuring the DNS service discovery provider, resolving service instances by name, watching for changes, and checking provider availability. The provider automatically handles SRV record lookups with A-record fallback and respects DNS TTL values for polling intervals.
+
+
 ## MetricsService
 
 The `MetricsService` provides in-process metrics collection for tracking application performance counters, gauges, and timing data. It's designed for lightweight, low-overhead metric collection within a single process and can be used to monitor application health, track request rates, measure operation durations, and expose metrics for debugging purposes. For production monitoring, integrate with Prometheus, Application Insights, or similar monitoring systems.
