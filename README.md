@@ -446,6 +446,57 @@ logger.LogWarning("Request processing failed");
 This example shows how to configure and use `StructuredLoggingOptions` to customize the logging pipeline with application-specific settings and contextual enrichment.
 
 
+## ServiceMeshOptions
+
+The `ServiceMeshOptions` class configures the service mesh sidecar proxy integration. It controls connection settings to the sidecar admin API, readiness timeouts, mesh identification, and enables/disables mesh integration. These options are typically bound from the `ServiceMesh` section in `appsettings.json`.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.ServiceMesh;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+// Configure options in appsettings.json
+// {
+// "ServiceMesh": {
+// "AdminEndpoint": "http://localhost:15000",
+// "ReadinessTimeoutSeconds": 5,
+// "MeshName": "istio",
+// "Enabled": true
+// }
+// }
+
+// Setup service collection with service mesh integration
+var services = new ServiceCollection();
+
+// Register service mesh integration with configuration
+services.AddServiceMeshIntegration(configuration);
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the sidecar proxy service
+var sidecarProxy = serviceProvider.GetRequiredService<ISidecarProxyService>();
+
+// Check if service mesh is enabled
+bool isEnabled = await sidecarProxy.IsServiceMeshEnabledAsync();
+
+// Configure the web application to use service mesh headers
+var builder = WebApplication.CreateBuilder();
+builder.Services.AddServiceMeshIntegration(builder.Configuration);
+
+var app = builder.Build();
+
+// Add service mesh header propagation middleware
+app.UseServiceMeshHeaders();
+
+// Continue with application configuration...
+app.Run();
+```
+
+This example demonstrates how to configure and use `ServiceMeshOptions` to integrate with a service mesh sidecar proxy, including registering services, checking mesh availability, and enabling header propagation middleware.
+
+
 ## HttpClientFactory
 
 The `HttpClientFactory` provides a centralized way to create configured `HttpClient` instances with standardized settings for timeouts, headers, and authentication. It wraps the default `IHttpClientFactory` from .NET's dependency injection system and adds convenience methods for common HTTP client configurations including authenticated clients with API keys, Bearer tokens, and custom base URLs.
