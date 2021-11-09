@@ -889,3 +889,113 @@ await foreach (var serviceList in provider.WatchAsync())
 // Deregistering a service
 var deregisterResult = await provider.DeregisterAsync(registration);
 ```
+
+## ServiceDiscoveryService
+
+The `ServiceDiscoveryService` orchestrates service discovery operations across DNS-based and registry-based providers with caching, configurable load balancing, and self-registration lifecycle management. It provides methods to discover services, select healthy endpoints, register and deregister service instances, retrieve service statistics, and manage discovery cache.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+// Setup service collection with service discovery
+var services = new ServiceCollection();
+services.AddLogging(configure => configure.AddConsole());
+
+// Configure service discovery options
+services.Configure<ServiceDiscoveryOptions>(options =>
+{
+    options.Enabled = true;
+    options.Mode = DiscoveryMode.Hybrid;
+    options.LoadBalancing = LoadBalancingStrategy.RoundRobin;
+    options.CacheTtl = TimeSpan.FromSeconds(30);
+    options.ResolutionTimeout = TimeSpan.FromSeconds(5);
+    
+    options.SelfRegistration.Enabled = true;
+    options.SelfRegistration.ServiceName = "user-service";
+    options.SelfRegistration.AdvertiseHost = "192.168.1.100";
+    options.SelfRegistration.AdvertisePort = 5001;
+    options.SelfRegistration.Version = "1.0.0";
+});
+
+// Register service discovery components
+services.AddServiceDiscovery(configuration);
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the service discovery service
+var discoveryService = serviceProvider.GetRequiredService<IServiceDiscoveryService>();
+
+// Discover all instances of a service
+var discoverResult = await discoveryService.DiscoverAsync("product-service");
+if (discoverResult.IsSuccess && discoverResult.Value is { } instances)
+{
+    Console.WriteLine($"Found {instances.Count} instances of product-service:");
+    foreach (var instance in instances)
+    {
+        Console.WriteLine($" - {instance.ToEndpointUri()} (Weight: {instance.Weight}, Priority: {instance.Priority}, Status: {instance.HealthStatus})");
+    }
+}
+
+// Select a healthy endpoint using configured load balancing strategy
+var endpointResult = await discoveryService.SelectEndpointAsync("payment-service");
+if (endpointResult.IsSuccess && endpointResult.Value is { } selectedEndpoint)
+{
+    Console.WriteLine($"Selected endpoint: {selectedEndpoint.ToEndpointUri()}");
+    
+    // Use the endpoint for HTTP requests
+    var httpClientFactory = serviceProvider.GetRequiredService<ICustomHttpClientFactory>();
+    var client = httpClientFactory.CreateClientWithBaseUrl(selectedEndpoint.ToEndpointUri().ToString());
+    var response = await client.GetAsync("/api/health");
+}
+
+// Register this service instance with the discovery backend
+var registerResult = await discoveryService.RegisterSelfAsync();
+if (registerResult.IsSuccess)
+{
+    Console.WriteLine("Service successfully registered with discovery backend.");
+}
+
+// Get statistics for a service
+var statsResult = await discoveryService.GetServiceStatsAsync("user-service");
+if (statsResult.IsSuccess && statsResult.Value is { } stats)
+{
+    Console.WriteLine($"Service stats for {stats.ServiceName}:");
+    Console.WriteLine($" - Total instances: {stats.TotalInstances}");
+    Console.WriteLine($" - Healthy: {stats.HealthyInstances}");
+    Console.WriteLine($" - Degraded: {stats.DegradedInstances}");
+    Console.WriteLine($" - Critical: {stats.CriticalInstances}");
+    Console.WriteLine($" - Active source: {stats.ActiveSource}");
+}
+
+// Get list of all registered services (requires Registry or Hybrid mode)
+var servicesResult = await discoveryService.GetRegisteredServicesAsync();
+if (servicesResult.IsSuccess && servicesResult.Value is { } serviceNames)
+{
+    Console.WriteLine("Registered services:");
+    foreach (var serviceName in serviceNames)
+    {
+        Console.WriteLine($" - {serviceName}");
+    }
+}
+
+// Refresh cache for a specific service
+await discoveryService.RefreshAsync("user-service");
+
+// In ASP.NET Core application setup
+var builder = WebApplication.CreateBuilder();
+builder.Services.AddServiceDiscovery(builder.Configuration);
+
+var app = builder.Build();
+app.UseServiceDiscovery(); // Handles self-registration on startup and deregistration on shutdown
+
+app.Run();
+```
