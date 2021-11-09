@@ -844,13 +844,48 @@ string random64 = benchmarks.GenerateRandomString64();
 Console.WriteLine($"Random 32: {random32}");
 Console.WriteLine($"Random 64: {random64}");
 
-// Convert human-readable text to URL slug
-string slug = benchmarks.ToSlug();
-Console.WriteLine(slug); // "my-service-name-production-v2"
 
-// Truncate long strings with ellipsis
-string truncated = benchmarks.Truncate();
-Console.WriteLine(truncated); // "My Service Name - Produc..."
+## RegistryServiceDiscoveryProvider
+
+The `RegistryServiceDiscoveryProvider` facilitates interaction with a service discovery registry, enabling dynamic service registration, lookup, and health monitoring. It provides mechanisms to register and deregister service instances, resolve service endpoints by name, and watch for changes in service configurations.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+// Assume dependencies (httpFactory, options, logger) are injected via DI
+var provider = new RegistryServiceDiscoveryProvider(httpFactory, options, logger);
+
+// Registering a service
+var registration = new ServiceDiscoveryRecord { Name = "my-service", Address = "10.0.0.1", Port = 8080 };
+var registerResult = await provider.RegisterAsync(registration);
+if (registerResult.IsSuccess)
+{
+    Console.WriteLine("Service registered successfully.");
+}
+
+// Resolving a service by name
+var servicesResult = await provider.ResolveAsync("my-service");
+if (servicesResult.IsSuccess)
+{
+    foreach (var service in servicesResult.Value)
+    {
+        Console.WriteLine($"Service: {service.Name} at {service.Address}:{service.Port}");
+    }
+}
+
+// Watching for service changes
+await foreach (var serviceList in provider.WatchAsync())
+{
+    Console.WriteLine($"Received update with {serviceList.Count} services.");
+}
+
+// Deregistering a service
+var deregisterResult = await provider.DeregisterAsync(registration);
 ```
-
-This example demonstrates how to use the `StringBenchmarks` class to benchmark and verify the behavior of string utility methods that are commonly used in web applications for URL routing, logging, and data processing.
