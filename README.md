@@ -450,6 +450,49 @@ This example shows how to configure and use `StructuredLoggingOptions` to custom
 
 The `HttpClientFactory` provides a centralized way to create configured `HttpClient` instances with standardized settings for timeouts, headers, and authentication. It wraps the default `IHttpClientFactory` from .NET's dependency injection system and adds convenience methods for common HTTP client configurations including authenticated clients with API keys, Bearer tokens, and custom base URLs.
 
+## JsonResponseFormatter
+
+The `JsonResponseFormatter` formats objects as JSON responses with consistent formatting, null handling, and date serialization. It uses camelCase property naming, ignores null values by default, and serializes dates in ISO 8601 UTC format. The formatter supports all JSON-based media types and provides custom date serialization through a dedicated converter.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Text.Json;
+using DotnetServiceScaffold.Infrastructure.Formatting;
+
+// Create the JSON formatter with default options
+var formatter = new JsonResponseFormatter();
+
+// Check if the formatter can handle a media type
+bool canFormatJson = formatter.CanFormat("application/json");
+bool canFormatJsonCustom = formatter.CanFormat("application/json+custom");
+
+// Format a simple object to JSON
+var user = new { Id = 1, Name = "John Doe", Email = "john@example.com" };
+string json = await formatter.FormatAsync(user);
+Console.WriteLine(json);
+// Output: {"id":1,"name":"John Doe","email":"john@example.com"}
+
+// Format a null value
+string nullJson = await formatter.FormatAsync(null);
+Console.WriteLine(nullJson); // null
+
+// Format an object with DateTime
+var order = new { 
+    Id = 101, 
+    CreatedAt = DateTime.UtcNow,
+    Status = "Processing"
+};
+string orderJson = await formatter.FormatAsync(order);
+Console.WriteLine(orderJson);
+// Output: {"id":101,"createdAt":"2024-07-15T14:30:45.1234567Z","status":"Processing"}
+
+// Check media type support
+bool supportsJson = formatter.CanFormat("application/json");
+bool supportsXml = formatter.CanFormat("application/xml");
+```
+
 ### Usage Example
 
 ```csharp
