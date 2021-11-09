@@ -352,6 +352,63 @@ var deleted = await apiClient.DeleteAsync("https://api.example.com/products/789"
 This example demonstrates how to use the `ExternalApiClient` to perform common CRUD operations against external APIs with proper type safety and error handling.
 
 
+## StructuredLoggingOptions
+
+The `StructuredLoggingOptions` class configures the structured logging pipeline for the application. It controls application identification, enrichment with contextual information, correlation ID handling, and minimum log level filtering. These options are typically bound from the `StructuredLogging` section in `appsettings.json`.
+
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Configure options in appsettings.json
+// {
+//   "StructuredLogging": {
+//     "ApplicationName": "MyProductionService",
+//     "EnrichWithMachineName": true,
+//     "EnrichWithEnvironment": true,
+//     "EnableCorrelationId": true,
+//     "CorrelationIdHeader": "X-Request-Id",
+//     "EnrichWithRequestContext": true,
+//     "MinimumLevel": "Debug"
+//   }
+// }
+
+// Register logging services with the configured options
+var services = new ServiceCollection();
+
+services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddConfiguration(configuration.GetSection("StructuredLogging"));
+    loggingBuilder.AddConsole();
+    loggingBuilder.AddDebug();
+});
+
+// Configure structured logging options
+services.Configure<StructuredLoggingOptions>(configuration.GetSection("StructuredLogging"));
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve logger and options
+var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+var loggingOptions = serviceProvider.GetRequiredService<IOptions<StructuredLoggingOptions>>().Value;
+
+// Use the configured logging
+logger.LogInformation("Application {ApplicationName} started in {EnvironmentName}",
+    loggingOptions.ApplicationName,
+    Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development");
+
+// Log with correlation ID (automatically added to HTTP requests if EnableCorrelationId is true)
+logger.LogWarning("Request processing failed");
+```
+
+This example shows how to configure and use `StructuredLoggingOptions` to customize the logging pipeline with application-specific settings and contextual enrichment.
+
+
 ## HttpClientFactory
 
 The `HttpClientFactory` provides a centralized way to create configured `HttpClient` instances with standardized settings for timeouts, headers, and authentication. It wraps the default `IHttpClientFactory` from .NET's dependency injection system and adds convenience methods for common HTTP client configurations including authenticated clients with API keys, Bearer tokens, and custom base URLs.
