@@ -1,0 +1,59 @@
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.o
+*.so
+*.dylib
+*.la
+*.a
+*.lai
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# NuGet
+.nuget/
+packages/
+nuget.config
+*.nupkg
+*.snupkg
+
+# Local app configuration
+appsettings.Development.json
+appsettings.Local.json
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+.env
+.env.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/settings.json
+
+# Test coverage
+coverage/
+*.trx
+TestResults/
+
+# Build artifacts
+dist/
+build/
+publish/
