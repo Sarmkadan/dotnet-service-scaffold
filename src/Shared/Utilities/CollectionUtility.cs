@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Runtime.CompilerServices;
+
 namespace DotnetServiceScaffold.Shared.Utilities;
 
 /// <summary>
@@ -17,8 +19,9 @@ public static class CollectionUtility
     /// </summary>
     public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
     {
+        ArgumentNullException.ThrowIfNull(source); // Fix: handle null source collection
         if (batchSize <= 0)
-            throw new ArgumentException("Batch size must be positive", nameof(batchSize));
+            throw new ArgumentOutOfRangeException(nameof(batchSize), batchSize, "Batch size must be positive.");
 
         var batch = new List<T>(batchSize);
 
@@ -42,8 +45,9 @@ public static class CollectionUtility
     /// </summary>
     public static List<List<T>> Chunk<T>(this IEnumerable<T> source, int chunkSize)
     {
+        ArgumentNullException.ThrowIfNull(source); // Fix: handle null source collection
         if (chunkSize <= 0)
-            throw new ArgumentException("Chunk size must be positive", nameof(chunkSize));
+            throw new ArgumentOutOfRangeException(nameof(chunkSize), chunkSize, "Chunk size must be positive.");
 
         var result = new List<List<T>>();
         var chunk = new List<T>(chunkSize);
@@ -199,6 +203,7 @@ public static class CollectionUtility
     /// <summary>
     /// Checks if a collection is null or empty.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrEmpty<T>(this IEnumerable<T>? source)
     {
         return source == null || !source.Any();
@@ -207,6 +212,7 @@ public static class CollectionUtility
     /// <summary>
     /// Checks if a collection has any items (opposite of IsNullOrEmpty).
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasItems<T>(this IEnumerable<T>? source)
     {
         return source != null && source.Any();

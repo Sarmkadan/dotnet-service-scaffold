@@ -27,9 +27,11 @@ public static class ValidationUtility
     /// </summary>
     public static void ValidateRange<T>(T value, T min, T max, string paramName) where T : IComparable<T>
     {
+        if (value == null)
+            throw new ArgumentNullException(paramName); // Fix: handle null input
+
         if (value.CompareTo(min) < 0 || value.CompareTo(max) > 0)
-            throw new ArgumentException(
-                $"{paramName} must be between {min} and {max}, but was {value}", paramName);
+            throw new ArgumentOutOfRangeException(paramName, value, $"{paramName} must be between {min} and {max}.");
     }
 
     /// <summary>
