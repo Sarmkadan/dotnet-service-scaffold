@@ -13,8 +13,10 @@ namespace DotnetServiceScaffold.Infrastructure.Caching;
 /// In-memory cache implementation using ConcurrentDictionary. Suitable for single-node
 /// deployments or development. For distributed deployments, use Redis implementation.
 /// Implements automatic expiration and cleanup of expired entries.
+/// All synchronous-completing paths return ValueTask.FromResult to avoid async state-machine
+/// heap allocation on cache hits.
 /// </summary>
-public class InMemoryCacheService : ICacheService
+public class InMemoryCacheService : ICacheService, IDisposable
 {
     private readonly ConcurrentDictionary<string, CacheEntry> _cache;
     private readonly ILogger<InMemoryCacheService> _logger;
@@ -36,33 +38,33 @@ public class InMemoryCacheService : ICacheService
 
     /// <summary>
     /// Gets a value from the cache. Returns null if key doesn't exist or has expired.
+    /// Completes synchronously — no async overhead on the hot path.
     /// </summary>
-    public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
+    public ValueTask<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
         if (string.IsNullOrEmpty(key))
-            return Task.FromResult<T?>(null);
+            return ValueTask.FromResult<T?>(null);
 
         if (_cache.TryGetValue(key, out var entry))
         {
-            // Check if entry has expired
             if (entry.IsExpired)
             {
                 _cache.TryRemove(key, out _);
-                return Task.FromResult<T?>(null);
+                return ValueTask.FromResult<T?>(null);
             }
 
             _logger.LogDebug("Cache hit for key {Key}", key);
-            return Task.FromResult(entry.Value as T);
+            return ValueTask.FromResult(entry.Value as T);
         }
 
         _logger.LogDebug("Cache miss for key {Key}", key);
-        return Task.FromResult<T?>(null);
+        return ValueTask.FromResult<T?>(null);
     }
 
     /// <summary>
     /// Sets a value in the cache with optional expiration.
     /// </summary>
-    public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
+    public ValueTask SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
         if (string.IsNullOrEmpty(key))
             throw new ArgumentException("Key cannot be null or empty", nameof(key));
@@ -80,48 +82,49 @@ public class InMemoryCacheService : ICacheService
             "Cached value for key {Key} with expiration {ExpirationSeconds}s",
             key, expiration?.TotalSeconds ?? -1);
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>
     /// Removes a value from the cache.
     /// </summary>
-    public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+    public ValueTask RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
 
         _cache.TryRemove(key, out _);
         _logger.LogDebug("Removed cache entry for key {Key}", key);
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>
     /// Checks if a key exists in the cache and hasn't expired.
     /// </summary>
-    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
+    public ValueTask<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
-            return Task.FromResult(false);
+            return ValueTask.FromResult(false);
 
         if (_cache.TryGetValue(key, out var entry))
         {
             if (entry.IsExpired)
             {
                 _cache.TryRemove(key, out _);
-                return Task.FromResult(false);
+                return ValueTask.FromResult(false);
             }
-            return Task.FromResult(true);
+            return ValueTask.FromResult(true);
         }
 
-        return Task.FromResult(false);
+        return ValueTask.FromResult(false);
     }
 
     /// <summary>
     /// Gets a value from cache or sets it using the factory if not found.
+    /// Returns synchronously on a cache hit; invokes the factory asynchronously on a miss.
     /// </summary>
-    public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
+    public async ValueTask<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
         var cached = await GetAsync<T>(key, cancellationToken);
         if (cached != null)
@@ -129,9 +132,7 @@ public class InMemoryCacheService : ICacheService
 
         var value = await factory();
         if (value != null)
-        {
             await SetAsync(key, value, expiration, cancellationToken);
-        }
 
         return value;
     }
@@ -139,10 +140,10 @@ public class InMemoryCacheService : ICacheService
     /// <summary>
     /// Removes all entries matching a regex pattern.
     /// </summary>
-    public Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
+    public ValueTask RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(pattern))
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
 
         try
         {
@@ -150,9 +151,7 @@ public class InMemoryCacheService : ICacheService
             var keysToRemove = _cache.Keys.Where(k => regex.IsMatch(k)).ToList();
 
             foreach (var key in keysToRemove)
-            {
                 _cache.TryRemove(key, out _);
-            }
 
             _logger.LogDebug("Removed {Count} cache entries matching pattern {Pattern}", keysToRemove.Count, pattern);
         }
@@ -161,24 +160,21 @@ public class InMemoryCacheService : ICacheService
             _logger.LogError(ex, "Error removing cache entries by pattern {Pattern}", pattern);
         }
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>
     /// Clears all cached values.
     /// </summary>
-    public Task ClearAsync(CancellationToken cancellationToken = default)
+    public ValueTask ClearAsync(CancellationToken cancellationToken = default)
     {
         var count = _cache.Count;
         _cache.Clear();
         _logger.LogInformation("Cleared cache ({Count} entries removed)", count);
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    /// <summary>
-    /// Removes all expired entries from the cache. Called periodically by cleanup timer.
-    /// </summary>
     private void CleanupExpiredEntries()
     {
         var expiredKeys = _cache
@@ -187,14 +183,10 @@ public class InMemoryCacheService : ICacheService
             .ToList();
 
         foreach (var key in expiredKeys)
-        {
             _cache.TryRemove(key, out _);
-        }
 
         if (expiredKeys.Count > 0)
-        {
             _logger.LogDebug("Cleaned up {Count} expired cache entries", expiredKeys.Count);
-        }
     }
 
     public void Dispose()
