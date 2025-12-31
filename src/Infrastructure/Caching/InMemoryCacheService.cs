@@ -124,7 +124,7 @@ public class InMemoryCacheService : ICacheService, IDisposable
     /// Gets a value from cache or sets it using the factory if not found.
     /// Returns synchronously on a cache hit; invokes the factory asynchronously on a miss.
     /// </summary>
-    public async ValueTask<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
+    public async ValueTask<T?> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
         var cached = await GetAsync<T>(key, cancellationToken);
         if (cached != null)
