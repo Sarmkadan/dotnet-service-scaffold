@@ -1,0 +1,28 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-service-scaffold", "dotnet-service-scaffold.csproj", "{D5CC03BF-6BB4-4749-815F-52BAA7BBE1D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-service-scaffold.Tests", "tests\dotnet-service-scaffold.Tests\dotnet-service-scaffold.Tests.csproj", "{5F27289D-F5BD-4E44-AA21-565235F50C85}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D5CC03BF-6BB4-4749-815F-52BAA7BBE1D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5CC03BF-6BB4-4749-815F-52BAA7BBE1D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5CC03BF-6BB4-4749-815F-52BAA7BBE1D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5CC03BF-6BB4-4749-815F-52BAA7BBE1D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F27289D-F5BD-4E44-AA21-565235F50C85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F27289D-F5BD-4E44-AA21-565235F50C85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F27289D-F5BD-4E44-AA21-565235F50C85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F27289D-F5BD-4E44-AA21-565235F50C85}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
