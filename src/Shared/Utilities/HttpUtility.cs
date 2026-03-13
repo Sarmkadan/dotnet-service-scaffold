@@ -168,7 +168,7 @@ public static class HttpUtility
 
         // Exponential backoff with jitter: 100ms * 2^attempt + random 0-100ms
         var baseDelay = 100 * Math.Pow(2, Math.Min(attempt, 5));
-        var jitter = new Random().Next(0, 100);
+        var jitter = Random.Shared.Next(0, 100); // Fix: use thread-safe shared Random instance
         return (int)(baseDelay + jitter);
     }
 
