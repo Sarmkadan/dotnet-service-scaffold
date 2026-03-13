@@ -21,12 +21,16 @@
   <ItemGroup>
     <Compile Remove="tests\**" />
     <Compile Remove="examples\**" />
+    <Compile Remove="benchmarks\**" />
     <Content Remove="tests\**" />
     <Content Remove="examples\**" />
+    <Content Remove="benchmarks\**" />
     <EmbeddedResource Remove="tests\**" />
     <EmbeddedResource Remove="examples\**" />
+    <EmbeddedResource Remove="benchmarks\**" />
     <None Remove="tests\**" />
     <None Remove="examples\**" />
+    <None Remove="benchmarks\**" />
   </ItemGroup>
 
   <ItemGroup>
