@@ -100,8 +100,8 @@ public static class ExceptionExtensions
 
         return exception switch
         {
-            ArgumentException => "Invalid input provided.",
             ArgumentNullException => "Required value was not provided.",
+            ArgumentException => "Invalid input provided.",
             InvalidOperationException => "The requested operation is not valid in the current state.",
             NotImplementedException => "This feature is not yet implemented.",
             TimeoutException => "The operation timed out. Please try again.",
@@ -117,8 +117,8 @@ public static class ExceptionExtensions
     {
         return exception switch
         {
-            ArgumentException => 400,
             ArgumentNullException => 400,
+            ArgumentException => 400,
             KeyNotFoundException => 404,
             InvalidOperationException => 409,
             TimeoutException => 504,

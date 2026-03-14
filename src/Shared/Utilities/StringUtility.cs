@@ -4,6 +4,7 @@
 // =============================================================================
 
 using System.Buffers;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -40,8 +41,19 @@ public static class StringUtility
             return string.Empty;
 
         // Convert to lowercase and remove accents
-        var bytes = Encoding.UTF8.GetBytes(text);
-        text = Encoding.ASCII.GetString(Encoding.GetEncoding("Cyrillic").GetString(bytes));
+        var normalizedString = text.Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder();
+
+        foreach (char c in normalizedString)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark && !char.IsControl(c))
+            {
+                stringBuilder.Append(c);
+            }
+        }
+        text = stringBuilder.ToString();
+        var asciiBytes = Encoding.ASCII.GetBytes(text);
+        text = Encoding.ASCII.GetString(asciiBytes);
 
         // Remove invalid characters
         text = Regex.Replace(text, @"[^\w\s-]", "", RegexOptions.None, TimeSpan.FromSeconds(1.0));

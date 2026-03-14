@@ -23,23 +23,21 @@ public static class EncryptionUtility
     {
         ValidatePassword(password);
 
-        using (var rng = new RNGCryptoServiceProvider())
-        {
-            byte[] salt = new byte[16];
-            rng.GetBytes(salt);
+        byte[] salt = RandomNumberGenerator.GetBytes(16);
 
-            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256))
-            {
-                byte[] hash = pbkdf2.GetBytes(20);
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+            Encoding.UTF8.GetBytes(password),
+            salt,
+            10000,
+            HashAlgorithmName.SHA256,
+            20); // 20 bytes for the hash
 
-                // Combine salt and hash for storage
-                byte[] combined = new byte[36];
-                Buffer.BlockCopy(salt, 0, combined, 0, 16);
-                Buffer.BlockCopy(hash, 0, combined, 16, 20);
+        // Combine salt and hash for storage
+        byte[] combined = new byte[36];
+        Buffer.BlockCopy(salt, 0, combined, 0, 16);
+        Buffer.BlockCopy(hash, 0, combined, 16, 20);
 
-                return Convert.ToBase64String(combined);
-            }
-        }
+        return Convert.ToBase64String(combined);
     }
 
     /// <summary>
@@ -61,16 +59,18 @@ public static class EncryptionUtility
             byte[] salt = new byte[16];
             Buffer.BlockCopy(combined, 0, salt, 0, 16);
 
-            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256))
-            {
-                byte[] storedHash = new byte[20];
-                Buffer.BlockCopy(combined, 16, storedHash, 0, 20);
+            byte[] storedHash = new byte[20];
+            Buffer.BlockCopy(combined, 16, storedHash, 0, 20);
 
-                byte[] computedHash = pbkdf2.GetBytes(20);
+            byte[] computedHash = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password),
+                salt,
+                10000,
+                HashAlgorithmName.SHA256,
+                20); // 20 bytes for the hash
 
-                // Constant-time comparison to prevent timing attacks
-                return CryptographicOperations.FixedTimeEquals(storedHash, computedHash);
-            }
+            // Constant-time comparison to prevent timing attacks
+            return CryptographicOperations.FixedTimeEquals(storedHash, computedHash);
         }
         catch
         {
@@ -89,13 +89,11 @@ public static class EncryptionUtility
         if (key.Length != 32)
             throw new ArgumentException("Key must be 32 bytes for AES-256", nameof(key));
 
-        using (var aes = new AesGcm(key))
+        // Explicitly specify tag size (16 bytes for 128-bit GCM tag)
+        using (var aes = new AesGcm(key, 16))
         {
             byte[] nonce = new byte[12]; // 96 bits for GCM
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(nonce);
-            }
+            RandomNumberGenerator.GetBytes(nonce);
 
             var plainBytes = Encoding.UTF8.GetBytes(plaintext);
             var ciphertext = new byte[plainBytes.Length];
@@ -131,7 +129,8 @@ public static class EncryptionUtility
             if (encryptedData.Length < 28) // 12 (nonce) + 16 (tag) minimum
                 throw new InvalidOperationException("Ciphertext is too short");
 
-            using (var aes = new AesGcm(key))
+            // Explicitly specify tag size (16 bytes for 128-bit GCM tag)
+            using (var aes = new AesGcm(key, 16))
             {
                 var nonce = new byte[12];
                 var tag = new byte[16];
@@ -162,12 +161,12 @@ public static class EncryptionUtility
         if (length <= 0)
             throw new ArgumentException("Length must be positive", nameof(length));
 
-        using (var rng = RandomNumberGenerator.Create())
+        byte[] data = new byte[length];
+        using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
         {
-            byte[] data = new byte[length];
             rng.GetBytes(data);
-            return data;
         }
+        return data;
     }
 
     /// <summary>
