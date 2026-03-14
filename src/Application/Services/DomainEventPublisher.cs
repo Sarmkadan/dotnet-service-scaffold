@@ -6,6 +6,7 @@
 using DotnetServiceScaffold.Domain.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using System.Reflection;
 
 namespace DotnetServiceScaffold.Application.Services;
 
@@ -50,7 +51,8 @@ public class DomainEventPublisher : IDomainEventPublisher
             return;
         }
 
-        var tasks = handlers.Cast<dynamic>()
+        var tasks = handlers
+            .OfType<IDomainEventHandler<TEvent>>() // Safely cast to the concrete handler interface
             .Select(handler => handler.HandleAsync(@event, cancellationToken))
             .ToList();
 
@@ -85,7 +87,12 @@ public class DomainEventPublisher : IDomainEventPublisher
         {
             // Use reflection to call PublishAsync with the correct generic type
             var publishMethod = GetType()
-                .GetMethod(nameof(PublishAsync), 2)
+                .GetMethod(
+                    nameof(PublishAsync),
+                    BindingFlags.Instance | BindingFlags.Public,
+                    null,
+                    new Type[] { @event.GetType(), typeof(CancellationToken) },
+                    null)
                 ?.MakeGenericMethod(@event.GetType());
 
             if (publishMethod == null)

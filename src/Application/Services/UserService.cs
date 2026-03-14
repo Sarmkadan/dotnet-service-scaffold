@@ -16,11 +16,13 @@ namespace DotnetServiceScaffold.Application.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IApiKeyRepository _apiKeyRepository;
     private readonly ILogger<UserService> _logger;
 
-    public UserService(IUserRepository userRepository, ILogger<UserService> logger)
+    public UserService(IUserRepository userRepository, IApiKeyRepository apiKeyRepository, ILogger<UserService> logger)
     {
         _userRepository = userRepository;
+        _apiKeyRepository = apiKeyRepository;
         _logger = logger;
     }
 
@@ -169,6 +171,36 @@ public class UserService : IUserService
     public async Task<User?> GetUserWithApiKeysAsync(Guid userId)
     {
         return await _userRepository.GetWithApiKeysAsync(userId);
+    }
+
+    public async Task<User?> ValidateApiKeyAsync(string apiKey)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Length < 8) // API keys should be long enough to have a prefix
+        {
+            return null;
+        }
+
+        var keyPrefix = apiKey.Substring(0, Math.Min(8, apiKey.Length)); // Use a reasonable prefix length
+        var apiKeyEntity = await _apiKeyRepository.GetByKeyPrefixAsync(keyPrefix);
+
+        if (apiKeyEntity == null || !apiKeyEntity.IsValid())
+        {
+            _logger.LogWarning("Invalid or expired API key attempt with prefix: {KeyPrefix}", keyPrefix);
+            return null;
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(apiKey, apiKeyEntity.KeyHash))
+        {
+            _logger.LogWarning("API key verification failed for prefix: {KeyPrefix}", keyPrefix);
+            return null;
+        }
+
+        // Key is valid, update usage stats
+        apiKeyEntity.RecordUsage();
+        await _apiKeyRepository.UpdateAsync(apiKeyEntity);
+
+        // Fetch the user associated with the API key, including their API keys if needed by other parts of the system
+        return await _userRepository.GetWithApiKeysAsync(apiKeyEntity.UserId);
     }
 
     private string HashPassword(string password)
