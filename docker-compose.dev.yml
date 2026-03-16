@@ -1,0 +1,116 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# Docker Compose configuration for development with hot reload
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # Development application service with hot reload
+  scaffold-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    container_name: dotnet-scaffold-dev
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+      - "5678:5678"  # Debug port
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5000
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      ConnectionStrings__DefaultConnection: Data Source=/app/data/scaffold-dev.db
+    volumes:
+      - .:/src:ro
+      - scaffold-dev-data:/app/data
+      - scaffold-dev-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - scaffold-network
+    # Enable debug mode for hot reload
+    command: >
+      dotnet watch run --no-launch-profile
+        --verbose
+        --non-interactive
+        --project /src/dotnet-service-scaffold.csproj
+
+  # Optional: Redis for development
+  redis-dev:
+    image: redis:7-alpine
+    container_name: scaffold-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - scaffold-network
+
+  # Optional: PostgreSQL for development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: scaffold-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scaffold_dev
+      POSTGRES_USER: scaffold
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scaffold -d scaffold_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scaffold-network
+
+volumes:
+  scaffold-dev-data:
+    driver: local
+  scaffold-dev-logs:
+    driver: local
+  redis-dev-data:
+    driver: local
+  postgres-dev-data:
+    driver: local
+
+networks:
+  scaffold-network:
+    driver: bridge
+
+# =============================================================================
+# DEVELOPMENT USAGE
+# =============================================================================
+#
+# 1. Start development services:
+# docker-compose -f docker-compose.dev.yml up -d
+#
+# 2. View logs:
+# docker-compose -f docker-compose.dev.yml logs -f scaffold-dev
+#
+# 3. Attach debugger to port 5678
+#
+# 4. Make changes - app will restart automatically
+#
+# 5. Stop services:
+# docker-compose -f docker-compose.dev.yml down
+#
+# 6. Clean up:
+# docker-compose -f docker-compose.dev.yml down -v
+#
