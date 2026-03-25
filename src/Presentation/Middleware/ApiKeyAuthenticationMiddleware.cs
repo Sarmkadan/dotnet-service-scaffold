@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -57,7 +58,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
             // Validate the API key against the database
             var user = await _userService.ValidateApiKeyAsync(providedApiKey);
 
-            if (user == null)
+            if (user is null)
             {
                 return AuthenticateResult.Fail("Invalid API key");
             }

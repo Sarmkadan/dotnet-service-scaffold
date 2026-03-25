@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -17,13 +18,13 @@ public static class ExceptionExtensions
     /// </summary>
     public static string GetFullMessage(this Exception exception)
     {
-        if (exception == null)
+        if (exception is null)
             return string.Empty;
 
         var messages = new List<string> { exception.Message };
 
         var innerException = exception.InnerException;
-        while (innerException != null)
+        while (innerException is not null)
         {
             messages.Add(innerException.Message);
             innerException = innerException.InnerException;
@@ -37,7 +38,7 @@ public static class ExceptionExtensions
     /// </summary>
     public static string GetFullStackTrace(this Exception exception)
     {
-        if (exception == null)
+        if (exception is null)
             return string.Empty;
 
         var traces = new List<string>();
@@ -45,7 +46,7 @@ public static class ExceptionExtensions
         var current = exception;
         int level = 0;
 
-        while (current != null)
+        while (current is not null)
         {
             if (!string.IsNullOrEmpty(current.StackTrace))
             {
@@ -69,7 +70,7 @@ public static class ExceptionExtensions
         if (exception is TException)
             return true;
 
-        return exception.InnerException != null && exception.InnerException.Is<TException>();
+        return exception.InnerException is not null && exception.InnerException.Is<TException>();
     }
 
     /// <summary>
@@ -79,7 +80,7 @@ public static class ExceptionExtensions
     {
         var current = exception;
 
-        while (current != null)
+        while (current is not null)
         {
             if (current is TException match)
                 return match;
@@ -95,7 +96,7 @@ public static class ExceptionExtensions
     /// </summary>
     public static string GetSafeMessage(this Exception exception)
     {
-        if (exception == null)
+        if (exception is null)
             return "An unexpected error occurred.";
 
         return exception switch

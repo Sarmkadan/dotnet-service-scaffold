@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -27,7 +28,7 @@ public static class ValidationUtility
     /// </summary>
     public static void ValidateRange<T>(T value, T min, T max, string paramName) where T : IComparable<T>
     {
-        if (value == null)
+        if (value is null)
             throw new ArgumentNullException(paramName); // Fix: handle null input
 
         if (value.CompareTo(min) < 0 || value.CompareTo(max) > 0)
@@ -168,7 +169,7 @@ public static class ValidationUtility
     /// </summary>
     public static void ValidateCollectionNotEmpty<T>(IEnumerable<T>? collection, string paramName)
     {
-        if (collection == null || !collection.Any())
+        if (collection is null || !collection.Any())
             throw new ArgumentException($"{paramName} cannot be null or empty", paramName);
     }
 

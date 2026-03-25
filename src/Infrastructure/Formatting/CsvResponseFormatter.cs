@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -22,7 +23,7 @@ public class CsvResponseFormatter : IResponseFormatter
     /// </summary>
     public Task<string> FormatAsync(object? data)
     {
-        if (data == null)
+        if (data is null)
             return Task.FromResult(string.Empty);
 
         try

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -134,7 +135,7 @@ public class AuditLogController : ControllerBase
             var allLogs = await _auditLogRepository.GetAllAsync();
             var log = allLogs.FirstOrDefault(l => l.Id == id);
 
-            if (log == null)
+            if (log is null)
                 return NotFound();
 
             var response = new AuditLogDto

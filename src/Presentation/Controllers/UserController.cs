@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -82,7 +83,7 @@ public class UserController : ControllerBase
         {
             var user = await _userService.AuthenticateUserAsync(request.Email, request.Password);
 
-            if (user == null)
+            if (user is null)
             {
                 _logger.LogWarning("Failed authentication attempt for {Email}", request.Email);
                 return Unauthorized(new { error = "Invalid email or password" });
@@ -119,7 +120,7 @@ public class UserController : ControllerBase
         {
             var user = await _userService.GetUserWithApiKeysAsync(userId);
 
-            if (user == null)
+            if (user is null)
             {
                 _logger.LogWarning("User not found: {UserId}", userId);
                 return NotFound(new { error = "User not found" });

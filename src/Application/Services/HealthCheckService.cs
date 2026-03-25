@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -36,7 +37,7 @@ public class HealthCheckService : IHealthCheckService
     public async Task<HealthCheckResult> PerformHealthCheckAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         if (!service.IsEnabled)
@@ -122,7 +123,7 @@ public class HealthCheckService : IHealthCheckService
     public async Task<IEnumerable<HealthCheckResult>> GetServiceHealthHistoryAsync(Guid serviceId, int count = 20)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         return await _healthCheckRepository.GetRecentResultsAsync(serviceId, count);
@@ -131,7 +132,7 @@ public class HealthCheckService : IHealthCheckService
     public async Task<decimal> GetServiceSuccessRateAsync(Guid serviceId, int minutesBack = 60)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         var threshold = DateTime.UtcNow.AddMinutes(-minutesBack);
@@ -151,7 +152,7 @@ public class HealthCheckService : IHealthCheckService
     public async Task<string> GetServiceHealthStatusAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         if (!service.IsEnabled)
@@ -163,7 +164,7 @@ public class HealthCheckService : IHealthCheckService
     public async Task<IEnumerable<HealthCheckResult>> GetFailedChecksAsync(Guid serviceId, int hoursBack = 24)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         return await _healthCheckRepository.GetFailedResultsAsync(serviceId, hoursBack);
@@ -188,7 +189,7 @@ public class HealthCheckService : IHealthCheckService
         string? errorMessage = null)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
-        if (service == null)
+        if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         var result = new HealthCheckResult
