@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -53,7 +54,7 @@ public class ResponseFormatterFactory : IResponseFormatterFactory
         if (string.IsNullOrWhiteSpace(mediaType))
             throw new ArgumentException("Media type cannot be null or empty", nameof(mediaType));
 
-        if (formatter == null)
+        if (formatter is null)
             throw new ArgumentNullException(nameof(formatter));
 
         _formatters[mediaType.ToLowerInvariant()] = formatter;

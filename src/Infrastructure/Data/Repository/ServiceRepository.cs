@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -70,7 +71,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
 
         return await _dbSet
             .Where(s => s.IsEnabled &&
-                        (s.LastHealthCheckAt == null ||
+                        (s.LastHealthCheckAt is null ||
                          s.LastHealthCheckAt < threshold))
             .OrderBy(s => s.LastHealthCheckAt)
             .ToListAsync();

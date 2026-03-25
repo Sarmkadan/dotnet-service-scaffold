@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -32,7 +33,7 @@ public class DomainEventPublisher : IDomainEventPublisher
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : IDomainEvent
     {
-        if (@event == null)
+        if (@event is null)
             throw new ArgumentNullException(nameof(@event));
 
         _logger.LogInformation(
@@ -95,7 +96,7 @@ public class DomainEventPublisher : IDomainEventPublisher
                     null)
                 ?.MakeGenericMethod(@event.GetType());
 
-            if (publishMethod == null)
+            if (publishMethod is null)
                 continue;
 
             await (dynamic)publishMethod.Invoke(this, new object?[] { @event, cancellationToken })!;

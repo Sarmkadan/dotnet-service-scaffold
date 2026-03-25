@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -85,7 +86,7 @@ public class ServiceController : ControllerBase
         {
             var service = await _serviceManagementService.GetServiceAsync(serviceId);
 
-            if (service == null)
+            if (service is null)
             {
                 _logger.LogWarning("Service not found: {ServiceId}", serviceId);
                 return NotFound(new { error = "Service not found" });

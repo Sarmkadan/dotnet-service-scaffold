@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -54,7 +55,7 @@ public class ConfigurationService : IConfigurationService
 
         var existing = await _configRepository.GetByKeyAsync(key, serviceId);
 
-        if (existing != null)
+        if (existing is not null)
         {
             existing.UpdateValue(value);
             existing.ConfigType = configType;

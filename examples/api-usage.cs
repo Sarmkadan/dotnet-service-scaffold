@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -131,7 +132,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> GetMetricsAsync(string serviceId = null)
     {
-        var endpoint = serviceId != null
+        var endpoint = serviceId is not null
             ? $"/api/metrics/service/{serviceId}"
             : "/api/metrics";
         return await GetAsync(endpoint, useApiKey: true);
@@ -210,7 +211,7 @@ public class CompleteApiUsageExample
         if (useToken && !string.IsNullOrEmpty(_currentUserToken))
             httpRequest.Headers.Add("Authorization", $"Bearer {_currentUserToken}");
 
-        if (data != null)
+        if (data is not null)
         {
             var json = JsonSerializer.Serialize(data);
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
