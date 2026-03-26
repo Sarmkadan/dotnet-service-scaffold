@@ -85,9 +85,9 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider
                 _logger.LogDebug("SRV lookup returned no results; falling back to A record for {Fqdn}", aFqdn);
 
                 var addresses = await System.Net.Dns.GetHostAddressesAsync(aFqdn, cancellationToken);
-                foreach (var addr in addresses.Where(a => a.AddressFamily == AddressFamily.InterNetwork))
+                foreach (var addr in addresses.Where(a => a.AddressFamily == AddressFamily.Internetwork))
                 {
-                    records.Add(BuildRecord(serviceName, addr.ToString(), dns.DefaultPort, dns.DefaultScheme));
+                    records.Add(BuildRecord(serviceName, addr.ToString(), dns.DefaultPort, dns.DefaultScheme, ttl: (int)_options.CacheTtl.TotalSeconds));
                 }
             }
 
@@ -119,28 +119,90 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider
     /// <remarks>
     /// Polls <see cref="ResolveAsync"/> at <see cref="ServiceDiscoveryOptions.RefreshInterval"/>
     /// and yields a new snapshot whenever the set of endpoint URIs changes.
+    /// // Hotfix: Ensure DNS TTL cache respects record changes by proactively re-resolving based on observed TTLs.
     /// </remarks>
     public async IAsyncEnumerable<IReadOnlyList<ServiceDiscoveryRecord>> WatchAsync(
         string serviceName,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var previousUris = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        DateTime lastSuccessfulResolveTime = DateTime.MinValue; // Tracks the last time a resolution attempt was successful
+        TimeSpan minObservedTtl = _options.RefreshInterval; // Stores the minimum TTL observed from the last successful resolution
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var result = await ResolveAsync(serviceName, cancellationToken);
-            if (result.IsSuccess && result.Value is { } current)
+            DateTime now = DateTime.UtcNow;
+
+            // Determine if a resolution is due based on RefreshInterval or the minimum observed TTL
+            bool isResolutionDue = (now - lastSuccessfulResolveTime >= _options.RefreshInterval) ||
+                                   (now - lastSuccessfulResolveTime >= minObservedTtl);
+
+            if (isResolutionDue || lastSuccessfulResolveTime == DateTime.MinValue) // Always resolve on the first run
             {
-                var currentUris = current.Select(r => r.ToEndpointUri())
-                                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
-                if (!currentUris.SetEquals(previousUris))
+                var result = await ResolveAsync(serviceName, cancellationToken);
+                if (result.IsSuccess && result.Value is { } current)
                 {
-                    previousUris = currentUris;
-                    yield return current;
+                    // Hotfix: Ensure DNS TTL cache respects record changes.
+                    // Recalculate minObservedTtl based on the newly resolved records.
+                    // If no DnsTtlSeconds is set (e.g., A-record fallback without explicit TTL from DNS response),
+                    // use _options.CacheTtl as a reasonable default for cache validity.
+                    minObservedTtl = current.Where(r => r.DnsTtlSeconds.HasValue)
+                                            .Select(r => TimeSpan.FromSeconds(r.DnsTtlSeconds!.Value))
+                                            .DefaultIfEmpty(_options.CacheTtl)
+                                            .Min();
+
+                    // Ensure minObservedTtl has a sensible lower bound to prevent overly aggressive polling.
+                    if (minObservedTtl < TimeSpan.FromSeconds(1))
+                    {
+                        minObservedTtl = TimeSpan.FromSeconds(1);
+                    }
+
+                    lastSuccessfulResolveTime = now; // Mark the time of this successful resolution
+
+                    var currentUris = current.Select(r => r.ToEndpointUri())
+                                             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                    if (!currentUris.SetEquals(previousUris))
+                    {
+                        previousUris = currentUris;
+                        yield return current;
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning(result.Exception, "Failed to resolve service {ServiceName} during watch. Retrying in {RefreshInterval}...", serviceName, _options.RefreshInterval);
+                    // On failure, we don't update lastSuccessfulResolveTime or minObservedTtl from this failed attempt.
+                    // The next iteration will still use the previous minObservedTtl and RefreshInterval for delay.
+                    // This effectively means we'll retry after the regular RefreshInterval if no successful resolution occurs.
                 }
             }
 
-            try { await Task.Delay(_options.RefreshInterval, cancellationToken); }
+            // Calculate the delay until the next resolution is required.
+            // This is the earliest of: remaining RefreshInterval or remaining minObservedTtl from last success.
+            TimeSpan delay;
+            if (lastSuccessfulResolveTime == DateTime.MinValue) // If never successfully resolved, wait for RefreshInterval
+            {
+                delay = _options.RefreshInterval;
+            }
+            else
+            {
+                TimeSpan timeSinceLastSuccess = now - lastSuccessfulResolveTime;
+                TimeSpan remainingRefreshInterval = _options.RefreshInterval - timeSinceLastSuccess;
+                TimeSpan remainingMinTtl = minObservedTtl - timeSinceLastSuccess;
+
+                // Take the minimum of positive remaining times. If either is negative, it means it's already due.
+                delay = TimeSpan.MaxValue;
+                if (remainingRefreshInterval > TimeSpan.Zero) delay = TimeSpan.Min(delay, remainingRefreshInterval);
+                if (remainingMinTtl > TimeSpan.Zero) delay = TimeSpan.Min(delay, remainingMinTtl);
+
+                // If no positive remaining time (i.e., both are already due or invalid), use a minimal delay
+                if (delay == TimeSpan.MaxValue || delay <= TimeSpan.Zero)
+                {
+                    delay = TimeSpan.FromMilliseconds(100); // Prevent busy-waiting
+                }
+            }
+
+            try { await Task.Delay(delay, cancellationToken); }
             catch (OperationCanceledException) { yield break; }
         }
     }
