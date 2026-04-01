@@ -8,6 +8,7 @@
 using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Infrastructure.Data;
 using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using DotnetServiceScaffold.Infrastructure.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -62,8 +63,21 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add health checks
+// SqliteHealthCheck verifies file accessibility and available disk space.
+// AddDbContextCheck verifies that EF Core can reach the database.
+var sqliteDbPath = connectionString
+    .Split(';', StringSplitOptions.RemoveEmptyEntries)
+    .Select(p => p.Trim())
+    .FirstOrDefault(p => p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+    ?.Substring("Data Source=".Length) ?? "scaffold.db";
+
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ServiceScaffoldDbContext>("database");
+    .AddDbContextCheck<ServiceScaffoldDbContext>("database")
+    .Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
+        "sqlite-file",
+        _ => new SqliteHealthCheck(sqliteDbPath),
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+        tags: ["db", "sqlite"]));
 
 var app = builder.Build();
 
@@ -81,8 +95,27 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// Health check endpoint
-app.MapHealthChecks("/health");
+// Health check endpoint with detailed JSON response
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                data = e.Value.Data
+            }),
+            totalDurationMs = report.TotalDuration.TotalMilliseconds
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
 
 // Status endpoint
 app.MapGet("/status", async (ServiceScaffoldDbContext context) =>
