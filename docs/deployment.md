@@ -2,7 +2,227 @@
 
 Complete guide for deploying dotnet-service-scaffold to production environments.
 
-## Pre-Deployment Checklist
+## Fresh Ubuntu 24.04 VPS — Step-by-Step Walkthrough
+
+This section covers a complete, first-time deployment on a clean Ubuntu 24.04 server.
+Follow these steps in order; later sections contain more detailed reference material.
+
+### Prerequisites
+
+- Ubuntu 24.04 LTS VPS with sudo access
+- A domain name with its A record pointing to the server's IP (needed for HTTPS)
+- Ports 22, 80, and 443 open in your firewall / hosting panel
+
+### Step 1 — Install .NET 10
+
+```bash
+# Add the Microsoft package repository
+wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+
+# Install the SDK (needed to publish) or just the runtime on production
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-10.0
+```
+
+Verify:
+
+```bash
+dotnet --version
+```
+
+### Step 2 — Create a dedicated service account
+
+Running the application as a non-root user limits the blast radius of any security issue.
+
+```bash
+sudo useradd -r -s /bin/false scaffold
+sudo mkdir -p /opt/dotnet-scaffold /var/lib/dotnet-scaffold /var/log/dotnet-scaffold
+sudo chown scaffold:scaffold /opt/dotnet-scaffold /var/lib/dotnet-scaffold /var/log/dotnet-scaffold
+sudo chmod 750 /var/lib/dotnet-scaffold   # DB directory — restricted to service account
+```
+
+### Step 3 — Publish and copy the application
+
+Run these commands from your development machine (or a CI runner) and then copy the output to the server, **or** clone the repository directly on the server and publish there.
+
+```bash
+# On your build machine (or on the server after cloning)
+dotnet publish -c Release -o ./publish
+
+# Copy to the server (replace user@your-server-ip)
+rsync -avz ./publish/ user@your-server-ip:/opt/dotnet-scaffold/
+```
+
+### Step 4 — Configure the connection string for the production database path
+
+Create `/opt/dotnet-scaffold/appsettings.Production.json` with the production database
+location and WAL-enabled connection string:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=/var/lib/dotnet-scaffold/scaffold.db;Mode=ReadWriteCreate;Cache=Shared"
+  },
+  "Serilog": {
+    "WriteTo": [
+      {
+        "Name": "File",
+        "Args": {
+          "path": "/var/log/dotnet-scaffold/scaffold-.txt",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 30
+        }
+      }
+    ]
+  }
+}
+```
+
+### Step 5 — Install the systemd unit
+
+```bash
+sudo tee /etc/systemd/system/dotnet-scaffold.service > /dev/null <<'EOF'
+[Unit]
+Description=DotNet Service Scaffold
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=scaffold
+Group=scaffold
+WorkingDirectory=/opt/dotnet-scaffold
+Environment="ASPNETCORE_ENVIRONMENT=Production"
+Environment="ASPNETCORE_URLS=http://localhost:5000"
+ExecStart=/usr/bin/dotnet /opt/dotnet-scaffold/dotnet-service-scaffold.dll
+ExecStartPost=/bin/sh -c 'until curl -sf http://localhost:5000/health; do sleep 1; done'
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/dotnet-scaffold /var/log/dotnet-scaffold
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+Enable and start the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable dotnet-scaffold
+sudo systemctl start dotnet-scaffold
+```
+
+Check that it came up correctly:
+
+```bash
+sudo systemctl status dotnet-scaffold
+curl http://localhost:5000/health
+```
+
+### Step 6 — Install Caddy (automatic HTTPS)
+
+Caddy obtains a Let's Encrypt certificate automatically the first time it receives a
+request for your domain — no manual certificate management needed.
+
+```bash
+sudo apt-get install -y caddy
+```
+
+Create `/etc/caddy/Caddyfile` (replace `your.domain.com` and the email address):
+
+```caddy
+{
+    email you@example.com
+}
+
+your.domain.com {
+    reverse_proxy localhost:5000 {
+        header_up X-Forwarded-For {http.request.remote.host}
+        header_up X-Forwarded-Proto {http.request.proto}
+        health_uri /health
+        health_interval 10s
+    }
+
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+    }
+
+    log {
+        output file /var/log/caddy/scaffold.log
+        level info
+    }
+}
+```
+
+Validate and reload:
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl enable caddy
+sudo systemctl restart caddy
+```
+
+### Step 7 — Open the firewall
+
+```bash
+sudo ufw allow 22/tcp    # SSH — keep this open!
+sudo ufw allow 80/tcp    # HTTP (Caddy redirects to HTTPS)
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw enable
+```
+
+### Step 8 — Verify end-to-end
+
+```bash
+# Health check over HTTPS (certificate is obtained on first request — may take a few seconds)
+curl https://your.domain.com/health
+```
+
+A successful response looks like:
+
+```json
+{
+  "status": "Healthy",
+  "checks": [
+    { "name": "database", "status": "Healthy" },
+    { "name": "sqlite-file", "status": "Healthy", "data": { "diskAvailableMB": 12345 } }
+  ]
+}
+```
+
+### Ongoing maintenance commands
+
+```bash
+# View application logs
+sudo journalctl -u dotnet-scaffold -f
+
+# Restart after updating binaries
+sudo systemctl restart dotnet-scaffold
+
+# Update Caddy configuration without downtime
+sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
+
+# Backup the database
+sudo -u scaffold sqlite3 /var/lib/dotnet-scaffold/scaffold.db ".backup /tmp/scaffold-$(date +%Y%m%d).db"
+```
+
+---
+
+
 
 - [ ] Application builds without errors (`dotnet build -c Release`)
 - [ ] All tests pass (`dotnet test`)
