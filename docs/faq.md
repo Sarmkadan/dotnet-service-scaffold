@@ -228,7 +228,63 @@ curl http://localhost:5000/api/user/me \
 
 ## Database
 
-### Q: How do I backup the database?
+### Q: How do I customize the SQLite connection string (e.g. change the database file path)?
+
+**A:** There are three ways to override the default `Data Source=scaffold.db` path, ordered from most to least recommended for production:
+
+**1. Environment variable (recommended for systemd)**
+
+Set `ConnectionStrings__DefaultConnection` in the systemd unit or in your shell before starting the service.
+The double underscore (`__`) is the ASP.NET Core hierarchy separator.
+
+```bash
+# In /etc/systemd/system/dotnet-scaffold.service, under [Service]:
+Environment="ConnectionStrings__DefaultConnection=Data Source=/var/lib/myservice/data.db;Mode=ReadWriteCreate;Cache=Shared"
+```
+
+Then reload and restart:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart dotnet-scaffold
+```
+
+**2. Environment-specific appsettings file**
+
+Create `appsettings.Production.json` next to the published DLL and set `ASPNETCORE_ENVIRONMENT=Production`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=/var/lib/myservice/data.db;Mode=ReadWriteCreate;Cache=Shared"
+  }
+}
+```
+
+**3. Edit appsettings.json directly**
+
+Open `appsettings.json` and change the `Data Source` value:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=/var/lib/myservice/data.db;Mode=ReadWriteCreate;Cache=Shared"
+  }
+}
+```
+
+> **Tip:** Always include `Mode=ReadWriteCreate;Cache=Shared` in the connection string to enable WAL mode and
+> shared-cache support. WAL mode prevents "database is locked" errors under concurrent load.
+
+Make sure the directory exists and is owned by the user that runs the service:
+
+```bash
+sudo mkdir -p /var/lib/myservice
+sudo chown myservice:myservice /var/lib/myservice
+sudo chmod 750 /var/lib/myservice
+```
+
+
 
 **A:** SQLite makes this simple:
 
