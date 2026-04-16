@@ -85,7 +85,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider
                 _logger.LogDebug("SRV lookup returned no results; falling back to A record for {Fqdn}", aFqdn);
 
                 var addresses = await System.Net.Dns.GetHostAddressesAsync(aFqdn, cancellationToken);
-                foreach (var addr in addresses.Where(a => a.AddressFamily == AddressFamily.Internetwork))
+                foreach (var addr in addresses.Where(a => a.AddressFamily == AddressFamily.InterNetwork))
                 {
                     records.Add(BuildRecord(serviceName, addr.ToString(), dns.DefaultPort, dns.DefaultScheme, ttl: (int)_options.CacheTtl.TotalSeconds));
                 }
@@ -170,7 +170,11 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider
                 }
                 else
                 {
-                    _logger.LogWarning(result.Exception, "Failed to resolve service {ServiceName} during watch. Retrying in {RefreshInterval}...", serviceName, _options.RefreshInterval);
+                    _logger.LogWarning(
+                        "Failed to resolve service {ServiceName} during watch: {ErrorMessage}. Retrying in {RefreshInterval}...",
+                        serviceName,
+                        result.ErrorMessage ?? "Unknown error",
+                        _options.RefreshInterval);
                     // On failure, we don't update lastSuccessfulResolveTime or minObservedTtl from this failed attempt.
                     // The next iteration will still use the previous minObservedTtl and RefreshInterval for delay.
                     // This effectively means we'll retry after the regular RefreshInterval if no successful resolution occurs.
@@ -192,8 +196,15 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider
 
                 // Take the minimum of positive remaining times. If either is negative, it means it's already due.
                 delay = TimeSpan.MaxValue;
-                if (remainingRefreshInterval > TimeSpan.Zero) delay = TimeSpan.Min(delay, remainingRefreshInterval);
-                if (remainingMinTtl > TimeSpan.Zero) delay = TimeSpan.Min(delay, remainingMinTtl);
+                if (remainingRefreshInterval > TimeSpan.Zero && remainingRefreshInterval < delay)
+                {
+                    delay = remainingRefreshInterval;
+                }
+
+                if (remainingMinTtl > TimeSpan.Zero && remainingMinTtl < delay)
+                {
+                    delay = remainingMinTtl;
+                }
 
                 // If no positive remaining time (i.e., both are already due or invalid), use a minimal delay
                 if (delay == TimeSpan.MaxValue || delay <= TimeSpan.Zero)
