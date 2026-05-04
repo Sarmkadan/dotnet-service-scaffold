@@ -497,6 +497,103 @@ app.Run();
 This example demonstrates how to configure and use `ServiceMeshOptions` to integrate with a service mesh sidecar proxy, including registering services, checking mesh availability, and enabling header propagation middleware.
 
 
+## ServiceDiscoveryOptions
+
+The `ServiceDiscoveryOptions` class configures service discovery behavior for locating and connecting to other services within a distributed system. It supports multiple discovery modes (DNS-based, registry-based, or hybrid), configurable load balancing strategies, caching policies, and self-registration capabilities. These options are typically bound from the `ServiceDiscovery` section in `appsettings.json`.
+
+### Usage Example
+
+```csharp
+using System;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+// Configure options in appsettings.json
+// {
+// "ServiceDiscovery": {
+// "Enabled": true,
+// "Mode": "Hybrid",
+// "LoadBalancing": "RoundRobin",
+// "CacheTtl": "00:00:30",
+// "RefreshInterval": "00:01:00",
+// "ResolutionTimeout": "00:00:05",
+// "SearchDomain": "cluster.local",
+// "PreferSrvRecords": true,
+// "DnsServerAddress": "8.8.8.8",
+// "DnsServerPort": 53,
+// "DefaultPort": 8080,
+// "DefaultScheme": "https",
+// "MaxRetries": 3,
+// "SocketTimeout": "00:00:05",
+// "AgentEndpoint": "http://localhost:8500",
+// "AclToken": "your-acl-token-here",
+// "OnlyHealthyInstances": true
+// }
+// }
+
+// Setup service collection with service discovery configuration
+var services = new ServiceCollection();
+
+services.Configure<ServiceDiscoveryOptions>(options =>
+{
+    options.Enabled = true;
+    options.Mode = DiscoveryMode.Hybrid;
+    options.LoadBalancing = LoadBalancingStrategy.RoundRobin;
+    options.CacheTtl = TimeSpan.FromSeconds(30);
+    options.RefreshInterval = TimeSpan.FromMinutes(1);
+    options.ResolutionTimeout = TimeSpan.FromSeconds(5);
+    options.SearchDomain = "cluster.local";
+    options.PreferSrvRecords = true;
+    options.DnsServerAddress = "8.8.8.8";
+    options.DnsServerPort = 53;
+    options.DefaultPort = 8080;
+    options.DefaultScheme = "https";
+    options.MaxRetries = 3;
+    options.SocketTimeout = TimeSpan.FromSeconds(5);
+    options.AgentEndpoint = "http://localhost:8500";
+    options.AclToken = "your-acl-token-here";
+    options.OnlyHealthyInstances = true;
+
+    // Configure DNS-specific options
+    options.Dns.PreferSrvRecords = true;
+    options.Dns.SearchDomain = "cluster.local";
+    options.Dns.DnsServerAddress = "8.8.8.8";
+    options.Dns.DefaultPort = 8080;
+    options.Dns.DefaultScheme = "https";
+
+    // Configure Registry-specific options
+    options.Registry.ServiceName = "my-service";
+    options.Registry.ServiceId = Guid.NewGuid().ToString();
+    options.Registry.Ttl = TimeSpan.FromSeconds(30);
+
+    // Configure SelfRegistration options
+    options.SelfRegistration.Enabled = true;
+    options.SelfRegistration.ServiceName = "user-service";
+    options.SelfRegistration.AdvertiseHost = "192.168.1.100";
+    options.SelfRegistration.AdvertisePort = 5001;
+    options.SelfRegistration.Version = "1.0.0";
+});
+
+// Register service discovery components
+services.AddServiceDiscovery(configuration);
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve service discovery service
+var discoveryService = serviceProvider.GetRequiredService<IServiceDiscoveryService>();
+
+// Discover services using configured options
+var result = await discoveryService.DiscoverAsync("product-service");
+if (result.IsSuccess && result.Value is { } instances)
+{
+    Console.WriteLine($"Found {instances.Count} instances");
+}
+```
+
+This example demonstrates configuring `ServiceDiscoveryOptions` with DNS, registry, and self-registration settings, then using the discovery service to locate service instances based on the configured options.
+
+
 
 ## DnsServiceDiscoveryProvider
 
