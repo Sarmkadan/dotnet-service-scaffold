@@ -88,6 +88,7 @@ public class UserService
 4. **SOLID principles** - Apply design principles
 5. **Comments** - Only explain WHY, not WHAT
 6. **No magic numbers** - Use named constants
+7. **Preserve author headers** - Keep copyright and author information in code files
 
 Example of good comments:
 ```csharp
