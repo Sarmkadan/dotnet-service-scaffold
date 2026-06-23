@@ -1,6 +1,5 @@
-![CI](https://github.com/sarmkadan/dotnet-service-scaffold/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/github/license/sarmkadan/dotnet-service-scaffold)
-![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
+![Build](https://github.com/sarmkadan/dotnet-service-scaffold/actions/workflows/build.yml/badge.svg)
+![License](https://img.shields.io/github/license/sarmkadan/dotnet-service-scaffold?style=flat-square&label=License&color=blue)
 
 # .NET Service Scaffold
 
