@@ -52,15 +52,15 @@ COPY --from=build --chown=scaffold:scaffold /app/publish .
 USER scaffold
 
 # Expose port
-EXPOSE 5000
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
 # Environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production \
-    ASPNETCORE_URLS=http://+:5000 \
+    ASPNETCORE_URLS=http://+:8080 \
     ConnectionStrings__DefaultConnection=Data Source=/app/data/scaffold.db
 
 # Set volumes for persistence
