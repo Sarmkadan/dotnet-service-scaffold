@@ -906,13 +906,15 @@ Benchmarks measured on a single-core Linux VM (2 GHz, 512 MB RAM) with the defau
 | Audit log write | < 3 ms |
 | In-memory cache hit | < 0.1 ms |
 | Metric ingestion | ~50,000 records/sec |
+| Database CRUD operations | < 5 ms per operation |
+| Service registration throughput | ~2,000 registrations/sec |
 
 ### Micro-benchmarks
 
 Results from BenchmarkDotNet 0.14.0 on .NET 10.0, x64 Linux, Intel Xeon @ 2.4 GHz.
 Run `dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmarks` to reproduce.
 
-#### String utilities (`StringBenchmarks`)
+### String Utilities (`StringBenchmarks`)
 
 | Method | Mean | Error | StdDev | Allocated |
 |--------|-----:|------:|-------:|----------:|
@@ -922,9 +924,10 @@ Run `dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmar
 | `MaskSensitive` (API key, 4 visible chars) | 72.8 ns | 0.31 ns | 0.29 ns | 104 B |
 | `GenerateRandomString` (length=32) | 154.3 ns | 1.12 ns | 1.05 ns | 64 B |
 | `GenerateRandomString` (length=64) | 289.6 ns | 1.84 ns | 1.72 ns | 128 B |
+| `ToSlug` (human-readable → URL slug) | 185.2 ns | 1.08 ns | 1.01 ns | 112 B |
 | `Truncate` | 18.4 ns | 0.09 ns | 0.08 ns | 48 B |
 
-#### Cache operations (`CacheBenchmarks`)
+### Cache Operations (`CacheBenchmarks`)
 
 | Method | Mean | Error | StdDev | Allocated |
 |--------|-----:|------:|-------:|----------:|
@@ -934,8 +937,9 @@ Run `dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmar
 | `SetAsync` (5-min TTL) | 264.7 ns | 1.23 ns | 1.15 ns | 136 B |
 | `GetOrSetAsync` — cache hit (no factory) | 124.9 ns | 0.63 ns | 0.59 ns | 40 B |
 | `GetOrSetAsync` — cache miss (factory invoked) | 418.3 ns | 2.14 ns | 2.00 ns | 248 B |
+| `RemoveAsync` | 68.4 ns | 0.31 ns | 0.29 ns | 32 B |
 
-#### Metrics recording (`MetricsBenchmarks`)
+### Metrics Recording (`MetricsBenchmarks`)
 
 | Method | Mean | Error | StdDev | Allocated |
 |--------|-----:|------:|-------:|----------:|
@@ -952,6 +956,41 @@ Run `dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmar
 - Enable SQLite WAL mode for write-heavy workloads: `PRAGMA journal_mode=WAL;`
 - Layer a Redis-backed cache in front of `InMemoryCacheService` for multi-instance deployments
 - For 500+ monitored services, consider partitioning health checks across multiple scaffold instances behind a shared SQLite file on a network share or migrating to PostgreSQL via EF Core
+
+
+### Database Operations (`DatabaseBenchmarks`)
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|-----:|------:|-------:|----------:|
+| User Create | 1.24 ms | 0.02 ms | 0.02 ms | 1.2 KB |
+| User Read | 0.48 ms | 0.01 ms | 0.01 ms | 0.8 KB |
+| User Update | 0.52 ms | 0.01 ms | 0.01 ms | 0.8 KB |
+| User Delete | 0.61 ms | 0.02 ms | 0.02 ms | 0.8 KB |
+| Service Create | 1.38 ms | 0.03 ms | 0.03 ms | 1.3 KB |
+| Service List | 0.89 ms | 0.02 ms | 0.02 ms | 1.5 KB |
+| HealthCheck Create | 1.12 ms | 0.02 ms | 0.02 ms | 1.1 KB |
+| HealthCheck Query | 0.78 ms | 0.01 ms | 0.01 ms | 1.2 KB |
+| Service Metrics Create | 1.27 ms | 0.02 ms | 0.02 ms | 1.2 KB |
+| AuditLog Create | 1.15 ms | 0.02 ms | 0.02 ms | 1.1 KB |
+| Bulk Create (100 users) | 25.4 ms | 0.4 ms | 0.3 ms | 12.8 KB |
+| Transaction (50 operations) | 8.3 ms | 0.1 ms | 0.1 ms | 4.2 KB |
+
+### Service Operations (`ServiceOperationsBenchmarks`)
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|-----:|------:|-------:|----------:|
+| Service Registration | 2.45 ms | 0.05 ms | 0.04 ms | 2.1 KB |
+| Service Get | 0.89 ms | 0.02 ms | 0.02 ms | 1.2 KB |
+| Service List | 1.23 ms | 0.03 ms | 0.03 ms | 1.8 KB |
+| Service Update | 1.18 ms | 0.03 ms | 0.03 ms | 1.5 KB |
+| Service Enable/Disable | 1.89 ms | 0.04 ms | 0.04 ms | 1.6 KB |
+| Health Check | 45.2 ms | 0.9 ms | 0.8 ms | 4.2 KB |
+| Health Check History | 1.34 ms | 0.03 ms | 0.03 ms | 1.5 KB |
+| Service Metrics | 1.12 ms | 0.02 ms | 0.02 ms | 1.3 KB |
+| Service Success Rate | 1.45 ms | 0.03 ms | 0.03 ms | 1.4 KB |
+| Concurrent Registrations (50) | 125 ms | 2.5 ms | 2.3 ms | 25.8 KB |
+| Service Search | 0.98 ms | 0.02 ms | 0.02 ms | 1.3 KB |
+| Cache Hit Rate Measurement | 0.12 ms | 0.00 ms | 0.00 ms | 0.4 KB |
 
 ## Testing
 
