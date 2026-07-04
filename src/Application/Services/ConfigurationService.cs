@@ -28,19 +28,43 @@ public class ConfigurationService : IConfigurationService
     public async Task<ServiceConfiguration?> GetConfigurationAsync(string key, Guid? serviceId = null)
     {
         if (string.IsNullOrWhiteSpace(key))
-            throw new ServiceValidationException("Configuration key cannot be empty");
+            throw new ArgumentNullException(nameof(key), "Configuration key cannot be empty");
 
-        return await _configRepository.GetByKeyAsync(key, serviceId);
+        try
+        {
+            return await _configRepository.GetByKeyAsync(key, serviceId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving configuration: {Key}", key);
+            throw new DataAccessException($"Error retrieving configuration: {key}", ex);
+        }
     }
 
     public async Task<IEnumerable<ServiceConfiguration>> GetAllConfigurationsAsync()
     {
-        return await _configRepository.GetAllAsync();
+        try
+        {
+            return await _configRepository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all configurations");
+            throw new DataAccessException("Error retrieving all configurations", ex);
+        }
     }
 
     public async Task<IEnumerable<ServiceConfiguration>> GetServiceConfigurationsAsync(Guid serviceId)
     {
-        return await _configRepository.GetByServiceIdAsync(serviceId);
+        try
+        {
+            return await _configRepository.GetByServiceIdAsync(serviceId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving configurations for service: {ServiceId}", serviceId);
+            throw new DataAccessException($"Error retrieving configurations for service: {serviceId}", ex);
+        }
     }
 
     public async Task<ServiceConfiguration> SetConfigurationAsync(
@@ -50,52 +74,74 @@ public class ConfigurationService : IConfigurationService
         Guid? serviceId = null,
         string? description = null)
     {
-        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value))
-            throw new ServiceValidationException("Configuration key and value are required");
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentNullException(nameof(key), "Configuration key cannot be empty");
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentNullException(nameof(value), "Configuration value cannot be empty");
 
-        var existing = await _configRepository.GetByKeyAsync(key, serviceId);
-
-        if (existing is not null)
+        try
         {
-            existing.UpdateValue(value);
-            existing.ConfigType = configType;
-            existing.Description = description;
-            var updated = await _configRepository.UpdateAsync(existing);
+            var existing = await _configRepository.GetByKeyAsync(key, serviceId);
 
-            _logger.LogInformation("Configuration updated: {Key} for service {ServiceId}", key, serviceId);
-            return updated;
+            if (existing is not null)
+            {
+                existing.UpdateValue(value);
+                existing.ConfigType = configType;
+                existing.Description = description;
+                var updated = await _configRepository.UpdateAsync(existing);
+
+                _logger.LogInformation("Configuration updated: {Key} for service {ServiceId}", key, serviceId);
+                return updated;
+            }
+
+            var config = new ServiceConfiguration
+            {
+                Id = Guid.NewGuid(),
+                Key = key,
+                Value = value,
+                ConfigType = configType,
+                ServiceId = serviceId,
+                Description = description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            if (!config.ValidateValue())
+            {
+                _logger.LogWarning("Configuration validation failed: {Key} = {Value}", key, value);
+                throw new ConfigurationException($"Invalid value for configuration type {configType}");
+            }
+
+            var created = await _configRepository.AddAsync(config);
+            _logger.LogInformation("Configuration created: {Key} for service {ServiceId}", key, serviceId);
+            return created;
         }
-
-        var config = new ServiceConfiguration
+        catch (ConfigurationException)
         {
-            Id = Guid.NewGuid(),
-            Key = key,
-            Value = value,
-            ConfigType = configType,
-            ServiceId = serviceId,
-            Description = description,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        if (!config.ValidateValue())
-        {
-            _logger.LogWarning("Configuration validation failed: {Key} = {Value}", key, value);
-            throw new ServiceValidationException($"Invalid value for configuration type {configType}");
+            throw;
         }
-
-        var created = await _configRepository.AddAsync(config);
-        _logger.LogInformation("Configuration created: {Key} for service {ServiceId}", key, serviceId);
-        return created;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting configuration: {Key}", key);
+            throw new DataAccessException($"Error setting configuration: {key}", ex);
+        }
     }
 
     public async Task DeleteConfigurationAsync(string key, Guid? serviceId = null)
     {
         if (string.IsNullOrWhiteSpace(key))
-            throw new ServiceValidationException("Configuration key cannot be empty");
+            throw new ArgumentNullException(nameof(key), "Configuration key cannot be empty");
 
-        await _configRepository.DeleteByKeyAsync(key, serviceId);
-        _logger.LogInformation("Configuration deleted: {Key}", key);
+        try
+        {
+            await _configRepository.DeleteByKeyAsync(key, serviceId);
+            _logger.LogInformation("Configuration deleted: {Key}", key);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting configuration: {Key}", key);
+            throw new DataAccessException($"Error deleting configuration: {key}", ex);
+        }
     }
 
     public async Task<int> GetConfigIntAsync(string key, int defaultValue = 0)
