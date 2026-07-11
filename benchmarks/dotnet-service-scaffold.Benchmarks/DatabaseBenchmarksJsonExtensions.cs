@@ -9,7 +9,7 @@ namespace DotnetServiceScaffold.Benchmarks;
 /// </summary>
 public static class DatabaseBenchmarksJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false
@@ -21,36 +21,29 @@ public static class DatabaseBenchmarksJsonExtensions
     /// <param name="value">The database benchmarks instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the database benchmarks.</returns>
-    public static string ToJson(this DatabaseBenchmarks value, bool indented = false)
-    {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
-
-        var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
-            : _jsonSerializerOptions;
-
-        return JsonSerializer.Serialize(value, options);
-    }
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public static string ToJson(this DatabaseBenchmarks value, bool indented = false) =>
+        value is null
+            ? throw new ArgumentNullException(nameof(value))
+            : JsonSerializer.Serialize(value, indented
+                ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
+                : _jsonSerializerOptions);
 
     /// <summary>
     /// Deserializes a JSON string to a <see cref="DatabaseBenchmarks"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A deserialized database benchmarks instance, or null if the JSON is null or empty.</returns>
-    public static DatabaseBenchmarks? FromJson(string json)
+    /// <returns>A deserialized database benchmarks instance.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
+    /// <exception cref="JsonException">Thrown when JSON deserialization fails.</exception>
+    public static DatabaseBenchmarks FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
-        return JsonSerializer.Deserialize<DatabaseBenchmarks>(json, _jsonSerializerOptions);
+        return JsonSerializer.Deserialize<DatabaseBenchmarks>(json, _jsonSerializerOptions)
+            ?? throw new JsonException("Deserialized result is null");
     }
 
     /// <summary>
@@ -59,8 +52,11 @@ public static class DatabaseBenchmarksJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized database benchmarks instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out DatabaseBenchmarks? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
@@ -71,7 +67,7 @@ public static class DatabaseBenchmarksJsonExtensions
         try
         {
             value = JsonSerializer.Deserialize<DatabaseBenchmarks>(json, _jsonSerializerOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
