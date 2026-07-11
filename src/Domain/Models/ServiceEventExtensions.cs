@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using DotnetServiceScaffold.Domain.Enums;
 using DotnetServiceScaffold.Domain.Models;
@@ -10,21 +10,24 @@ using DotnetServiceScaffold.Domain.Models;
 namespace DotnetServiceScaffold.Domain.Models;
 
 /// <summary>
-/// Extension methods for ServiceEvent providing additional utility functionality.
+/// Extension methods for <see cref="ServiceEvent"/> providing additional utility functionality.
 /// </summary>
 public static class ServiceEventExtensions
 {
     /// <summary>
     /// Determines if the event occurred within the last specified time span.
     /// </summary>
-    /// <param name="serviceEvent">The service event to check</param>
-    /// <param name="timeSpan">The time span to check against (e.g., TimeSpan.FromHours(1))</param>
-    /// <returns>True if the event occurred within the specified time span, otherwise false</returns>
+    /// <param name="serviceEvent">The service event to check.</param>
+    /// <param name="timeSpan">The time span to check against (e.g., <see cref="TimeSpan.FromHours(double)"/>).</param>
+    /// <returns>True if the event occurred within the specified time span, otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceEvent"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeSpan"/> is negative.</exception>
     public static bool IsRecent(this ServiceEvent serviceEvent, TimeSpan timeSpan)
     {
-        if (serviceEvent == null)
+        ArgumentNullException.ThrowIfNull(serviceEvent);
+        if (timeSpan < TimeSpan.Zero)
         {
-            throw new ArgumentNullException(nameof(serviceEvent));
+            throw new ArgumentOutOfRangeException(nameof(timeSpan), "Time span cannot be negative.");
         }
 
         return DateTime.UtcNow - serviceEvent.CreatedAt <= timeSpan;
@@ -33,14 +36,12 @@ public static class ServiceEventExtensions
     /// <summary>
     /// Gets a formatted display string for the event including severity and type.
     /// </summary>
-    /// <param name="serviceEvent">The service event</param>
-    /// <returns>Formatted string suitable for display in logs or UI</returns>
+    /// <param name="serviceEvent">The service event.</param>
+    /// <returns>Formatted string suitable for display in logs or UI.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceEvent"/> is <see langword="null"/>.</exception>
     public static string GetDisplayString(this ServiceEvent serviceEvent)
     {
-        if (serviceEvent == null)
-        {
-            throw new ArgumentNullException(nameof(serviceEvent));
-        }
+        ArgumentNullException.ThrowIfNull(serviceEvent);
 
         return $"[{serviceEvent.CreatedAt:yyyy-MM-dd HH:mm:ss}] [{serviceEvent.Severity ?? "Info"}] {serviceEvent.GetEventTypeDescription()}: {serviceEvent.Message ?? "No message"}";
     }
@@ -48,15 +49,13 @@ public static class ServiceEventExtensions
     /// <summary>
     /// Determines if the event is from a specific service by service ID.
     /// </summary>
-    /// <param name="serviceEvent">The service event</param>
-    /// <param name="serviceId">The service ID to check against</param>
-    /// <returns>True if the event belongs to the specified service, otherwise false</returns>
+    /// <param name="serviceEvent">The service event.</param>
+    /// <param name="serviceId">The service ID to check against.</param>
+    /// <returns>True if the event belongs to the specified service, otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceEvent"/> is <see langword="null"/>.</exception>
     public static bool BelongsToService(this ServiceEvent serviceEvent, Guid serviceId)
     {
-        if (serviceEvent == null)
-        {
-            throw new ArgumentNullException(nameof(serviceEvent));
-        }
+        ArgumentNullException.ThrowIfNull(serviceEvent);
 
         return serviceEvent.ServiceId == serviceId;
     }
@@ -65,14 +64,12 @@ public static class ServiceEventExtensions
     /// Gets a priority level (0-5) for the event based on severity and type.
     /// Higher values indicate higher priority for alerting and processing.
     /// </summary>
-    /// <param name="serviceEvent">The service event</param>
-    /// <returns>Priority level from 0 (lowest) to 5 (highest)</returns>
+    /// <param name="serviceEvent">The service event.</param>
+    /// <returns>Priority level from 0 (lowest) to 5 (highest).</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceEvent"/> is <see langword="null"/>.</exception>
     public static int GetPriorityLevel(this ServiceEvent serviceEvent)
     {
-        if (serviceEvent == null)
-        {
-            throw new ArgumentNullException(nameof(serviceEvent));
-        }
+        ArgumentNullException.ThrowIfNull(serviceEvent);
 
         // Map severity to base priority
         int severityPriority = 2; // default
