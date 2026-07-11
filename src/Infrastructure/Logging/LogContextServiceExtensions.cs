@@ -6,7 +6,7 @@ using Serilog.Context;
 namespace DotnetServiceScaffold.Infrastructure.Logging;
 
 /// <summary>
-/// Extension methods for <see cref="LogContextService"/> that provide convenient APIs
+/// Extension methods for <see cref="ILogContextService"/> that provide convenient APIs
 /// for working with Serilog context and structured logging.
 /// </summary>
 public static class LogContextServiceExtensions
@@ -16,7 +16,7 @@ public static class LogContextServiceExtensions
     /// </summary>
     /// <param name="service">The log context service instance.</param>
     /// <param name="properties">Dictionary of properties to add.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="properties"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="properties"/> is null.</exception>
     public static void AddProperties(this ILogContextService service, IReadOnlyDictionary<string, object?> properties)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -36,6 +36,8 @@ public static class LogContextServiceExtensions
     /// <param name="correlationId">The correlation ID for the request.</param>
     /// <param name="userId">The user ID associated with the request.</param>
     /// <param name="operationName">The name of the operation being performed.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="correlationId"/> is null or whitespace.</exception>
     public static void AddRequestProperties(this ILogContextService service, string correlationId, string? userId, string? operationName = null)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -61,7 +63,7 @@ public static class LogContextServiceExtensions
     /// </summary>
     /// <param name="service">The log context service instance.</param>
     /// <param name="action">The action to execute within the scoped context.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="action"/> is null.</exception>
     public static void WithContextScope(this ILogContextService service, Action action)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -81,7 +83,7 @@ public static class LogContextServiceExtensions
     /// <param name="service">The log context service instance.</param>
     /// <param name="func">The function to execute within the scoped context.</param>
     /// <returns>The result of the function.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> or <paramref name="func"/> is null.</exception>
     public static T WithContextScope<T>(this ILogContextService service, Func<T> func)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -101,6 +103,8 @@ public static class LogContextServiceExtensions
     /// <param name="key">The property key to retrieve.</param>
     /// <param name="value">When this method returns, contains the property value if found; otherwise, the default value for type <typeparamref name="T"/>.</param>
     /// <returns>True if the property exists and has a value; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="key"/> is null or whitespace.</exception>
     public static bool TryGetProperty<T>(this ILogContextService service, string key, out T? value)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -123,6 +127,8 @@ public static class LogContextServiceExtensions
     /// <param name="actionName">The name of the action being measured.</param>
     /// <param name="action">The action to measure.</param>
     /// <returns>A <see cref="Stopwatch"/> instance that can be used for further timing measurements.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/>, <paramref name="actionName"/>, or <paramref name="action"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="actionName"/> is null or whitespace.</exception>
     public static Stopwatch MeasureExecutionTime(this ILogContextService service, string actionName, Action action)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -153,6 +159,8 @@ public static class LogContextServiceExtensions
     /// <param name="actionName">The name of the action being measured.</param>
     /// <param name="func">The function to measure.</param>
     /// <returns>A tuple containing the result of the function and a <see cref="Stopwatch"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/>, <paramref name="actionName"/>, or <paramref name="func"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="actionName"/> is null or whitespace.</exception>
     public static (T Result, Stopwatch Stopwatch) MeasureExecutionTime<T>(this ILogContextService service, string actionName, Func<T> func)
     {
         ArgumentNullException.ThrowIfNull(service);
