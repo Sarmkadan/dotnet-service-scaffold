@@ -51,14 +51,21 @@ public static class ServiceMeshExtensions
     /// Registers the <see cref="ISidecarProxyService"/> and its named HTTP client.
     /// Reads configuration from the <c>ServiceMesh</c> section of <paramref name="configuration"/>.
     /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configuration">The <see cref="IConfiguration"/> containing service mesh settings.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="configuration"/> is <see langword="null"/>.</exception>
     public static IServiceCollection AddServiceMeshIntegration(
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
         services.Configure<ServiceMeshOptions>(configuration.GetSection(ServiceMeshOptions.SectionName));
 
         var adminEndpoint = configuration[$"{ServiceMeshOptions.SectionName}:{nameof(ServiceMeshOptions.AdminEndpoint)}"]
-                            ?? "http://localhost:15000";
+            ?? "http://localhost:15000";
 
         services.AddHttpClient<ISidecarProxyService, SidecarProxyService>(client =>
         {
@@ -76,8 +83,12 @@ public static class ServiceMeshExtensions
     /// <see cref="HttpContext.Items"/> for downstream handlers to forward.
     /// Should be placed early in the pipeline, before authentication middleware.
     /// </summary>
+    /// <param name="app">The <see cref="WebApplication"/> to configure.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="app"/> is <see langword="null"/>.</exception>
     public static WebApplication UseServiceMeshHeaders(this WebApplication app)
     {
+        ArgumentNullException.ThrowIfNull(app);
+
         app.UseMiddleware<ServiceMeshHeaderPropagationMiddleware>();
         return app;
     }
@@ -109,10 +120,17 @@ internal sealed class ServiceMeshHeaderPropagationMiddleware
     /// <summary>
     /// Initializes the middleware with the next delegate and a logger.
     /// </summary>
+    /// <param name="next">The next <see cref="RequestDelegate"/> in the pipeline.</param>
+    /// <param name="logger">The logger for this middleware.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="next"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="logger"/> is <see langword="null"/>.</exception>
     public ServiceMeshHeaderPropagationMiddleware(
         RequestDelegate next,
         ILogger<ServiceMeshHeaderPropagationMiddleware> logger)
     {
+        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _next = next;
         _logger = logger;
     }
@@ -121,16 +139,24 @@ internal sealed class ServiceMeshHeaderPropagationMiddleware
     /// Extracts mesh propagation headers and stores them under the <c>mesh:</c> prefix
     /// in <see cref="HttpContext.Items"/>, then continues the pipeline.
     /// </summary>
+    /// <param name="context">The <see cref="HttpContext"/> for the current request.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
     public async Task InvokeAsync(HttpContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         foreach (var header in PropagationHeaders)
         {
             if (context.Request.Headers.TryGetValue(header, out var value))
+            {
                 context.Items[$"mesh:{header}"] = value.ToString();
+            }
         }
 
         if (context.Items.TryGetValue("mesh:x-request-id", out var requestId))
+        {
             _logger.LogDebug("Mesh request propagated with ID {RequestId}", requestId);
+        }
 
         await _next(context);
     }
