@@ -33,9 +33,7 @@ public static class CacheBenchmarksJsonExtensions
 
         var options = indented
             ? new JsonSerializerOptions(_jsonOptions)
-            {
-                WriteIndented = true
-            }
+            { WriteIndented = true }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -62,19 +60,22 @@ public static class CacheBenchmarksJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized value if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out CacheBenchmarks? value)
     {
         value = default;
 
+        ArgumentNullException.ThrowIfNull(json);
+
         if (string.IsNullOrWhiteSpace(json))
         {
-            return true;
+            return false;
         }
 
         try
         {
             value = JsonSerializer.Deserialize<CacheBenchmarks>(json, _jsonOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
