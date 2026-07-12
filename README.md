@@ -1,66 +1,66 @@
 // ... (rest of the README.md content remains the same)
 
-## ResponseFormatterFactoryExtensions
+## ResultExtensions
 
-The `ResponseFormatterFactoryExtensions` class provides a set of extension methods for working with response formatters. These methods enable you to retrieve a formatter for a given media type, register custom formatters, and check if any media types are supported.
+The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.
 
 ### Usage Examples
 
 ```csharp
-// Get a formatter for a specific media type
-var formatter = ResponseFormatterFactoryExtensions.GetFormatterOrDefault("application/json");
+// Chain synchronous operations on successful results
+var result = Result.Success()
+    .Then<int>(_ => 42)
+    .Then(value => value * 2);
 
-// Check if a formatter exists for a media type
-var hasFormatter = ResponseFormatterFactoryExtensions.TryGetFormatter("application/json", out var formatter);
+// Chain asynchronous operations on successful results
+var asyncResult = Result.Success()
+    .ThenAsync(async _ => 
+    {
+        await Task.Delay(10);
+        return "processed";
+    });
 
-// Get a formatter, throwing if it doesn't exist
-var requiredFormatter = ResponseFormatterFactoryExtensions.GetFormatterRequired("application/json");
+// Convert non-generic Result to generic Result<T>
+var genericResult = Result.Success().ToGeneric<string>();
 
-// Register a custom formatter
-ResponseFormatterFactoryExtensions.RegisterFormatter("application/custom", new CustomResponseFormatter());
+// Combine multiple results into a single aggregated result
+var combined = Result.Combine(
+    Result.Success(),
+    Result.Failure("Error 1"),
+    Result.Failure("Error 2")
+);
 
-// Check if any media types are supported
-var areMediaTypesSupported = ResponseFormatterFactoryExtensions.AreAnyMediaTypesSupported(new[] { "application/json", "application/xml" });
+// Add validation to a successful result
+var validated = Result.Success(25)
+    .Also(value => 
+    {
+        if (value <= 0) 
+            return Result.Failure("Value must be positive");
+        return Result.Success();
+    });
 
-// Get the default formatter
-var defaultFormatter = ResponseFormatterFactoryExtensions.GetDefaultFormatter();
+// Extract value or use a default on failure
+var valueOrDefault = Result.Failure<int>("Invalid").GetValueOrDefault(0);
+
+// Extract value or throw on failure
+try 
+{
+    var value = Result.Success(42).GetValueOrThrow();
+}
+catch (Exception ex) 
+{
+    // Handle exception
+}
+
+// Get error details from a failed result
+var (errorMessage, errorCode) = Result.Failure("Invalid", "ERR001").GetError();
+
+// Create result based on a condition
+var conditionResult = Result.FromCondition(
+    42 > 20, 
+    "Value must be greater than 20", 
+    "VAL001"
+);
 ```
 
-These extension methods are useful for configuring and using response formatters in your application, allowing you to handle different media types and customize the formatting of responses.
-
-## ServiceRepositoryExtensions
-
-`ServiceRepositoryExtensions` adds a collection of query‑focused helper methods for working with `ServiceRegistration` entities. They simplify common retrieval scenarios such as finding services by name, status, owner, or health state, and provide aggregated information like service counts per status.
-
-### Usage Example
-
-```csharp
-// Assume an injected repository that works with ServiceRegistration entities
-IRepository<ServiceRegistration> repository = /* resolved from DI */;
-
-// Get a single service registration by its unique name
-var registration = await repository.GetByNameAsync("OrderService");
-
-// Retrieve all services that are currently in a specific status
-var runningServices = await repository.GetByStatusAsync(ServiceStatus.Running);
-
-// Get every enabled service together with its latest metrics
-var enabledWithMetrics = await repository.GetEnabledServicesWithMetricsAsync();
-
-// Find all services owned by a particular team or user
-var teamServices = await repository.GetByOwnerAsync("team-alpha");
-
-// List services that are currently unhealthy
-var unhealthyServices = await repository.GetUnhealthyServicesAsync();
-
-// Identify services that have not reported a health check within the last hour
-var staleHealthServices = await repository.GetServicesWithoutRecentHealthCheckAsync(TimeSpan.FromHours(1));
-
-// Get services that are due for a health check based on the configured schedule
-var dueForCheck = await repository.GetServicesDueForHealthCheckAsync();
-
-// Obtain a dictionary that maps each ServiceStatus to the number of services in that state
-var statusCounts = await repository.GetServiceCountsByStatusAsync();
-```
-
-These extension methods enable concise, readable data‑access code when working with service registrations, reducing boilerplate and keeping query logic in a single, well‑tested place.
+These extensions provide a fluent API for handling success/failure scenarios while maintaining strong type safety and avoiding boilerplate error-checking code.
