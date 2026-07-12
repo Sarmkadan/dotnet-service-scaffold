@@ -81,6 +81,59 @@ Configure Serilog enrichment through `StructuredLogging` settings in `appsetting
 | BCrypt.Net | 4.x | Secure password hashing |
 | Swashbuckle | 6.x | Swagger integration |
 
+## LogContextServiceExtensions
+
+The `LogContextServiceExtensions` class provides extension methods for working with Serilog's structured logging context. These methods enable you to add properties to the log context, manage scoped logging contexts, retrieve property values, and measure execution time of operations. This is particularly useful for adding correlation IDs, user IDs, operation names, and timing information to your logs, making it easier to trace requests across service boundaries and identify performance bottlenecks.
+
+### Usage Examples
+
+```csharp
+// Initialize the log context service
+var logContextService = new LogContextService();
+
+// Add request properties including correlation ID and user ID
+logContextService.AddRequestProperties(
+    correlationId: Guid.NewGuid().ToString(),
+    userId: "user-123",
+    operationName: "ProcessOrder"
+);
+
+// Add multiple properties at once
+logContextService.AddProperties(new Dictionary<string, object?> {
+    { "OrderId", "ORD-456" },
+    { "Amount", 99.99 },
+    { "CustomerId", "CUST-789" }
+});
+
+// Measure execution time of an operation
+logContextService.MeasureExecutionTime("DatabaseQuery", () => {
+    // Your database query here
+    Thread.Sleep(100);
+});
+
+// Execute within a scoped context (automatically disposes when complete)
+logContextService.WithContextScope(() => {
+    // All logs within this block will have the current context properties
+    logContextService.AddProperty("TransactionId", Guid.NewGuid().ToString());
+    
+    // Your business logic here
+});
+
+// Retrieve a property value
+if (logContextService.TryGetProperty<string>("CorrelationId", out var correlationId))
+{
+    Console.WriteLine($"Correlation ID: {correlationId}");
+}
+
+// Measure execution time and get result
+var (result, stopwatch) = logContextService.MeasureExecutionTime("ProcessPayment", () => {
+    // Your payment processing logic
+    return "PaymentSuccess";
+});
+
+Console.WriteLine($"Result: {result}, Duration: {stopwatch.ElapsedMilliseconds}ms");
+```
+
 ## Project Architecture
 
 ### Directory Structure
