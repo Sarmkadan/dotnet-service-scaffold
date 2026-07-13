@@ -4,13 +4,14 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-// Example: Advanced usage with error handling and custom options
-// Demonstrates handling potential exceptions and parsing structured JSON responses
-
+/// <summary>
+/// Example usage of the service scaffold with advanced features.
+/// </summary>
 public class AdvancedUsage
 {
-    private readonly HttpClient _httpClient;
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AdvancedUsage"/> class.
+    /// </summary>
     public AdvancedUsage()
     {
         _httpClient = new HttpClient();
@@ -18,6 +19,11 @@ public class AdvancedUsage
         _httpClient.BaseAddress = new Uri("http://localhost:5000");
     }
 
+    /// <summary>
+    /// Retrieves service metrics asynchronously.
+    /// </summary>
+    /// <param name="serviceId">The ID of the service to retrieve metrics for.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task GetServiceMetricsAsync(string serviceId)
     {
         try
@@ -41,7 +47,12 @@ public class AdvancedUsage
         }
     }
 
-    // Simplified model for demonstration
+    /// <summary>
+    /// Simplified model for demonstration of service metrics.
+    /// </summary>
     public class MetricsResponse { public MetricsData Data { get; set; } }
+    /// <summary>
+    /// Simplified model for demonstration of service metrics data.
+    /// </summary>
     public class MetricsData { public decimal CpuUsage { get; set; } public decimal ErrorRate { get; set; } }
 }
