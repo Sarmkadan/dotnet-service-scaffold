@@ -63,7 +63,7 @@ public static class ServiceConfigurationExtensions
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        if (DateTime.TryParse(configuration.Value, out var result))
+        if (DateTime.TryParse(configuration.Value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var result))
         {
             return result;
         }
@@ -117,12 +117,15 @@ public static class ServiceConfigurationExtensions
     /// </summary>
     /// <param name="configuration">The service configuration</param>
     /// <param name="defaultValue">The default value to return if configuration is null or empty</param>
-    /// <exception cref="ArgumentNullException"><paramref name="configuration"/> is null.</exception>
     /// <returns>The configuration value or the default value</returns>
     public static string GetValueOrDefault(this ServiceConfiguration? configuration, string defaultValue = "")
     {
-        ArgumentNullException.ThrowIfNull(configuration);
-        return configuration.Value ?? defaultValue;
+        if (configuration is null || string.IsNullOrEmpty(configuration.Value))
+        {
+            return defaultValue;
+        }
+
+        return configuration.Value;
     }
 
     /// <summary>
