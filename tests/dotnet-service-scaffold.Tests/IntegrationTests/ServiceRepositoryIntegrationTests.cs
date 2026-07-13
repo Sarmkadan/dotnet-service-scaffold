@@ -15,17 +15,23 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace DotnetServiceScaffold.Tests.IntegrationTests;
-
+/// <summary>
+/// Integration tests for the ServiceRepository class.
+/// </summary>
 public class ServiceRepositoryIntegrationTests : IntegrationTestBase
 {
-    private readonly ServiceRepository _serviceRepository;
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ServiceRepositoryIntegrationTests"/> class.
+    /// </summary>
     public ServiceRepositoryIntegrationTests()
     {
         _serviceRepository = new ServiceRepository(DbContext);
     }
 
+    /// <summary>
+    /// Tests that adding a service registration to the database is successful.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task AddServiceRegistrationAsync_ShouldAddServiceToDatabase()
     {
@@ -49,6 +55,10 @@ public class ServiceRepositoryIntegrationTests : IntegrationTestBase
         savedService.Description.Should().Be(service.Description);
     }
 
+    /// <summary>
+    /// Tests that getting a service registration by ID returns the service when found.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetServiceRegistrationByIdAsync_ShouldReturnService_WhenFound()
     {
@@ -73,6 +83,10 @@ public class ServiceRepositoryIntegrationTests : IntegrationTestBase
         foundService.Id.Should().Be(serviceId);
     }
 
+    /// <summary>
+    /// Tests that getting a service registration by ID returns null when not found.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetServiceRegistrationByIdAsync_ShouldReturnNull_WhenNotFound()
     {
@@ -86,6 +100,10 @@ public class ServiceRepositoryIntegrationTests : IntegrationTestBase
         foundService.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that updating a service registration in the database is successful.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateServiceRegistrationAsync_ShouldUpdateServiceInDatabase()
     {
@@ -114,6 +132,10 @@ public class ServiceRepositoryIntegrationTests : IntegrationTestBase
         updatedService.Status.Should().Be(ServiceStatus.Inactive);
     }
 
+    /// <summary>
+    /// Tests that deleting a service registration from the database is successful.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task DeleteServiceRegistrationAsync_ShouldRemoveServiceFromDatabase()
     {
@@ -138,6 +160,10 @@ public class ServiceRepositoryIntegrationTests : IntegrationTestBase
         deletedService.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that getting all service registrations returns all services.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetAllServiceRegistrationsAsync_ShouldReturnAllServices()
     {
@@ -156,6 +182,10 @@ public class ServiceRepositoryIntegrationTests : IntegrationTestBase
         allServices.Should().ContainEquivalentOf(service2);
     }
 
+    /// <summary>
+    /// Tests that getting all service registrations returns an empty collection when no services exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetAllServiceRegistrationsAsync_ShouldReturnEmpty_WhenNoServices()
     {
