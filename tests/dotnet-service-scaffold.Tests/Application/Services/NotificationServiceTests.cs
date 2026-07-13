@@ -16,17 +16,29 @@ using DotnetServiceScaffold.Application.Services;
 
 namespace DotnetServiceScaffold.Tests.Application.Services;
 
+/// <summary>
+/// Tests for the <see cref="NotificationService"/> class.
+/// </summary>
 public class NotificationServiceTests
 {
     private readonly ILogger<NotificationService> _logger;
     private readonly NotificationService _notificationService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NotificationServiceTests"/> class.
+    /// Sets up a mock logger and the service under test.
+    /// </summary>
     public NotificationServiceTests()
     {
         _logger = Substitute.For<ILogger<NotificationService>>();
         _notificationService = new NotificationService(_logger);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendNotificationAsync(Guid,string,string)"/> returns true on success
+    /// and logs the expected information.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendNotificationAsync_ShouldReturnTrue_OnSuccess()
     {
@@ -45,6 +57,11 @@ public class NotificationServiceTests
             NotificationType.Email, userId, subject);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendNotificationAsync(Guid,string,string,NotificationType)"/>
+    /// returns true on success with a different notification type and logs the expected information.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendNotificationAsync_ShouldReturnTrue_OnSuccessWithDifferentType()
     {
@@ -63,6 +80,11 @@ public class NotificationServiceTests
             NotificationType.Sms, userId, subject);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendEmailAsync(string,string,string)"/> returns true on success
+    /// and logs the expected information.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendEmailAsync_ShouldReturnTrue_OnSuccess()
     {
@@ -79,6 +101,11 @@ public class NotificationServiceTests
         _logger.Received(1).LogInformation("Sending email to {EmailAddress}: {Subject}", email, subject);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendBulkNotificationAsync(IEnumerable<Guid>,string,string)"/>
+    /// returns the correct count of successful notifications and logs the expected information.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendBulkNotificationAsync_ShouldReturnCorrectCount()
     {
@@ -100,6 +127,11 @@ public class NotificationServiceTests
             userIds.Count, userIds.Count);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendBulkNotificationAsync(IEnumerable<Guid>,string,string)"/>
+    /// handles an empty user list by returning zero and logging the expected information.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendBulkNotificationAsync_ShouldHandleEmptyUserList()
     {
@@ -121,6 +153,11 @@ public class NotificationServiceTests
             0, 0);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendAlertAsync(string,string,string)"/> returns true on success
+    /// and logs a warning with alert details.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendAlertAsync_ShouldReturnTrue_OnSuccess()
     {
@@ -139,6 +176,11 @@ public class NotificationServiceTests
             alertType, description, details);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="NotificationService.SendAlertAsync(string,string)"/> returns true when no details are provided
+    /// and logs a warning with "N/A" for details.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task SendAlertAsync_ShouldReturnTrue_WithoutDetails()
     {
