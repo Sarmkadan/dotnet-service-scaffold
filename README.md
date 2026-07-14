@@ -140,6 +140,32 @@ int resultCount = await HealthCheckRepositoryIntegrationTestsExtensions
 
 These extension methods streamline the arrangement, execution, and verification phases of integration tests that involve health‑check data.
 
+## DatabaseBenchmarks
+
+The `DatabaseBenchmarks` class provides performance benchmarks for database operations. It measures the execution time of CRUD operations and query performance for common database interactions.
+
+### Usage Example
+
+```csharp
+var benchmarks = new DatabaseBenchmarks();
+
+await benchmarks.Setup();
+
+// Run benchmarks
+await benchmarks.CreateUser();
+await benchmarks.ReadUserByEmail();
+await benchmarks.UpdateUser();
+await benchmarks.DeleteUser();
+await benchmarks.CreateService();
+await benchmarks.ListServices();
+await benchmarks.BulkCreateUsers();
+await benchmarks.TransactionCommit();
+
+await benchmarks.Cleanup();
+```
+
+This example demonstrates how to use the `DatabaseBenchmarks` class to measure the performance of database operations.
+
 ## MetricsBenchmarks
 
 The `MetricsBenchmarks` class provides performance benchmarks for in-process metric collection. It measures the overhead of incrementing counters, recording timings, and retrieving metrics.
@@ -166,4 +192,5 @@ metrics.RecordGauge();
 var metricsSnapshot = metrics.GetMetricsAsync().Result;
 ```
 
-This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection. Note that the actual usage may vary depending on your specific requirements and use cases.
+This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection.
+```
