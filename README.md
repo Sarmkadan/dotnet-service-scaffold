@@ -2089,6 +2089,102 @@ context.Request.QueryString = new QueryString("?page=1&limit=10");
 context.Request.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 context.Request.Headers["X-Forwarded-For"] = "192.168.1.100,10.0.0.5";
 context.Request.ContentType = "application/json";
+
+// Get user information from claims
+Guid? userId = context.GetUserId();
+string? userEmail = context.GetUserEmail();
+string? userName = context.GetUserName();
+
+// Check if user has a specific claim
+bool hasCustomClaim = context.HasClaim("custom_claim");
+
+// Get the raw authorization header
+string? authHeader = context.GetAuthorizationHeader();
+
+// Check if request is from localhost
+bool isLocalhost = context.IsLocalhost();
+
+// Get the full request URL
+string requestUrl = context.GetRequestUrl();
+```
+
+## MetricsController
+
+The `MetricsController` provides API endpoints for monitoring application health and performance characteristics through metrics collection. It exposes endpoints to retrieve all metrics, filter metrics by category, reset metrics to zero, and get summary statistics including counts of counters, gauges, timers, and unique metric categories. The controller requires authentication and provides comprehensive error handling with appropriate HTTP status codes.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Controllers;
+
+// Initialize HTTP client with authentication
+var httpClient = new HttpClient();
+httpClient.BaseAddress = new Uri("https://api.example.com");
+httpClient.DefaultRequestHeaders.Authorization = 
+    new AuthenticationHeaderValue("Bearer", "your-auth-token-here");
+
+// Get all metrics
+var response = await httpClient.GetAsync("/api/metrics");
+if (response.IsSuccessStatusCode)
+{
+    var metricsData = await response.Content.ReadAsStringAsync();
+    Console.WriteLine($"Retrieved {metricsData.Count} metrics");
+}
+
+// Get metrics by category (e.g., "http", "database", "cache")
+var categoryResponse = await httpClient.GetAsync("/api/metrics/category/http");
+if (categoryResponse.IsSuccessStatusCode)
+{
+    var categoryMetrics = await categoryResponse.Content.ReadAsStringAsync();
+    Console.WriteLine($"HTTP metrics: {categoryMetrics}");
+}
+
+// Get metrics summary statistics
+var summaryResponse = await httpClient.GetAsync("/api/metrics/summary");
+if (summaryResponse.IsSuccessStatusCode)
+{
+    var summary = await summaryResponse.Content.ReadAsStringAsync();
+    Console.WriteLine($"Metrics summary: {summary}");
+}
+
+// Reset metrics (requires Admin role)
+var resetResponse = await httpClient.PostAsync("/api/metrics/reset", null);
+if (resetResponse.IsSuccessStatusCode || resetResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+{
+    Console.WriteLine("Metrics reset successfully");
+}
+```
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Security.Claims;
+using DotnetServiceScaffold.Presentation.Extensions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+// Create a mock HttpContext with user claims
+var context = new DefaultHttpContext();
+context.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+{
+    new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+    new Claim(ClaimTypes.Email, "user@example.com"),
+    new Claim(ClaimTypes.Name, "johndoe"),
+    new Claim("custom_claim", "custom_value")
+}, "TestAuth"));
+
+context.Request.Scheme = "https";
+context.Request.Host = new HostString("api.example.com");
+context.Request.Path = "/api/users";
+context.Request.QueryString = new QueryString("?page=1&limit=10");
+context.Request.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
+context.Request.Headers["X-Forwarded-For"] = "192.168.1.100,10.0.0.5";
+context.Request.ContentType = "application/json";
 context.Request.Headers.Authorization = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 context.Request.Headers["X-Api-Key"] = "sk_live_abc123xyz789";
 
