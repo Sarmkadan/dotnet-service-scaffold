@@ -255,6 +255,75 @@ public static async Task Main()
 
 The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup`, `CacheHit`, `CacheMiss`, `CacheSet`, `Exists`, `GetOrSetHit`, `GetOrSetMiss`) and the `CachedService` properties (`Id`, `Name`, `IsHealthy`) to illustrate typical cache interactions.
 
+## InMemoryCacheService
+
+The `InMemoryCacheService` provides a lightweight, in-memory caching implementation using `ConcurrentDictionary` for single-node deployments or development environments. It supports automatic expiration of cached entries, pattern-based removal, and efficient synchronous operations on cache hits to minimize overhead. The service automatically cleans up expired entries on a configurable interval and provides methods for common cache operations including get, set, check existence, and bulk operations.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.Caching;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection();
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the cache service
+var cacheService = serviceProvider.GetRequiredService<InMemoryCacheService>();
+
+// Cache a value with 5-minute expiration
+var userData = new { Id = 1, Name = "John Doe", Email = "john@example.com" };
+await cacheService.SetAsync("user:1:profile", userData, TimeSpan.FromMinutes(5));
+
+// Retrieve a cached value
+var cachedUser = await cacheService.GetAsync<object>("user:1:profile");
+if (cachedUser != null)
+{
+Console.WriteLine($"Retrieved user: {cachedUser.Name}");
+}
+
+// Check if a key exists
+bool exists = await cacheService.ExistsAsync("user:1:profile");
+Console.WriteLine($"Key exists: {exists}");
+
+// Get value or set it using a factory (cache-aside pattern)
+var serviceConfig = await cacheService.GetOrSetAsync(
+"service:config",
+async () => 
+{
+// Expensive operation - only called if cache misses
+await Task.Delay(100);
+return new { Timeout = 30, Retries = 3, Enabled = true };
+},
+TimeSpan.FromHours(1)
+);
+
+Console.WriteLine($"Service config: Timeout={serviceConfig?.Timeout}, Retries={serviceConfig?.Retries}");
+
+// Remove a specific key
+await cacheService.RemoveAsync("user:1:profile");
+
+// Remove all keys matching a pattern (e.g., all user sessions)
+await cacheService.RemoveByPatternAsync("user:*:sessions");
+
+// Clear the entire cache
+await cacheService.ClearAsync();
+
+// Access cache metadata
+var entry = cacheService.GetAsync<object>("some:key").Result;
+if (entry != null)
+{
+Console.WriteLine($"Value created at: {entry.CreatedAt}");
+Console.WriteLine($"Value expires at: {entry.ExpiresAt}");
+}
+```
+
 ## ConfigurationRepository
 
 The `ConfigurationRepository` provides data access methods for application and service configurations, allowing for easy retrieval, existence checking, and management of configuration settings stored in the database. It leverages `ServiceScaffoldDbContext` to perform these operations and includes built-in logging for transparency and debugging.
