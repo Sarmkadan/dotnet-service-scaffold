@@ -313,6 +313,115 @@ string repeated = StringUtility.Repeat("ha", 3);
 Console.WriteLine(repeated); // "hahaha"
 ```
 
+## CollectionUtility
+
+The `CollectionUtility` class provides utility methods for common collection operations including batching, chunking, grouping, filtering, and manipulation. These methods help simplify working with collections by providing functional-style operations that maintain immutability and support LINQ-style chaining.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Batch a large collection into smaller chunks for processing
+var numbers = Enumerable.Range(1, 100);
+var batches = numbers.Batch(10);
+foreach (var batch in batches)
+{
+    Console.WriteLine(string.Join(", ", batch));
+}
+
+// Chunk a collection into groups of specified size
+var fruits = new List<string> { "apple", "banana", "orange", "grape", "kiwi", "melon" };
+var chunks = fruits.Chunk(2);
+foreach (var chunk in chunks)
+{
+    Console.WriteLine($"Chunk: {string.Join(", ", chunk)}");
+}
+
+// Check if two collections contain the same elements (order-independent)
+var list1 = new List<int> { 1, 2, 3, 4, 5 };
+var list2 = new List<int> { 5, 4, 3, 2, 1 };
+bool sameElements = list1.ContainsSameElements(list2);
+Console.WriteLine(sameElements); // true
+
+// Get common elements between two collections
+var setA = new HashSet<int> { 1, 2, 3, 4, 5 };
+var setB = new HashSet<int> { 4, 5, 6, 7, 8 };
+var common = setA.GetCommon(setB);
+Console.WriteLine(string.Join(", ", common)); // "4, 5"
+
+// Get difference between two collections
+var allUsers = new List<string> { "alice", "bob", "charlie", "david" };
+var activeUsers = new List<string> { "alice", "charlie" };
+var inactive = allUsers.GetDifference(activeUsers);
+Console.WriteLine(string.Join(", ", inactive)); // "bob, david"
+
+// Flatten a nested collection
+var nested = new List<List<int>>
+{
+    new List<int> { 1, 2, 3 },
+    new List<int> { 4, 5 },
+    new List<int> { 6, 7, 8, 9 }
+};
+var flat = nested.Flatten();
+Console.WriteLine(string.Join(", ", flat)); // "1, 2, 3, 4, 5, 6, 7, 8, 9"
+
+// Shuffle a collection randomly
+var deck = new List<string> { "Ace", "King", "Queen", "Jack", "10", "9" };
+var shuffled = deck.Shuffle();
+Console.WriteLine(string.Join(", ", shuffled));
+
+// Remove duplicates while preserving order
+var withDuplicates = new List<int> { 1, 2, 3, 2, 4, 1, 5, 3 };
+var unique = withDuplicates.DistinctPreservingOrder();
+Console.WriteLine(string.Join(", ", unique)); // "1, 2, 3, 4, 5"
+
+// Group a collection by a key into a dictionary
+var people = new List<(string Name, string Department)>
+{
+    ("Alice", "Engineering"),
+    ("Bob", "Marketing"),
+    ("Charlie", "Engineering"),
+    ("David", "HR"),
+    ("Eve", "Marketing")
+};
+var grouped = people.GroupByToDictionary(p => p.Department);
+foreach (var kvp in grouped)
+{
+    Console.WriteLine($"{kvp.Key}: {string.Join(", ", kvp.Value.Select(p => p.Name))}");
+}
+
+// Split a collection based on a predicate
+var numbers2 = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+var (even, odd) = numbers2.Partition(n => n % 2 == 0);
+Console.WriteLine($"Even: {string.Join(", ", even)}"); // "2, 4, 6, 8, 10"
+Console.WriteLine($"Odd: {string.Join(", ", odd)}"); // "1, 3, 5, 7, 9"
+
+// Check if a collection is null or empty
+List<string>? nullList = null;
+bool isNullOrEmpty = nullList.IsNullOrEmpty();
+Console.WriteLine(isNullOrEmpty); // true
+
+var emptyList = new List<string>();
+isNullOrEmpty = emptyList.IsNullOrEmpty();
+Console.WriteLine(isNullOrEmpty); // true
+
+// Check if a collection has items
+var populatedList = new List<string> { "item1", "item2" };
+bool hasItems = populatedList.HasItems();
+Console.WriteLine(hasItems); // true
+
+// Execute an action on each item
+var colors = new List<string> { "red", "green", "blue" };
+colors.ForEach(color => Console.WriteLine($"Color: {color}"));
+
+// Execute an action on each item with index
+var letters = new List<char> { 'a', 'b', 'c', 'd' };
+letters.ForEach((letter, index) => Console.WriteLine($"Index {index}: {letter}"));
+```
+
 ## ReflectionUtility
 
 The `ReflectionUtility` class provides reflection-based utilities for type inspection, property access, method invocation, and attribute discovery. It simplifies common reflection patterns with strongly-typed methods that handle null safety, case-insensitive lookups, and error conditions gracefully. The utility is useful for dynamic configuration loading, plugin architectures, serialization frameworks, and testing utilities where runtime type inspection is required.
