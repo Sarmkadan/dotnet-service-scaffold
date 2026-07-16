@@ -1604,6 +1604,77 @@ if (specificFlag != null)
 }
 ```
 
+## AuditService
+
+The `AuditService` provides comprehensive audit logging, compliance tracking, and activity monitoring for the application. It records user actions, system events, and failed operations with timestamps, user context, and entity associations. The service supports querying audit logs by user, entity, time range, and status, and includes automated cleanup of old logs for compliance and storage management.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+
+// Initialize the audit service (typically via dependency injection)
+var auditService = new AuditService(auditLogRepository, logger);
+
+// Log a successful user action
+await auditService.LogActionAsync(
+    userId: Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    action: "Update",
+    entityType: "User",
+    entityId: Guid.Parse("550e8400-e29b-41d4-a716-446655440001"),
+    description: "User profile updated with new email address"
+);
+
+// Log a failed action with reason
+await auditService.LogFailedActionAsync(
+    userId: Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    action: "Delete",
+    entityType: "User",
+    reason: "Insufficient permissions to delete system user"
+);
+
+// Retrieve audit logs for a specific user
+var userAuditLogs = await auditService.GetUserAuditLogsAsync(
+    userId: Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    count: 100
+);
+Console.WriteLine($"Found {userAuditLogs.Count()} audit logs for user");
+
+// Get audit logs for a specific entity (e.g., a service registration)
+var entityAuditLogs = await auditService.GetEntityAuditLogsAsync(
+    entityType: "ServiceRegistration",
+    entityId: Guid.Parse("123e4567-e89b-12d3-a456-426614174000")
+);
+foreach (var log in entityAuditLogs)
+{
+    Console.WriteLine($"{log.CreatedAt:yyyy-MM-dd HH:mm:ss} - {log.ActionName}: {log.Description}");
+}
+
+// Get recent audit logs for monitoring dashboard
+var recentLogs = await auditService.GetRecentLogsAsync(count: 50);
+Console.WriteLine($"Last {recentLogs.Count()} actions recorded");
+
+// Get failed actions for error tracking
+var failedActions = await auditService.GetFailedActionsAsync(count: 20);
+Console.WriteLine($"Found {failedActions.Count()} failed actions");
+
+// Retrieve a specific audit log by ID
+var specificLog = await auditService.GetAuditLogAsync(
+    logId: Guid.Parse("550e8400-e29b-41d4-a716-446655440002")
+);
+if (specificLog != null)
+{
+    Console.WriteLine($"Action: {specificLog.ActionName}, Status: {specificLog.Status}");
+}
+
+// Clean up old audit logs (keep logs for 90 days)
+await auditService.CleanupOldLogsAsync(daysToKeep: 90);
+Console.WriteLine("Old audit logs cleaned up");
+```
+
 ## ConfigurationService
 
 The `ConfigurationService` provides centralized management of application and service configurations, enabling runtime configuration retrieval and modification. It supports both system-wide and service-specific configurations, with type-safe methods for retrieving common configuration types (integers, booleans, strings, TimeSpans). The service handles configuration validation, audit logging, and provides comprehensive error handling for configuration operations.
