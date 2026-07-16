@@ -1178,6 +1178,59 @@ Console.WriteLine(matchesPattern); // true
 
 The `CollectionUtility` class provides utility methods for common collection operations including batching, chunking, grouping, filtering, and manipulation. These methods help simplify working with collections by providing functional-style operations that maintain immutability and support LINQ-style chaining.
 
+## CacheAndCollectionTests
+
+The `CacheAndCollectionTests` class provides comprehensive unit tests for cache and collection utilities, verifying all public members and edge cases. It tests password strength validation, range validation, batching operations, partitioning, and in-memory cache functionality, ensuring the utility methods work correctly across different scenarios.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Tests;
+using FluentAssertions;
+
+// Test password strength validation with various inputs
+bool isStrongPassword = CacheAndCollectionTests.IsPasswordStrong_VariousPasswords_ReturnsExpectedStrengthAssessment(
+    "SecureP@ssw0rd123", 
+    true
+);
+Console.WriteLine($"Strong password test passed: {isStrongPassword}");
+
+// Test range validation that throws ArgumentException
+try
+{
+    CacheAndCollectionTests.ValidateRange_ValueAboveUpperBound_ThrowsArgumentExceptionWithParamName();
+    Console.WriteLine("Range validation test passed");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Range validation correctly threw: {ex.GetType().Name}");
+}
+
+// Test batching operations on collections
+var tenElements = Enumerable.Range(1, 10);
+var batches = tenElements.Batch(3).ToList();
+Console.WriteLine($"Batching 10 elements with size 3 produces {batches.Count} batches");
+// Output: Batching 10 elements with size 3 produces 4 batches
+
+// Test partitioning operations to separate collections based on predicates
+var numbers = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+var (evens, odds) = numbers.Partition(n => n % 2 == 0);
+Console.WriteLine($"Partitioning produces {evens.Count()} even numbers and {odds.Count()} odd numbers");
+// Output: Partitioning produces 5 even numbers and 5 odd numbers
+
+// Test in-memory cache operations
+var cache = new InMemoryCacheService();
+await cache.SetAsync("test-key", "test-value", TimeSpan.FromMinutes(5));
+var cachedValue = await cache.GetAsync<string>("test-key");
+Console.WriteLine($"Cache get/set operations work correctly: {cachedValue == "test-value"}");
+
+// Test cache removal operations
+await cache.SetAsync("temp-key", "temporary-value");
+await cache.RemoveAsync("temp-key");
+bool exists = await cache.ExistsAsync("temp-key");
+Console.WriteLine($"Cache removal works correctly: {exists == false}");
+```
+
 ### Usage Examples
 
 ```csharp
