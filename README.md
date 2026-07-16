@@ -1071,6 +1071,80 @@ var deregisterResult = await provider.DeregisterAsync(registration);
 
 The `ServiceDiscoveryService` orchestrates service discovery operations across DNS-based and registry-based providers with caching, configurable load balancing, and self-registration lifecycle management. It provides methods to discover services, select healthy endpoints, register and deregister service instances, retrieve service statistics, and manage discovery cache.
 
+## AuditLogRepository
+
+The `AuditLogRepository` provides data access methods for audit logging functionality, enabling compliance tracking, security auditing, and operational monitoring. It supports querying audit logs by user, entity, time range, and status, as well as automated cleanup of old logs. This repository is typically used by application services to record and retrieve audit events for security investigations and compliance reporting.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection();
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite("Data Source=service-scaffold.db"));
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the audit log repository
+var auditLogRepository = serviceProvider.GetRequiredService<AuditLogRepository>();
+
+// Record an audit event (typically done automatically by domain events or application services)
+var auditEvent = new AuditLog
+{
+    UserId = Guid.Parse("123e4567-e89b-12d3-a456-426614174000"),
+    EntityType = "User",
+    EntityId = Guid.Parse("123e4567-e89b-12d3-a456-426614174000"),
+    Action = "Update",
+    Status = "Success",
+    Changes = "{\"Name\":\"Old Name\",\"Name\":\"New Name\"}",
+    Metadata = "{\"ipAddress\":\"192.168.1.100\",\"userAgent\":\"Mozilla/5.0...\"}",
+    CreatedAt = DateTime.UtcNow
+};
+
+// In a real application, this would be added via DbContext
+// await dbContext.AuditLogs.AddAsync(auditEvent);
+// await dbContext.SaveChangesAsync();
+
+// Query audit logs by user ID
+var userLogs = await auditLogRepository.GetByUserIdAsync(
+    Guid.Parse("123e4567-e89b-12d3-a456-426614174000"),
+    count: 20
+);
+
+Console.WriteLine($"Found {userLogs.Count()} recent logs for user");
+
+// Query audit logs by entity type and ID
+var entityLogs = await auditLogRepository.GetByEntityAsync(
+    "User",
+    Guid.Parse("123e4567-e89b-12d3-a456-426614174000")
+);
+
+Console.WriteLine($"Found {entityLogs.Count()} logs for this entity");
+
+// Get recent audit logs for monitoring dashboard
+var recentLogs = await auditLogRepository.GetRecentLogsAsync(count: 100);
+
+// Find failed actions for error analysis
+var failedActions = await auditLogRepository.GetFailedActionsAsync(count: 50);
+
+Console.WriteLine($"Found {failedActions.Count()} failed actions in last 50 logs");
+
+// Clean up old logs (typically run as a background job)
+await auditLogRepository.DeleteOldLogsAsync(daysToKeep: 90);
+
+Console.WriteLine("Old logs cleanup completed");
+```
+
 ### Usage Example
 
 ```csharp
