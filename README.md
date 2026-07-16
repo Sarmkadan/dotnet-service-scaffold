@@ -253,6 +253,104 @@ var metricsSnapshot = metrics.GetMetricsAsync().Result;
 
 This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection.
 
+## PerformanceUtility
+
+The `PerformanceUtility` class provides performance monitoring and measurement utilities for tracking execution time, memory usage, CPU utilization, and garbage collection statistics. It includes methods for measuring synchronous and asynchronous operations, retrieving system resource usage, and formatting performance data for logging and monitoring purposes.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Measure synchronous operation execution time
+long syncElapsedMs = PerformanceUtility.MeasureMs(() =>
+{
+    // Simulate work
+    for (int i = 0; i < 1000000; i++)
+    {
+        var x = i * 2;
+    }
+});
+Console.WriteLine($"Synchronous operation took {syncElapsedMs}ms");
+
+// Measure synchronous operation with result and execution time
+var (result, elapsedMs) = PerformanceUtility.MeasureMs(() =>
+{
+    // Simulate work that returns a value
+    Task.Delay(50).Wait();
+    return "Operation completed";
+});
+Console.WriteLine($"Result: {result}, Time: {elapsedMs}ms");
+
+// Measure asynchronous operation execution time
+long asyncElapsedMs = await PerformanceUtility.MeasureMsAsync(async () =>
+{
+    await Task.Delay(100);
+});
+Console.WriteLine($"Asynchronous operation took {asyncElapsedMs}ms");
+
+// Measure asynchronous operation with result and execution time
+var (asyncResult, asyncTimeMs) = await PerformanceUtility.MeasureMsAsync(async () =>
+{
+    await Task.Delay(75);
+    return 42;
+});
+Console.WriteLine($"Async result: {asyncResult}, Time: {asyncTimeMs}ms");
+
+// Get current memory usage in MB
+double memoryUsageMb = PerformanceUtility.GetMemoryUsageMb();
+Console.WriteLine($"Current memory usage: {memoryUsageMb:F2}MB");
+
+// Get detailed memory statistics
+var memoryStats = PerformanceUtility.GetMemoryStats();
+Console.WriteLine($"Working set: {memoryStats.WorkingSetMb:F2}MB, " +
+                 $"Private memory: {memoryStats.PrivateMemoryMb:F2}MB, " +
+                 $"Peak working set: {memoryStats.PeakWorkingSetMb:F2}MB");
+
+// Get CPU usage percentage
+double cpuUsage = PerformanceUtility.GetCpuUsagePercent();
+Console.WriteLine($"Current CPU usage: {cpuUsage:F1}%");
+
+// Get garbage collection statistics
+await Task.Delay(100); // Give GC a chance to run
+var gcStats = PerformanceUtility.GetGcStats();
+Console.WriteLine($"GC Collections - Gen0: {gcStats.Gen0Collections}, " +
+                 $"Gen1: {gcStats.Gen1Collections}, " +
+                 $"Gen2: {gcStats.Gen2Collections}");
+
+// Format elapsed time for display
+string formattedTime = PerformanceUtility.FormatElapsedTime(syncElapsedMs);
+Console.WriteLine($"Formatted time: {formattedTime}");
+
+// Format bytes for display
+string formattedBytes = PerformanceUtility.FormatBytes(1024 * 1024);
+Console.WriteLine($"Formatted bytes: {formattedBytes}");
+
+// Retry with exponential backoff (useful for transient failures)
+int attemptCount = 0;
+var retryResult = await PerformanceUtility.RetryWithBackoffAsync(async () =>
+{
+    attemptCount++;
+    if (attemptCount < 3)
+    {
+        throw new InvalidOperationException("Temporary failure");
+    }
+    return "Success after retries";
+}, maxAttempts: 5, initialDelayMs: 100);
+Console.WriteLine($"Retry result: {retryResult}, Attempts: {attemptCount}");
+
+// Access instance properties for detailed monitoring
+var perfInstance = new PerformanceUtility();
+Console.WriteLine($"Working set: {perfInstance.WorkingSetMb:F2}MB");
+Console.WriteLine($"Private memory: {perfInstance.PrivateMemoryMb:F2}MB");
+Console.WriteLine($"Peak working set: {perfInstance.PeakWorkingSetMb:F2}MB");
+Console.WriteLine($"Gen0 collections: {perfInstance.Gen0Collections}");
+Console.WriteLine($"Gen1 collections: {perfInstance.Gen1Collections}");
+Console.WriteLine($"Gen2 collections: {perfInstance.Gen2Collections}");
+```
+
 ## CacheBenchmarks
 
 `CacheBenchmarks` contains a set of BenchmarkDotNet benchmarks that also expose their public members for ad‑hoc usage. It demonstrates typical in‑memory cache operations such as reading, writing, checking existence, and the get‑or‑set pattern against an `InMemoryCacheService`.
