@@ -416,6 +416,67 @@ PropertyInfo[] obsoleteProps = ReflectionUtility.GetPropertiesWithAttribute<Obso
 Console.WriteLine($"Found {obsoleteProps.Length} properties with Obsolete attribute");
 ```
 
+## DateTimeUtility
+
+The `DateTimeUtility` class provides utility methods for common date/time operations including age calculation, relative time formatting, business hours checking, and various datetime boundary calculations. All methods work with UTC dates for consistency and provide flexible reference date parameters for testing scenarios.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Calculate age from birth date
+var birthDate = new DateTime(1990, 5, 15);
+int age = DateTimeUtility.CalculateAge(birthDate);
+Console.WriteLine($"Age: {age} years"); // Age: 36 years
+
+// Calculate age as of a specific date (for testing)
+var referenceDate = new DateTime(2026, 7, 16);
+int ageAsOfDate = DateTimeUtility.CalculateAge(birthDate, referenceDate);
+Console.WriteLine($"Age as of {referenceDate:yyyy-MM-dd}: {ageAsOfDate} years");
+
+// Get relative time formatting
+var pastDate = DateTime.UtcNow.AddHours(-2);
+string? relativePast = DateTimeUtility.GetRelativeTime(pastDate);
+Console.WriteLine(relativePast); // "2 hours ago"
+
+var futureDate = DateTime.UtcNow.AddDays(3);
+string? relativeFuture = DateTimeUtility.GetRelativeTime(futureDate);
+Console.WriteLine(relativeFuture); // "3 days from now"
+
+// Check if current time is within business hours (Monday-Friday, 9am-5pm UTC)
+bool isBusinessHours = DateTimeUtility.IsBusinessHours(DateTime.UtcNow);
+Console.WriteLine($"Is business hours: {isBusinessHours}");
+
+// Get start/end of day boundaries
+var now = DateTime.UtcNow;
+DateTime startOfDay = DateTimeUtility.GetStartOfDay(now);
+DateTime endOfDay = DateTimeUtility.GetEndOfDay(now);
+Console.WriteLine($"Start of day: {startOfDay}");
+Console.WriteLine($"End of day: {endOfDay}");
+
+// Get start of week (Monday)
+DateTime startOfWeek = DateTimeUtility.GetStartOfWeek(now);
+Console.WriteLine($"Start of week: {startOfWeek:yyyy-MM-dd}");
+
+// Get start of month
+DateTime startOfMonth = DateTimeUtility.GetStartOfMonth(now);
+Console.WriteLine($"Start of month: {startOfMonth:yyyy-MM-dd}");
+
+// Check if a date is in the past, future, or today
+var yesterday = DateTime.UtcNow.AddDays(-1);
+var tomorrow = DateTime.UtcNow.AddDays(1);
+
+Console.WriteLine($"Yesterday is past: {DateTimeUtility.IsPast(yesterday)}"); // true
+Console.WriteLine($"Tomorrow is future: {DateTimeUtility.IsFuture(tomorrow)}"); // true
+Console.WriteLine($"Today is today: {DateTimeUtility.IsToday(now)}"); // true
+
+// Parse ISO 8601 duration string
+TimeSpan duration = DateTimeUtility.ParseIsoDuration("P3DT4H5M6S");
+Console.WriteLine($"Duration: {duration}"); // 3.04:05:06
+```
+
 ## EncryptionUtility
 
 The `EncryptionUtility` class provides cryptographic operations for secure password handling, data encryption, and message authentication. It includes methods for hashing passwords with PBKDF2, AES-256-GCM encryption/decryption, generating secure random tokens, and computing HMAC-SHA256 signatures. All cryptographic operations use .NET's built-in security libraries with proper key sizes and authenticated encryption modes.
