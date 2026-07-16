@@ -636,6 +636,57 @@ if (existingService != null)
 
 This example demonstrates how to use the `ServiceRepository` for service-specific queries including retrieving services by various criteria, working with health statuses, managing service metrics, and performing CRUD operations on service registrations.
 
+## DockerComposeOptions
+
+The `DockerComposeOptions` class provides configuration for generating Docker Compose files. It controls service naming, port mappings, environment variables, resource limits, and optional infrastructure services like Caddy reverse proxy, Prometheus metrics, and Redis caching. Use this class to customize container deployment configurations for different environments.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.DockerCompose;
+
+// Create Docker Compose configuration for production deployment
+var options = new DockerComposeOptions
+{
+    ServiceName = "my-api",
+    ImageName = "mycompany/api-service:2.1.0",
+    HostPort = 80,
+    ContainerPort = 5000,
+    Environment = "Production",
+    ConnectionString = "Data Source=/app/data/production.db",
+    
+    // Add custom environment variables
+    EnvironmentVariables = new Dictionary<string, string>
+    {
+        ["ASPNETCORE_ENVIRONMENT"] = "Production",
+        ["LOG_LEVEL"] = "Information",
+        ["ENABLE_METRICS"] = "true"
+    },
+    
+    // Configure volumes for persistent data
+    Volumes = new Dictionary<string, string>
+    {
+        ["api-data"] = "/app/data",
+        ["api-logs"] = "/app/logs"
+    },
+    
+    // Enable optional infrastructure services
+    IncludeCaddy = true,
+    CaddyDomain = "api.example.com",
+    IncludePrometheus = true,
+    IncludeRedis = true,
+    
+    // Resource limits
+    CpuLimit = "2",
+    MemoryLimit = "1G"
+};
+
+// The options can be passed to DockerComposeGenerator to create a docker-compose.yml file
+// var composeContent = DockerComposeGenerator.Generate(options);
+```
+
+This example demonstrates how to configure `DockerComposeOptions` with service details, environment settings, resource constraints, and optional infrastructure components for containerized deployments.
+
 ## HealthCheckRepository
 
 The `HealthCheckRepository` provides data access and analytics for service health check results. It extends the generic `Repository<T>` class to offer specialized methods for querying health check data including retrieving results by service ID, finding recent or failed results, calculating average response times, counting failures, and cleaning up old health check records. The repository is designed for monitoring dashboards, alerting systems, and service reliability analysis.
