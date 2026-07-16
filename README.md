@@ -1226,6 +1226,67 @@ app.Run();
 This example demonstrates how to configure and use `ServiceMeshOptions` to integrate with a service mesh sidecar proxy, including registering services, checking mesh availability, and enabling header propagation middleware.
 
 
+## DotnetServiceScaffoldOptions
+
+The `DotnetServiceScaffoldOptions` class provides the root configuration for the DotnetServiceScaffold application. It binds from the `ApplicationSettings` section in `appsettings.json` and controls core application behaviors including health monitoring intervals, security settings, API behavior, caching, and service registration limits. These options are validated using DataAnnotations and provide sensible defaults for production use.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Shared.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+// Configure options in appsettings.json
+// {
+//   "ApplicationSettings": {
+//     "HealthCheckInterval": 60,
+//     "HealthCheckTimeout": 10,
+//     "MaxConcurrentHealthChecks": 5,
+//     "MaintenanceMode": false,
+//     "AuditLogRetentionDays": 90,
+//     "HealthCheckResultRetentionDays": 30,
+//     "MaxFailedLoginAttempts": 5,
+//     "AccountLockoutDurationMinutes": 30,
+//     "PasswordMinimumLength": 8,
+//     "EnableCors": true,
+//     "AllowedOrigins": ["https://example.com", "https://api.example.com"],
+//     "RateLimitPerMinute": 60,
+//     "MaxServiceRegistrations": 100,
+//     "MaxResponseSize": 1048576,
+//     "EnableDetailedErrors": false,
+//     "DefaultPageSize": 50,
+//     "MaxPageSize": 200,
+//     "CacheDurationSeconds": 300,
+//     "EnableRequestLogging": true,
+//     "MaxCollectionSize": 1000,
+//     "JwtTokenExpirationMinutes": 60,
+//     "JwtSecret": "your-very-long-secret-key-here",
+//     "DatabaseMigrationStrategy": "Auto"
+//   }
+// }
+
+// Setup service collection with configuration
+var services = new ServiceCollection();
+
+// Configure DotnetServiceScaffold options
+services.Configure<DotnetServiceScaffoldOptions>(configuration.GetSection("ApplicationSettings"));
+
+// Register application services
+services.AddApplicationServices();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the options
+var options = serviceProvider.GetRequiredService<IOptions<DotnetServiceScaffoldOptions>>().Value;
+
+// Use the configured options throughout the application
+Console.WriteLine($"Health checks run every {options.HealthCheckInterval} seconds");
+Console.WriteLine($"Maximum concurrent health checks: {options.MaxConcurrentHealthChecks}");
+Console.WriteLine($"CORS enabled: {options.EnableCors}");
+Console.WriteLine($"Rate limit: {options.RateLimitPerMinute} requests per minute");
+```
+
 ## ServiceDiscoveryOptions
 
 The `ServiceDiscoveryOptions` class configures service discovery behavior for locating and connecting to other services within a distributed system. It supports multiple discovery modes (DNS-based, registry-based, or hybrid), configurable load balancing strategies, caching policies, and self-registration capabilities. These options are typically bound from the `ServiceDiscovery` section in `appsettings.json`.
