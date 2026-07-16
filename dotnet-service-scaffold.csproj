@@ -35,9 +35,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-    <PackageReference Include="Microsoft.OpenApi" Version="2.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" />
+    <!-- Note: do not add Microsoft.AspNetCore.OpenApi / Microsoft.OpenApi 2.x here.
+         Swashbuckle is built against Microsoft.OpenApi 1.x; forcing 2.x on it causes a
+         TypeLoadException in SwaggerGenerator.GetSwagger at startup. Nothing in this
+         project uses AddOpenApi/MapOpenApi, so those packages are unnecessary. -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
