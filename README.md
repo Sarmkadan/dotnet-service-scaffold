@@ -236,6 +236,114 @@ var conditionResult = Result.FromCondition(
 
 These extensions provide a fluent API for handling success/failure scenarios while maintaining strong type safety and avoiding boilerplate error-checking code.
 
+## ServiceConfiguration
+
+The `ServiceConfiguration` class stores configuration parameters for services and the platform. It provides strongly-typed methods for retrieving configuration values as integers, booleans, TimeSpans, and other common types, along with validation and masking utilities for sensitive data. Configuration entries can be scoped to specific services or be system-wide settings.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create a new service configuration for an API timeout setting
+var timeoutConfig = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "API_TIMEOUT_SECONDS",
+    Value = "30",
+    ConfigType = "integer",
+    Description = "Maximum time in seconds for API requests to complete",
+    IsSystemConfig = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Create a configuration for a feature flag
+var featureFlag = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "FEATURE_NEW_DASHBOARD",
+    Value = "true",
+    ConfigType = "boolean",
+    Description = "Enables the new dashboard interface",
+    IsSystemConfig = false,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Create a configuration for a maintenance window
+var maintenanceWindow = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "MAINTENANCE_WINDOW",
+    Value = "PT2H",  // ISO 8601 duration format: 2 hours
+    ConfigType = "timespan",
+    Description = "Duration of scheduled maintenance windows",
+    IsSystemConfig = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Create a sensitive configuration for an API key
+var apiKeyConfig = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "EXTERNAL_API_KEY",
+    Value = "sk_live_abc123xyz789",
+    ConfigType = "string",
+    Description = "API key for external payment service",
+    IsEncrypted = true,
+    IsSystemConfig = false,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Retrieve configuration values with type safety
+int timeoutSeconds = timeoutConfig.GetIntValue();
+Console.WriteLine($"API timeout: {timeoutSeconds} seconds");
+
+bool isFeatureEnabled = featureFlag.GetBoolValue();
+Console.WriteLine($"Feature enabled: {isFeatureEnabled}");
+
+TimeSpan maintenanceDuration = maintenanceWindow.GetTimeSpanValue();
+Console.WriteLine($"Maintenance window: {maintenanceDuration.TotalHours} hours");
+
+// Validate configuration values
+bool isValid = timeoutConfig.ValidateValue();
+Console.WriteLine($"Configuration is valid: {isValid}");
+
+// Mask sensitive values for logging
+string maskedApiKey = apiKeyConfig.GetMaskedValue();
+Console.WriteLine($"API key: {maskedApiKey}");
+
+// Update configuration values
+apiKeyConfig.UpdateValue("sk_live_new_key_456def", Guid.Parse("550e8400-e29b-41d4-a716-446655440000"));
+Console.WriteLine($"Updated API key at: {apiKeyConfig.UpdatedAt}");
+
+// Create a configuration scoped to a specific service
+var serviceScopedConfig = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "MAX_CONNECTIONS",
+    Value = "100",
+    ConfigType = "integer",
+    ServiceId = Guid.Parse("123e4567-e89b-12d3-a456-426614174000"),
+    Description = "Maximum concurrent connections for this service",
+    IsSystemConfig = false,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Access the related service
+if (serviceScopedConfig.Service != null)
+{
+    Console.WriteLine($"Configuration belongs to service: {serviceScopedConfig.Service.ServiceName}");
+}
+```
+
+This example demonstrates creating service configurations for different types of settings, retrieving typed values, validating configurations, masking sensitive data, and updating configuration values while maintaining audit trails.
+
 ## ServiceConfigurationExtensions
 
 The `ServiceConfigurationExtensions` class provides helper methods for retrieving and updating service configuration values with type safety and validation. It includes methods for common data types like `double`, `decimal`, `DateTime`, and `Guid`, as well as utilities for checking system configuration flags and updating values conditionally.
