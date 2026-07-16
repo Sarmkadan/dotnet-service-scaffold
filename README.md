@@ -257,6 +257,62 @@ This example demonstrates how to use the `MetricsBenchmarks` class to measure th
 
 The `PerformanceUtility` class provides performance monitoring and measurement utilities for tracking execution time, memory usage, CPU utilization, and garbage collection statistics. It includes methods for measuring synchronous and asynchronous operations, retrieving system resource usage, and formatting performance data for logging and monitoring purposes.
 
+## StringUtility
+
+The `StringUtility` class provides utility methods for common string operations including truncation, URL slug generation, case conversion, sensitive data masking, validation, and text manipulation. These methods are optimized for performance with minimal allocations and include support for null safety throughout.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Truncate long text for display (keeps last 4 characters visible)
+string longText = "This is a very long text that needs to be truncated for display purposes";
+string truncated = StringUtility.Truncate(longText, 30);
+Console.WriteLine(truncated); // "This is a very long text..."
+
+// Convert text to URL-friendly slug
+string title = "My Awesome Blog Post Title!";
+string slug = StringUtility.ToSlug(title);
+Console.WriteLine(slug); // "my-awesome-blog-post-title"
+
+// Convert PascalCase to snake_case
+string pascalCase = "UserAccountServiceManager";
+string snakeCase = StringUtility.ToSnakeCase(pascalCase);
+Console.WriteLine(snakeCase); // "user_account_service_manager"
+
+// Convert snake_case to camelCase
+string snakeCaseText = "user_account_service_manager";
+string camelCase = StringUtility.ToCamelCase(snakeCaseText);
+Console.WriteLine(camelCase); // "userAccountServiceManager"
+
+// Mask sensitive information (keeps first and last 4 characters visible)
+string apiKey = "sk_live_1234567890abcdef";
+string maskedKey = StringUtility.MaskSensitive(apiKey);
+Console.WriteLine(maskedKey); // "sk_l***ef"
+
+// Generate a random string for tokens or session IDs
+string randomToken = StringUtility.GenerateRandomString(32);
+Console.WriteLine(randomToken); // "XyZ9aBcD3eFgH4iJ5kL6mN7oP8qR"
+
+// Validate email format
+bool isValidEmail = StringUtility.IsValidEmail("user@example.com");
+Console.WriteLine(isValidEmail); // true
+
+bool isInvalidEmail = StringUtility.IsValidEmail("invalid-email");
+Console.WriteLine(isInvalidEmail); // false
+
+// Strip HTML tags from user-provided content
+string htmlContent = "<p>Hello <strong>World</strong>!</p>";
+string plainText = StringUtility.StripHtmlTags(htmlContent);
+Console.WriteLine(plainText); // "Hello World!"
+
+// Repeat a string multiple times
+string repeated = StringUtility.Repeat("ha", 3);
+Console.WriteLine(repeated); // "hahaha"
+```
+
 ## ReflectionUtility
 
 The `ReflectionUtility` class provides reflection-based utilities for type inspection, property access, method invocation, and attribute discovery. It simplifies common reflection patterns with strongly-typed methods that handle null safety, case-insensitive lookups, and error conditions gracefully. The utility is useful for dynamic configuration loading, plugin architectures, serialization frameworks, and testing utilities where runtime type inspection is required.
