@@ -2175,6 +2175,66 @@ await configurationService.DeleteConfigurationAsync("OLD_FEATURE_FLAG");
 Console.WriteLine("Configuration deleted successfully");
 ```
 
+## LogContextServiceTests
+
+The `LogContextServiceTests` class provides comprehensive unit tests for the `LogContextService` class, verifying all public members and edge cases. It tests correlation ID management, user ID tracking, custom property storage, context scoping with disposable contexts, and validation of input parameters, ensuring the logging context utilities work correctly across different scenarios.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.Logging;
+
+// Create a new LogContextService instance for testing
+var logContextService = new LogContextService();
+
+// Test CorrelationId property
+logContextService.CorrelationId = "req-12345";
+Console.WriteLine(logContextService.CorrelationId); // "req-12345"
+
+// Test UserId property  
+logContextService.UserId = "user-42";
+Console.WriteLine(logContextService.UserId); // "user-42"
+
+// Test AddProperty method for custom properties
+logContextService.AddProperty("TenantId", "tenant-A");
+logContextService.AddProperty("RequestId", "req-67890");
+
+// Test GetProperties method to retrieve all set values
+var properties = logContextService.GetProperties();
+Console.WriteLine(properties["CorrelationId"]); // "req-12345"
+Console.WriteLine(properties["UserId"]); // "user-42"
+Console.WriteLine(properties["TenantId"]); // "tenant-A"
+Console.WriteLine(properties["RequestId"]); // "req-67890"
+
+// Test PushProperties method to create a disposable context scope
+using (var context = logContextService.PushProperties())
+{
+    // Properties are scoped to this context
+    logContextService.CorrelationId = "scoped-req-999";
+    Console.WriteLine(logContextService.CorrelationId); // "scoped-req-999"
+}
+
+// After disposing the context, original values are restored
+Console.WriteLine(logContextService.CorrelationId); // "req-12345" (restored)
+
+// Test that AddProperty throws when key is null
+try
+{
+    logContextService.AddProperty(null!, "value");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"ArgumentException thrown as expected: {ex.Message}");
+}
+
+// Test that AddProperty overwrites existing keys
+logContextService.AddProperty("Key", "first-value");
+Console.WriteLine(logContextService.GetProperties()["Key"]); // "first-value"
+
+logContextService.AddProperty("Key", "second-value");
+Console.WriteLine(logContextService.GetProperties()["Key"]); // "second-value" (overwritten)
+```
+
 ## CacheBenchmarks
 
 `CacheBenchmarks` contains a set of BenchmarkDotNet benchmarks that also expose their public members for ad‑hoc usage. It demonstrates typical in‑memory cache operations such as reading, writing, checking existence, and the get‑or‑set pattern against an `InMemoryCacheService`.
