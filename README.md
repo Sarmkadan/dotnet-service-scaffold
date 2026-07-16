@@ -171,6 +171,84 @@ Console.WriteLine(validationException.ErrorCode); // "VALIDATION_ERROR"
 Console.WriteLine(validationException.Errors.Count); // 1
 ```
 
+## ServiceEvent
+
+The `ServiceEvent` class records significant events that occur on a service, including restarts, status changes, errors, health check results, configuration updates, and deployment activities. It tracks event metadata such as severity levels, source hosts, stack traces, and acknowledgment status, enabling comprehensive monitoring, alerting, and incident response workflows for service reliability operations.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Domain.Enums;
+
+// Create a service event for a service restart
+var restartEvent = new ServiceEvent
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    EventType = ServiceEventType.ServiceRestarted,
+    Message = "Service restarted after configuration update",
+    Severity = "Information",
+    SourceHost = "production-server-01",
+    StackTrace = null,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Get event type description
+string eventDescription = restartEvent.GetEventTypeDescription();
+Console.WriteLine(eventDescription); // "Service Restarted"
+
+// Check if event requires attention
+bool isAlertWorthy = restartEvent.IsAlertWorthy();
+Console.WriteLine(isAlertWorthy); // false (Information severity)
+
+// Create a critical error event
+var errorEvent = new ServiceEvent
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    EventType = ServiceEventType.ErrorOccurred,
+    Message = "Database connection timeout after 30 seconds",
+    Severity = "Critical",
+    SourceHost = "api-gateway-02",
+    StackTrace = "at Npgsql.NpgsqlCommand.ExecuteReader()\n...",
+    CreatedAt = DateTime.UtcNow
+};
+
+// Check if critical error requires immediate attention
+bool requiresImmediateAttention = errorEvent.IsAlertWorthy();
+Console.WriteLine(requiresImmediateAttention); // true (Critical severity)
+
+// Acknowledge the critical error
+Console.WriteLine(errorEvent.AcknowledgedAt); // False (not acknowledged yet)
+errorEvent.Acknowledge();
+Console.WriteLine(errorEvent.AcknowledgedAt); // True (acknowledged)
+Console.WriteLine(errorEvent.AcknowledgedBy); // Timestamp of acknowledgment
+
+// Create a health check failure event
+var healthCheckFailedEvent = new ServiceEvent
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    EventType = ServiceEventType.HealthCheckFailed,
+    Message = "Health check endpoint returned 503 Service Unavailable",
+    Severity = "Warning",
+    SourceHost = "monitoring-probe-01",
+    CreatedAt = DateTime.UtcNow
+};
+
+// Get health check event description
+string healthCheckDescription = healthCheckFailedEvent.GetEventTypeDescription();
+Console.WriteLine(healthCheckDescription); // "Health Check Failed"
+
+// Access related service information (if loaded)
+if (restartEvent.Service != null)
+{
+    Console.WriteLine($"Event belongs to service: {restartEvent.Service.ServiceName}");
+}
+```
+
 ## ResultExtensions
 
 The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.
