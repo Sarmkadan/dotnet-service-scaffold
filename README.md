@@ -2108,6 +2108,78 @@ bool isLocalhost = context.IsLocalhost();
 string requestUrl = context.GetRequestUrl();
 ```
 
+## AuditLogController
+
+The `AuditLogController` provides API endpoints for querying and retrieving audit trail data. It enables compliance tracking, security investigations, and monitoring by exposing endpoints to list audit logs with filtering capabilities, retrieve specific audit log entries by ID, and get audit logs filtered by user. The controller requires authentication and returns paginated responses with comprehensive error handling.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Controllers;
+
+// Initialize HTTP client with authentication
+var httpClient = new HttpClient();
+httpClient.BaseAddress = new Uri("https://api.example.com");
+httpClient.DefaultRequestHeaders.Authorization = 
+    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "your-auth-token-here");
+
+// List audit logs with optional filtering (date range, action type, pagination)
+var listResponse = await httpClient.GetAsync(
+    "/api/auditlog?fromDate=2026-01-01&toDate=2026-07-17&action=Update&page=1&pageSize=50");
+
+if (listResponse.IsSuccessStatusCode)
+{
+    var listResult = await listResponse.Content.ReadFromJsonAsync<PagedAuditLogResponse>();
+    Console.WriteLine($"Found {listResult?.TotalCount} audit logs across {listResult?.TotalPages} pages");
+    foreach (var log in listResult?.Data ?? new List<AuditLogDto>())
+    {
+        Console.WriteLine($"[{log.CreatedAt:yyyy-MM-dd}] {log.ActionName} on {log.EntityType}: {log.Description}");
+    }
+}
+
+// Get a specific audit log by ID
+var logId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var getResponse = await httpClient.GetAsync($"/api/auditlog/{logId}");
+
+if (getResponse.IsSuccessStatusCode)
+{
+    var getResult = await getResponse.Content.ReadFromJsonAsync<AuditLogDto>();
+    Console.WriteLine($"Retrieved audit log: {getResult?.ActionName} by user {getResult?.UserId}");
+}
+
+// Get audit logs for a specific user (last 30 days by default)
+var userId = Guid.Parse("550e8400-e29b-41d4-a716-446655440001");
+var userResponse = await httpClient.GetAsync($"/api/auditlog/user/{userId}?days=7");
+
+if (userResponse.IsSuccessStatusCode)
+{
+    var userLogs = await userResponse.Content.ReadFromJsonAsync<List<AuditLogDto>>();
+    Console.WriteLine($"Found {userLogs?.Count} audit logs for user {userId} in last 7 days");
+}
+
+// Define response types for deserialization
+public record PagedAuditLogResponse(
+    List<AuditLogDto> Data,
+    int Page,
+    int PageSize,
+    int TotalCount,
+    int TotalPages
+);
+
+public record AuditLogDto(
+    Guid Id,
+    Guid? UserId,
+    string? ActionName,
+    string? EntityType,
+    string? Description,
+    DateTime CreatedAt
+);
+```
+
 ## MetricsController
 
 The `MetricsController` provides API endpoints for monitoring application health and performance characteristics through metrics collection. It exposes endpoints to retrieve all metrics, filter metrics by category, reset metrics to zero, and get summary statistics including counts of counters, gauges, timers, and unique metric categories. The controller requires authentication and provides comprehensive error handling with appropriate HTTP status codes.
