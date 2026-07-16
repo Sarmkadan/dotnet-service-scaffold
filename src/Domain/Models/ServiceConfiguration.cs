@@ -31,7 +31,10 @@ public class ServiceConfiguration
 
     public Guid? ServiceId { get; set; }
 
-    [ForeignKey(nameof(Service))]
+    // [ForeignKey] on a navigation property must name the foreign key *property* (ServiceId),
+    // not the navigation itself. nameof(Service) here made EF model building throw
+    // InvalidOperationException at startup ("property list ... is incorrect").
+    [ForeignKey(nameof(ServiceId))]
     public ServiceRegistration? Service { get; set; }
 
     public bool IsEncrypted { get; set; }

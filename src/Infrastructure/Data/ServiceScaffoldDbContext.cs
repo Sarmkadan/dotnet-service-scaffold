@@ -146,7 +146,19 @@ public class ServiceScaffoldDbContext : DbContext
 		try
 		{
 			_logger.LogInformation("Initializing database schema...");
-			await Database.MigrateAsync();
+
+			// The project ships without EF Core migrations. MigrateAsync() on a project with
+			// no migrations only creates __EFMigrationsHistory and no entity tables, so every
+			// query then fails with "no such table". Use migrations when they exist, otherwise
+			// fall back to EnsureCreatedAsync() which builds the schema from the model.
+			if (Database.GetMigrations().Any())
+			{
+				await Database.MigrateAsync();
+			}
+			else
+			{
+				await Database.EnsureCreatedAsync();
+			}
 
 			// WAL mode allows concurrent reads during writes, preventing "database is locked"
 			// errors that occur with the default DELETE journal mode under concurrent load.
