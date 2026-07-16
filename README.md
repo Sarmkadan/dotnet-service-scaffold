@@ -368,6 +368,97 @@ await userRepository.SaveChangesAsync();
 
 This example demonstrates how to use the `Repository<T>` class for common CRUD operations with proper dependency injection setup, error handling through the repository's built-in logging, and type-safe operations for any entity type.
 
+## ServiceRepository
+
+The `ServiceRepository` provides specialized data access methods for service registrations with built-in health check and metric queries. It extends the generic `Repository<T>` class to offer service-specific queries including retrieving services by name, status, owner, and health metrics. The repository includes methods for finding unhealthy services, services without recent health checks, and services with their associated metrics.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Enums;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection with DbContext
+var services = new ServiceCollection();
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite("Data Source=service-scaffold.db"));
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the service repository
+var serviceRepository = new ServiceRepository(
+    serviceProvider.GetRequiredService<ServiceScaffoldDbContext>(),
+    serviceProvider.GetRequiredService<ILogger<ServiceRepository>>());
+
+var serviceId = Guid.NewGuid();
+var ownerId = Guid.NewGuid();
+
+// Get a service by name
+var serviceByName = await serviceRepository.GetByNameAsync("user-service");
+
+// Get services by status
+var activeServices = await serviceRepository.GetByStatusAsync(ServiceStatus.Healthy);
+var unhealthyServices = await serviceRepository.GetByStatusAsync(ServiceStatus.Unhealthy);
+
+// Get all enabled services
+var enabledServices = await serviceRepository.GetEnabledServicesAsync();
+
+// Get services by owner
+var ownerServices = await serviceRepository.GetByOwnerAsync(ownerId);
+
+// Get a service with its metrics
+var serviceWithMetrics = await serviceRepository.GetWithMetricsAsync(serviceId, metricsCount: 20);
+if (serviceWithMetrics != null)
+{
+    Console.WriteLine($"Service {serviceWithMetrics.ServiceName} has {serviceWithMetrics.Metrics.Count} metrics");
+}
+
+// Find unhealthy services
+var unhealthyServicesList = await serviceRepository.GetUnhealthyServicesAsync();
+Console.WriteLine($"Found {unhealthyServicesList.Count()} unhealthy services");
+
+// Find services without recent health checks (threshold: 5 minutes)
+var staleServices = await serviceRepository.GetServicesWithoutRecentHealthCheckAsync(minutesThreshold: 5);
+Console.WriteLine($"Found {staleServices.Count()} services without recent health checks");
+
+// Create and add a new service
+var newService = new ServiceRegistration
+{
+    Id = serviceId,
+    ServiceName = "api-gateway",
+    Endpoint = "https://api.example.com/gateway",
+    Description = "API Gateway service",
+    Status = ServiceStatus.Healthy,
+    IsEnabled = true,
+    OwnerId = ownerId,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+await serviceRepository.AddAsync(newService);
+await serviceRepository.SaveChangesAsync();
+
+// Update service status
+var existingService = await serviceRepository.GetByNameAsync("api-gateway");
+if (existingService != null)
+{
+    existingService.Status = ServiceStatus.Degraded;
+    existingService.UpdatedAt = DateTime.UtcNow;
+    await serviceRepository.UpdateAsync(existingService);
+}
+```
+
+This example demonstrates how to use the `ServiceRepository` for service-specific queries including retrieving services by various criteria, working with health statuses, managing service metrics, and performing CRUD operations on service registrations.
+
+
 ### Usage Example
 
 ```csharp
