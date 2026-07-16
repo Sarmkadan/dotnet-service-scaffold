@@ -344,6 +344,69 @@ if (serviceScopedConfig.Service != null)
 
 This example demonstrates creating service configurations for different types of settings, retrieving typed values, validating configurations, masking sensitive data, and updating configuration values while maintaining audit trails.
 
+## User
+
+The `User` class represents an authenticated user in the system with comprehensive profile information, authentication state, and security tracking. It provides built-in methods for login tracking, account lockout management, and user validation, making it suitable for authentication services, user management APIs, and access control systems.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create a new user with required fields
+var newUser = new User
+{
+    Id = Guid.NewGuid(),
+    Email = "john.doe@example.com",
+    FullName = "John Doe",
+    PasswordHash = "$2a$12$hashed_password_here", // In production, use proper password hashing
+    Role = "Administrator",
+    IsActive = true,
+    ProfileImageUrl = "https://example.com/images/john.jpg",
+    Bio = "Senior software engineer with 10+ years of experience in .NET development",
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Validate user data before saving
+bool isValid = newUser.IsValid();
+Console.WriteLine($"User data valid: {isValid}");
+
+// Record a successful login
+newUser.RecordSuccessfulLogin();
+Console.WriteLine($"Last login: {newUser.LastLoginAt}");
+Console.WriteLine($"Login attempts reset: {newUser.LoginAttempts}");
+
+// Simulate failed login attempts
+for (int i = 0; i < 3; i++)
+{
+    newUser.RecordFailedLoginAttempt();
+}
+Console.WriteLine($"Failed attempts: {newUser.LoginAttempts}");
+Console.WriteLine($"Account locked: {newUser.IsLocked}");
+
+// Check if account is locked (auto-unlocks after 30 minutes)
+bool isLocked = newUser.IsAccountLocked();
+Console.WriteLine($"Is account locked: {isLocked}");
+
+// Update user profile information
+newUser.FullName = "Johnathan Doe";
+newUser.Bio = "Senior software engineer specializing in distributed systems and cloud architecture";
+newUser.ProfileImageUrl = "https://example.com/images/johnathan.jpg";
+newUser.UpdateLastActivity();
+
+// Check user status
+Console.WriteLine($"User active: {newUser.IsActive}");
+Console.WriteLine($"User role: {newUser.Role ?? "None"}");
+Console.WriteLine($"Profile created: {newUser.CreatedAt:yyyy-MM-dd}");
+Console.WriteLine($"Last updated: {newUser.UpdatedAt:yyyy-MM-dd HH:mm:ss}");
+
+// Access navigation properties (empty collections by default)
+Console.WriteLine($"API keys: {newUser.ApiKeys.Count}");
+Console.WriteLine($"Managed services: {newUser.ManagedServices.Count}");
+```
+
 ## ServiceConfigurationExtensions
 
 The `ServiceConfigurationExtensions` class provides helper methods for retrieving and updating service configuration values with type safety and validation. It includes methods for common data types like `double`, `decimal`, `DateTime`, and `Guid`, as well as utilities for checking system configuration flags and updating values conditionally.
