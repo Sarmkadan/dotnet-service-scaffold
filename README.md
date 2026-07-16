@@ -434,6 +434,56 @@ propagatedResult.ErrorCode.Should().Be("ERR_SRC");
 mapperInvoked.Should().BeFalse(); // Mapper should not be invoked for failed results
 ```
 
+## StringUtilityTests
+
+The `StringUtilityTests` class provides comprehensive unit tests for the `StringUtility` class, verifying all public members and edge cases. It tests string truncation, case conversion, sensitive data masking, email validation, and null/empty input handling, ensuring the utility methods work correctly across different scenarios.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Shared.Utilities;
+using FluentAssertions;
+
+// Test Truncate method with long string
+string longText = "This is a very long text that needs to be truncated for display purposes";
+string truncated = StringUtility.Truncate(longText, 30);
+truncated.Should().Be("This is a very long text...");
+truncated.Length.Should().Be(30);
+
+// Test Truncate with null or empty input
+string? nullResult = StringUtility.Truncate(null, 10);
+nullResult.Should().BeEmpty();
+
+string emptyResult = StringUtility.Truncate(string.Empty, 10);
+emptyResult.Should().BeEmpty();
+
+// Test ToSnakeCase with camelCase input
+string camelCase = "helloWorld";
+string snakeCase = StringUtility.ToSnakeCase(camelCase);
+snakeCase.Should().Be("hello_world");
+
+// Test ToSnakeCase with PascalCase input
+string pascalCase = "MyServiceName";
+string snakeCase2 = StringUtility.ToSnakeCase(pascalCase);
+snakeCase2.Should().Be("my_service_name");
+
+// Test MaskSensitive with API key
+string apiKey = "ABCDE12345FGHIJ";
+string maskedKey = StringUtility.MaskSensitive(apiKey, visibleChars: 2);
+maskedKey.Should().StartWith("AB");
+maskedKey.Should().EndWith("IJ");
+maskedKey.Should().Contain("*");
+maskedKey.Length.Should().Be(apiKey.Length);
+
+// Test IsValidEmail with valid email
+bool isValidEmail = StringUtility.IsValidEmail("user@example.com");
+isValidEmail.Should().BeTrue();
+
+// Test IsValidEmail with invalid email
+bool isInvalidEmail = StringUtility.IsValidEmail("not-an-email");
+isInvalidEmail.Should().BeFalse();
+```
+
 ## ResultExtensions
 
 The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.
