@@ -249,6 +249,49 @@ public static async Task Main()
 
 The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup`, `CacheHit`, `CacheMiss`, `CacheSet`, `Exists`, `GetOrSetHit`, `GetOrSetMiss`) and the `CachedService` properties (`Id`, `Name`, `IsHealthy`) to illustrate typical cache interactions.
 
+## ConfigurationRepository
+
+The `ConfigurationRepository` provides data access methods for application and service configurations, allowing for easy retrieval, existence checking, and management of configuration settings stored in the database. It leverages `ServiceScaffoldDbContext` to perform these operations and includes built-in logging for transparency and debugging.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection();
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite("Data Source=service-scaffold.db"));
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the configuration repository
+var configRepository = new ConfigurationRepository(
+    serviceProvider.GetRequiredService<ServiceScaffoldDbContext>(),
+    serviceProvider.GetRequiredService<ILogger<ConfigurationRepository>>());
+
+var serviceId = Guid.NewGuid();
+
+// Get a configuration by key and service ID
+var config = await configRepository.GetByKeyAsync("FEATURE_FLAG_X", serviceId);
+
+// Check if a configuration key exists
+bool exists = await configRepository.KeyExistsAsync("API_TIMEOUT", serviceId);
+
+// Get all configurations for a service
+var configs = await configRepository.GetByServiceIdAsync(serviceId);
+
+// Delete a configuration by key
+await configRepository.DeleteByKeyAsync("API_TIMEOUT", serviceId);
+```
+
 
 ## ServiceCollectionExtensions
 
