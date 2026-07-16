@@ -531,6 +531,97 @@ Console.WriteLine($"API keys: {newUser.ApiKeys.Count}");
 Console.WriteLine($"Managed services: {newUser.ManagedServices.Count}");
 ```
 
+## UserService
+
+The `UserService` class provides comprehensive user management functionality including user creation, authentication, password management, and user lifecycle operations. It handles user registration, login/logout tracking, password validation and changes, account unlocking, and API key authentication. The service integrates with repositories for data persistence and includes comprehensive logging for audit and debugging purposes.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+
+// Initialize the user service (typically via dependency injection)
+var userService = new UserService(
+    userRepository,
+    apiKeyRepository,
+    logger
+);
+
+// Create a new user account
+var newUser = await userService.CreateUserAsync(
+    email: "john.doe@example.com",
+    fullName: "John Doe",
+    password: "SecurePassword123!"
+);
+Console.WriteLine($"Created user: {newUser.Email} with ID: {newUser.Id}");
+
+// Authenticate a user
+var authenticatedUser = await userService.AuthenticateUserAsync(
+    email: "john.doe@example.com",
+    password: "SecurePassword123!"
+);
+if (authenticatedUser != null)
+{
+    Console.WriteLine($"User authenticated: {authenticatedUser.Email}");
+}
+
+// Get user by email
+var retrievedUser = await userService.GetUserByEmailAsync("john.doe@example.com");
+if (retrievedUser != null)
+{
+    Console.WriteLine($"Retrieved user: {retrievedUser.FullName}");
+}
+
+// Update user information
+retrievedUser.FullName = "Johnathan Doe";
+var updatedUser = await userService.UpdateUserAsync(retrievedUser);
+Console.WriteLine($"Updated user: {updatedUser.FullName}");
+
+// Change user password
+bool passwordChanged = await userService.ChangePasswordAsync(
+    userId: newUser.Id,
+    oldPassword: "SecurePassword123!",
+    newPassword: "NewSecurePassword456!"
+);
+Console.WriteLine($"Password changed successfully: {passwordChanged}");
+
+// Validate password
+bool isValidPassword = await userService.ValidatePasswordAsync(
+    email: "john.doe@example.com",
+    password: "NewSecurePassword456!"
+);
+Console.WriteLine($"Password validation: {isValidPassword}");
+
+// Get active users
+var activeUsers = await userService.GetActiveUsersAsync();
+Console.WriteLine($"Active users count: {activeUsers.Count()}");
+
+// Unlock a user account
+await userService.UnlockUserAsync(newUser.Id);
+Console.WriteLine("User account unlocked");
+
+// Get user with API keys (for authentication scenarios)
+var userWithKeys = await userService.GetUserWithApiKeysAsync(newUser.Id);
+if (userWithKeys != null)
+{
+    Console.WriteLine($"User has {userWithKeys.ApiKeys.Count} API keys");
+}
+
+// Validate API key authentication
+var apiKeyUser = await userService.ValidateApiKeyAsync("sk_live_abc123xyz789");
+if (apiKeyUser != null)
+{
+    Console.WriteLine($"API key authenticated user: {apiKeyUser.Email}");
+}
+
+// Delete a user account
+await userService.DeleteUserAsync(newUser.Id);
+Console.WriteLine("User account deleted");
+```
+
 ## ApiKey
 
 The `ApiKey` class represents API authentication keys for programmatic access to the scaffold system. It provides secure key management with validation, expiration tracking, IP restrictions, scope-based permissions, and usage analytics. API keys are associated with users and can be configured with customizable access controls including allowed IP addresses, permitted scopes, and expiration dates.
