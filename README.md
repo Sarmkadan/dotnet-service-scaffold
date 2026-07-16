@@ -458,6 +458,86 @@ if (existingService != null)
 
 This example demonstrates how to use the `ServiceRepository` for service-specific queries including retrieving services by various criteria, working with health statuses, managing service metrics, and performing CRUD operations on service registrations.
 
+## HealthCheckRepository
+
+The `HealthCheckRepository` provides data access and analytics for service health check results. It extends the generic `Repository<T>` class to offer specialized methods for querying health check data including retrieving results by service ID, finding recent or failed results, calculating average response times, counting failures, and cleaning up old health check records. The repository is designed for monitoring dashboards, alerting systems, and service reliability analysis.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection with DbContext
+var services = new ServiceCollection();
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+  options.UseSqlite("Data Source=service-scaffold.db"));
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the health check repository
+var healthCheckRepository = new HealthCheckRepository(
+  serviceProvider.GetRequiredService<ServiceScaffoldDbContext>(),
+  serviceProvider.GetRequiredService<ILogger<HealthCheckRepository>>());
+
+var serviceId = Guid.NewGuid();
+
+// Get all health check results for a service
+var allResults = await healthCheckRepository.GetByServiceIdAsync(serviceId);
+Console.WriteLine($"Found {allResults.Count()} total health check results");
+
+// Get recent health check results (last 20 checks)
+var recentResults = await healthCheckRepository.GetRecentResultsAsync(serviceId, count: 20);
+Console.WriteLine($"Found {recentResults.Count()} recent health check results");
+
+// Get the latest health check result
+var latestResult = await healthCheckRepository.GetLatestResultAsync(serviceId);
+if (latestResult != null)
+{
+  Console.WriteLine($"Latest result - Healthy: {latestResult.IsHealthy}, Response Time: {latestResult.ResponseTimeMs}ms");
+}
+
+// Get failed health check results from the last 24 hours
+var failedResults = await healthCheckRepository.GetFailedResultsAsync(serviceId, hoursBack: 24);
+Console.WriteLine($"Found {failedResults.Count()} failed health checks in last 24 hours");
+
+// Calculate average response time for the last hour
+var avgResponseTime = await healthCheckRepository.GetAverageResponseTimeAsync(serviceId, minutesBack: 60);
+Console.WriteLine($"Average response time: {avgResponseTime:F2}ms");
+
+// Count failures in the last hour
+var failureCount = await healthCheckRepository.GetFailureCountAsync(serviceId, minutesBack: 60);
+Console.WriteLine($"Failure count: {failureCount}");
+
+// Clean up old health check results (older than 30 days)
+await healthCheckRepository.DeleteOldResultsAsync(serviceId, daysToKeep: 30);
+Console.WriteLine("Old health check results cleanup completed");
+
+// Add a new health check result
+var newHealthCheck = new HealthCheckResult
+{
+  Id = Guid.NewGuid(),
+  ServiceId = serviceId,
+  IsHealthy = true,
+  ResponseTimeMs = 42,
+  StatusCode = 200,
+  CheckedAt = DateTime.UtcNow,
+  Details = "Service responded within acceptable time"
+};
+
+await healthCheckRepository.AddAsync(newHealthCheck);
+await healthCheckRepository.SaveChangesAsync();
+```
+
+This example demonstrates how to use the `HealthCheckRepository` for querying health check data, calculating reliability metrics, and managing health check history for monitoring and alerting purposes.
+
 
 ### Usage Example
 
