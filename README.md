@@ -64,6 +64,64 @@ if (chainedResult.IsSuccess)
 }
 ```
 
+## ServiceRegistration
+
+The `ServiceRegistration` class represents a registered service that is monitored and managed by the scaffold system. It tracks service metadata, health status, metrics, and events, enabling comprehensive service lifecycle management including health checks, performance monitoring, and operational status tracking.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Domain.Enums;
+
+// Create a new service registration for a production API service
+var apiService = new ServiceRegistration
+{
+    Id = Guid.NewGuid(),
+    ServiceName = "user-api",
+    Description = "User management and authentication API service",
+    HealthCheckUrl = "https://api.example.com/health",
+    Version = "2.1.0",
+    Endpoint = "https://api.example.com",
+    Status = ServiceStatus.Healthy,
+    OwnerId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    HealthCheckIntervalSeconds = 30,
+    TimeoutSeconds = 5,
+    IsEnabled = true,
+    SystemdServiceName = "user-api.service"
+};
+
+// Validate the service configuration
+bool isValid = apiService.IsValid();
+Console.WriteLine($"Service configuration valid: {isValid}");
+
+// Record a successful health check
+apiService.RecordSuccessfulHealthCheck();
+Console.WriteLine($"Service status: {apiService.Status}");
+Console.WriteLine($"Success rate: {apiService.GetSuccessRate()}%");
+Console.WriteLine($"Last health check: {apiService.LastHealthCheckAt}");
+
+// Record metrics and track requests
+apiService.TotalRequests++;
+apiService.SuccessfulRequests++;
+
+// Record a failed health check (after 3 failures, status becomes Unhealthy)
+apiService.RecordFailedHealthCheck();
+Console.WriteLine($"Consecutive failures: {apiService.ConsecutiveFailures}");
+Console.WriteLine($"Service status after failure: {apiService.Status}");
+
+// Disable the service for maintenance
+apiService.Disable("Scheduled maintenance window");
+Console.WriteLine($"Service enabled: {apiService.IsEnabled}");
+Console.WriteLine($"Service status: {apiService.Status}");
+
+// Re-enable the service after maintenance
+apiService.Enable();
+Console.WriteLine($"Service enabled after re-enable: {apiService.IsEnabled}");
+Console.WriteLine($"Consecutive failures reset: {apiService.ConsecutiveFailures}");
+```
+
 ## ServiceScaffoldException
 
 The `ServiceScaffoldException` class serves as the base exception type for the service scaffold platform. It provides a consistent error handling mechanism with support for error codes, enabling structured error handling and reporting throughout the application. All service-specific exceptions in the platform inherit from this base class, allowing for centralized error handling and logging strategies.
