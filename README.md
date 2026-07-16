@@ -546,9 +546,91 @@ Console.WriteLine("Deployment Guide:");
 Console.WriteLine(deploymentGuide);
 ```
 
-## ServiceRepository
+## ExceptionExtensions
 
-The `ServiceRepository` provides specialized data access methods for service registrations with built-in health check and metric queries. It extends the generic `Repository<T>` class to offer service-specific queries including retrieving services by name, status, owner, and health metrics. The repository includes methods for finding unhealthy services, services without recent health checks, and services with their associated metrics.
+The `ExceptionExtensions` class provides utility methods for working with exceptions, enabling robust error handling, debugging, and logging. These extensions simplify common patterns like extracting full error messages, checking exception types, determining retryability, and formatting error responses for APIs. The methods handle exception chains and provide safe defaults for user-facing messages.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Shared.Extensions;
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+
+// Example exception chain for demonstration
+try
+{
+    // Simulate a chain of exceptions
+    throw new InvalidOperationException("Database operation failed",
+        new IOException("Disk I/O error occurred",
+            new UnauthorizedAccessException("Access denied to data directory")));
+}
+catch (Exception ex)
+{
+    // Get the complete error message chain
+    string fullMessage = ex.GetFullMessage();
+    Console.WriteLine($"Full error message: {fullMessage}");
+    // Output: Full error message: Database operation failed -> Disk I/O error occurred -> Access denied to data directory
+
+    // Get the complete stack trace including inner exceptions
+    string fullStackTrace = ex.GetFullStackTrace();
+    Console.WriteLine($"Full stack trace available ({fullStackTrace.Length} characters)");
+
+    // Check if exception is of a specific type
+    bool isIOException = ex.Is<IOException>();
+    Console.WriteLine($"Is IOException: {isIOException}");
+    
+    bool isTimeoutException = ex.Is<TimeoutException>();
+    Console.WriteLine($"Is TimeoutException: {isTimeoutException}");
+
+    // Find a specific exception type in the chain
+    var ioException = ex.FindInnerException<IOException>();
+    if (ioException != null)
+    {
+        Console.WriteLine($"Found IOException: {ioException.Message}");
+    }
+
+    // Get a safe user-facing error message
+    string userMessage = ex.GetSafeMessage();
+    Console.WriteLine($"User message: {userMessage}");
+    // Output: User message: The requested operation is not valid in the current state.
+
+    // Get appropriate HTTP status code for the exception
+    int statusCode = ex.GetHttpStatusCode();
+    Console.WriteLine($"HTTP status code: {statusCode}");
+    // Output: HTTP status code: 409 (Conflict for InvalidOperationException)
+
+    // Check if exception is retryable
+    bool shouldRetry = ex.IsRetryable();
+    Console.WriteLine($"Should retry: {shouldRetry}");
+    // Output: Should retry: True (IOException is retryable)
+
+    // Convert exception to error object for API responses
+    var errorObject = ex.ToErrorObject();
+    Console.WriteLine($"Error object: {errorObject}");
+    
+    // Get structured log message
+    string logMessage = ex.ToLogMessage("DatabaseService");
+    Console.WriteLine($"Log message preview: {logMessage.Substring(0, Math.Min(100, logMessage.Length))}...");
+}
+
+// Example with HttpRequestException
+try
+{
+    throw new HttpRequestException("Failed to connect to external API", null, HttpStatusCode.ServiceUnavailable);
+}
+catch (Exception ex)
+{
+    // These methods work with any exception type
+    Console.WriteLine($"Safe message: {ex.GetSafeMessage()}");
+    Console.WriteLine($"Status code: {ex.GetHttpStatusCode()}");
+    Console.WriteLine($"Is retryable: {ex.IsRetryable()}");
+}
+```
+
+These extension methods provide a comprehensive toolkit for exception handling, making it easier to implement consistent error handling patterns across your application while maintaining clean separation between technical details and user-facing messages.
 
 ### Usage Examples
 
