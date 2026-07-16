@@ -2027,6 +2027,90 @@ Console.WriteLine($"CORS enabled: {options.EnableCors}");
 Console.WriteLine($"Rate limit: {options.RateLimitPerMinute} requests per minute");
 ```
 
+## ServiceDiscoveryRecord
+
+The `ServiceDiscoveryRecord` class represents a resolved service instance obtained from a discovery backend. It combines addressing information (host, port, scheme) with health telemetry and registry metadata so that consumers can select and route to live endpoints. This record is typically used by service discovery clients, load balancers, and health monitoring systems to make intelligent routing decisions based on instance availability and health status.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create a new service discovery record for a user service instance
+var userServiceRecord = new ServiceDiscoveryRecord
+{
+    InstanceId = Guid.NewGuid(),
+    ServiceName = "user-service",
+    Version = "2.1.0",
+    Host = "user-service.internal",
+    Port = 8443,
+    Scheme = "https",
+    Weight = 25,
+    Priority = 1,
+    HealthStatus = DiscoveryHealthStatus.Passing,
+    Source = DiscoverySource.Registry,
+    Tags = new List<string> { "v2.1.0", "production", "eu-west-1" },
+    Metadata = new Dictionary<string, string>
+    {
+        ["region"] = "eu-west-1",
+        ["capacity"] = "high",
+        ["maintenance_window"] = "02:00-03:00"
+    },
+    RegisteredAt = DateTime.UtcNow,
+    LastSeenAt = DateTime.UtcNow,
+    DnsTtlSeconds = null,
+    ConsecutiveFailures = 0
+};
+
+// Build the endpoint URI for this service instance
+string endpointUri = userServiceRecord.ToEndpointUri();
+Console.WriteLine($"Service endpoint: {endpointUri}");
+// Output: Service endpoint: https://user-service.internal:8443
+
+// Check if the service instance is alive and healthy
+bool isAlive = userServiceRecord.IsAlive();
+Console.WriteLine($"Is service alive: {isAlive}");
+// Output: Is service alive: True
+
+// Record a successful health check
+userServiceRecord.RecordHealthy();
+Console.WriteLine($"Health status after check: {userServiceRecord.HealthStatus}");
+// Output: Health status after check: Passing
+Console.WriteLine($"Consecutive failures: {userServiceRecord.ConsecutiveFailures}");
+// Output: Consecutive failures: 0
+
+// Record a failed health check (would escalate to Critical after 3 failures)
+userServiceRecord.RecordUnhealthy();
+Console.WriteLine($"Health status after failure: {userServiceRecord.HealthStatus}");
+// Output: Health status after failure: Warning
+Console.WriteLine($"Consecutive failures: {userServiceRecord.ConsecutiveFailures}");
+// Output: Consecutive failures: 1
+
+// Create a DNS-sourced service record
+var dnsRecord = new ServiceDiscoveryRecord
+{
+    InstanceId = Guid.NewGuid(),
+    ServiceName = "api-gateway",
+    Host = "gateway.api.cluster.local",
+    Port = 443,
+    Scheme = "https",
+    Source = DiscoverySource.Dns,
+    DnsTtlSeconds = 30,
+    Weight = 50,
+    Priority = 0,
+    Tags = new List<string> { "v3.2.1", "tls-enabled" },
+    Metadata = new Dictionary<string, string> { ["protocol"] = "grpc-web" }
+};
+
+// Use the record for load balancing decisions
+if (dnsRecord.IsAlive(TimeSpan.FromMinutes(2)))
+{
+    Console.WriteLine($"Using {dnsRecord.ServiceName} at {dnsRecord.ToEndpointUri()}");
+}
+```
+
 ## ServiceDiscoveryOptions
 
 The `ServiceDiscoveryOptions` class configures service discovery behavior for locating and connecting to other services within a distributed system. It supports multiple discovery modes (DNS-based, registry-based, or hybrid), configurable load balancing strategies, caching policies, and self-registration capabilities. These options are typically bound from the `ServiceDiscovery` section in `appsettings.json`.
