@@ -257,6 +257,54 @@ This example demonstrates how to use the `MetricsBenchmarks` class to measure th
 
 The `PerformanceUtility` class provides performance monitoring and measurement utilities for tracking execution time, memory usage, CPU utilization, and garbage collection statistics. It includes methods for measuring synchronous and asynchronous operations, retrieving system resource usage, and formatting performance data for logging and monitoring purposes.
 
+## EncryptionUtility
+
+The `EncryptionUtility` class provides cryptographic operations for secure password handling, data encryption, and message authentication. It includes methods for hashing passwords with PBKDF2, AES-256-GCM encryption/decryption, generating secure random tokens, and computing HMAC-SHA256 signatures. All cryptographic operations use .NET's built-in security libraries with proper key sizes and authenticated encryption modes.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Text;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Hash a password for secure storage
+string password = "MySecurePassword123!";
+string hashedPassword = EncryptionUtility.HashPassword(password);
+Console.WriteLine($"Hashed password: {hashedPassword}");
+
+// Verify a password against stored hash
+bool isValid = EncryptionUtility.VerifyPassword(password, hashedPassword);
+Console.WriteLine($"Password verification: {(isValid ? "Valid" : "Invalid")}");
+
+// Generate a secure AES-256 key (32 bytes)
+byte[] aesKey = EncryptionUtility.GenerateRandomBytes(32);
+
+// Encrypt sensitive data
+string sensitiveData = "Sensitive user information";
+string encryptedData = EncryptionUtility.EncryptAes(sensitiveData, aesKey);
+Console.WriteLine($"Encrypted data: {encryptedData}");
+
+// Decrypt the data
+string decryptedData = EncryptionUtility.DecryptAes(encryptedData, aesKey);
+Console.WriteLine($"Decrypted data: {decryptedData}");
+
+// Generate a secure random token for session management
+string secureToken = EncryptionUtility.GenerateSecureToken(32);
+Console.WriteLine($"Secure token: {secureToken}");
+
+// Compute HMAC-SHA256 signature for API request signing
+string apiKey = "your-secret-api-key";
+string requestBody = "{\"userId\": 123}";
+string signature = EncryptionUtility.ComputeHmacSha256(requestBody, apiKey);
+Console.WriteLine($"HMAC signature: {signature}");
+
+// Compute SHA256 hash for checksums
+string fileContent = "file content to hash";
+string fileHash = EncryptionUtility.ComputeSha256(fileContent);
+Console.WriteLine($"File hash: {fileHash}");
+```
+
 ### Usage Examples
 
 ```csharp
