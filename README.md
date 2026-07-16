@@ -313,6 +313,74 @@ string repeated = StringUtility.Repeat("ha", 3);
 Console.WriteLine(repeated); // "hahaha"
 ```
 
+## ValidationUtility
+
+The `ValidationUtility` class provides utility methods for validating input data including strings, collections, and common formats like URLs, email addresses, phone numbers, passwords, GUIDs, IP addresses, and JSON. The validation methods throw `ArgumentException` or `ArgumentNullException` on validation failures, making them suitable for parameter validation in public APIs and service methods.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Validate that a string is not null or empty
+ValidationUtility.ValidateNotNullOrEmpty("username", nameof(username));
+
+// Validate that a value is within a specified range
+ValidationUtility.ValidateRange(42, 0, 100, nameof(age));
+
+// Validate that a string length is within specified bounds
+ValidationUtility.ValidateLength("password123", 8, 64, nameof(password));
+
+// Validate a password meets minimum security requirements
+bool isStrongPassword = ValidationUtility.IsPasswordStrong("SecureP@ssw0rd");
+Console.WriteLine(isStrongPassword); // true
+
+bool isWeakPassword = ValidationUtility.IsPasswordStrong("weak");
+Console.WriteLine(isWeakPassword); // false
+
+// Validate a URL is properly formatted
+bool isValidUrl = ValidationUtility.IsValidUrl("https://example.com/api/users");
+Console.WriteLine(isValidUrl); // true
+
+bool isInvalidUrl = ValidationUtility.IsValidUrl("not-a-url");
+Console.WriteLine(isInvalidUrl); // false
+
+// Validate a phone number
+bool isValidPhone = ValidationUtility.IsValidPhoneNumber("+1-555-123-4567");
+Console.WriteLine(isValidPhone); // true
+
+// Validate an email address
+bool isValidEmail = ValidationUtility.IsValidEmail("user@example.com");
+Console.WriteLine(isValidEmail); // true
+
+bool isInvalidEmail = ValidationUtility.IsValidEmail("invalid-email");
+Console.WriteLine(isInvalidEmail); // false
+
+// Validate a UUID/GUID string
+bool isValidGuid = ValidationUtility.IsValidGuid("550e8400-e29b-41d4-a716-446655440000");
+Console.WriteLine(isValidGuid); // true
+
+// Validate an IP address (IPv4 or IPv6)
+bool isValidIp = ValidationUtility.IsValidIpAddress("192.168.1.1");
+Console.WriteLine(isValidIp); // true
+
+bool isValidIpv6 = ValidationUtility.IsValidIpAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+Console.WriteLine(isValidIpv6); // true
+
+// Validate a JSON string can be parsed
+bool isValidJson = ValidationUtility.IsValidJson("{\"name\":\"John\",\"age\":30}");
+Console.WriteLine(isValidJson); // true
+
+// Validate a collection is not null or empty
+ValidationUtility.ValidateCollectionNotEmpty(new List<string> { "item1", "item2" }, nameof(items));
+
+// Validate that a value matches a regex pattern
+bool matchesPattern = ValidationUtility.MatchesPattern("ABC-123", "^[A-Z]{3}-\\d{3}$");
+Console.WriteLine(matchesPattern); // true
+```
+
 ## CollectionUtility
 
 The `CollectionUtility` class provides utility methods for common collection operations including batching, chunking, grouping, filtering, and manipulation. These methods help simplify working with collections by providing functional-style operations that maintain immutability and support LINQ-style chaining.
