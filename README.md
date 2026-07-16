@@ -2157,6 +2157,98 @@ context.AddResponseHeader("X-Custom-Header", "custom-value");
 context.SetResponseContentType("application/json");
 ```
 
+## RateLimitingMiddleware
+
+The `RateLimitingMiddleware` implements a token bucket algorithm for rate limiting HTTP requests to prevent abuse and ensure fair usage. It applies different rate limits for authenticated versus anonymous users, with configurable thresholds per minute. The middleware tracks request counts per client identifier (IP address or user ID) and returns HTTP 429 responses when limits are exceeded, including `Retry-After` headers for clients to implement proper backoff strategies.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Middleware;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+// Configure rate limiting in Program.cs
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure rate limiting options
+builder.Services.Configure<RateLimitOptions>(options =>
+{
+    options.AnonymousRequestsPerMinute = 60;      // 1 request/second for anonymous users
+    options.AuthenticatedRequestsPerMinute = 300; // 5 requests/second for authenticated users
+});
+
+// Add rate limiting middleware
+builder.Services.AddRateLimiting();
+
+var app = builder.Build();
+
+// Use rate limiting middleware
+app.UseMiddleware<RateLimitingMiddleware>();
+
+// Configure other middleware and endpoints
+app.MapGet("/api/health", () => "OK")
+   .RequireRateLimiting(0); // Exclude health check from rate limiting
+
+app.MapGet("/api/users", (HttpContext context) => "User data")
+   .RequireAuthorization();
+
+app.Run();
+
+// Example HTTP client usage with rate limiting awareness
+public class ApiClient
+{
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<ApiClient> _logger;
+    
+    public ApiClient(HttpClient httpClient, ILogger<ApiClient> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    }
+    
+    public async Task<string> GetUserDataAsync(string userId, string apiKey)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/api/users/{userId}");
+            
+            // Check rate limit headers
+            if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remainingHeaders))
+            {
+                var remaining = int.Parse(remainingHeaders.First());
+                _logger.LogInformation("Rate limit remaining: {Remaining}", remaining);
+                
+                if (remaining <= 5) // Warn when close to limit
+                {
+                    _logger.LogWarning("Approaching rate limit! Only {Remaining} requests remaining", remaining);
+                }
+            }
+            
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        {
+            // Handle 429 response
+            var retryAfter = response.Headers.RetryAfter?.Delta?.TotalSeconds ?? 60;
+            _logger.LogWarning("Rate limited! Retry after {RetryAfter} seconds", retryAfter);
+            
+            await Task.Delay(TimeSpan.FromSeconds(retryAfter));
+            return await GetUserDataAsync(userId, apiKey); // Retry after delay
+        }
+    }
+}
+```
+
 ## Repository
 
 The `Repository<T>` class is a generic repository implementation that provides standard CRUD operations for Entity Framework Core entities. It abstracts common database operations like retrieving entities by ID, getting all entities, adding, updating, and deleting entities, checking existence, and saving changes. The repository includes built-in logging and error handling for robust data access operations.
