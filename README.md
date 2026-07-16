@@ -254,6 +254,77 @@ The example uses the real public members of `CacheBenchmarks` (`Setup`, `Cleanup
 
 The `ServiceCollectionExtensions` class provides extension methods for registering infrastructure and application services in the dependency injection container. It centralizes service configuration for better maintainability and consistency across the application, including application services, integration services, caching, background services, and API authentication.
 
+## Repository
+
+The `Repository<T>` class is a generic repository implementation that provides standard CRUD operations for Entity Framework Core entities. It abstracts common database operations like retrieving entities by ID, getting all entities, adding, updating, and deleting entities, checking existence, and saving changes. The repository includes built-in logging and error handling for robust data access operations.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection with DbContext
+var services = new ServiceCollection();
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite("Data Source=service-scaffold.db"));
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the repository for a specific entity type
+var userRepository = serviceProvider.GetRequiredService<Repository<User>>();
+
+// Add a new user
+var newUser = new User
+{
+    Id = Guid.NewGuid(),
+    Username = "johndoe",
+    Email = "john.doe@example.com",
+    CreatedAt = DateTime.UtcNow
+};
+var addedUser = await userRepository.AddAsync(newUser);
+Console.WriteLine($"Added user: {addedUser.Id}");
+
+// Get a user by ID
+var existingUser = await userRepository.GetByIdAsync(addedUser.Id);
+if (existingUser != null)
+{
+    Console.WriteLine($"Retrieved user: {existingUser.Username}");
+}
+
+// Check if a user exists
+bool userExists = await userRepository.ExistsAsync(addedUser.Id);
+Console.WriteLine($"User exists: {userExists}");
+
+// Get all users
+var allUsers = await userRepository.GetAllAsync();
+Console.WriteLine($"Total users: {allUsers.Count()}");
+
+// Update a user
+if (existingUser != null)
+{
+    existingUser.Email = "john.doe.updated@example.com";
+    var updatedUser = await userRepository.UpdateAsync(existingUser);
+    Console.WriteLine($"Updated user email to: {updatedUser.Email}");
+}
+
+// Delete a user
+await userRepository.DeleteAsync(addedUser.Id);
+Console.WriteLine("User deleted successfully");
+
+// Save changes explicitly (though AddAsync/UpdateAsync/DeleteAsync call this internally)
+await userRepository.SaveChangesAsync();
+```
+
+This example demonstrates how to use the `Repository<T>` class for common CRUD operations with proper dependency injection setup, error handling through the repository's built-in logging, and type-safe operations for any entity type.
+
 ### Usage Example
 
 ```csharp
