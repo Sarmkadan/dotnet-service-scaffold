@@ -1322,6 +1322,63 @@ await userRepository.SaveChangesAsync();
 
 This example demonstrates how to use the `Repository<T>` class for common CRUD operations with proper dependency injection setup, error handling through the repository's built-in logging, and type-safe operations for any entity type.
 
+## UpstreamCluster
+
+The `UpstreamCluster` class represents a single upstream cluster tracked by the sidecar proxy in a service mesh environment. It contains health status information for a group of backend hosts that serve identical traffic, enabling circuit breaker patterns and load balancing decisions. Each cluster tracks the number of healthy vs total hosts, endpoint resolution, and circuit breaker state to determine overall cluster health.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create an upstream cluster for a payment processing service
+var paymentCluster = new UpstreamCluster
+{
+    Name = "payment-service-cluster",
+    Endpoint = "https://payment-service.internal:8443",
+    HealthyHosts = 3,
+    TotalHosts = 4
+};
+
+// Calculate cluster health percentage
+decimal healthPercent = paymentCluster.GetHealthPercent();
+Console.WriteLine($"Payment cluster health: {healthPercent}%");
+// Output: Payment cluster health: 75%
+
+// Check if circuit breaker is open (no healthy hosts)
+bool isCircuitOpen = paymentCluster.CircuitBreakerOpen;
+Console.WriteLine($"Circuit breaker open: {isCircuitOpen}");
+// Output: Circuit breaker open: False
+
+// Update cluster status after health check
+paymentCluster.HealthyHosts = 4; // All hosts healthy
+paymentCluster.TotalHosts = 4;
+
+// Recalculate health after update
+healthPercent = paymentCluster.GetHealthPercent();
+Console.WriteLine($"Updated payment cluster health: {healthPercent}%");
+// Output: Updated payment cluster health: 100%
+
+// Create a degraded cluster with some unhealthy hosts
+var userCluster = new UpstreamCluster
+{
+    Name = "user-service-cluster",
+    Endpoint = "https://user-service.internal:8080",
+    HealthyHosts = 2,
+    TotalHosts = 5
+};
+
+// Check if circuit breaker should trip (fewer than 50% healthy)
+bool shouldTrip = userCluster.CircuitBreakerOpen;
+Console.WriteLine($"Circuit breaker should trip: {shouldTrip}");
+// Output: Circuit breaker should trip: False
+
+// Calculate health for monitoring dashboard
+Console.WriteLine($"Cluster {userCluster.Name}: {userCluster.GetHealthPercent()}% healthy ({userCluster.HealthyHosts}/{userCluster.TotalHosts} hosts)");
+// Output: Cluster user-service-cluster: 40% healthy (2/5 hosts)
+```
+
 ## UserRepository
 
 The `UserRepository` provides data access methods for user management operations. It handles user retrieval by email, filtering users by status (active/locked), email existence checks, and loading users with their associated API keys. This repository is typically used by authentication services, user management APIs, and any component that needs to work with user data.
