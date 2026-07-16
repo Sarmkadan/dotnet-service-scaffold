@@ -426,6 +426,51 @@ if (userWithKeys != null)
 }
 ```
 
+## DeploymentConfiguration
+
+The `DeploymentConfiguration` class provides deployment utilities for generating production-ready configuration files including systemd service units, Caddy reverse proxy configurations, environment files, and comprehensive deployment guides. It centralizes deployment best practices for .NET applications running on Linux with systemd and Caddy, enabling consistent and repeatable deployments across different environments.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.Configuration;
+
+// Create deployment options with custom configuration
+var options = new DeploymentOptions
+{
+    ServiceName = "user-api",
+    ServiceDescription = "User Management API Service",
+    ServiceUser = "apiuser",
+    ApplicationPath = "/opt/user-api",
+    DataPath = "/var/lib/user-api",
+    LogPath = "/var/log/user-api",
+    ServerDomain = "api.example.com",
+    ApplicationPort = 5001,
+    DotnetPath = "/usr/bin/dotnet",
+    ServiceVersion = "2.1.0"
+};
+
+// Generate systemd service unit file
+string systemdService = DeploymentConfiguration.GenerateSystemdServiceUnit(options);
+Console.WriteLine("Systemd Service Unit:");
+Console.WriteLine(systemdService);
+
+// Generate Caddy reverse proxy configuration
+string caddyConfig = DeploymentConfiguration.GenerateCaddyConfiguration(options);
+Console.WriteLine("Caddy Configuration:");
+Console.WriteLine(caddyConfig);
+
+// Generate environment file for systemd
+string envFile = DeploymentConfiguration.GenerateEnvironmentFile(options);
+Console.WriteLine("Environment File:");
+Console.WriteLine(envFile);
+
+// Generate comprehensive deployment guide
+string deploymentGuide = DeploymentConfiguration.GenerateDeploymentGuide(options);
+Console.WriteLine("Deployment Guide:");
+Console.WriteLine(deploymentGuide);
+```
+
 ## ServiceRepository
 
 The `ServiceRepository` provides specialized data access methods for service registrations with built-in health check and metric queries. It extends the generic `Repository<T>` class to offer service-specific queries including retrieving services by name, status, owner, and health metrics. The repository includes methods for finding unhealthy services, services without recent health checks, and services with their associated metrics.
