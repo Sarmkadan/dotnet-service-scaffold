@@ -2184,6 +2184,74 @@ public record AuditLogDto(
 
 The `MetricsController` provides API endpoints for monitoring application health and performance characteristics through metrics collection. It exposes endpoints to retrieve all metrics, filter metrics by category, reset metrics to zero, and get summary statistics including counts of counters, gauges, timers, and unique metric categories. The controller requires authentication and provides comprehensive error handling with appropriate HTTP status codes.
 
+## HealthCheckController
+
+The `HealthCheckController` provides API endpoints for service health monitoring and management. It enables performing immediate health checks on registered services, retrieving health check history, getting current health status with success rates, and accessing failed health checks for troubleshooting. The controller handles service not found scenarios and provides appropriate HTTP status codes for all operations.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Controllers;
+
+// Initialize HTTP client with authentication
+var httpClient = new HttpClient();
+httpClient.BaseAddress = new Uri("https://api.example.com");
+httpClient.DefaultRequestHeaders.Authorization =
+    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "your-auth-token-here");
+
+// Perform immediate health check on a service
+var serviceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var checkResponse = await httpClient.PostAsync($"/api/healthcheck/{serviceId}/check", null);
+
+if (checkResponse.IsSuccessStatusCode)
+{
+    var checkResult = await checkResponse.Content.ReadFromJsonAsync<HealthCheckResponse>();
+    Console.WriteLine($"Health check successful: {checkResult?.Data?.Status} in {checkResult?.Data?.ResponseTimeMs}ms");
+}
+
+// Get recent health check history for a service
+var historyResponse = await httpClient.GetAsync($"/api/healthcheck/{serviceId}/history?count=50");
+
+if (historyResponse.IsSuccessStatusCode)
+{
+    var historyResult = await historyResponse.Content.ReadFromJsonAsync<HealthHistoryResponse>();
+    Console.WriteLine($"Found {historyResult?.Count} historical health checks");
+}
+
+// Get current health status with success rate
+var statusResponse = await httpClient.GetAsync($"/api/healthcheck/{serviceId}/status");
+
+if (statusResponse.IsSuccessStatusCode)
+{
+    var statusResult = await statusResponse.Content.ReadFromJsonAsync<HealthStatusResponse>();
+    Console.WriteLine($"Current status: {statusResult?.Data?.Status}, Success rate: {statusResult?.Data?.SuccessRate}");
+}
+
+// Get failed health checks in the last 24 hours
+var failuresResponse = await httpClient.GetAsync($"/api/healthcheck/{serviceId}/failures?hoursBack=24");
+
+if (failuresResponse.IsSuccessStatusCode)
+{
+    var failuresResult = await failuresResponse.Content.ReadFromJsonAsync<FailedChecksResponse>();
+    Console.WriteLine($"Found {failuresResult?.Count} failed checks in last 24 hours");
+}
+
+// Define response types for deserialization
+public record HealthCheckResponse(bool Success, HealthCheckData? Data);
+public record HealthCheckData(Guid Id, string Status, int HttpStatusCode, long ResponseTimeMs, DateTime CheckedAt, string? ErrorMessage);
+
+public record HealthHistoryResponse(bool Success, int Count, HealthCheckData[]? Data);
+
+public record HealthStatusResponse(bool Success, HealthStatusData? Data);
+public record HealthStatusData(string Status, string SuccessRate, DateTime Timestamp);
+
+public record FailedChecksResponse(bool Success, int Count, HealthCheckData[]? Data);
+```
+
 ## UserController
 
 The `UserController` provides API endpoints for user management and authentication operations. It handles user registration, login, profile retrieval, password changes, and account unlocking. The controller uses the `IUserService` for business logic and returns appropriate HTTP status codes with structured response objects containing success status and data payloads.
