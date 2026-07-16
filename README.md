@@ -236,6 +236,52 @@ var conditionResult = Result.FromCondition(
 
 These extensions provide a fluent API for handling success/failure scenarios while maintaining strong type safety and avoiding boilerplate error-checking code.
 
+## ServiceMetric
+
+The `ServiceMetric` class represents performance and health metrics for registered services, tracking CPU usage, memory consumption, disk usage, network activity, request patterns, and error rates. It provides calculated properties for derived metrics like error rates and severity ratings, along with formatting utilities for monitoring dashboards and alerting systems. Metrics are recorded at regular intervals to enable trend analysis, anomaly detection, and capacity planning across the service mesh.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create service metrics for a high-traffic API service
+var metrics = new ServiceMetric
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    CpuUsagePercent = 45.5m,
+    MemoryUsagePercent = 68.2m,
+    MemoryUsageBytes = 2147483648, // 2GB
+    DiskUsagePercent = 32.7m,
+    DiskUsageBytes = 5368709120, // 5GB
+    ActiveConnections = 156,
+    RequestsPerSecond = 245.8m,
+    AverageResponseTimeMs = 85.3m,
+    TotalRequests = 1254789,
+    ErrorCount = 23,
+    RecordedAt = DateTime.UtcNow,
+    Notes = "Peak usage during daily sync job",
+    Uptime = 0.995,
+    HasAnomalies = false
+};
+
+// Calculate derived metrics
+Console.WriteLine($"Error rate: {metrics.GetErrorRate():P2}"); // 0.0018%
+Console.WriteLine($"Severity rating: {metrics.GetSeverityRating()}"); // "Medium"
+
+// Format metrics for monitoring display
+string formattedMetrics = metrics.FormatMetrics();
+Console.WriteLine(formattedMetrics);
+
+// Access related service information (if loaded)
+if (metrics.Service != null)
+{
+    Console.WriteLine($"Service: {metrics.Service.ServiceName}");
+}
+```
+
 ## ServiceConfiguration
 
 The `ServiceConfiguration` class stores configuration parameters for services and the platform. It provides strongly-typed methods for retrieving configuration values as integers, booleans, TimeSpans, and other common types, along with validation and masking utilities for sensitive data. Configuration entries can be scoped to specific services or be system-wide settings.
