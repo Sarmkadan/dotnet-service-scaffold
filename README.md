@@ -1513,6 +1513,79 @@ if (specificFlag != null)
 }
 ```
 
+## ConfigurationService
+
+The `ConfigurationService` provides centralized management of application and service configurations, enabling runtime configuration retrieval and modification. It supports both system-wide and service-specific configurations, with type-safe methods for retrieving common configuration types (integers, booleans, strings, TimeSpans). The service handles configuration validation, audit logging, and provides comprehensive error handling for configuration operations.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+
+// Initialize the configuration service (typically via dependency injection)
+var configurationService = new ConfigurationService(configRepository, logger);
+
+// Get a configuration by key (system-wide)
+var timeoutConfig = await configurationService.GetConfigurationAsync("API_TIMEOUT_SECONDS");
+if (timeoutConfig != null)
+{
+    Console.WriteLine($"API timeout: {timeoutConfig.Value}");
+}
+
+// Get a configuration for a specific service
+var serviceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var serviceConfig = await configurationService.GetConfigurationAsync("MAX_CONNECTIONS", serviceId);
+if (serviceConfig != null)
+{
+    Console.WriteLine($"Service max connections: {serviceConfig.Value}");
+}
+
+// Set a new configuration value
+var newConfig = await configurationService.SetConfigurationAsync(
+    key: "FEATURE_NEW_DASHBOARD",
+    value: "true",
+    configType: "boolean",
+    description: "Enables the new dashboard interface"
+);
+Console.WriteLine($"Created configuration: {newConfig.Key} = {newConfig.Value}");
+
+// Update an existing configuration
+var updatedConfig = await configurationService.SetConfigurationAsync(
+    key: "API_TIMEOUT_SECONDS",
+    value: "60",
+    configType: "integer"
+);
+Console.WriteLine($"Updated configuration: {updatedConfig.Key} = {updatedConfig.Value}");
+
+// Get typed configuration values
+int timeoutSeconds = await configurationService.GetConfigIntAsync("API_TIMEOUT_SECONDS", defaultValue: 30);
+Console.WriteLine($"API timeout: {timeoutSeconds} seconds");
+
+bool isFeatureEnabled = await configurationService.GetConfigBoolAsync("FEATURE_NEW_DASHBOARD", defaultValue: false);
+Console.WriteLine($"New dashboard enabled: {isFeatureEnabled}");
+
+string apiKey = await configurationService.GetConfigStringAsync("EXTERNAL_API_KEY", defaultValue: "");
+Console.WriteLine($"API key configured: {(string.IsNullOrEmpty(apiKey) ? "Not set" : "Configured")}");
+
+TimeSpan maintenanceWindow = await configurationService.GetConfigTimeSpanAsync("MAINTENANCE_WINDOW", TimeSpan.FromHours(2));
+Console.WriteLine($"Maintenance window: {maintenanceWindow.TotalHours} hours");
+
+// Get all configurations
+var allConfigs = await configurationService.GetAllConfigurationsAsync();
+Console.WriteLine($"Total configurations: {allConfigs.Count()}");
+
+// Get configurations for a specific service
+var serviceConfigs = await configurationService.GetServiceConfigurationsAsync(serviceId);
+Console.WriteLine($"Service configurations: {serviceConfigs.Count()}");
+
+// Delete a configuration
+await configurationService.DeleteConfigurationAsync("OLD_FEATURE_FLAG");
+Console.WriteLine("Configuration deleted successfully");
+```
+
 ## CacheBenchmarks
 
 `CacheBenchmarks` contains a set of BenchmarkDotNet benchmarks that also expose their public members for ad‑hoc usage. It demonstrates typical in‑memory cache operations such as reading, writing, checking existence, and the get‑or‑set pattern against an `InMemoryCacheService`.
