@@ -1037,9 +1037,93 @@ var httpClientFactory = serviceProvider.GetRequiredService<ICustomHttpClientFact
 
 This example demonstrates how to use the `ServiceCollectionExtensions` methods to configure the dependency injection container with all infrastructure and application services needed for a typical ASP.NET Core application.
 
-## JsonUtility
+## HttpUtility
 
-The `JsonUtility` class provides static methods for JSON serialization and deserialization with support for both strongly-typed objects and dynamic types. It includes methods for pretty-printing JSON, validating JSON strings, merging JSON documents, extracting properties, and formatting JSON content for debugging and display purposes.
+The `HttpUtility` class provides utility methods for common HTTP operations including authentication header creation, query string manipulation, URL building, status code checking, and response parsing. It simplifies working with `HttpClient` and HTTP responses by providing strongly-typed helpers for common patterns like Basic and Bearer authentication, query parameter handling, and status code classification.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Create Basic authentication header
+string authHeader = HttpUtility.CreateBasicAuthHeader("admin", "secure-password-123");
+Console.WriteLine(authHeader);
+// Output: Basic YWRtaW46c2VjdXJlLXBhc3N3b3JkLTEyMw==
+
+// Create Bearer token authorization header
+string bearerHeader = HttpUtility.CreateBearerAuthHeader("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
+Console.WriteLine(bearerHeader);
+// Output: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+// Parse Basic authentication header
+var basicAuth = HttpUtility.ParseBasicAuthHeader(authHeader);
+if (basicAuth.HasValue)
+{
+    Console.WriteLine($"Username: {basicAuth.Value.Username}, Password: {basicAuth.Value.Password}");
+    // Output: Username: admin, Password: secure-password-123
+}
+
+// Parse Bearer token from header
+string? token = HttpUtility.ParseBearerToken(bearerHeader);
+Console.WriteLine(token);
+// Output: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+// Build query string from parameters
+var queryParams = new Dictionary<string, string>
+{
+    ["page"] = "1",
+    ["limit"] = "10",
+    ["search"] = "test query"
+};
+string queryString = HttpUtility.BuildQueryString(queryParams);
+Console.WriteLine(queryString);
+// Output: page=1&limit=10&search=test+query
+
+// Parse query string back to dictionary
+var parsedParams = HttpUtility.ParseQueryString(queryString);
+foreach (var param in parsedParams)
+{
+    Console.WriteLine($"{param.Key}: {param.Value}");
+}
+// Output:
+// page: 1
+// limit: 10
+// search: test query
+
+// Build URL with path and query parameters
+string apiUrl = HttpUtility.BuildUrl(
+    "https://api.example.com/v1",
+    "users",
+    new Dictionary<string, string> { ["page"] = "1", ["limit"] = "10" }
+);
+Console.WriteLine(apiUrl);
+// Output: https://api.example.com/v1/users?page=1&limit=10
+
+// Check status code categories
+int statusCode = 404;
+Console.WriteLine($"Is success: {HttpUtility.IsSuccessStatusCode(statusCode)}"); // false
+Console.WriteLine($"Is client error: {HttpUtility.IsClientErrorStatusCode(statusCode)}"); // true
+Console.WriteLine($"Is server error: {HttpUtility.IsServerErrorStatusCode(statusCode)}"); // false
+Console.WriteLine($"Is retryable: {HttpUtility.IsRetryableStatusCode(statusCode)}"); // false
+
+// Get retry delay for retryable status codes
+int? delayMs = HttpUtility.GetRetryDelayMs(429, attempt: 1);
+Console.WriteLine(delayMs); // ~200ms (with jitter)
+
+// Extract media type and charset from Content-Type header
+string? contentType = "application/json; charset=utf-8";
+Console.WriteLine(HttpUtility.GetMediaType(contentType)); // application/json
+Console.WriteLine(HttpUtility.GetCharset(contentType)); // utf-8
+
+// Mask sensitive information in URLs for logging
+string sensitiveUrl = "https://api.example.com/login?username=admin&password=secret123&token=xyz";
+string maskedUrl = HttpUtility.MaskSensitiveUrl(sensitiveUrl);
+Console.WriteLine(maskedUrl);
+// Output: https://api.example.com/login?username=admin&password=***MASKED***&token=***MASKED***
+```
 
 ### Usage Example
 
