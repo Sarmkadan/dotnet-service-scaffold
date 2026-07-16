@@ -2112,6 +2112,102 @@ string requestUrl = context.GetRequestUrl();
 
 The `MetricsController` provides API endpoints for monitoring application health and performance characteristics through metrics collection. It exposes endpoints to retrieve all metrics, filter metrics by category, reset metrics to zero, and get summary statistics including counts of counters, gauges, timers, and unique metric categories. The controller requires authentication and provides comprehensive error handling with appropriate HTTP status codes.
 
+## UserController
+
+The `UserController` provides API endpoints for user management and authentication operations. It handles user registration, login, profile retrieval, password changes, and account unlocking. The controller uses the `IUserService` for business logic and returns appropriate HTTP status codes with structured response objects containing success status and data payloads.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Controllers;
+
+// Initialize HTTP client with authentication
+var httpClient = new HttpClient();
+httpClient.BaseAddress = new Uri("https://api.example.com");
+httpClient.DefaultRequestHeaders.Authorization = 
+    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "your-auth-token-here");
+
+// Register a new user
+var registerResponse = await httpClient.PostAsJsonAsync("/api/user/register", new
+{
+    Email = "john.doe@example.com",
+    FullName = "John Doe",
+    Password = "SecurePassword123!"
+});
+
+if (registerResponse.IsSuccessStatusCode)
+{
+    var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterResponse>();
+    Console.WriteLine($"User registered successfully: {registerResult?.Data?.UserId}");
+}
+
+// Login with existing user credentials
+var loginResponse = await httpClient.PostAsJsonAsync("/api/user/login", new
+{
+    Email = "john.doe@example.com",
+    Password = "SecurePassword123!"
+});
+
+if (loginResponse.IsSuccessStatusCode)
+{
+    var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+    Console.WriteLine($"User logged in: {loginResult?.Data?.UserId}, Last login: {loginResult?.Data?.LastLoginAt}");
+}
+
+// Get user profile by ID
+var userId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var userResponse = await httpClient.GetAsync($"/api/user/{userId}");
+
+if (userResponse.IsSuccessStatusCode)
+{
+    var userResult = await userResponse.Content.ReadFromJsonAsync<UserResponse>();
+    Console.WriteLine($"User found: {userResult?.Data?.Email}, Active: {userResult?.Data?.IsActive}");
+}
+
+// Change user password
+var changePasswordResponse = await httpClient.PostAsJsonAsync($"/api/user/{userId}/change-password", new
+{
+    OldPassword = "SecurePassword123!",
+    NewPassword = "NewSecurePassword456!"
+});
+
+if (changePasswordResponse.IsSuccessStatusCode)
+{
+    var passwordResult = await changePasswordResponse.Content.ReadFromJsonAsync<ChangePasswordResponse>();
+    Console.WriteLine("Password changed successfully");
+}
+
+// Unlock a user account
+var unlockResponse = await httpClient.PostAsync($"/api/user/{userId}/unlock", null);
+
+if (unlockResponse.IsSuccessStatusCode)
+{
+    var unlockResult = await unlockResponse.Content.ReadFromJsonAsync<UnlockResponse>();
+    Console.WriteLine("User account unlocked successfully");
+}
+
+// Define response types for deserialization
+public record RegisterResponse(bool Success, UserData? Data);
+public record LoginResponse(bool Success, UserData? Data);
+public record UserResponse(bool Success, UserData? Data);
+public record ChangePasswordResponse(bool Success, string? Message);
+public record UnlockResponse(bool Success, string? Message);
+
+public record UserData(
+    Guid UserId,
+    string Email,
+    string FullName,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime? LastLoginAt,
+    int ApiKeyCount
+);
+```
+
 ### Usage Examples
 
 ```csharp
