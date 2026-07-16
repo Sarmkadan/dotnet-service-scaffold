@@ -808,6 +808,74 @@ PropertyInfo[] obsoleteProps = ReflectionUtility.GetPropertiesWithAttribute<Obso
 Console.WriteLine($"Found {obsoleteProps.Length} properties with Obsolete attribute");
 ```
 
+## AuditLog
+
+The `AuditLog` class records audit trails for system actions performed by users, providing a comprehensive history of operations including user context, timestamps, IP addresses, and state changes. It tracks who performed an action, what was changed, when it occurred, and whether it succeeded, enabling compliance tracking, debugging, and security auditing across the application.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create an audit log entry for a user login action
+var loginAudit = new AuditLog
+{
+    ActionName = "Login",
+    EntityType = "User",
+    EntityId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    UserId = Guid.Parse("550e8400-e29b-41d4-a716-446655440001"),
+    IpAddress = "192.168.1.100",
+    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    Description = "User logged in from web browser",
+    Status = "Success",
+    OldValues = null,
+    NewValues = null,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Generate a human-readable summary
+string summary = loginAudit.GetSummary();
+Console.WriteLine(summary);
+// Output: "John Doe performed Login on User (550e8400-e29b-41d4-a716-446655440000) at 2026-07-16T14:30:45.1234567Z"
+
+// Check if the action was successful
+bool isSuccessful = loginAudit.WasSuccessful();
+Console.WriteLine(isSuccessful); // true
+
+// Get a formatted action description
+string actionDescription = loginAudit.GetActionDescription();
+Console.WriteLine(actionDescription); // "Logged in"
+
+// Create an audit log for a data update with before/after values
+var updateAudit = new AuditLog
+{
+    ActionName = "Update",
+    EntityType = "ServiceRegistration",
+    EntityId = Guid.Parse("123e4567-e89b-12d3-a456-426614174000"),
+    UserId = Guid.Parse("550e8400-e29b-41d4-a716-446655440001"),
+    OldValues = "{\"Status\":\"Unhealthy\",\"Description\":\"Service is down\"}",
+    NewValues = "{\"Status\":\"Healthy\",\"Description\":\"Service restored\"}",
+    IpAddress = "10.0.0.5",
+    UserAgent = "ServiceScaffold/2.1.0",
+    Description = "Service status updated from Unhealthy to Healthy",
+    Status = "Success",
+    CreatedAt = DateTime.UtcNow
+};
+
+string updateSummary = updateAudit.GetSummary();
+Console.WriteLine(updateSummary);
+// Output: "John Doe performed Update on ServiceRegistration (123e4567-e89b-12d3-a456-426614174000) at 2026-07-16T14:31:12.4567890Z"
+
+// Check if update was successful
+bool updateSuccessful = updateAudit.WasSuccessful();
+Console.WriteLine(updateSuccessful); // true
+
+// Get the action description for update
+string updateDescription = updateAudit.GetActionDescription();
+Console.WriteLine(updateDescription); // "Updated"
+```
+
 ## DateTimeUtility
 
 The `DateTimeUtility` class provides utility methods for common date/time operations including age calculation, relative time formatting, business hours checking, and various datetime boundary calculations. All methods work with UTC dates for consistency and provide flexible reference date parameters for testing scenarios.
