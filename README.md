@@ -1705,6 +1705,103 @@ var options = new DockerComposeOptions
 
 This example demonstrates how to configure `DockerComposeOptions` with service details, environment settings, resource constraints, and optional infrastructure components for containerized deployments.
 
+## HealthCheckResult
+
+The `HealthCheckResult` class records the results of health checks performed on services, tracking response times, HTTP status codes, system resource usage, and error conditions. It provides methods to evaluate service health status, response time acceptability, and resource utilization thresholds, enabling comprehensive monitoring and alerting capabilities for service reliability.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Domain.Enums;
+
+// Create a health check result for a successful API service check
+var successResult = new HealthCheckResult
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    Status = HealthStatus.Healthy,
+    HttpStatusCode = 200,
+    ResponseTimeMs = 125,
+    CheckedAt = DateTime.UtcNow,
+    CheckMethod = "GET",
+    CheckEndpoint = "https://api.example.com/health",
+    CpuUsagePercent = 12.5m,
+    MemoryUsagePercent = 45.2m,
+    DiskUsageBytes = 1024 * 1024 * 512 // 512MB
+};
+
+// Evaluate if the service is healthy
+bool isHealthy = successResult.IsHealthy();
+Console.WriteLine($"Service is healthy: {isHealthy}"); // true
+
+// Check if response time is acceptable (default threshold: 5000ms)
+bool isResponseTimeOk = successResult.IsResponseTimeAcceptable();
+Console.WriteLine($"Response time acceptable: {isResponseTimeOk}"); // true
+
+// Check if system resources are within acceptable ranges
+bool resourcesHealthy = successResult.AreResourcesHealthy();
+Console.WriteLine($"Resources healthy: {resourcesHealthy}"); // true
+
+// Get a human-readable summary
+string summary = successResult.GetSummary();
+Console.WriteLine(summary);
+// Output: Status: Healthy | HTTP 200 | Response Time: 125ms | CPU: 12.5% | Memory: 45.2%
+
+// Create a failed health check result for a service experiencing issues
+var failedResult = new HealthCheckResult
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    Status = HealthStatus.Unhealthy,
+    HttpStatusCode = 500,
+    ResponseTimeMs = 15000,
+    ErrorMessage = "Database connection timeout",
+    ResponseBody = "{\"error\": \"Database unavailable\"}",
+    CheckedAt = DateTime.UtcNow.AddMinutes(-5),
+    CheckMethod = "GET",
+    CheckEndpoint = "https://api.example.com/health",
+    CpuUsagePercent = 98.7m,
+    MemoryUsagePercent = 95.4m,
+    DiskUsageBytes = 1024L * 1024 * 1024 * 10 // 10GB
+};
+
+// Evaluate the failed result
+Console.WriteLine($"Service is healthy: {failedResult.IsHealthy()}"); // false
+Console.WriteLine($"Response time acceptable: {failedResult.IsResponseTimeAcceptable(thresholdMs: 5000)}"); // false
+Console.WriteLine($"Resources healthy: {failedResult.AreResourcesHealthy(cpuThreshold: 90, memoryThreshold: 85)}"); // false
+
+// Get summary for the failed result
+string failedSummary = failedResult.GetSummary();
+Console.WriteLine(failedSummary);
+// Output: Status: Unhealthy | HTTP 500 | Response Time: 15000ms | CPU: 98.7% | Memory: 95.4% | Error: Database connection timeout
+
+// Create a degraded health check result (service responding but with issues)
+var degradedResult = new HealthCheckResult
+{
+    Id = Guid.NewGuid(),
+    ServiceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    Status = HealthStatus.Degraded,
+    HttpStatusCode = 200,
+    ResponseTimeMs = 8500,
+    CheckedAt = DateTime.UtcNow,
+    CheckMethod = "GET",
+    CheckEndpoint = "https://api.example.com/health"
+};
+
+// Evaluate degraded result
+Console.WriteLine($"Service is healthy: {degradedResult.IsHealthy()}"); // false (Status is Degraded)
+Console.WriteLine($"Response time acceptable: {degradedResult.IsResponseTimeAcceptable()}"); // false (8500ms > 5000ms)
+Console.WriteLine($"Resources healthy: {degradedResult.AreResourcesHealthy()}"); // true (no resource data)
+
+// Access related service information (if loaded)
+if (successResult.Service != null)
+{
+    Console.WriteLine($"Service: {successResult.Service.ServiceName}");
+}
+```
+
 ## HealthCheckRepository
 
 The `HealthCheckRepository` provides data access and analytics for service health check results. It extends the generic `Repository<T>` class to offer specialized methods for querying health check data including retrieving results by service ID, finding recent or failed results, calculating average response times, counting failures, and cleaning up old health check records. The repository is designed for monitoring dashboards, alerting systems, and service reliability analysis.
