@@ -64,6 +64,55 @@ if (chainedResult.IsSuccess)
 }
 ```
 
+## ServiceScaffoldException
+
+The `ServiceScaffoldException` class serves as the base exception type for the service scaffold platform. It provides a consistent error handling mechanism with support for error codes, enabling structured error handling and reporting throughout the application. All service-specific exceptions in the platform inherit from this base class, allowing for centralized error handling and logging strategies.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Exceptions;
+
+// Create a basic service scaffold exception
+var exception = new ServiceScaffoldException("Service operation failed due to timeout");
+Console.WriteLine(exception.Message); // "Service operation failed due to timeout"
+Console.WriteLine(exception.ErrorCode); // null (no error code provided)
+
+// Create an exception with an error code
+var errorCodeException = new ServiceScaffoldException(
+    "Database connection failed", 
+    "DB_CONNECTION_FAILED"
+);
+Console.WriteLine(errorCodeException.ErrorCode); // "DB_CONNECTION_FAILED"
+
+// Create an exception with inner exception
+try
+{
+    // Some operation that might fail
+    throw new InvalidOperationException("Invalid state");
+}
+catch (Exception ex)
+{
+    var wrappedException = new ServiceScaffoldException(
+        "Service failed to process request", 
+        "SERVICE_PROCESSING_ERROR",
+        ex
+    );
+    Console.WriteLine(wrappedException.InnerException?.Message); // "Invalid state"
+}
+
+// Use with specific exception types
+var notFoundException = new ServiceNotFoundException(Guid.NewGuid());
+Console.WriteLine(notFoundException.Message); // "Service with ID [guid] not found"
+Console.WriteLine(notFoundException.ErrorCode); // "SERVICE_NOT_FOUND"
+
+var validationException = new ServiceValidationException("Invalid configuration value");
+Console.WriteLine(validationException.Message); // "Invalid configuration value"
+Console.WriteLine(validationException.ErrorCode); // "VALIDATION_ERROR"
+Console.WriteLine(validationException.Errors.Count); // 1
+```
+
 ## ResultExtensions
 
 The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.
