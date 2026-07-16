@@ -1605,6 +1605,89 @@ await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
 Console.WriteLine("Old health check results cleaned up");
 ```
 
+## ServiceManagementService
+
+The `ServiceManagementService` provides comprehensive service registration and lifecycle management capabilities for the service scaffold platform. It handles service registration, retrieval, updates, and status management including enabling, disabling, and health monitoring. The service integrates with the service repository for data persistence, user repository for ownership validation, and audit service for compliance tracking, enabling complete service lifecycle management with full audit trails.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+
+// Initialize the service management service (typically via dependency injection)
+var serviceManagementService = new ServiceManagementService(
+    serviceRepository,
+    userRepository,
+    auditService,
+    logger
+);
+
+// Register a new service with required parameters
+var newService = await serviceManagementService.RegisterServiceAsync(
+    serviceName: "user-api",
+    endpoint: "https://api.example.com",
+    healthCheckUrl: "https://api.example.com/health",
+    ownerId: Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
+);
+Console.WriteLine($"Registered service: {newService.ServiceName} with ID: {newService.Id}");
+
+// Retrieve a service by ID
+var retrievedService = await serviceManagementService.GetServiceAsync(newService.Id);
+if (retrievedService != null)
+{
+    Console.WriteLine($"Retrieved service: {retrievedService.ServiceName} (Status: {retrievedService.Status})");
+}
+
+// Retrieve a service by name
+var serviceByName = await serviceManagementService.GetServiceByNameAsync("user-api");
+Console.WriteLine($"Service by name: {serviceByName?.ServiceName}");
+
+// Get all services owned by a specific user
+var userServices = await serviceManagementService.GetServicesByOwnerAsync(
+    Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
+);
+Console.WriteLine($"User owns {userServices.Count()} services");
+
+// Get all registered services
+var allServices = await serviceManagementService.GetAllServicesAsync();
+Console.WriteLine($"Total registered services: {allServices.Count()}");
+
+// Update service configuration
+if (retrievedService != null)
+{
+    retrievedService.Description = "Updated user management API service";
+    var updatedService = await serviceManagementService.UpdateServiceAsync(retrievedService);
+    Console.WriteLine($"Updated service: {updatedService.Description}");
+}
+
+// Disable a service for maintenance
+var disabledService = await serviceManagementService.DisableServiceAsync(
+    newService.Id,
+    "Scheduled maintenance window"
+);
+Console.WriteLine($"Service disabled: {disabledService.IsEnabled}");
+
+// Re-enable a service after maintenance
+var enabledService = await serviceManagementService.EnableServiceAsync(newService.Id);
+Console.WriteLine($"Service re-enabled: {enabledService.IsEnabled}");
+
+// Get unhealthy services for monitoring
+var unhealthyServices = await serviceManagementService.GetUnhealthyServicesAsync();
+Console.WriteLine($"Unhealthy services count: {unhealthyServices.Count()}");
+
+// Calculate service success rate over the last hour
+var successRate = await serviceManagementService.GetServiceSuccessRateAsync(newService.Id, minutesBack: 60);
+Console.WriteLine($"Service success rate: {successRate}%");
+
+// Unregister/delete a service
+await serviceManagementService.UnregisterServiceAsync(newService.Id);
+Console.WriteLine("Service unregistered successfully");
+```
+
 ## FeatureFlagService
 
 The `FeatureFlagService` provides runtime feature flag management to enable/disable features dynamically without code changes or redeployment. It supports global feature toggling, per-user feature rollout for A/B testing, and gradual feature deployment through percentage-based rollouts. The service maintains audit trails with creation and modification timestamps, enabling comprehensive tracking of feature state changes across the application lifecycle.
