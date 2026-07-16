@@ -1549,6 +1549,62 @@ Console.WriteLine($"Gen1 collections: {perfInstance.Gen1Collections}");
 Console.WriteLine($"Gen2 collections: {perfInstance.Gen2Collections}");
 ```
 
+## HealthCheckService
+
+The `HealthCheckService` provides comprehensive health monitoring and service status tracking for registered services in the scaffold system. It performs HTTP-based health checks against service endpoints, records results with response times and status codes, calculates success rates, and maintains historical health data for trend analysis and alerting. The service integrates with the service registry to update service status based on health check results and provides methods for retrieving historical health data, calculating success metrics, and cleaning up old results.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+
+// Initialize the health check service (typically via dependency injection)
+var healthCheckService = new HealthCheckService(
+    healthCheckRepository,
+    serviceRepository,
+    httpClient,
+    logger
+);
+
+// Perform a health check on a registered service
+var serviceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var healthResult = await healthCheckService.PerformHealthCheckAsync(serviceId);
+Console.WriteLine($"Health check status: {healthResult.Status} in {healthResult.ResponseTimeMs}ms");
+
+// Get recent health check history for a service
+var healthHistory = await healthCheckService.GetServiceHealthHistoryAsync(serviceId, count: 50);
+Console.WriteLine($"Found {healthHistory.Count()} historical health checks");
+
+// Calculate service success rate over the last hour
+var successRate = await healthCheckService.GetServiceSuccessRateAsync(serviceId, minutesBack: 60);
+Console.WriteLine($"Service success rate: {successRate}%");
+
+// Get current health status of a service
+var healthStatus = await healthCheckService.GetServiceHealthStatusAsync(serviceId);
+Console.WriteLine($"Current health status: {healthStatus}");
+
+// Get all failed health checks in the last 24 hours
+var failedChecks = await healthCheckService.GetFailedChecksAsync(serviceId, hoursBack: 24);
+Console.WriteLine($"Found {failedChecks.Count()} failed checks in last 24 hours");
+
+// Create a manual health check result (useful for testing or external monitoring)
+var manualResult = await healthCheckService.CreateHealthCheckResultAsync(
+    serviceId: serviceId,
+    statusCode: 200,
+    responseTimeMs: 150,
+    errorMessage: null
+);
+Console.WriteLine($"Manual health check created: {manualResult.Status}");
+
+// Clean up old health check results (keep 30 days of data)
+await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
+Console.WriteLine("Old health check results cleaned up");
+```
+
 ## FeatureFlagService
 
 The `FeatureFlagService` provides runtime feature flag management to enable/disable features dynamically without code changes or redeployment. It supports global feature toggling, per-user feature rollout for A/B testing, and gradual feature deployment through percentage-based rollouts. The service maintains audit trails with creation and modification timestamps, enabling comprehensive tracking of feature state changes across the application lifecycle.
