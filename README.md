@@ -2059,6 +2059,104 @@ await configRepository.DeleteByKeyAsync("API_TIMEOUT", serviceId);
 
 The `ServiceCollectionExtensions` class provides extension methods for registering infrastructure and application services in the dependency injection container. It centralizes service configuration for better maintainability and consistency across the application, including application services, integration services, caching, background services, and API authentication.
 
+## HttpContextExtensions
+
+The `HttpContextExtensions` class provides extension methods for `HttpContext` that simplify common HTTP request and response operations. It includes helpers for extracting user information from claims, working with authentication headers, checking request characteristics, and manipulating response headers. These extensions are particularly useful in ASP.NET Core controllers and middleware where direct access to HTTP context properties is needed.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Security.Claims;
+using DotnetServiceScaffold.Presentation.Extensions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+// Create a mock HttpContext with user claims
+var context = new DefaultHttpContext();
+context.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+{
+    new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+    new Claim(ClaimTypes.Email, "user@example.com"),
+    new Claim(ClaimTypes.Name, "johndoe"),
+    new Claim("custom_claim", "custom_value")
+}, "TestAuth"));
+
+context.Request.Scheme = "https";
+context.Request.Host = new HostString("api.example.com");
+context.Request.Path = "/api/users";
+context.Request.QueryString = new QueryString("?page=1&limit=10");
+context.Request.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
+context.Request.Headers["X-Forwarded-For"] = "192.168.1.100,10.0.0.5";
+context.Request.ContentType = "application/json";
+context.Request.Headers.Authorization = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+context.Request.Headers["X-Api-Key"] = "sk_live_abc123xyz789";
+
+// Get user information from claims
+Guid? userId = context.GetUserId();
+Console.WriteLine($"User ID: {userId}"); // User ID: [guid]
+
+string? userEmail = context.GetUserEmail();
+Console.WriteLine($"User Email: {userEmail}"); // User Email: user@example.com
+
+string? username = context.GetUsername();
+Console.WriteLine($"Username: {username}"); // Username: johndoe
+
+bool isAuthenticated = context.IsAuthenticated();
+Console.WriteLine($"Is Authenticated: {isAuthenticated}"); // Is Authenticated: true
+
+// Get specific claim value
+string? customClaim = context.GetClaim("custom_claim");
+Console.WriteLine($"Custom Claim: {customClaim}"); // Custom Claim: custom_value
+
+// Check if user has a specific claim
+bool hasClaim = context.HasClaim(ClaimTypes.Email, "user@example.com");
+Console.WriteLine($"Has email claim: {hasClaim}"); // Has email claim: true
+
+// Get client IP address (handles reverse proxies)
+string? clientIp = context.GetClientIpAddress();
+Console.WriteLine($"Client IP: {clientIp}"); // Client IP: 192.168.1.100
+
+// Get authentication tokens
+string? bearerToken = context.GetBearerToken();
+Console.WriteLine($"Bearer Token: {bearerToken?.Substring(0, 10)}..."); // Bearer Token: eyJhbGciO...
+
+string? apiKey = context.GetApiKey();
+Console.WriteLine($"API Key: {apiKey}"); // API Key: sk_live_abc123xyz789
+
+// Get request information
+string? userAgent = context.GetUserAgent();
+Console.WriteLine($"User Agent: {userAgent}"); // User Agent: Mozilla/5.0...
+
+string contentType = context.GetContentType();
+Console.WriteLine($"Content Type: {contentType}"); // Content Type: application/json
+
+bool isSecure = context.IsSecureConnection();
+Console.WriteLine($"Is Secure: {isSecure}"); // Is Secure: true
+
+// Get full request URL
+string fullUrl = context.GetFullUrl();
+Console.WriteLine($"Full URL: {fullUrl}"); // Full URL: https://api.example.com/api/users?page=1&limit=10
+
+// Check if client accepts JSON
+bool acceptsJson = context.AcceptsJson();
+Console.WriteLine($"Accepts JSON: {acceptsJson}"); // Accepts JSON: true
+
+// Check if request is from a browser
+bool isFromBrowser = context.IsFromBrowser();
+Console.WriteLine($"Is from browser: {isFromBrowser}"); // Is from browser: true
+
+// Set response headers
+context.SetResponseHeader("X-Request-Id", Guid.NewGuid().ToString());
+context.SetResponseHeader("Cache-Control", "no-cache");
+
+// Add response headers (preserves existing values)
+context.AddResponseHeader("X-Custom-Header", "custom-value");
+
+// Set response content type
+context.SetResponseContentType("application/json");
+```
+
 ## Repository
 
 The `Repository<T>` class is a generic repository implementation that provides standard CRUD operations for Entity Framework Core entities. It abstracts common database operations like retrieving entities by ID, getting all entities, adding, updating, and deleting entities, checking existence, and saving changes. The repository includes built-in logging and error handling for robust data access operations.
