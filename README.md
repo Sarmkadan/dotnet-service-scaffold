@@ -11,6 +11,59 @@ A service-registry / health-monitoring API: ASP.NET Core + EF Core (SQLite, WAL)
 
 See [docs/architecture.md](docs/architecture.md) for the full breakdown: what is wired at startup, data flow, design decisions and trade-offs, extension points, and known limitations.
 
+## Result
+
+The `Result` type is a discriminated union pattern for handling success/failure scenarios in a functional style. It provides a type-safe way to represent operations that may fail without throwing exceptions, enabling better error handling through the type system. The pattern includes both non-generic (`Result`) and generic (`Result<T>`) variants, allowing you to carry successful values or error information throughout your application.
+
+### Usage Examples
+
+```csharp
+// Create a successful result
+var successResult = Result.Success();
+Console.WriteLine(successResult.IsSuccess); // true
+
+// Create a failed result with error message
+var failureResult = Result.Failure("Invalid input data");
+Console.WriteLine(failureResult.IsSuccess); // false
+Console.WriteLine(failureResult.ErrorMessage); // "Invalid input data"
+
+// Create a failed result with error code
+var errorResult = Result.Failure("Database connection failed", "DB001");
+Console.WriteLine(errorResult.ErrorCode); // "DB001"
+
+// Work with generic Result<T>
+Result<string> stringResult = Result.Success("Hello, World!");
+if (stringResult.IsSuccess)
+{
+    Console.WriteLine(stringResult.Value); // "Hello, World!"
+}
+
+// Handle failure case
+Result<int> numberResult = Result.Failure<int>("Invalid number format");
+if (!numberResult.IsSuccess)
+{
+    Console.WriteLine(numberResult.ErrorMessage); // "Invalid number format"
+}
+
+// Use IfSuccess/IfFailure for side effects
+Result.Success()
+    .IfSuccess(() => Console.WriteLine("Operation completed successfully"))
+    .IfFailure(error => Console.WriteLine($"Failed: {error}"));
+
+// Chain operations using Map (non-generic)
+var mappedResult = Result.Success()
+    .Map(() => 42)
+    .Map(value => value * 2);
+
+// Chain operations using Map with generic Result<T>
+Result<int> chainedResult = Result.Success(10)
+    .Map(value => value + 5);
+if (chainedResult.IsSuccess)
+{
+    Console.WriteLine(chainedResult.Value); // 15
+}
+```
+
 ## ResultExtensions
 
 The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.
