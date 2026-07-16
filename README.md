@@ -1458,6 +1458,61 @@ Console.WriteLine($"Gen1 collections: {perfInstance.Gen1Collections}");
 Console.WriteLine($"Gen2 collections: {perfInstance.Gen2Collections}");
 ```
 
+## FeatureFlagService
+
+The `FeatureFlagService` provides runtime feature flag management to enable/disable features dynamically without code changes or redeployment. It supports global feature toggling, per-user feature rollout for A/B testing, and gradual feature deployment through percentage-based rollouts. The service maintains audit trails with creation and modification timestamps, enabling comprehensive tracking of feature state changes across the application lifecycle.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using DotnetServiceScaffold.Application.Services;
+
+// Initialize the feature flag service (typically via dependency injection)
+var featureFlagService = new FeatureFlagService(logger);
+
+// Check if a feature is enabled globally
+bool isAuditLoggingEnabled = featureFlagService.IsEnabled("audit_logging");
+Console.WriteLine($"Audit logging enabled: {isAuditLoggingEnabled}");
+
+// Check if a feature is enabled for a specific user (A/B testing support)
+var userId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+bool isFeatureEnabledForUser = featureFlagService.IsEnabledForUser("advanced_analytics", userId);
+Console.WriteLine($"Advanced analytics enabled for user: {isFeatureEnabledForUser}");
+
+// Enable a feature at runtime
+featureFlagService.EnableFeature("advanced_analytics");
+Console.WriteLine("Advanced analytics feature enabled");
+
+// Disable a feature at runtime
+featureFlagService.DisableFeature("rate_limiting");
+Console.WriteLine("Rate limiting feature disabled");
+
+// Set rollout percentage for gradual feature deployment (e.g., 50% of users)
+featureFlagService.SetRolloutPercentage("advanced_analytics", 50);
+Console.WriteLine("Advanced analytics rollout set to 50%");
+
+// Register a new feature flag
+featureFlagService.RegisterFeature("new_dashboard", "Enable the new dashboard interface", false);
+Console.WriteLine("New dashboard feature registered");
+
+// Get all feature flags
+var allFlags = featureFlagService.GetAllFlags().ToList();
+Console.WriteLine($"Total feature flags: {allFlags.Count}");
+foreach (var flag in allFlags)
+{
+    Console.WriteLine($"  {flag.Name}: {flag.Description} (Enabled: {flag.IsEnabled}, Rollout: {flag.RolloutPercentage}%)");
+}
+
+// Get a specific feature flag
+var specificFlag = featureFlagService.GetFlag("webhooks");
+if (specificFlag != null)
+{
+    Console.WriteLine($"Webhooks flag found: Enabled={specificFlag.IsEnabled}, Created={specificFlag.CreatedAt}");
+}
+```
+
 ## CacheBenchmarks
 
 `CacheBenchmarks` contains a set of BenchmarkDotNet benchmarks that also expose their public members for ad‑hoc usage. It demonstrates typical in‑memory cache operations such as reading, writing, checking existence, and the get‑or‑set pattern against an `InMemoryCacheService`.
