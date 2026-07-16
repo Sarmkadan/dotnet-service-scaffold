@@ -122,6 +122,145 @@ Console.WriteLine($"Service enabled after re-enable: {apiService.IsEnabled}");
 Console.WriteLine($"Consecutive failures reset: {apiService.ConsecutiveFailures}");
 ```
 
+## ServiceController
+
+The `ServiceController` provides API endpoints for service registration and management. It enables registering new services for monitoring, retrieving service information, listing all registered services, managing services by owner, and handling service lifecycle operations including enabling, disabling, and health monitoring. The controller handles validation errors, service not found scenarios, and provides appropriate HTTP status codes for all operations.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Controllers;
+
+// Initialize HTTP client with authentication
+var httpClient = new HttpClient();
+httpClient.BaseAddress = new Uri("https://api.example.com");
+httpClient.DefaultRequestHeaders.Authorization = 
+    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "your-auth-token-here");
+
+// Register a new service for monitoring
+var registerResponse = await httpClient.PostAsJsonAsync("/api/service/register", new RegisterServiceRequest(
+    ServiceName = "user-api",
+    Endpoint = "https://api.example.com",
+    HealthCheckUrl = "https://api.example.com/health",
+    OwnerId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
+));
+
+if (registerResponse.IsSuccessStatusCode)
+{
+    var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterServiceResponse>();
+    Console.WriteLine($"Service registered successfully: {registerResult?.Data?.ServiceName} (ID: {registerResult?.Data?.Id})");
+}
+
+// Retrieve service information by ID
+var serviceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var getResponse = await httpClient.GetAsync($"/api/service/{serviceId}");
+
+if (getResponse.IsSuccessStatusCode)
+{
+    var getResult = await getResponse.Content.ReadFromJsonAsync<GetServiceResponse>();
+    Console.WriteLine($"Service status: {getResult?.Data?.Status}");
+    Console.WriteLine($"Success rate: {getResult?.Data?.SuccessRate}");
+    Console.WriteLine($"Version: {getResult?.Data?.Version}");
+}
+
+// List all registered services
+var listResponse = await httpClient.GetAsync("/api/service");
+
+if (listResponse.IsSuccessStatusCode)
+{
+    var listResult = await listResponse.Content.ReadFromJsonAsync<ListServicesResponse>();
+    Console.WriteLine($"Total services: {listResult?.Count}");
+    foreach (var service in listResult?.Data ?? new List<ServiceData>())
+    {
+        Console.WriteLine($"- {service.ServiceName} ({service.Status}, Enabled: {service.IsEnabled})");
+    }
+}
+
+// Get services owned by a specific user
+var ownerId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+var ownerResponse = await httpClient.GetAsync($"/api/service/owner/{ownerId}");
+
+if (ownerResponse.IsSuccessStatusCode)
+{
+    var ownerResult = await ownerResponse.Content.ReadFromJsonAsync<GetServicesByOwnerResponse>();
+    Console.WriteLine($"Owner has {ownerResult?.Count} services");
+}
+
+// Disable a service for maintenance
+var disableResponse = await httpClient.PostAsJsonAsync($"/api/service/{serviceId}/disable", new DisableServiceRequest(
+    Reason = "Scheduled maintenance window"
+));
+
+if (disableResponse.IsSuccessStatusCode)
+{
+    var disableResult = await disableResponse.Content.ReadFromJsonAsync<DisableServiceResponse>();
+    Console.WriteLine($"Service disabled: {disableResult?.Data?.ServiceName}");
+}
+
+// Re-enable a previously disabled service
+var enableResponse = await httpClient.PostAsync($"/api/service/{serviceId}/enable", null);
+
+if (enableResponse.IsSuccessStatusCode)
+{
+    var enableResult = await enableResponse.Content.ReadFromJsonAsync<EnableServiceResponse>();
+    Console.WriteLine($"Service re-enabled: {enableResult?.Data?.ServiceName}");
+}
+
+// Get unhealthy services that need attention
+var unhealthyResponse = await httpClient.GetAsync("/api/service/health/unhealthy");
+
+if (unhealthyResponse.IsSuccessStatusCode)
+{
+    var unhealthyResult = await unhealthyResponse.Content.ReadFromJsonAsync<GetUnhealthyServicesResponse>();
+    Console.WriteLine($"Found {unhealthyResult?.Count} unhealthy services");
+    foreach (var service in unhealthyResult?.Data ?? new List<UnhealthyServiceData>())
+    {
+        Console.WriteLine($"- {service.ServiceName}: {service.Status} ({service.ConsecutiveFailures} failures)");
+    }
+}
+
+// Define response types for deserialization
+public record RegisterServiceRequest(string ServiceName, string Endpoint, string HealthCheckUrl, Guid OwnerId);
+public record RegisterServiceResponse(bool Success, ServiceData? Data);
+
+public record GetServiceResponse(bool Success, ServiceDetailsData? Data);
+public record ServiceDetailsData(
+    Guid Id,
+    string ServiceName,
+    string Endpoint,
+    string Status,
+    string Version,
+    bool IsEnabled,
+    string SuccessRate,
+    DateTime LastHealthCheckAt,
+    DateTime CreatedAt
+);
+
+public record ListServicesResponse(bool Success, int Count, List<ServiceData>? Data);
+public record ServiceData(Guid Id, string ServiceName, string Status, bool IsEnabled, DateTime CreatedAt);
+
+public record GetServicesByOwnerResponse(bool Success, int Count, List<ServiceData>? Data);
+
+public record DisableServiceRequest(string Reason);
+public record DisableServiceResponse(bool Success, ServiceStatusData? Data);
+public record ServiceStatusData(Guid Id, string ServiceName, string Status);
+
+public record EnableServiceResponse(bool Success, ServiceStatusData? Data);
+
+public record GetUnhealthyServicesResponse(bool Success, int Count, List<UnhealthyServiceData>? Data);
+public record UnhealthyServiceData(
+    Guid Id,
+    string ServiceName,
+    string Status,
+    int ConsecutiveFailures,
+    DateTime LastHealthCheckAt
+);
+```
+
 ## ServiceScaffoldException
 
 The `ServiceScaffoldException` class serves as the base exception type for the service scaffold platform. It provides a consistent error handling mechanism with support for error codes, enabling structured error handling and reporting throughout the application. All service-specific exceptions in the platform inherit from this base class, allowing for centralized error handling and logging strategies.
