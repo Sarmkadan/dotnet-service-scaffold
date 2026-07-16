@@ -368,6 +368,64 @@ await userRepository.SaveChangesAsync();
 
 This example demonstrates how to use the `Repository<T>` class for common CRUD operations with proper dependency injection setup, error handling through the repository's built-in logging, and type-safe operations for any entity type.
 
+## UserRepository
+
+The `UserRepository` provides data access methods for user management operations. It handles user retrieval by email, filtering users by status (active/locked), email existence checks, and loading users with their associated API keys. This repository is typically used by authentication services, user management APIs, and any component that needs to work with user data.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection with DbContext
+var services = new ServiceCollection();
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite("Data Source=service-scaffold.db"));
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the user repository
+var userRepository = new UserRepository(
+    serviceProvider.GetRequiredService<ServiceScaffoldDbContext>(),
+    serviceProvider.GetRequiredService<ILogger<UserRepository>>());
+
+var userId = Guid.NewGuid();
+
+// Get a user by email
+var user = await userRepository.GetByEmailAsync("user@example.com");
+if (user != null)
+{
+    Console.WriteLine($"Found user: {user.Username}");
+}
+
+// Check if an email exists
+bool emailExists = await userRepository.EmailExistsAsync("user@example.com");
+Console.WriteLine($"Email exists: {emailExists}");
+
+// Get all active users
+var activeUsers = await userRepository.GetActiveUsersAsync();
+Console.WriteLine($"Active users: {activeUsers.Count()}");
+
+// Get all locked users
+var lockedUsers = await userRepository.GetLockedUsersAsync();
+Console.WriteLine($"Locked users: {lockedUsers.Count()}");
+
+// Get a user with their API keys (for authentication scenarios)
+var userWithKeys = await userRepository.GetWithApiKeysAsync(userId);
+if (userWithKeys != null)
+{
+    Console.WriteLine($"User has {userWithKeys.ApiKeys.Count} API keys");
+}
+```
+
 ## ServiceRepository
 
 The `ServiceRepository` provides specialized data access methods for service registrations with built-in health check and metric queries. It extends the generic `Repository<T>` class to offer service-specific queries including retrieving services by name, status, owner, and health metrics. The repository includes methods for finding unhealthy services, services without recent health checks, and services with their associated metrics.
