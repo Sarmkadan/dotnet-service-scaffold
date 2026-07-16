@@ -1060,6 +1060,133 @@ PropertyInfo[] obsoleteProps = ReflectionUtility.GetPropertiesWithAttribute<Obso
 Console.WriteLine($"Found {obsoleteProps.Length} properties with Obsolete attribute");
 ```
 
+## NotificationService
+
+The `NotificationService` provides a unified interface for sending various types of notifications to users and systems, including individual notifications, bulk communications, emails, and critical alerts. It abstracts the underlying delivery mechanisms (email, SMS, push notifications, webhooks, Slack) to allow flexible implementations and easy switching between notification providers. The service includes built-in logging and error handling to ensure reliable notification delivery.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Enums;
+
+// Example notification service usage in an application service
+public class UserManagementService
+{
+    private readonly NotificationService _notificationService;
+    private readonly ILogger<UserManagementService> _logger;
+
+    public UserManagementService(NotificationService notificationService, ILogger<UserManagementService> logger)
+    {
+        _notificationService = notificationService;
+        _logger = logger;
+    }
+
+    public async Task NotifyUserOfPasswordResetAsync(Guid userId, string emailAddress, string resetToken)
+    {
+        // Send individual notification to user
+        bool notificationSent = await _notificationService.SendNotificationAsync(
+            userId,
+            "Password Reset Requested",
+            $"A password reset was requested for your account. Token: {resetToken}",
+            NotificationType.Email
+        );
+
+        if (notificationSent)
+        {
+            _logger.LogInformation("Password reset notification sent to user {UserId}", userId);
+        }
+        else
+        {
+            _logger.LogWarning("Failed to send password reset notification to user {UserId}", userId);
+        }
+    }
+
+    public async Task SendWelcomeEmailAsync(string emailAddress, string username)
+    {
+        // Send email directly to email address
+        bool emailSent = await _notificationService.SendEmailAsync(
+            emailAddress,
+            "Welcome to Service Scaffold",
+            $"<h1>Welcome, {username}!</h1><p>Thank you for registering with our platform.</p>"
+        );
+
+        if (emailSent)
+        {
+            _logger.LogInformation("Welcome email sent to {EmailAddress}", emailAddress);
+        }
+    }
+
+    public async Task NotifyMultipleUsersAsync(IEnumerable<Guid> userIds, string announcementSubject, string announcementMessage)
+    {
+        // Send bulk notification to multiple users
+        int successfulNotifications = await _notificationService.SendBulkNotificationAsync(
+            userIds,
+            announcementSubject,
+            announcementMessage,
+            NotificationType.Email
+        );
+
+        _logger.LogInformation(
+            "Sent bulk notification to {Count} users: {SuccessCount} successful",
+            userIds.Count(),
+            successfulNotifications
+        );
+    }
+
+    public async Task SendCriticalSystemAlertAsync(string alertType, string description)
+    {
+        // Send critical alert for system events
+        bool alertSent = await _notificationService.SendAlertAsync(
+            alertType: alertType,
+            description: description,
+            details: $"System component: {alertType}. Please investigate immediately."
+        );
+
+        if (alertSent)
+        {
+            _logger.LogInformation("Critical alert sent: {AlertType} - {Description}", alertType, description);
+        }
+    }
+}
+
+// Example usage in a controller or background service
+var notificationService = new NotificationService(logger);
+
+// Send single notification
+bool singleNotificationSent = await notificationService.SendNotificationAsync(
+    userId: Guid.NewGuid(),
+    subject: "Account Update",
+    message: "Your account information has been updated successfully.",
+    type: NotificationType.Email
+);
+
+// Send email directly
+bool emailSent = await notificationService.SendEmailAsync(
+    emailAddress: "user@example.com",
+    subject: "Welcome Email",
+    htmlBody: "<h1>Welcome!</h1><p>Thank you for signing up.</p>"
+);
+
+// Send bulk notification to multiple users
+int bulkResult = await notificationService.SendBulkNotificationAsync(
+    userIds: new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() },
+    subject: "System Maintenance Notice",
+    message: "Scheduled maintenance on Sunday at 2 AM UTC. Expect 15 minutes downtime.",
+    type: NotificationType.Slack
+);
+
+// Send critical alert
+bool alertSent = await notificationService.SendAlertAsync(
+    alertType: "DatabaseFailure",
+    description: "Primary database connection lost",
+    details: "Database server 192.168.1.100:5432 is unreachable"
+);
+```
+
 ## AuditLog
 
 The `AuditLog` class records audit trails for system actions performed by users, providing a comprehensive history of operations including user context, timestamps, IP addresses, and state changes. It tracks who performed an action, what was changed, when it occurred, and whether it succeeded, enabling compliance tracking, debugging, and security auditing across the application.
