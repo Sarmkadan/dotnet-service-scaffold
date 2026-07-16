@@ -388,6 +388,52 @@ if (restartEvent.Service != null)
 }
 ```
 
+## ResultTests
+
+The `ResultTests` class provides comprehensive unit tests for the `Result` and `Result<T>` types, verifying all public members and edge cases. It tests success and failure scenarios, error handling, and value transformation through the `Map` method, ensuring the discriminated union pattern works correctly across different use cases.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Shared.Models;
+using FluentAssertions;
+
+// Test that Success() returns a result with IsSuccess set to true
+var successResult = Result.Success();
+successResult.IsSuccess.Should().BeTrue();
+
+// Test that Failure() with message and code sets all error properties
+var failureResult = Result.Failure("record not found", "ERR_404");
+failureResult.IsSuccess.Should().BeFalse();
+failureResult.ErrorMessage.Should().Be("record not found");
+failureResult.ErrorCode.Should().Be("ERR_404");
+
+// Test that Failure() from exception captures message and uses type name as code
+var exception = new InvalidOperationException("invalid state transition");
+var exceptionResult = Result.Failure(exception);
+exceptionResult.IsSuccess.Should().BeFalse();
+exceptionResult.ErrorMessage.Should().Be("invalid state transition");
+exceptionResult.ErrorCode.Should().Be("InvalidOperationException");
+
+// Test Map() on success result transforms value to new type
+Result<int> source = Result<int>.Success(42);
+var mappedResult = source.Map(v => $"value:{v}");
+mappedResult.IsSuccess.Should().BeTrue();
+mappedResult.Value.Should().Be("value:42");
+
+// Test Map() on failure result propagates error without calling mapper
+Result<string> failureSource = Result<string>.Failure("upstream failure", "ERR_SRC");
+bool mapperInvoked = false;
+var propagatedResult = failureSource.Map(v => {
+    mapperInvoked = true;
+    return v.ToUpper();
+});
+propagatedResult.IsSuccess.Should().BeFalse();
+propagatedResult.ErrorMessage.Should().Be("upstream failure");
+propagatedResult.ErrorCode.Should().Be("ERR_SRC");
+mapperInvoked.Should().BeFalse(); // Mapper should not be invoked for failed results
+```
+
 ## ResultExtensions
 
 The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.
