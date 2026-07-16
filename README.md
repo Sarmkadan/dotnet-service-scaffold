@@ -257,6 +257,109 @@ This example demonstrates how to use the `MetricsBenchmarks` class to measure th
 
 The `PerformanceUtility` class provides performance monitoring and measurement utilities for tracking execution time, memory usage, CPU utilization, and garbage collection statistics. It includes methods for measuring synchronous and asynchronous operations, retrieving system resource usage, and formatting performance data for logging and monitoring purposes.
 
+## ReflectionUtility
+
+The `ReflectionUtility` class provides reflection-based utilities for type inspection, property access, method invocation, and attribute discovery. It simplifies common reflection patterns with strongly-typed methods that handle null safety, case-insensitive lookups, and error conditions gracefully. The utility is useful for dynamic configuration loading, plugin architectures, serialization frameworks, and testing utilities where runtime type inspection is required.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Reflection;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Define a sample class with attributes for demonstration
+public class SampleEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public int Age { get; set; }
+    public DateTime CreatedAt { get; set; }
+    
+    [Obsolete("Use newer method instead")]
+    public void OldMethod() { }
+    
+    public void NewMethod() { }
+}
+
+// Get all public properties of a type
+PropertyInfo[] properties = ReflectionUtility.GetPublicProperties(typeof(SampleEntity));
+Console.WriteLine($"Found {properties.Length} properties");
+// Output: Found 3 properties
+
+// Get a property value
+var entity = new SampleEntity { Name = "John", Age = 30, CreatedAt = DateTime.UtcNow };
+string name = (string)ReflectionUtility.GetPropertyValue(entity, "Name")!;
+Console.WriteLine(name); // Output: John
+
+// Set a property value
+bool setSuccess = ReflectionUtility.SetPropertyValue(entity, "Age", 31);
+Console.WriteLine(setSuccess); // Output: True
+Console.WriteLine(entity.Age); // Output: 31
+
+// Work with attributes
+bool hasObsolete = ReflectionUtility.HasAttribute<ObsoleteAttribute>(
+    typeof(SampleEntity).GetMethod("OldMethod")!);
+Console.WriteLine(hasObsolete); // Output: True
+
+// Get all types in an assembly that inherit from a base class
+var types = ReflectionUtility.GetTypesByBaseClass(
+    Assembly.GetExecutingAssembly(),
+    typeof(SampleEntity)
+);
+Console.WriteLine($"Found {types.Count()} types");
+
+// Get all types that implement an interface
+var interfaceTypes = ReflectionUtility.GetTypesByInterface(
+    Assembly.GetExecutingAssembly(),
+    typeof(IEquatable<>)
+);
+
+// Get all public methods
+MethodInfo[] methods = ReflectionUtility.GetPublicMethods(typeof(SampleEntity));
+Console.WriteLine($"Found {methods.Length} methods");
+
+// Get a specific method
+MethodInfo? method = ReflectionUtility.GetMethod(typeof(SampleEntity), "NewMethod");
+Console.WriteLine(method?.Name); // Output: NewMethod
+
+// Invoke a method
+object? result = ReflectionUtility.InvokeMethod(entity, "NewMethod");
+Console.WriteLine(result); // Output: (null - void method)
+
+// Create an instance
+object? instance = ReflectionUtility.CreateInstance(typeof(SampleEntity));
+Console.WriteLine(instance?.GetType().Name); // Output: SampleEntity
+
+// Work with nullable types
+bool isNullable = ReflectionUtility.IsNullableType(typeof(int?));
+Console.WriteLine(isNullable); // Output: True
+
+Type? underlyingType = ReflectionUtility.GetUnderlyingType(typeof(int?));
+Console.WriteLine(underlyingType?.Name); // Output: Int32
+
+// Check if a type is a collection
+bool isList = ReflectionUtility.IsCollectionType(typeof(System.Collections.Generic.List<string>));
+Console.WriteLine(isList); // Output: True
+
+bool isString = ReflectionUtility.IsCollectionType(typeof(string));
+Console.WriteLine(isString); // Output: False
+
+// Get collection element type
+Type? elementType = ReflectionUtility.GetCollectionElementType(typeof(int[]));
+Console.WriteLine(elementType?.Name); // Output: Int32
+
+// Convert values between types
+object? converted = ReflectionUtility.ConvertValue("42", typeof(int));
+Console.WriteLine(converted); // Output: 42
+
+// Get properties with a specific attribute
+PropertyInfo[] obsoleteProps = ReflectionUtility.GetPropertiesWithAttribute<ObsoleteAttribute>(
+    typeof(SampleEntity)
+).ToArray();
+Console.WriteLine($"Found {obsoleteProps.Length} properties with Obsolete attribute");
+```
+
 ## EncryptionUtility
 
 The `EncryptionUtility` class provides cryptographic operations for secure password handling, data encryption, and message authentication. It includes methods for hashing passwords with PBKDF2, AES-256-GCM encryption/decryption, generating secure random tokens, and computing HMAC-SHA256 signatures. All cryptographic operations use .NET's built-in security libraries with proper key sizes and authenticated encryption modes.
