@@ -389,6 +389,86 @@ bool supportsXmlAfterRegistration = factory.IsMediaTypeSupported("application/xm
 This example demonstrates creating a formatter factory, retrieving formatters for different media types, checking support for media types, and registering custom formatters.
 
 
+## ServiceScaffoldDbContext
+
+The `ServiceScaffoldDbContext` class is the Entity Framework Core DbContext for the service scaffold platform. It manages all database entities including users, service registrations, health checks, metrics, events, API keys, audit logs, and service configurations. The context provides methods for database initialization and schema management, and is designed to work with SQLite by default (with WAL journal mode for better write concurrency).
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Configure DbContext with dependency injection
+var services = new ServiceCollection();
+
+// Register DbContext with SQLite (or your preferred database provider)
+services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite("Data Source=service-scaffold.db"));
+
+services.AddLogging(configure => configure.AddConsole());
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Resolve the DbContext
+var dbContext = serviceProvider.GetRequiredService<ServiceScaffoldDbContext>();
+
+// Access DbSets for all entities
+var users = dbContext.Users;
+var serviceRegistrations = dbContext.ServiceRegistrations;
+var healthChecks = dbContext.HealthCheckResults;
+var metrics = dbContext.ServiceMetrics;
+var events = dbContext.ServiceEvents;
+var apiKeys = dbContext.ApiKeys;
+var auditLogs = dbContext.AuditLogs;
+var configurations = dbContext.ServiceConfigurations;
+
+// Initialize the database schema (creates tables if they don't exist)
+await dbContext.InitializeDatabaseAsync();
+
+// Example: Query for healthy services
+var healthyServices = await serviceRegistrations
+    .Include(s => s.HealthCheckResults)
+    .Where(s => s.HealthCheckResults.Any(h => h.IsHealthy))
+    .ToListAsync();
+
+// Example: Add a new service registration
+var newService = new ServiceRegistration
+{
+    ServiceName = "user-service",
+    Endpoint = "https://api.example.com/users",
+    Description = "User management service",
+    IsActive = true,
+    CreatedAt = DateTime.UtcNow
+};
+
+await serviceRegistrations.AddAsync(newService);
+await dbContext.SaveChangesAsync();
+
+// Example: Record a health check result
+var healthCheck = new HealthCheckResult
+{
+    ServiceId = newService.Id,
+    IsHealthy = true,
+    ResponseTimeMs = 42,
+    StatusCode = 200,
+    CheckedAt = DateTime.UtcNow,
+    Details = "Service responded within acceptable time"
+};
+
+await healthChecks.AddAsync(healthCheck);
+await dbContext.SaveChangesAsync();
+
+// Example: Query metrics for a specific service
+var serviceMetrics = await metrics
+    .Where(m => m.ServiceId == newService.Id)
+    .OrderByDescending(m => m.RecordedAt)
+    .Take(100)
+    .ToListAsync();
+```
+
 ## StructuredLoggingOptions
 
 The `StructuredLoggingOptions` class configures the structured logging pipeline for the application. It controls application identification, enrichment with contextual information, correlation ID handling, and minimum log level filtering. These options are typically bound from the `StructuredLogging` section in `appsettings.json`.
