@@ -5,6 +5,12 @@
 
 # Service Scaffold
 
+## Architecture
+
+A service-registry / health-monitoring API: ASP.NET Core + EF Core (SQLite, WAL), Serilog, API-key authentication, in-process Prometheus-format metrics. Single project with layered folders (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Presentation`, `src/Shared`), plus xUnit tests and BenchmarkDotNet benchmarks. Entry point is `Program.cs`; several components (rate limiting, caching, service discovery, service mesh) are opt-in via extension methods rather than wired by default.
+
+See [docs/architecture.md](docs/architecture.md) for the full breakdown: what is wired at startup, data flow, design decisions and trade-offs, extension points, and known limitations.
+
 ## ResultExtensions
 
 The `ResultExtensions` class provides utility methods for working with `Result` and `Result<T>` types, enabling operation chaining, result aggregation, and error handling. These extensions simplify common patterns like transforming successful results, combining multiple results, extracting values safely, and validating conditions.

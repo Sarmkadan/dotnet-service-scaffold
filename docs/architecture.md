@@ -1,641 +1,136 @@
 # Architecture Guide
 
-This document describes the overall architecture, design patterns, and structure of dotnet-service-scaffold.
+This document describes the actual architecture of dotnet-service-scaffold as implemented in the code. It is a single ASP.NET Core web application (one `.csproj`, entry point `Program.cs` in the repository root) organized into layered folders under `src/`, plus a test project and a BenchmarkDotNet project.
 
-## High-Level Architecture
+## Overview
 
-The application follows **Clean Architecture** principles with clear separation of concerns across four layers:
+dotnet-service-scaffold is a service-registry / health-monitoring style API:
+
+- Users register **services** (name + endpoint + health check URL).
+- The app can **probe** those endpoints over HTTP and persist `HealthCheckResult` rows.
+- **Metrics**, **audit logs**, **API keys**, and per-service **configuration** are stored alongside.
+- Persistence is **SQLite via EF Core** (WAL mode enabled at startup).
+- Logging is **Serilog** (console + rolling file `logs/scaffold-*.txt`).
+- The app self-exposes `/health` (ASP.NET Core health checks), `/status` (DB ping), and `/metrics` (Prometheus text format from the in-process `MetricsService`).
+
+## Project Layout
 
 ```
-┌────────────────────────────────────────┐
-│    PRESENTATION LAYER (Controllers)    │
-│  Handles HTTP requests and responses   │
-└────────────────┬───────────────────────┘
-                 │
-┌────────────────▼───────────────────────┐
-│    MIDDLEWARE LAYER                    │
-│  Cross-cutting concerns (auth, logging)│
-└────────────────┬───────────────────────┘
-                 │
-┌────────────────▼───────────────────────┐
-│  APPLICATION LAYER (Services)          │
-│  Business logic and orchestration      │
-└────────────────┬───────────────────────┘
-                 │
-┌────────────────▼───────────────────────┐
-│   DOMAIN LAYER (Models & Logic)        │
-│  Core business rules and entities      │
-└────────────────┬───────────────────────┘
-                 │
-┌────────────────▼───────────────────────┐
-│ INFRASTRUCTURE LAYER (Repositories)    │
-│  Data access and external services     │
-└────────────────┬───────────────────────┘
-                 │
-┌────────────────▼───────────────────────┐
-│    SQLite Database                     │
-└────────────────────────────────────────┘
+Program.cs                     Composition root (DI, pipeline, endpoints, DB init)
+src/
+  Domain/                      Entities, enums, domain events, exceptions
+  Application/Services/        Business logic (UserService, HealthCheckService, ...)
+  Infrastructure/
+    Data/                      ServiceScaffoldDbContext + repositories
+    Caching/                   ICacheService / InMemoryCacheService
+    Metrics/                   MetricsService, PrometheusFormatter
+    Logging/                   Serilog enrichment, CorrelationIdMiddleware
+    HealthChecks/              SqliteHealthCheck (file/disk probe)
+    Integration/               ExternalApiClient, WebhookClient, HttpClientFactory
+    Formatting/                JSON/CSV response formatters + factory
+    DockerCompose/             docker-compose YAML generator
+    Configuration/             systemd/Caddy deployment file generators
+    ServiceDiscovery/          DNS + registry discovery providers (opt-in)
+    ServiceMesh/               Envoy-compatible sidecar admin client (opt-in)
+    Extensions/                ServiceCollectionExtensions (DI helpers)
+  Presentation/
+    Controllers/               User, Service, HealthCheck, Metrics, AuditLog,
+                               ApiKey, DockerCompose controllers
+    Middleware/                ApiKeyAuthenticationHandler (+ Options),
+                               ErrorHandling, RequestLogging, RateLimiting
+  Shared/                      Result/Result<T>, options, utilities, constants
+tests/                         xUnit unit + integration tests (in-memory/SQLite)
+benchmarks/                    BenchmarkDotNet micro-benchmarks
+docs/                          Per-type reference docs + guides
+examples/                      Standalone usage examples (not compiled into the app)
 ```
 
-## Layer Descriptions
+## What Is Actually Wired at Startup
 
-### 1. Presentation Layer
+`Program.cs` is the source of truth. It registers:
 
-**Location**: `src/Presentation/`
+- `ServiceScaffoldDbContext` (SQLite, connection string `ConnectionStrings:DefaultConnection`, default `Data Source=scaffold.db`).
+- Repositories (scoped): `IUserRepository`, `IServiceRepository`, `IHealthCheckRepository`, `IAuditLogRepository`, `IConfigurationRepository`, `IApiKeyRepository`.
+- Application services (scoped): `IUserService`, `IServiceManagementService`, `IAuditService`, `IConfigurationService`. `IHealthCheckService` is registered as a **typed HTTP client** (`AddHttpClient<IHealthCheckService, HealthCheckService>`, 30s timeout) because it performs outbound HTTP probes.
+- `AddApplicationServices(configuration)`: `IDomainEventPublisher`, `IDockerComposeGenerator`, structured-logging services.
+- Singletons: `IMetricsService`, `IPrometheusFormatter` (in-process metric state must survive across requests, hence singleton).
+- Authentication: `AddApiAuthentication()` registers the `ApiKey` scheme (`ApiKeyAuthenticationHandler`, `X-Api-Key` header validated against the database through `IUserService`). Controllers marked `[Authorize]` (e.g. `MetricsController`) rely on this scheme.
+- Health checks: `AddDbContextCheck` (EF connectivity) + custom `SqliteHealthCheck` (file accessibility / disk space).
 
-Responsible for handling HTTP requests, validating input, and returning responses.
+Pipeline order: Swagger (Development only) → optional `CorrelationIdMiddleware` (when `StructuredLogging:EnableCorrelationId` is true) → HTTPS redirect → authentication → authorization → controllers → `/health`, `/status`, `/metrics` endpoints. After building the pipeline, the app calls `ServiceScaffoldDbContext.InitializeDatabaseAsync()` (schema creation + `PRAGMA journal_mode=WAL`) and aborts startup if it fails.
 
-**Key Components**:
-- **Controllers** - Handle API endpoints
-  - `UserController` - User authentication and management
-  - `ServiceController` - Service registration and lifecycle
-  - `HealthCheckController` - Health check execution and history
-  - `MetricsController` - Performance metrics retrieval
-  - `AuditLogController` - Audit trail access
-  - `ApiKeyController` - API key management
+### Opt-in components (present in the codebase, NOT wired by default)
 
-**Pattern**: MVC Pattern with REST semantics
+These compile into the assembly but are only activated if you call their extension methods yourself:
+
+- `ErrorHandlingMiddleware`, `RequestLoggingMiddleware`, `RateLimitingMiddleware` — available via `ServiceCollectionExtensions.UseApplicationMiddleware(app)`.
+- `ICacheService` / `InMemoryCacheService` — via `AddCachingServices()`.
+- `IExternalApiClient`, `IWebhookClient`, `ICustomHttpClientFactory`, `IResponseFormatterFactory` — via `AddIntegrationServices()`.
+- Service discovery (`DnsServiceDiscoveryProvider`, `RegistryServiceDiscoveryProvider`, `ServiceDiscoveryService`) and service mesh (`SidecarProxyService`) — via their respective `Add*` extensions in `src/Infrastructure/ServiceDiscovery` and `src/Infrastructure/ServiceMesh`.
+- `NotificationService`, `FeatureFlagService` — implemented and unit-tested, but not registered in `Program.cs`.
+
+Docs or examples that show these components in use assume you opt in explicitly.
+
+## Domain Model
+
+EF Core DbSets (see `ServiceScaffoldDbContext`): `Users`, `ServiceRegistrations`, `HealthCheckResults`, `ServiceMetrics`, `ServiceEvents`, `ApiKeys`, `AuditLogs`, `ServiceConfigurations`.
+
+Key relationships: `ServiceRegistration` belongs to a `User` (OwnerId) and has many `HealthCheckResults`, `ServiceMetrics`, `ServiceEvents`, and optional `ServiceConfigurations`; `ApiKey` belongs to a `User`; `AuditLog` references user/entity ids loosely (no hard FK to arbitrary entities).
+
+Enums (`src/Domain/Enums/`):
 
 ```csharp
-[ApiController]
-[Route("api/[controller]")]
-public class ServiceController : ControllerBase
-{
-    [HttpPost("register")]
-    public async Task<IActionResult> RegisterService(RegisterServiceRequest request)
-    {
-        // Delegate to application service
-        var result = await _serviceManagementService.RegisterServiceAsync(request);
-        return Ok(new { success = true, data = result });
-    }
-}
+public enum ServiceStatus  { Unknown, Healthy, Degraded, Unhealthy, Disabled, Maintenance }
+public enum HealthStatus   { Unknown, Healthy, Degraded, Unhealthy, Timeout, Error }
+public enum ServiceEventType { /* registration/health/status lifecycle events */ }
 ```
 
-### 2. Middleware Layer
+Exceptions derive from `ServiceScaffoldException`: `ServiceNotFoundException`, `ServiceValidationException`, `HealthCheckException`, `UnauthorizedException`, `InvalidApiKeyException`, `DataAccessException`, `ConfigurationException`, `ResourceExhaustedException`.
 
-**Location**: `src/Presentation/Middleware/`
+`Result` / `Result<T>` (`src/Shared/Models/`) provide a railway-style success/failure type used by service discovery and utility code instead of exceptions for expected failures.
 
-Provides cross-cutting concerns for the request pipeline.
-
-**Key Middleware**:
-- **ApiKeyAuthenticationMiddleware** - Validates API keys
-- **ErrorHandlingMiddleware** - Catches exceptions and returns proper responses
-- **RequestLoggingMiddleware** - Logs all requests/responses
-- **RateLimitingMiddleware** - Prevents abuse
-
-**Example**:
-```csharp
-public class ApiKeyAuthenticationMiddleware
-{
-    // Validates X-API-Key header
-    // Checks IP whitelist
-    // Adds user context to request
-}
-```
-
-### 3. Application Layer
-
-**Location**: `src/Application/Services/`
-
-Contains business logic and service coordination.
-
-**Key Services**:
-
-| Service | Responsibility |
-|---------|-----------------|
-| `UserService` | User management, authentication |
-| `HealthCheckService` | Health probe execution, monitoring |
-| `ServiceManagementService` | Service registration, lifecycle |
-| `AuditService` | Audit logging and compliance |
-| `ConfigurationService` | Application settings management |
-| `FeatureFlagService` | Feature toggles |
-| `MetricsService` | Performance metrics collection |
-
-**Design Pattern**: Service/Interface pattern
-
-```csharp
-public interface IHealthCheckService
-{
-    Task<HealthCheckResult> CheckServiceHealthAsync(string serviceId);
-    Task<List<HealthCheckResult>> GetHistoryAsync(string serviceId, int days);
-    Task<List<HealthCheckResult>> GetFailuresAsync(string serviceId);
-}
-
-public class HealthCheckService : IHealthCheckService
-{
-    private readonly IHealthCheckRepository _repository;
-    private readonly HttpClient _httpClient;
-
-    // Implementation delegates to repositories
-}
-```
-
-### 4. Domain Layer
-
-**Location**: `src/Domain/`
-
-Represents core business entities and rules.
-
-**Key Entities**:
+## Data Flow: Health Check
 
 ```
-User
-├── Id
-├── Username
-├── Email
-├── PasswordHash
-├── FailedLoginAttempts
-├── LastLoginAt
-└── IsActive
-
-ServiceRegistration
-├── Id
-├── Name
-├── Description
-├── HealthCheckUrl
-├── Status (Healthy/Unhealthy/Unknown)
-├── SuccessRate
-├── LastCheckedAt
-└── OwnerId (references User)
-
-HealthCheckResult
-├── Id
-├── ServiceId (references ServiceRegistration)
-├── Status (Healthy/Degraded/Unhealthy)
-├── ResponseTime
-├── StatusCode
-├── Message
-└── CheckedAt
-
-ServiceMetric
-├── Id
-├── ServiceId (references ServiceRegistration)
-├── CpuUsage
-├── MemoryUsage
-├── DiskUsage
-├── AverageResponseTime
-├── RequestsPerMinute
-├── ErrorRate
-└── RecordedAt
-
-AuditLog
-├── Id
-├── UserId (references User)
-├── Action (ServiceRegistered, HealthCheckFailed, etc.)
-├── EntityType
-├── EntityId
-├── Changes (JSON)
-├── Timestamp
-└── IpAddress
-
-ApiKey
-├── Id
-├── Key (hashed)
-├── Name
-├── Scopes (service:read, service:write, etc.)
-├── IpWhitelist
-├── LastUsedAt
-├── CreatedAt
-└── ExpiresAt (optional)
-
-ServiceConfiguration
-├── Id
-├── Key (setting name)
-├── Value (JSON serialized)
-├── Type (string, int, bool, json)
-├── IsEncrypted
-└── UpdatedAt
+POST /api/healthcheck/... (HealthCheckController)
+  → IHealthCheckService.PerformHealthCheckAsync(serviceId)
+      → IServiceRepository.GetByIdAsync            (load registration)
+      → HttpClient GET service.HealthCheckUrl       (typed client, 30s timeout)
+      → new HealthCheckResult { IsHealthy, ResponseTimeMs, StatusCode, ... }
+      → IHealthCheckRepository.AddAsync + SaveChangesAsync
+  → controller serializes result to JSON
 ```
 
-**Enumerations**:
+Failed probes are recorded as unhealthy results rather than thrown, so history/analytics queries (`GetFailedResultsAsync`, `GetAverageResponseTimeAsync`, `GetFailureCountAsync`) work uniformly.
 
-```csharp
-public enum HealthStatus { Healthy, Degraded, Unhealthy }
-public enum ServiceStatus { Active, Inactive, Pending, Failed }
-public enum ServiceEventType { Registered, HealthCheckPassed, HealthCheckFailed, StatusChanged }
-```
+## Key Design Decisions
 
-**Exceptions**:
+- **Single project, layered folders** rather than one assembly per layer. Trade-off: simpler build/deploy for a scaffold; the layering is by convention (nothing stops Presentation referencing Infrastructure directly).
+- **SQLite + WAL** as the default store. Zero-dependency local run and good read concurrency; the trade-off is a single writer and no horizontal scaling. `InitializeDatabaseAsync` uses EF migrations when present and falls back to `EnsureCreatedAsync` (the repo currently ships no migrations, so the fallback path is the one that runs).
+- **Repository pattern over EF Core.** Generic `Repository<T>` plus per-aggregate repositories with intent-revealing queries. Trade-off: some duplication of what LINQ-on-DbContext already gives you, in exchange for mockable seams (used heavily by the unit tests).
+- **API-key authentication as an `AuthenticationHandler`** (scheme-based) rather than custom middleware, so standard `[Authorize]`/`[AllowAnonymous]` attributes and 401/403 semantics apply.
+- **In-process metrics** (`MetricsService` singleton + Prometheus text formatter) instead of a metrics library dependency. Cheap and dependency-free; counters reset on restart and are per-instance only.
+- **Serilog configured in code** from the `StructuredLogging` options section (not from the `Serilog` config section, which exists in `appsettings.json` but is effectively documentation — the logger is built programmatically in `Program.cs`).
 
-```csharp
-public class ServiceScaffoldException : Exception { }
-public class ServiceNotFoundException : ServiceScaffoldException { }
-public class ServiceValidationException : ServiceScaffoldException { }
-public class UnauthorizedException : ServiceScaffoldException { }
-public class InvalidApiKeyException : ServiceScaffoldException { }
-```
+## Extension Points
 
-### 5. Infrastructure Layer
+- **New entity/feature**: model in `src/Domain/Models` → DbSet in `ServiceScaffoldDbContext` → repository interface + implementation → application service → controller → register in `Program.cs`.
+- **Response formats**: implement `IResponseFormatter` and register it on `ResponseFormatterFactory` (JSON and CSV ship built-in).
+- **Discovery backends**: implement `IServiceDiscoveryProvider` (DNS and HTTP-registry providers included).
+- **Caching**: swap `InMemoryCacheService` for a distributed `ICacheService` implementation.
+- **Cross-cutting middleware**: wire `UseApplicationMiddleware()` to get error handling, request logging, and rate limiting in one call.
 
-**Location**: `src/Infrastructure/`
+## Known Limitations
 
-Implements data access and external service integration.
+- No EF Core migrations are checked in; schema comes from `EnsureCreatedAsync`, so model changes on an existing database require manual handling.
+- In-memory cache and metrics are per-process; not suitable as-is for multi-instance deployments.
+- Health checks are executed on demand; there is no background scheduler registered (`AddBackgroundServices()` is currently a no-op).
+- Rate limiting, request logging, and centralized error handling exist but are opt-in (see above); the default pipeline relies on framework defaults.
+- SQLite means a single writer; heavy concurrent write load will serialize.
 
-**Key Components**:
+## Testing
 
-#### Data Access (Repository Pattern)
+- `tests/dotnet-service-scaffold.Tests` — xUnit; unit tests mock repositories, integration tests exercise repositories against real (temporary) SQLite databases via `IntegrationTestBase`.
+- `benchmarks/dotnet-service-scaffold.Benchmarks` — BenchmarkDotNet suites for database CRUD, cache, metrics, and string utilities.
 
-```csharp
-public interface IRepository<T> where T : class
-{
-    Task<T> GetByIdAsync(string id);
-    Task<List<T>> GetAllAsync();
-    Task<T> AddAsync(T entity);
-    Task UpdateAsync(T entity);
-    Task DeleteAsync(T entity);
-}
-
-public class ServiceRepository : Repository<ServiceRegistration>
-{
-    // Specialized queries for ServiceRegistration
-    public async Task<List<ServiceRegistration>> GetByOwnerIdAsync(string ownerId)
-    {
-        return await _context.Services
-            .Where(s => s.OwnerId == ownerId)
-            .ToListAsync();
-    }
-}
-```
-
-#### Database Context
-
-```csharp
-public class ServiceScaffoldDbContext : DbContext
-{
-    public DbSet<User> Users { get; set; }
-    public DbSet<ServiceRegistration> Services { get; set; }
-    public DbSet<HealthCheckResult> HealthCheckResults { get; set; }
-    public DbSet<AuditLog> AuditLogs { get; set; }
-    // ... more DbSets
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        // Entity configuration
-        modelBuilder.Entity<User>()
-            .HasMany(u => u.Services)
-            .WithOne()
-            .HasForeignKey(s => s.OwnerId);
-
-        modelBuilder.Entity<HealthCheckResult>()
-            .HasIndex(h => h.ServiceId)
-            .HasIndex(h => h.CheckedAt);
-    }
-}
-```
-
-#### Caching
-
-```csharp
-public interface ICacheService
-{
-    Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration);
-    Task RemoveAsync(string key);
-}
-
-// InMemoryCacheService provides basic caching
-// Can be extended with Redis for distributed scenarios
-```
-
-#### External Integration
-
-```csharp
-public class ExternalApiClient
-{
-    // Calls third-party APIs
-    // Implements retry logic and timeout handling
-}
-
-public class WebhookClient
-{
-    // Sends webhooks to registered endpoints
-    // Implements signing and verification
-}
-```
-
-## Data Flow Example: Service Health Check
-
-Here's how a health check request flows through the architecture:
-
-```
-1. HTTP Request arrives at HealthCheckController
-
-2. Controller validates request
-   - Deserializes JSON
-   - Checks authentication (via middleware)
-
-3. Calls IHealthCheckService.CheckServiceHealthAsync()
-
-4. HealthCheckService:
-   - Retrieves service details from IServiceRepository
-   - Makes HTTP request using HttpClient
-   - Creates HealthCheckResult entity
-   - Calls IHealthCheckRepository.AddAsync()
-   - Updates cache
-
-5. HealthCheckRepository (Infrastructure):
-   - Adds entity to ServiceScaffoldDbContext
-   - Calls SaveChangesAsync()
-   - Entity Framework Core:
-     - Maps entity to SQL
-     - Executes INSERT against SQLite
-
-6. AuditService logs the action
-   - Creates AuditLog entry
-   - Records timestamp and user info
-
-7. Controller returns Result<HealthCheckResult>
-   - Serialized to JSON
-   - HTTP 200 with data
-```
-
-## Dependency Injection
-
-All dependencies are registered in `Program.cs`:
-
-```csharp
-// Repositories
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
-
-// Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
-
-// Infrastructure
-builder.Services.AddDbContext<ServiceScaffoldDbContext>();
-builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
-```
-
-**Key Principle**: Depend on abstractions, not implementations.
-
-## Design Patterns Used
-
-### 1. Repository Pattern
-- Abstracts data access layer
-- Enables testing with mocks
-- Centralizes query logic
-
-### 2. Service Pattern
-- Encapsulates business logic
-- Coordinates between repositories
-- Provides reusable operations
-
-### 3. Middleware Pattern
-- Processes requests in pipeline
-- Handles cross-cutting concerns
-- Allows composability
-
-### 4. Dependency Injection
-- Loose coupling between components
-- Easier testing and maintenance
-- Built into ASP.NET Core
-
-### 5. Value Object Pattern
-- Immutable objects representing values
-- Example: HealthStatus enum
-- Improves type safety
-
-### 6. Domain Event Pattern
-- Models significant business events
-- Future: event sourcing support
-- Currently used for audit logging
-
-## Database Schema
-
-Key tables and relationships:
-
-```sql
--- Users table
-CREATE TABLE Users (
-    Id TEXT PRIMARY KEY,
-    Username TEXT UNIQUE NOT NULL,
-    Email TEXT UNIQUE NOT NULL,
-    PasswordHash TEXT NOT NULL,
-    IsActive INTEGER DEFAULT 1,
-    FailedLoginAttempts INTEGER DEFAULT 0,
-    LastLoginAt TEXT,
-    CreatedAt TEXT NOT NULL,
-    UpdatedAt TEXT NOT NULL
-);
-
--- Services table (Foreign Key: UserId)
-CREATE TABLE Services (
-    Id TEXT PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Description TEXT,
-    HealthCheckUrl TEXT,
-    Status TEXT DEFAULT 'Pending',
-    IsEnabled INTEGER DEFAULT 1,
-    SuccessRate REAL DEFAULT 100.0,
-    LastCheckedAt TEXT,
-    OwnerId TEXT NOT NULL,
-    FOREIGN KEY (OwnerId) REFERENCES Users(Id)
-);
-
--- Health Check Results (Foreign Key: ServiceId)
-CREATE TABLE HealthCheckResults (
-    Id TEXT PRIMARY KEY,
-    ServiceId TEXT NOT NULL,
-    Status TEXT NOT NULL,
-    ResponseTime INTEGER,
-    StatusCode INTEGER,
-    Message TEXT,
-    CheckedAt TEXT NOT NULL,
-    FOREIGN KEY (ServiceId) REFERENCES Services(Id)
-);
-
--- Indexes for performance
-CREATE INDEX idx_services_owner ON Services(OwnerId);
-CREATE INDEX idx_healthchecks_service ON HealthCheckResults(ServiceId);
-CREATE INDEX idx_healthchecks_timestamp ON HealthCheckResults(CheckedAt);
-```
-
-## Error Handling
-
-All exceptions inherit from `ServiceScaffoldException`:
-
-```csharp
-try
-{
-    // Business logic
-}
-catch (ServiceNotFoundException ex)
-{
-    // Log and return 404
-    return NotFound(new { error = ex.Message });
-}
-catch (ServiceValidationException ex)
-{
-    // Log and return 400
-    return BadRequest(new { error = ex.Message });
-}
-catch (Exception ex)
-{
-    // Log unexpected error
-    // Return 500 with generic message
-    return StatusCode(500, new { error = "Internal server error" });
-}
-```
-
-## Security Architecture
-
-### Authentication Flow
-
-```
-API Key in Header
-        ↓
-ApiKeyAuthenticationMiddleware validates
-        ↓
-IP whitelist check
-        ↓
-Scope verification
-        ↓
-Request proceeds with ApiKeyContext
-```
-
-### Password Security
-
-- BCrypt hashing with salt
-- Account lockout after 5 failed attempts
-- Minimum 8 character passwords
-- No password reversal
-
-### Audit Trail
-
-Every significant action logged:
-- Service registration/deletion
-- Health check results
-- User login/logout
-- Configuration changes
-- API key usage
-
-## Scalability Considerations
-
-### Current Limitations
-- In-memory caching (not distributed)
-- Single SQLite database (no sharding)
-- Synchronous health checks (limited concurrency)
-
-### Future Improvements
-- Redis integration for distributed caching
-- PostgreSQL support for horizontal scaling
-- Async health check batching
-- Event sourcing for audit logs
-- Message queue integration (RabbitMQ/Kafka)
-
-## Testing Strategy
-
-### Unit Tests
-Test individual services in isolation with mocked repositories:
-
-```csharp
-[Fact]
-public async Task RegisterService_WithValidData_Success()
-{
-    // Arrange
-    var mockRepository = new Mock<IServiceRepository>();
-    var service = new ServiceManagementService(mockRepository.Object);
-
-    // Act
-    var result = await service.RegisterServiceAsync(request);
-
-    // Assert
-    Assert.NotNull(result);
-    mockRepository.Verify(r => r.AddAsync(It.IsAny<ServiceRegistration>()), Times.Once);
-}
-```
-
-### Integration Tests
-Test full request/response cycle with in-memory database.
-
-### Load Testing
-Monitor performance under high health check load:
-```bash
-# Simulate 100 concurrent health checks
-wrk -t 8 -c 100 -d 30s http://localhost:5000/api/healthcheck/svc-uuid/check
-```
-
-## Extending the Architecture
-
-### Adding a New Feature
-
-1. **Define Domain Model** (`src/Domain/Models/`)
-2. **Create Repository Interface** (`src/Infrastructure/Data/Repository/`)
-3. **Implement Repository** with DbContext
-4. **Create Service Interface** (`src/Application/Services/`)
-5. **Implement Service** with business logic
-6. **Create Controller** (`src/Presentation/Controllers/`)
-7. **Register in Program.cs**
-8. **Write Tests**
-9. **Update Documentation**
-
-### Example: Adding a Notification Service
-
-```csharp
-// 1. Domain Model
-public class Notification
-{
-    public string Id { get; set; }
-    public string UserId { get; set; }
-    public string Message { get; set; }
-    public NotificationType Type { get; set; }
-    public bool IsRead { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-// 2. Repository
-public interface INotificationRepository : IRepository<Notification>
-{
-    Task<List<Notification>> GetUnreadAsync(string userId);
-}
-
-// 3. Service
-public interface INotificationService
-{
-    Task SendNotificationAsync(string userId, string message);
-    Task MarkAsReadAsync(string notificationId);
-}
-
-// 4. Controller
-[ApiController]
-[Route("api/notifications")]
-public class NotificationController : ControllerBase
-{
-    [HttpGet("unread")]
-    public async Task<IActionResult> GetUnread(string userId)
-    {
-        var notifications = await _notificationService.GetUnreadAsync(userId);
-        return Ok(notifications);
-    }
-}
-
-// 5. Register in Program.cs
-builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-```
-
-## Performance Optimization
-
-### Database Queries
-- Use `Include()` for eager loading
-- Create indexes on frequently queried columns
-- Implement pagination for large result sets
-
-### Caching Strategy
-- Cache service list (changes infrequently)
-- Cache configuration values
-- Set appropriate TTLs
-
-### Health Check Optimization
-- Batch health checks
-- Implement circuit breaker for failing services
-- Use timeout to prevent hung requests
-
-## Conclusion
-
-The architecture is designed to be:
-- **Maintainable** - Clear separation of concerns
-- **Testable** - Dependency injection and interfaces
-- **Extensible** - Easy to add new features
-- **Scalable** - Foundation for growth
-- **Secure** - Built-in authentication and auditing
+Run with `dotnet test` / `dotnet run -c Release --project benchmarks/dotnet-service-scaffold.Benchmarks`.
