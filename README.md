@@ -407,6 +407,71 @@ Console.WriteLine($"API keys: {newUser.ApiKeys.Count}");
 Console.WriteLine($"Managed services: {newUser.ManagedServices.Count}");
 ```
 
+## ApiKey
+
+The `ApiKey` class represents API authentication keys for programmatic access to the scaffold system. It provides secure key management with validation, expiration tracking, IP restrictions, scope-based permissions, and usage analytics. API keys are associated with users and can be configured with customizable access controls including allowed IP addresses, permitted scopes, and expiration dates.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+
+// Create a new API key for a user
+var apiKey = new ApiKey
+{
+  Id = Guid.NewGuid(),
+  UserId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+  Name = "Production API Key",
+  KeyHash = "$2a$12$hashed_api_key_value_here", // Store only the hash
+  KeyPrefix = "sk_live_", // First few characters for identification
+  IsActive = true,
+  Description = "API key for production service integration",
+  AllowedScopes = "read:services,write:services,metrics:read",
+  AllowedIps = "192.168.1.100,10.0.0.5,127.0.0.1",
+  ExpiresAt = DateTime.UtcNow.AddDays(90),
+  CreatedAt = DateTime.UtcNow
+};
+
+// Validate the API key configuration
+bool isValid = apiKey.IsValid();
+Console.WriteLine($"API key is valid: {isValid}");
+
+// Check if the key has expired
+bool isExpired = apiKey.IsExpired();
+Console.WriteLine($"API key expired: {isExpired}");
+
+// Get days until expiration
+int? daysUntilExpiration = apiKey.GetDaysUntilExpiration();
+if (daysUntilExpiration.HasValue)
+{
+  Console.WriteLine($"Days until expiration: {daysUntilExpiration} days");
+}
+
+// Check if the source IP is allowed
+bool isIpAllowed = apiKey.IsIpAllowed("192.168.1.100");
+Console.WriteLine($"IP 192.168.1.100 is allowed: {isIpAllowed}");
+
+bool isIpBlocked = apiKey.IsIpAllowed("203.0.113.45");
+Console.WriteLine($"IP 203.0.113.45 is allowed: {isIpBlocked}");
+
+// Check if the requested scope is permitted
+bool hasReadScope = apiKey.HasScope("read:services");
+Console.WriteLine($"Has 'read:services' scope: {hasReadScope}");
+
+bool hasWriteScope = apiKey.HasScope("write:metrics");
+Console.WriteLine($"Has 'write:metrics' scope: {hasWriteScope}");
+
+// Record API key usage
+apiKey.RecordUsage();
+Console.WriteLine($"Total API calls: {apiKey.ApiCallsCount}");
+Console.WriteLine($"Last used at: {apiKey.LastUsedAt}");
+
+// Revoke an API key (disable it)
+apiKey.Revoke();
+Console.WriteLine($"API key active after revocation: {apiKey.IsActive}");
+```
+
 ## ServiceConfigurationExtensions
 
 The `ServiceConfigurationExtensions` class provides helper methods for retrieving and updating service configuration values with type safety and validation. It includes methods for common data types like `double`, `decimal`, `DateTime`, and `Guid`, as well as utilities for checking system configuration flags and updating values conditionally.
