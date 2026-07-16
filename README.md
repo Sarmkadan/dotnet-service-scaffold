@@ -939,6 +939,70 @@ var httpClientFactory = serviceProvider.GetRequiredService<ICustomHttpClientFact
 
 This example demonstrates how to use the `ServiceCollectionExtensions` methods to configure the dependency injection container with all infrastructure and application services needed for a typical ASP.NET Core application.
 
+## JsonUtility
+
+The `JsonUtility` class provides static methods for JSON serialization and deserialization with support for both strongly-typed objects and dynamic types. It includes methods for pretty-printing JSON, validating JSON strings, merging JSON documents, extracting properties, and formatting JSON content for debugging and display purposes.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Serialize an object to JSON
+var user = new { Id = 1, Name = "John Doe", Email = "john@example.com", Roles = new[] { "Admin", "User" } };
+string json = JsonUtility.Serialize(user);
+Console.WriteLine(json);
+// Output: {"Id":1,"Name":"John Doe","Email":"john@example.com","Roles":["Admin","User"]}
+
+// Serialize with pretty printing (indented JSON)
+string prettyJson = JsonUtility.SerializePretty(user);
+Console.WriteLine(prettyJson);
+/* Output:
+{
+  "Id": 1,
+  "Name": "John Doe",
+  "Email": "john@example.com",
+  "Roles": [
+    "Admin",
+    "User"
+  ]
+}
+*/
+
+// Deserialize back to a strongly-typed object
+var deserializedUser = JsonUtility.Deserialize<Dictionary<string, object>>(json);
+Console.WriteLine(deserializedUser["Name"]); // "John Doe"
+
+// Deserialize to dynamic type
+dynamic dynamicUser = JsonUtility.DeserializeDynamic(json);
+Console.WriteLine(dynamicUser.Name); // "John Doe"
+Console.WriteLine(dynamicUser.Roles[0]); // "Admin"
+
+// Extract a property value from JSON
+var email = JsonUtility.GetProperty<string>(json, "Email");
+Console.WriteLine(email); // "john@example.com"
+
+// Check if a string is valid JSON
+bool isValid = JsonUtility.IsValidJson(json);
+Console.WriteLine(isValid); // true
+
+// Get the JSON type
+string jsonType = JsonUtility.GetJsonType(json);
+Console.WriteLine(jsonType); // "Object"
+
+// Merge two JSON strings
+string json1 = "{\"Name\":\"John\",\"Age\":30}";
+string json2 = "{\"Age\":31,\"City\":\"New York\"}";
+string mergedJson = JsonUtility.MergeJson(json1, json2);
+Console.WriteLine(mergedJson); // {"Name":"John","Age":31,"City":"New York"}
+
+// Format JSON for better readability
+string formattedJson = JsonUtility.FormatJson(json);
+Console.WriteLine(formattedJson);
+```
+
 ## ExternalApiClient
 
 The `ExternalApiClient` is a generic HTTP client for calling external APIs. It handles JSON serialization, error responses, and provides a clean interface for common HTTP operations (GET, POST, PUT, DELETE) with built-in logging and validation. The client automatically deserializes responses into the requested type and throws appropriate exceptions for failed requests.
