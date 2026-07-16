@@ -68,7 +68,9 @@ builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
+// IHealthCheckService is registered below via AddHttpClient<IHealthCheckService, HealthCheckService>,
+// which supplies the HttpClient the implementation requires. Do not also register it as a plain
+// scoped service: that descriptor cannot resolve HttpClient and breaks IEnumerable<IHealthCheckService>.
 builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
@@ -86,6 +88,10 @@ builder.Services.AddHttpClient<IHealthCheckService, HealthCheckService>()
 
 // Add controllers and API support
 builder.Services.AddControllers();
+// Register the API key authentication scheme. Several controllers are decorated with
+// [Authorize]; without a registered authentication scheme those endpoints throw
+// InvalidOperationException ("No authenticationScheme was specified") at runtime.
+builder.Services.AddApiAuthentication();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -124,6 +130,7 @@ if (structuredLoggingOptions.EnableCorrelationId)
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
