@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -27,9 +27,9 @@ public static class UserServiceJsonExtensions
     /// <summary>
     /// Serializes the <see cref="UserService"/> instance to a JSON string.
     /// </summary>
-    /// <param name="value">The UserService instance to serialize.</param>
+    /// <param name="value">The <see cref="UserService"/> instance to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representation of the UserService.</returns>
+    /// <returns>A JSON string representation of the <see cref="UserService"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static string ToJson(this UserService value, bool indented = false)
     {
@@ -46,24 +46,19 @@ public static class UserServiceJsonExtensions
     /// Deserializes a JSON string to a <see cref="UserService"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized UserService instance, or null if the JSON is null or empty.</returns>
+    /// <returns>The deserialized <see cref="UserService"/> instance, or null if the JSON is null or empty.</returns>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static UserService? FromJson(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
-
-        return JsonSerializer.Deserialize<UserService>(json, _jsonOptions);
-    }
+        => string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<UserService>(json, _jsonOptions);
 
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="UserService"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized UserService instance, or null if deserialization fails.</param>
-    /// <returns>True if deserialization succeeds; otherwise, false.</returns>
+    /// <param name="value">Receives the deserialized value if successful.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     public static bool TryFromJson(string json, out UserService? value)
     {
         value = null;
