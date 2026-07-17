@@ -9,7 +9,52 @@
 
 A service-registry / health-monitoring API: ASP.NET Core + EF Core (SQLite, WAL), Serilog, API-key authentication, in-process Prometheus-format metrics. Single project with layered folders (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Presentation`, `src/Shared`), plus xUnit tests and BenchmarkDotNet benchmarks. Entry point is `Program.cs`; several components (rate limiting, caching, service discovery, service mesh) are opt-in via extension methods rather than wired by default.
 
-See [docs/architecture.md](docs/architecture.md) for the full breakdown: what is wired at startup, data flow, design decisions and trade-offs, extension points, and known limitations.
+## DeploymentConfigurationTests
+
+The `DeploymentConfigurationTests` class provides comprehensive unit tests for the `DeploymentConfiguration` class, ensuring that infrastructure deployment artifacts—such as systemd service units, Caddy reverse proxy configurations, environment files, and deployment guides—are generated correctly with expected security settings and configuration values. These tests validate the integrity of the infrastructure-as-code generation logic, confirming that all generated files adhere to required production standards.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.Configuration;
+using DotnetServiceScaffold.Tests.Infrastructure.Configuration;
+using Xunit;
+
+// Arrange: Initialize DeploymentOptions with test settings
+var options = new DeploymentOptions
+{
+    ServiceName = "my-service",
+    ServiceDescription = "A production .NET service",
+    ServiceUser = "serviceuser",
+    ApplicationPath = "/app/my-service",
+    DataPath = "/var/lib/my-service",
+    LogPath = "/var/log/my-service",
+    ServerDomain = "my-app.com",
+    ApplicationPort = 5000,
+    DotnetPath = "/usr/bin/dotnet",
+    ServiceVersion = "1.0.0"
+};
+
+// Generate and verify systemd service unit
+var unitFile = DeploymentConfiguration.GenerateSystemdServiceUnit(options);
+Assert.Contains("Description=A production .NET service", unitFile);
+Assert.Contains("NoNewPrivileges=true", unitFile);
+
+// Generate and verify Caddy configuration
+var caddyConfig = DeploymentConfiguration.GenerateCaddyConfiguration(options);
+Assert.Contains("my-app.com {", caddyConfig);
+Assert.Contains("interval 30s", caddyConfig);
+
+// Generate and verify environment file
+var envFile = DeploymentConfiguration.GenerateEnvironmentFile(options);
+Assert.Contains("ASPNETCORE_ENVIRONMENT=Production", envFile);
+Assert.Contains("SERVICE_NAME=my-service", envFile);
+
+// Generate and verify deployment guide
+var guide = DeploymentConfiguration.GenerateDeploymentGuide(options);
+Assert.Contains("# Deployment Guide for my-service", guide);
+Assert.Contains("sudo useradd -r -s /bin/false serviceuser", guide);
+```
 
 ## Result
 
