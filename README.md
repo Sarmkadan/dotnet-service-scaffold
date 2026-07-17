@@ -1460,6 +1460,70 @@ Console.WriteLine($"Health distribution - Healthy: {healthyPercentage}%, Unhealt
 
 This example demonstrates how to use the `CacheBenchmarksExtensions` methods to query and analyze cached service data efficiently.
 
+## MetricsServiceExtensions
+
+The `MetricsServiceExtensions` class provides extension methods for the `MetricsService` that add convenience overloads and additional metric recording capabilities. These extensions simplify common metric collection patterns including incrementing counters, recording gauges, measuring operation durations, and tracking asynchronous operations with automatic timing.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.Metrics;
+
+// Initialize metrics service (typically via dependency injection)
+var metricsService = new MetricsService();
+
+// Increment a counter with a specific value
+metricsService.IncrementCounter("http.requests.total", 42);
+
+// Increment a counter with tags for dimensional metrics
+var tags = new Dictionary<string, string>
+{
+    ["method"] = "GET",
+    ["endpoint"] = "/api/users",
+    ["status"] = "200"
+};
+metricsService.IncrementCounter("http.requests", 10, tags);
+
+// Record a gauge metric (e.g., memory usage, active connections)
+metricsService.RecordGauge("memory.usage_mb", 75.5);
+metricsService.RecordGauge("active.connections", 156, tags);
+
+// Record a timing metric in milliseconds
+metricsService.RecordTiming("api.response_time_ms", 150);
+metricsService.RecordTiming("database.query_time_ms", 85, tags);
+
+// Measure async operation duration - generic version returns result
+var userData = await metricsService.MeasureAsync("user_service.get_user", async () =>
+{
+    await Task.Delay(100);
+    return new { Id = 123, Name = "John Doe" };
+});
+
+// Measure async operation duration - non-generic version for void operations
+await metricsService.MeasureAsync("cleanup.task", async () =>
+{
+    await Task.Delay(50);
+});
+
+// Convenience method to increment counter by 1
+metricsService.Increment("requests.processed");
+metricsService.Increment("requests.processed", tags);
+
+// Record gauge with value 0 (useful for tracking resource presence)
+metricsService.RecordGaugeZero("resource.available");
+metricsService.RecordGaugeZero("cache.hit", tags);
+
+// Measure synchronous action duration
+metricsService.RecordActionTime("cache.lookup", () =>
+{
+    // Simulate cache lookup
+    System.Threading.Thread.Sleep(25);
+});
+```
+
 ## MetricsBenchmarks
 
 The `MetricsBenchmarks` class provides performance benchmarks for in-process metric collection. It measures the overhead of incrementing counters, recording timings, and retrieving metrics.
