@@ -6923,5 +6923,76 @@ Console.WriteLine(json);
 // Deserialize a JSON string to a byte array
 var deserialized = EncryptionUtilityJsonExtensions.FromJsonToByteArray(json);
 Console.WriteLine(deserialized);
+
+## PerformanceUtilityValidation
+
+The `PerformanceUtilityValidation` class provides validation helpers for performance measurement data, specifically for validating memory statistics and garbage collection statistics. It offers methods to validate, check validity, and ensure correctness of performance-related data structures.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Example MemoryStats object
+var memoryStats = new MemoryStats
+{
+    WorkingSetMb = 128,
+    PrivateMemoryMb = 64,
+    PeakWorkingSetMb = 256
+};
+
+// Validate memory stats and get error list
+var memoryErrors = memoryStats.Validate();
+if (memoryErrors.Count > 0)
+{
+    Console.WriteLine("Memory validation errors:");
+    foreach (var error in memoryErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+else
+{
+    Console.WriteLine("Memory stats are valid!");
+}
+
+// Check if memory stats are valid
+if (memoryStats.IsValid())
+{
+    Console.WriteLine("Memory stats passed validation");
+}
+
+// Ensure memory stats are valid (throws if invalid)
+memoryStats.EnsureValid();
+
+// Example GarbageCollectionStats object
+var gcStats = new GarbageCollectionStats
+{
+    Gen0Collections = 5,
+    Gen1Collections = 2,
+    Gen2Collections = 1,
+    TotalMemoryBytes = 1024 * 1024 * 100 // 100 MB
+};
+
+// Validate GC stats and get error list
+var gcErrors = gcStats.Validate();
+if (gcErrors.Count > 0)
+{
+    Console.WriteLine("GC validation errors:");
+    foreach (var error in gcErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Check if GC stats are valid
+if (gcStats.IsValid())
+{
+    Console.WriteLine("GC stats passed validation");
+}
+
+// Ensure GC stats are valid (throws if invalid)
+gcStats.EnsureValid();
 ```
 ```
