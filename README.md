@@ -6760,4 +6760,32 @@ public async Task SendAlertAsync_ShouldReturnTrue_WithoutDetails()
     // Assert
     result.Should().BeTrue();
 }
+
+## EncryptionUtilityJsonExtensions
+
+The `EncryptionUtilityJsonExtensions` class provides JSON serialization extensions for encryption utility results. Enables serialization and deserialization of encryption operations results to/from JSON.
+
+### Usage Example
+
+```csharp
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+// Serialize a string to a JSON string
+var json = EncryptionUtilityJsonExtensions.ToJson("Hello, World!");
+Console.WriteLine(json);
+
+// Deserialize a JSON string to a string
+var original = EncryptionUtilityJsonExtensions.FromJson(json);
+Console.WriteLine(original);
+
+// Serialize a byte array to a JSON string
+var bytes = System.Text.Encoding.UTF8.GetBytes("Hello, World!");
+json = EncryptionUtilityJsonExtensions.ToJson(bytes);
+Console.WriteLine(json);
+
+// Deserialize a JSON string to a byte array
+var deserialized = EncryptionUtilityJsonExtensions.FromJsonToByteArray(json);
+Console.WriteLine(deserialized);
+```
 ```
