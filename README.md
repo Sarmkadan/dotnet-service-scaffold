@@ -1373,6 +1373,101 @@ emptyPage.Should().BeEmpty();
 
 The `CacheAndCollectionTests` class provides comprehensive unit tests for cache and collection utilities, verifying all public members and edge cases. It tests password strength validation, range validation, batching operations, partitioning, and in-memory cache functionality, ensuring the utility methods work correctly across different scenarios.
 
+## ConfigurationServiceTests
+
+The `ConfigurationServiceTests` class provides comprehensive unit tests for the `ConfigurationService` class, validating all public members and edge cases. These tests cover configuration retrieval by ID and key, creation with duplicate key validation, and update operations with existence checking, ensuring the configuration service handles all scenarios correctly.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using NSubstitute;
+using FluentAssertions;
+
+// Initialize the configuration service with a mock repository
+var configurationRepository = Substitute.For<IConfigurationRepository>();
+var configurationService = new ConfigurationService(configurationRepository);
+
+// Create a test configuration
+var testConfig = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "TestFeatureFlag",
+    Value = "true",
+    ConfigType = "boolean",
+    Description = "Feature flag for new dashboard interface",
+    IsSystemConfig = false,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Test creating a new configuration
+configurationRepository.GetConfigurationByKeyAsync(testConfig.Key).Returns((ServiceConfiguration)null);
+configurationRepository.AddConfigurationAsync(Arg.Any<ServiceConfiguration>()).Returns(Task.CompletedTask);
+
+var createdConfig = await configurationService.CreateConfigurationAsync(testConfig);
+createdConfig.Should().NotBeNull();
+createdConfig.Key.Should().Be(testConfig.Key);
+
+// Test retrieving configuration by ID
+configurationRepository.GetConfigurationByIdAsync(testConfig.Id).Returns(testConfig);
+var retrievedById = await configurationService.GetConfigurationByIdAsync(testConfig.Id);
+retrievedById.Should().Be(testConfig);
+
+// Test retrieving configuration by key
+configurationRepository.GetConfigurationByKeyAsync(testConfig.Key).Returns(testConfig);
+var retrievedByKey = await configurationService.GetConfigurationByKeyAsync(testConfig.Key);
+retrievedByKey.Should().Be(testConfig);
+
+// Test updating an existing configuration
+var updatedConfig = new ServiceConfiguration
+{
+    Id = testConfig.Id,
+    Key = "TestFeatureFlag",
+    Value = "false", // Flip the flag
+    ConfigType = "boolean",
+    Description = "Feature flag for new dashboard interface",
+    IsSystemConfig = false,
+    CreatedAt = testConfig.CreatedAt,
+    UpdatedAt = DateTime.UtcNow
+};
+
+configurationRepository.GetConfigurationByIdAsync(testConfig.Id).Returns(testConfig);
+configurationRepository.UpdateConfigurationAsync(Arg.Any<ServiceConfiguration>()).Returns(Task.CompletedTask);
+configurationRepository.GetConfigurationByKeyAsync(updatedConfig.Key).Returns((ServiceConfiguration)null);
+
+await configurationService.UpdateConfigurationAsync(updatedConfig);
+
+// Test error scenarios - attempting to create duplicate key
+var duplicateConfig = new ServiceConfiguration
+{
+    Key = "TestFeatureFlag",
+    Value = "true"
+};
+
+configurationRepository.GetConfigurationByKeyAsync(duplicateConfig.Key).Returns(testConfig);
+
+Func<Task> createDuplicateAction = async () => await configurationService.CreateConfigurationAsync(duplicateConfig);
+await createDuplicateAction.Should().ThrowAsync<ServiceScaffoldException>();
+
+// Test error scenarios - attempting to update non-existent configuration
+var nonExistentConfig = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "NonExistent",
+    Value = "value"
+};
+
+configurationRepository.GetConfigurationByIdAsync(nonExistentConfig.Id).Returns((ServiceConfiguration)null);
+
+Func<Task> updateNonExistentAction = async () => await configurationService.UpdateConfigurationAsync(nonExistentConfig);
+await updateNonExistentAction.Should().ThrowAsync<ServiceScaffoldException>();
+```
+
 ### Usage Examples
 
 ```csharp
