@@ -9,6 +9,43 @@
 
 A service-registry / health-monitoring API: ASP.NET Core + EF Core (SQLite, WAL), Serilog, API-key authentication, in-process Prometheus-format metrics. Single project with layered folders (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Presentation`, `src/Shared`), plus xUnit tests and BenchmarkDotNet benchmarks. Entry point is `Program.cs`; several components (rate limiting, caching, service discovery, service mesh) are opt-in via extension methods rather than wired by default.
 
+## HealthCheckMonitorExample
+
+The `HealthCheckMonitorExample` class demonstrates how to implement continuous service health monitoring. It provides functionality to perform health checks, retrieve historical data, identify failure patterns, and generate comprehensive reports, which can be used to build reliable alerting and observability pipelines.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+
+// Initialize the monitor with your API key and service base URL
+var monitor = new HealthCheckMonitorExample("sk_live_your_api_key_here", "http://localhost:5000");
+var serviceId = "svc-12345678";
+
+// Perform a single health check
+var (status, responseTime) = await monitor.CheckServiceHealthAsync(serviceId);
+Console.WriteLine($"Service Status: {status}, Response Time: {responseTime}ms");
+
+// Retrieve and analyze health trends over the last 7 days
+var history = await monitor.GetHealthHistoryAsync(serviceId, days: 7);
+monitor.AnalyzeTrends(history);
+
+// Get a list of recent failures
+var failures = await monitor.GetFailuresAsync(serviceId, limit: 10);
+foreach (var failure in failures)
+{
+    Console.WriteLine($"Failure at {failure.CheckedAt}: {failure.Message} (Status: {failure.StatusCode})");
+}
+
+// Generate a comprehensive health report
+var report = await monitor.GenerateHealthReportAsync("UserService", serviceId);
+Console.WriteLine(report);
+
+// Start continuous monitoring (interval of 60 seconds)
+// await monitor.MonitorServiceAsync("UserService", serviceId, intervalSeconds: 60);
+```
+
 ## ErrorHandlingMiddlewareTests
 
 The `ErrorHandlingMiddlewareTests` class provides comprehensive unit tests for the `ErrorHandlingMiddleware` class, verifying that the middleware correctly intercepts and handles various exceptions during request processing. These tests ensure that the middleware appropriately catches specific exception types—such as `ServiceScaffoldException`, `ArgumentNullException`, `ArgumentException`, `InvalidOperationException`, and `KeyNotFoundException`—and returns the expected HTTP status codes (500, 400, 409, 404), while also validating that generic exceptions return a generic message in production environments.
