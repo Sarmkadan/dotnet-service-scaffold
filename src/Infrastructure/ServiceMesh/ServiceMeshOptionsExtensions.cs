@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -55,6 +55,7 @@ public static class ServiceMeshOptionsExtensions
     /// </summary>
     /// <param name="options">The service mesh options to check.</param>
     /// <param name="sidecarProxyService">The sidecar proxy service to perform the readiness check.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>True if the service mesh is enabled and ready; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="options"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="sidecarProxyService"/> is <see langword="null"/>.</exception>
@@ -66,11 +67,6 @@ public static class ServiceMeshOptionsExtensions
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(sidecarProxyService);
 
-        if (!options.Enabled)
-        {
-            return false;
-        }
-
-        return await sidecarProxyService.IsServiceMeshEnabledAsync(cancellationToken);
+        return options.Enabled && await sidecarProxyService.IsServiceMeshEnabledAsync(cancellationToken);
     }
 }
