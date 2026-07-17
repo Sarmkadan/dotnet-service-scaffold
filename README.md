@@ -1995,6 +1995,72 @@ var nonExistentApiKey = await apiKeyRepository.GetByIdAsync(Guid.NewGuid());
 nonExistentApiKey.Should().BeNull();
 ```
 
+## ServiceRepositoryIntegrationTests
+
+The `ServiceRepositoryIntegrationTests` class provides comprehensive integration tests for the `ServiceRepository`, validating all public members and edge cases. These tests verify that service registration CRUD operations work correctly with the database, including adding service registrations, retrieving service registrations by ID, updating service registrations, deleting service registrations, and handling scenarios with empty collections.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Domain.Enums;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using FluentAssertions;
+using Xunit;
+
+// Initialize the service repository (typically via dependency injection)
+var serviceRepository = new ServiceRepository(dbContext);
+
+// Create a new service registration for testing
+var newService = new ServiceRegistration
+{
+    Name = "MyService",
+    Description = "A test service for integration testing",
+    BaseUrl = "https://api.example.com",
+    Status = ServiceStatus.Active,
+    CreatedAt = DateTime.UtcNow
+};
+
+// Test adding a service registration to the database
+await serviceRepository.AddServiceRegistrationAsync(newService);
+
+// Verify the service was added
+var savedService = await serviceRepository.GetServiceRegistrationByIdAsync(newService.Id);
+savedService.Should().NotBeNull();
+savedService.Name.Should().Be("MyService");
+
+// Test updating a service registration
+savedService.Description = "Updated description for testing";
+savedService.Status = ServiceStatus.Inactive;
+await serviceRepository.UpdateServiceRegistrationAsync(savedService);
+
+// Verify the update
+var updatedService = await serviceRepository.GetServiceRegistrationByIdAsync(newService.Id);
+updatedService.Should().NotBeNull();
+updatedService.Description.Should().Be("Updated description for testing");
+
+// Test getting all service registrations
+var allServices = await serviceRepository.GetAllServiceRegistrationsAsync();
+allServices.Should().HaveCount(1);
+
+// Test deleting a service registration
+await serviceRepository.DeleteServiceRegistrationAsync(newService.Id);
+
+// Verify the service was deleted
+var deletedService = await serviceRepository.GetServiceRegistrationByIdAsync(newService.Id);
+deletedService.Should().BeNull();
+
+// Test getting a non-existent service registration
+var nonExistentService = await serviceRepository.GetServiceRegistrationByIdAsync(Guid.NewGuid());
+nonExistentService.Should().BeNull();
+
+// Test getting all service registrations when none exist
+var emptyServices = await serviceRepository.GetAllServiceRegistrationsAsync();
+emptyServices.Should().BeEmpty();
+```
+
 ## NotificationService
 
 The `NotificationService` provides a unified interface for sending various types of notifications to users and systems, including individual notifications, bulk communications, emails, and critical alerts. It abstracts the underlying delivery mechanisms (email, SMS, push notifications, webhooks, Slack) to allow flexible implementations and easy switching between notification providers. The service includes built-in logging and error handling to ensure reliable notification delivery.
