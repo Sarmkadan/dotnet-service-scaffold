@@ -503,6 +503,93 @@ catch (ArgumentException ex)
 var referenceDate = DateTime.UtcNow.AddDays(-7);
 var refErrors = DateTimeUtilityValidation.ValidateReferenceDate(referenceDate);
 
+## HttpUtilityValidation
+
+Provides validation helpers for HTTP-related values such as Basic authentication credentials, bearer tokens, status codes, URLs, paths, query parameters, content types, headers, and retry attempts. Each validation method returns a list of validation problems or an empty list if the input is valid. Convenience methods like `IsValidBasicAuth` and `EnsureValidBasicAuth` provide boolean checks and exception-throwing variants respectively.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Validate Basic authentication credentials
+var authProblems = HttpUtilityValidation.ValidateBasicAuth("user", "pass123");
+if (authProblems.Count == 0)
+{
+    Console.WriteLine("Credentials are valid for Basic authentication");
+}
+
+// Validate a bearer token
+var bearerProblems = HttpUtilityValidation.ValidateBearerToken(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+);
+if (HttpUtilityValidation.IsValidBearerToken("token123"))
+{
+    Console.WriteLine("Token format is valid");
+}
+
+// Validate HTTP status code
+var statusProblems = HttpUtilityValidation.ValidateStatusCode(200);
+if (HttpUtilityValidation.IsValidStatusCode(404))
+{
+    Console.WriteLine("Status code 404 is valid");
+}
+
+// Validate base URL
+var urlProblems = HttpUtilityValidation.ValidateBaseUrl("https://api.example.com");
+if (HttpUtilityValidation.IsValidBaseUrl("https://example.com"))
+{
+    Console.WriteLine("Base URL is valid");
+}
+
+// Validate path
+var pathProblems = HttpUtilityValidation.ValidatePath("/api/v1/users");
+if (HttpUtilityValidation.IsValidPath("/valid/path"))
+{
+    Console.WriteLine("Path is valid");
+}
+
+// Validate query parameters
+var queryParams = new Dictionary<string, string> { { "page", "1" }, { "limit", "10" } };
+var queryProblems = HttpUtilityValidation.ValidateQueryParameters(queryParams);
+if (HttpUtilityValidation.IsValidQueryParameters(queryParams))
+{
+    Console.WriteLine("Query parameters are valid");
+}
+
+// Validate Content-Type header
+var contentTypeProblems = HttpUtilityValidation.ValidateContentType("application/json");
+if (HttpUtilityValidation.IsValidContentType("text/plain"))
+{
+    Console.WriteLine("Content-Type is valid");
+}
+
+// Validate header
+var headerProblems = HttpUtilityValidation.ValidateHeader("Authorization: Bearer token");
+if (HttpUtilityValidation.IsValidHeader("X-Custom-Header: value"))
+{
+    Console.WriteLine("Header is valid");
+}
+
+// Validate retry attempt
+var retryProblems = HttpUtilityValidation.ValidateRetryAttempt(3);
+if (HttpUtilityValidation.IsValidRetryAttempt(5))
+{
+    Console.WriteLine("Retry attempt is valid");
+}
+
+// Use Ensure methods to throw exceptions on validation failure
+try
+{
+    HttpUtilityValidation.EnsureValidBasicAuth("user:with:colon", "password");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
 ## CollectionUtilityValidation
 
 The `CollectionUtilityValidation` class provides validation helpers for collection operations. It validates parameters and constraints for `CollectionUtility` operations, ensuring correct usage and preventing runtime errors from invalid collection inputs.
@@ -1959,6 +2046,68 @@ var deleteParamsErrors = AuditLogRepositoryValidation.ValidateDeleteOldLogsParam
 if (AuditLogRepositoryValidation.IsDeleteOldLogsParametersValid(daysToKeep: 30))
 {
     await repository.DeleteOldLogsAsync(30);
+}
+```
+
+## HttpUtilityValidation
+
+The `HttpUtilityValidation` class provides comprehensive validation helpers for HTTP-related components such as authentication credentials, status codes, URLs, headers, and query parameters. It ensures that HTTP request inputs conform to expected standards and constraints, enabling robust error checking before executing network operations.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Validate Basic authentication credentials
+string username = "admin";
+string password = "password123";
+if (HttpUtilityValidation.IsValidBasicAuth(username, password))
+{
+    Console.WriteLine("Credentials are valid.");
+}
+
+// Validate a bearer token and status code
+string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+int statusCode = 200;
+
+if (HttpUtilityValidation.IsValidBearerToken(token) && HttpUtilityValidation.IsValidStatusCode(statusCode))
+{
+    Console.WriteLine("Token and status code are valid.");
+}
+
+// Validate a base URL and path
+string baseUrl = "https://api.example.com";
+string path = "/v1/users";
+
+if (HttpUtilityValidation.IsValidBaseUrl(baseUrl) && HttpUtilityValidation.IsValidPath(path))
+{
+    Console.WriteLine("URL and path are valid.");
+}
+
+// Validate query parameters
+var queryParams = new Dictionary<string, string> { { "limit", "10" }, { "offset", "0" } };
+if (HttpUtilityValidation.IsValidQueryParameters(queryParams))
+{
+    Console.WriteLine("Query parameters are valid.");
+}
+
+// Validate retry attempt
+int retryAttempt = 3;
+if (HttpUtilityValidation.IsValidRetryAttempt(retryAttempt))
+{
+    Console.WriteLine("Retry attempt is within valid range.");
+}
+
+// Use Ensure methods to throw exceptions on validation failure
+try
+{
+    HttpUtilityValidation.EnsureValidBaseUrl("invalid-url");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
 }
 ```
 
