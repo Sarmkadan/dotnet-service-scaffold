@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Infrastructure.Caching;
@@ -24,7 +23,7 @@ public static class CacheBenchmarksExtensions
     /// Gets all healthy services from the cached service list.
     /// </summary>
     /// <param name="benchmarks">The benchmarks instance.</param>
-    /// <returns>Read-only list of healthy services, or empty list if null.</returns>
+    /// <returns>Read-only list of healthy services, or empty list if null or services are null.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> is null.</exception>
     public static async ValueTask<IReadOnlyList<CachedService>> GetHealthyServicesAsync(this CacheBenchmarks benchmarks)
     {
@@ -34,14 +33,14 @@ public static class CacheBenchmarksExtensions
         return result?.Services
             .Where(s => s.IsHealthy)
             .ToList()
-            .AsReadOnly() ?? [];
+            .AsReadOnly() ?? new List<CachedService>().AsReadOnly();
     }
 
     /// <summary>
     /// Gets all unhealthy services from the cached service list.
     /// </summary>
     /// <param name="benchmarks">The benchmarks instance.</param>
-    /// <returns>Read-only list of unhealthy services, or empty list if null.</returns>
+    /// <returns>Read-only list of unhealthy services, or empty list if null or services are null.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> is null.</exception>
     public static async ValueTask<IReadOnlyList<CachedService>> GetUnhealthyServicesAsync(this CacheBenchmarks benchmarks)
     {
@@ -51,7 +50,7 @@ public static class CacheBenchmarksExtensions
         return result?.Services
             .Where(s => !s.IsHealthy)
             .ToList()
-            .AsReadOnly() ?? [];
+            .AsReadOnly() ?? new List<CachedService>().AsReadOnly();
     }
 
     /// <summary>
