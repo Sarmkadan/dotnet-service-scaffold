@@ -1801,6 +1801,68 @@ PropertyInfo[] obsoleteProps = ReflectionUtility.GetPropertiesWithAttribute<Obso
 Console.WriteLine($"Found {obsoleteProps.Length} properties with Obsolete attribute");
 ```
 
+## HealthCheckRepositoryIntegrationTests
+
+The `HealthCheckRepositoryIntegrationTests` class provides comprehensive integration tests for the `HealthCheckRepository`, validating all public members and edge cases. These tests verify that health check CRUD operations work correctly with the database, including adding health check results, retrieving results for specific services, getting the latest health check for a service, and deleting health check results.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Domain.Enums;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using FluentAssertions;
+using Xunit;
+
+// Initialize the health check repository (typically via dependency injection)
+var healthCheckRepository = new HealthCheckRepository(dbContext);
+
+// Create a new health check result for testing
+var healthCheckResult = new HealthCheckResult
+{
+    ServiceId = Guid.NewGuid(),
+    Status = HealthStatus.Healthy,
+    CheckedAt = DateTime.UtcNow,
+    ResponseTimeMs = 150,
+    Details = "Service is responding normally"
+};
+
+// Test adding a health check result to the database
+await healthCheckRepository.AddHealthCheckResultAsync(healthCheckResult);
+await dbContext.SaveChangesAsync();
+
+// Verify the health check result was added
+var savedResult = await healthCheckRepository.GetHealthCheckResultsForServiceAsync(healthCheckResult.ServiceId);
+savedResult.Should().ContainSingle();
+savedResult.First().Status.Should().Be(HealthStatus.Healthy);
+
+// Test retrieving all health check results for a specific service
+var serviceId = healthCheckResult.ServiceId;
+var allResults = await healthCheckRepository.GetHealthCheckResultsForServiceAsync(serviceId);
+allResults.Should().NotBeEmpty();
+
+// Test getting the latest health check result for a service
+var latestResult = await healthCheckRepository.GetLatestHealthCheckResultForServiceAsync(serviceId);
+latestResult.Should().NotBeNull();
+latestResult.CheckedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+// Test getting health check results when none exist for a service
+var nonExistentServiceId = Guid.NewGuid();
+var emptyResults = await healthCheckRepository.GetHealthCheckResultsForServiceAsync(nonExistentServiceId);
+emptyResults.Should().BeEmpty();
+
+// Test deleting a health check result
+await healthCheckRepository.DeleteHealthCheckResultAsync(healthCheckResult.Id);
+await dbContext.SaveChangesAsync();
+
+// Verify the health check result was deleted
+var deletedResult = await healthCheckRepository.GetHealthCheckResultsForServiceAsync(serviceId);
+deletedResult.Should().BeEmpty();
+```
+
 ## ApiKeyRepositoryIntegrationTests
 
 The `ApiKeyRepositoryIntegrationTests` class provides comprehensive integration tests for the `ApiKeyRepository`, validating all public members and edge cases. These tests verify that API key CRUD operations work correctly with the database, including adding, retrieving, updating, and deleting API keys, as well as handling error scenarios like duplicate prefixes and non-existent IDs.
