@@ -1,5 +1,7 @@
 #nullable enable
 
+using Microsoft.Extensions.Logging;
+
 namespace DotnetServiceScaffold.Infrastructure.Logging;
 
 /// <summary>
@@ -9,10 +11,10 @@ namespace DotnetServiceScaffold.Infrastructure.Logging;
 public static class StructuredLoggingOptionsExtensions
 {
     /// <summary>
-    /// Configures the structured logging to use a custom application name.
+    /// Configures the application name used in all log entries.
     /// </summary>
     /// <param name="options">The logging options to configure.</param>
-    /// <param name="applicationName">The application name to use in logs.</param>
+    /// <param name="applicationName">The name of the application to include in structured logs.</param>
     /// <returns>The configured <see cref="StructuredLoggingOptions"/> for method chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or empty.</exception>
@@ -31,7 +33,7 @@ public static class StructuredLoggingOptionsExtensions
     /// Configures the minimum log level using a <see cref="LogLevel"/> enum value.
     /// </summary>
     /// <param name="options">The logging options to configure.</param>
-    /// <param name="level">The log level to set as minimum.</param>
+    /// <param name="level">The minimum log level to set.</param>
     /// <returns>The configured <see cref="StructuredLoggingOptions"/> for method chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
     public static StructuredLoggingOptions WithMinimumLevel(
@@ -45,7 +47,7 @@ public static class StructuredLoggingOptionsExtensions
     }
 
     /// <summary>
-    /// Configures the correlation ID header name.
+    /// Configures the HTTP header name used for correlation ID propagation.
     /// </summary>
     /// <param name="options">The logging options to configure.</param>
     /// <param name="headerName">The HTTP header name to use for correlation ID.</param>
@@ -64,7 +66,7 @@ public static class StructuredLoggingOptionsExtensions
     }
 
     /// <summary>
-    /// Disables machine name enrichment in log entries.
+    /// Disables automatic inclusion of machine name in log entries.
     /// </summary>
     /// <param name="options">The logging options to configure.</param>
     /// <returns>The configured <see cref="StructuredLoggingOptions"/> for method chaining.</returns>
