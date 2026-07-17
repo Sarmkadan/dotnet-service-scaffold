@@ -316,6 +316,79 @@ if (chainedResult.IsSuccess)
 }
 ```
 
+## ResultValidation
+
+The `ResultValidation` class provides validation helpers for `Result` and `Result<T>` types. It validates business rules, null/empty values, and domain constraints, ensuring result instances meet expected invariants before use in business logic.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Shared.Models;
+
+// Validate a successful result - should pass validation
+var validResult = Result.Success("Valid data");
+var validationErrors = ResultValidation.Validate(validResult);
+Console.WriteLine($"Valid result has {validationErrors.Count} errors"); // 0
+
+// Validate a failed result with missing error message - should fail validation
+var invalidResult = Result.Failure("error_code");
+var invalidErrors = ResultValidation.Validate(invalidResult);
+Console.WriteLine($"Invalid result has {invalidErrors.Count} errors"); // 1
+Console.WriteLine(string.Join(", ", invalidErrors));
+// "Failed result must have a non-empty ErrorMessage."
+
+// Validate a failed result with missing error code - should fail validation
+var errorCodeMissing = Result.Failure("Error message without code");
+errorCodeMissing = Result.Failure(errorCodeMissing.ErrorMessage); // Ensure error code is null
+var codeErrors = ResultValidation.Validate(errorCodeMissing);
+Console.WriteLine($"Result with missing error code has {codeErrors.Count} errors"); // 1
+Console.WriteLine(string.Join(", ", codeErrors));
+// "Failed result must have a non-null ErrorCode."
+
+// Use IsValid for quick validation checks
+bool isValid = ResultValidation.IsValid(Result.Success(42));
+Console.WriteLine(isValid); // true
+
+bool isInvalid = ResultValidation.IsValid(Result.Failure("error_code"));
+Console.WriteLine(isInvalid); // false
+
+// Use EnsureValid to throw exception on invalid result
+try
+{
+    Result.Failure("error_code").EnsureValid();
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine(ex.Message);
+    // "Result validation failed:\n- Failed result must have a non-empty ErrorMessage."
+}
+
+// Validate generic Result<T> with successful value
+Result<int> validNumber = Result.Success(100);
+var numberErrors = ResultValidation.Validate(validNumber);
+Console.WriteLine($"Valid number result has {numberErrors.Count} errors"); // 0
+
+// Validate generic Result<T> with successful value that has default value - should fail
+Result<int> defaultValue = Result.Success(default(int));
+var defaultErrors = ResultValidation.Validate(defaultValue);
+Console.WriteLine($"Default value result has {defaultErrors.Count} errors"); // 1
+Console.WriteLine(string.Join(", ", defaultErrors));
+// "Successful result must not contain default value of type Int32."
+
+// Validate generic Result<T> with successful null string - allowed
+Result<string> nullString = Result.Success<string>(null);
+var nullStringErrors = ResultValidation.Validate(nullString);
+Console.WriteLine($"Null string result has {nullStringErrors.Count} errors"); // 0
+
+// Validate generic Result<T> with successful empty string - should fail
+Result<string> emptyString = Result.Success("");
+var emptyStringErrors = ResultValidation.Validate(emptyString);
+Console.WriteLine($"Empty string result has {emptyStringErrors.Count} errors"); // 1
+Console.WriteLine(string.Join(", ", emptyStringErrors));
+// "Successful result with string value must not be empty or whitespace."
+```
+
 ## ServiceRegistration
 
 The `ServiceRegistration` class represents a registered service that is monitored and managed by the scaffold system. It tracks service metadata, health status, metrics, and events, enabling comprehensive service lifecycle management including health checks, performance monitoring, and operational status tracking.
