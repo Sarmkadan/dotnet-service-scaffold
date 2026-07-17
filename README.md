@@ -5642,4 +5642,135 @@ userRepository.GetUserByIdAsync(existingUserId).Returns(existingUser);
 
 await userService.DeleteUserAsync(existingUserId);
 Console.WriteLine("User deleted successfully");
+
+## NotificationServiceTests
+
+The `NotificationServiceTests` class provides comprehensive unit tests for the `NotificationService` class, validating all public members and edge cases. These tests cover individual notifications, bulk communications, emails, and critical alerts, ensuring the notification service handles various scenarios correctly.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Enums;
+using FluentAssertions;
+using NSubstitute;
+using Xunit;
+
+// Initialize the notification service with a mock logger
+var logger = Substitute.For<ILogger<NotificationService>>();
+var notificationService = new NotificationService(logger);
+
+// Test sending a single notification to a user
+[Fact]
+public async Task SendNotificationAsync_ShouldReturnTrue_OnSuccess()
+{
+    // Arrange
+    var userId = Guid.NewGuid();
+    var subject = "Test Subject";
+    var message = "Test Message";
+
+    // Act
+    var result = await notificationService.SendNotificationAsync(userId, subject, message);
+
+    // Assert
+    result.Should().BeTrue();
+}
+
+// Test sending a single notification with a specific type
+[Fact]
+public async Task SendNotificationAsync_ShouldReturnTrue_OnSuccessWithDifferentType()
+{
+    // Arrange
+    var userId = Guid.NewGuid();
+    var subject = "Test Subject";
+    var message = "Test Message";
+
+    // Act
+    var result = await notificationService.SendNotificationAsync(userId, subject, message, NotificationType.Sms);
+
+    // Assert
+    result.Should().BeTrue();
+}
+
+// Test sending an email directly to an email address
+[Fact]
+public async Task SendEmailAsync_ShouldReturnTrue_OnSuccess()
+{
+    // Arrange
+    var email = "test@example.com";
+    var subject = "Email Subject";
+    var body = "<html><body><h1>Hello</h1></body></html>";
+
+    // Act
+    var result = await notificationService.SendEmailAsync(email, subject, body);
+
+    // Assert
+    result.Should().BeTrue();
+}
+
+// Test sending bulk notifications to multiple users
+[Fact]
+public async Task SendBulkNotificationAsync_ShouldReturnCorrectCount()
+{
+    // Arrange
+    var userIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+    var subject = "Bulk Subject";
+    var message = "Bulk Message";
+
+    // Act
+    var result = await notificationService.SendBulkNotificationAsync(userIds, subject, message);
+
+    // Assert
+    result.Should().Be(userIds.Count);
+}
+
+// Test handling empty user list in bulk notifications
+[Fact]
+public async Task SendBulkNotificationAsync_ShouldHandleEmptyUserList()
+{
+    // Arrange
+    var userIds = new List<Guid>();
+    var subject = "Empty List";
+    var message = "No users";
+
+    // Act
+    var result = await notificationService.SendBulkNotificationAsync(userIds, subject, message);
+
+    // Assert
+    result.Should().Be(0);
+}
+
+// Test sending a critical alert
+[Fact]
+public async Task SendAlertAsync_ShouldReturnTrue_OnSuccess()
+{
+    // Arrange
+    var alertType = "Critical Error";
+    var description = "Database connection lost";
+    var details = "Detailed stack trace here";
+
+    // Act
+    var result = await notificationService.SendAlertAsync(alertType, description, details);
+
+    // Assert
+    result.Should().BeTrue();
+}
+
+// Test sending an alert without details
+[Fact]
+public async Task SendAlertAsync_ShouldReturnTrue_WithoutDetails()
+{
+    // Arrange
+    var alertType = "Warning";
+    var description = "High CPU usage";
+
+    // Act
+    var result = await notificationService.SendAlertAsync(alertType, description);
+
+    // Assert
+    result.Should().BeTrue();
+}
 ```
