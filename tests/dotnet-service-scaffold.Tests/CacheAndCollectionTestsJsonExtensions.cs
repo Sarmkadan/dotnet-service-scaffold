@@ -15,14 +15,10 @@ public static class CacheAndCollectionTestsJsonExtensions
         WriteIndented = false,
     };
 
-    private static JsonSerializerOptions GetJsonOptions(bool indented)
+    private static JsonSerializerOptions GetJsonOptions(bool indented) => new(_jsonOptions)
     {
-        var options = new JsonSerializerOptions(_jsonOptions)
-        {
-            WriteIndented = indented,
-        };
-        return options;
-    }
+        WriteIndented = indented
+    };
 
     /// <summary>
     /// Serializes a <see cref="CacheAndCollectionTests"/> instance to a JSON string.
@@ -43,15 +39,15 @@ public static class CacheAndCollectionTestsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized <see cref="CacheAndCollectionTests"/> instance, or <see langword="null"/> if the JSON is empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static CacheAndCollectionTests? FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<CacheAndCollectionTests>(json, _jsonOptions);
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<CacheAndCollectionTests>(json, _jsonOptions);
     }
 
     /// <summary>
@@ -60,8 +56,11 @@ public static class CacheAndCollectionTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized value if successful.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <see langword="null"/>.</exception>
     public static bool TryFromJson(string json, out CacheAndCollectionTests? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = default;
 
         if (string.IsNullOrWhiteSpace(json))
