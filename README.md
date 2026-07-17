@@ -502,6 +502,85 @@ catch (ArgumentException ex)
 // Validate a reference date
 var referenceDate = DateTime.UtcNow.AddDays(-7);
 var refErrors = DateTimeUtilityValidation.ValidateReferenceDate(referenceDate);
+
+## CollectionUtilityValidation
+
+The `CollectionUtilityValidation` class provides validation helpers for collection operations. It validates parameters and constraints for `CollectionUtility` operations, ensuring correct usage and preventing runtime errors from invalid collection inputs.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Validate a collection with batch size
+var numbers = new List<int> { 1, 2, 3, 4, 5 };
+var batchErrors = CollectionUtilityValidation.Validate(numbers, batchSize: 2);
+if (batchErrors.Count == 0)
+{
+    var batches = CollectionUtility.Batch(numbers, 2);
+    Console.WriteLine($"Created {batches.Count()} batches");
+}
+
+// Validate two collections for comparison operations
+var collection1 = new List<string> { "a", "b", "c" };
+var collection2 = new List<string> { "x", "y", "z" };
+var comparisonErrors = CollectionUtilityValidation.Validate(collection1, collection2);
+if (CollectionUtilityValidation.IsValid(collection1, collection2))
+{
+    var intersection = CollectionUtility.Intersect(collection1, collection2);
+    Console.WriteLine($"Intersection count: {intersection.Count()}");
+}
+
+// Validate a collection with a predicate
+var evenNumbers = new List<int> { 2, 4, 6, 8 };
+var predicateErrors = CollectionUtilityValidation.Validate(evenNumbers, x => x % 2 == 0);
+if (CollectionUtilityValidation.IsValid(evenNumbers, x => x > 0))
+{
+    var filtered = CollectionUtility.Where(evenNumbers, x => x > 3);
+    Console.WriteLine($"Filtered count: {filtered.Count()}");
+}
+
+// Validate a collection with key selector
+var people = new List<Person> 
+{
+    new Person { Id = 1, Name = "Alice" },
+    new Person { Id = 2, Name = "Bob" }
+};
+var keyErrors = CollectionUtilityValidation.Validate(people, p => p.Id);
+if (CollectionUtilityValidation.IsValid(people, p => p.Name))
+{
+    var grouped = CollectionUtility.GroupBy(people, p => p.Name);
+    Console.WriteLine($"Group count: {grouped.Count()}");
+}
+
+// Use Ensure methods to throw exceptions on validation failure
+try
+{
+    CollectionUtilityValidation.EnsureValid((IEnumerable<int>)null, batchSize: 1);
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Validate chunk operations
+var chunkErrors = CollectionUtilityValidation.Validate(numbers, chunkSize: 3, isChunkValidation: true);
+if (CollectionUtilityValidation.IsValid(numbers, chunkSize: 3, isChunkValidation: true))
+{
+    var chunks = CollectionUtility.Chunk(numbers, 3);
+    Console.WriteLine($"Created {chunks.Count()} chunks");
+}
+
+// Example Person class for key selector usage
+public class Person
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
+```
 ```
 
 ## ServiceController
