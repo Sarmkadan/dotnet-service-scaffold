@@ -44,9 +44,12 @@ public static class AuditLogJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized audit log entry, or null if the JSON is null or whitespace.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static AuditLog? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         if (string.IsNullOrWhiteSpace(json))
         {
             return null;
@@ -61,12 +64,28 @@ public static class AuditLogJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized audit log entry if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out AuditLog? value)
+        => TryFromJson(json, out value, out _);
+
+    /// <summary>
+    /// Attempts to deserialize an <see cref="AuditLog"/> instance from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="value">Receives the deserialized audit log entry if successful.</param>
+    /// <param name="errorMessage">Receives the error message if deserialization failed.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    public static bool TryFromJson(string json, out AuditLog? value, out string? errorMessage)
     {
         value = null;
+        errorMessage = null;
+
+        ArgumentNullException.ThrowIfNull(json);
 
         if (string.IsNullOrWhiteSpace(json))
         {
+            errorMessage = "JSON string cannot be null or whitespace.";
             return false;
         }
 
@@ -75,8 +94,9 @@ public static class AuditLogJsonExtensions
             value = JsonSerializer.Deserialize<AuditLog>(json, _options);
             return true;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
+            errorMessage = ex.Message;
             return false;
         }
     }
