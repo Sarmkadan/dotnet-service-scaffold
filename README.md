@@ -1034,6 +1034,71 @@ Console.WriteLine($"Managed services: {newUser.ManagedServices.Count}");
 
 The `UserService` class provides comprehensive user management functionality including user creation, authentication, password management, and user lifecycle operations. It handles user registration, login/logout tracking, password validation and changes, account unlocking, and API key authentication. The service integrates with repositories for data persistence and includes comprehensive logging for audit and debugging purposes.
 
+## HttpClientFactoryValidation
+
+The `HttpClientFactoryValidation` class provides validation helpers for `HttpClientFactory` instances and their configuration parameters. It ensures proper validation of HttpClient creation parameters including client names, API keys, bearer tokens, and base URLs, preventing runtime errors from invalid configurations.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Net.Http;
+using DotnetServiceScaffold.Infrastructure.Integration;
+
+// Validate an HttpClientFactory instance
+var factory = new HttpClientFactory();
+var validationErrors = HttpClientFactoryValidation.Validate(factory);
+if (HttpClientFactoryValidation.IsValid(factory))
+{
+    Console.WriteLine("HttpClientFactory is valid");
+}
+
+// Ensure validation throws on invalid factory
+try
+{
+    HttpClientFactoryValidation.EnsureValid(null); // Throws ArgumentNullException
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Validation caught error: {ex.Message}");
+}
+
+// Validate client name for CreateClient method
+var clientName = "my-http-client";
+var createClientErrors = HttpClientFactoryValidation.ValidateCreateClient(clientName);
+if (HttpClientFactoryValidation.IsValidCreateClient(clientName))
+{
+    var httpClient = factory.CreateClient(clientName);
+}
+
+// Validate API key authentication parameters
+var apiKey = "sk_live_abc123xyz789";
+var authClientName = "authenticated-client";
+var authErrors = HttpClientFactoryValidation.ValidateCreateAuthenticatedClient(apiKey, authClientName);
+if (HttpClientFactoryValidation.IsValidCreateAuthenticatedClient(apiKey, authClientName))
+{
+    var authenticatedClient = factory.CreateAuthenticatedClient(apiKey, authClientName);
+}
+
+// Validate bearer token authentication parameters
+var bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+var bearerClientName = "bearer-client";
+var bearerErrors = HttpClientFactoryValidation.ValidateCreateBearerClient(bearerToken, bearerClientName);
+if (HttpClientFactoryValidation.IsValidCreateBearerClient(bearerToken, bearerClientName))
+{
+    var bearerClient = factory.CreateBearerClient(bearerToken, bearerClientName);
+}
+
+// Validate base URL and client name parameters
+var baseUrl = "https://api.example.com";
+var baseClientName = "base-url-client";
+var baseUrlErrors = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl(baseUrl, baseClientName);
+if (HttpClientFactoryValidation.IsValidCreateClientWithBaseUrl(baseUrl, baseClientName))
+{
+    var baseUrlClient = factory.CreateClientWithBaseUrl(baseUrl, baseClientName);
+}
+```
+
 ### Usage Examples
 
 ```csharp
