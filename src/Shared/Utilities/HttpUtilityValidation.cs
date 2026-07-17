@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DotnetServiceScaffold.Shared.Utilities;
 
@@ -19,8 +19,8 @@ public static class HttpUtilityValidation
     /// </summary>
     /// <param name="username">The username to validate.</param>
     /// <param name="password">The password to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if username or password is null.</exception>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="username"/> or <paramref name="password"/> is null.</exception>
     public static IReadOnlyList<string> ValidateBasicAuth(string username, string password)
     {
         ArgumentNullException.ThrowIfNull(username);
@@ -58,15 +58,15 @@ public static class HttpUtilityValidation
             problems.Add("Password contains null character which is not allowed.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a username for Basic authentication.
     /// </summary>
     /// <param name="username">The username to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if username is null.</exception>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="username"/> is null.</exception>
     public static IReadOnlyList<string> ValidateBasicAuthUsername(string username)
     {
         ArgumentNullException.ThrowIfNull(username);
@@ -93,15 +93,15 @@ public static class HttpUtilityValidation
             problems.Add("Username contains non-ASCII characters which may cause interoperability issues.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a password for Basic authentication.
     /// </summary>
     /// <param name="password">The password to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if password is null.</exception>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="password"/> is null.</exception>
     public static IReadOnlyList<string> ValidateBasicAuthPassword(string password)
     {
         ArgumentNullException.ThrowIfNull(password);
@@ -118,14 +118,15 @@ public static class HttpUtilityValidation
             problems.Add("Password contains null character which is not allowed.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a bearer token.
     /// </summary>
     /// <param name="token">The bearer token to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="token"/> is null.</exception>
     public static IReadOnlyList<string> ValidateBearerToken(string token)
     {
         ArgumentNullException.ThrowIfNull(token);
@@ -147,14 +148,14 @@ public static class HttpUtilityValidation
             problems.Add("Bearer token contains non-ASCII characters which may cause interoperability issues.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates HTTP status codes.
     /// </summary>
     /// <param name="statusCode">The status code to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidateStatusCode(int statusCode)
     {
         var problems = new List<string>();
@@ -164,14 +165,14 @@ public static class HttpUtilityValidation
             problems.Add("Status code must be between 100 and 599 inclusive.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a base URL.
     /// </summary>
     /// <param name="baseUrl">The base URL to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidateBaseUrl(string baseUrl)
     {
         ArgumentNullException.ThrowIfNull(baseUrl);
@@ -202,14 +203,14 @@ public static class HttpUtilityValidation
             problems.Add("Base URL is not a valid URI format.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a path component for URL building.
     /// </summary>
     /// <param name="path">The path to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidatePath(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
@@ -231,14 +232,14 @@ public static class HttpUtilityValidation
             problems.Add("Path contains null character which is not allowed.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates query parameters for URL building.
     /// </summary>
     /// <param name="parameters">The query parameters to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidateQueryParameters(Dictionary<string, string> parameters)
     {
         ArgumentNullException.ThrowIfNull(parameters);
@@ -272,14 +273,14 @@ public static class HttpUtilityValidation
             problems.Add("Query parameters exceed maximum count of 100.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a Content-Type header value.
     /// </summary>
     /// <param name="contentType">The Content-Type header value to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidateContentType(string contentType)
     {
         ArgumentNullException.ThrowIfNull(contentType);
@@ -296,14 +297,14 @@ public static class HttpUtilityValidation
             problems.Add("Content-Type header contains null character which is not allowed.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a header string.
     /// </summary>
     /// <param name="header">The header string to validate.</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidateHeader(string header)
     {
         ArgumentNullException.ThrowIfNull(header);
@@ -320,14 +321,14 @@ public static class HttpUtilityValidation
             problems.Add("Header contains null character which is not allowed.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
     /// Validates a retry attempt number.
     /// </summary>
     /// <param name="attempt">The retry attempt number (1-based).</param>
-    /// <returns>A read-only list of validation problems, or empty if valid.</returns>
+    /// <returns>An <see cref="IReadOnlyList{T}"/> of validation problems, or empty if valid.</returns>
     public static IReadOnlyList<string> ValidateRetryAttempt(int attempt)
     {
         var problems = new List<string>();
@@ -342,7 +343,7 @@ public static class HttpUtilityValidation
             problems.Add("Retry attempt exceeds maximum of 20.");
         }
 
-        return problems.AsReadOnly();
+        return problems;
     }
 
     /// <summary>
@@ -351,90 +352,63 @@ public static class HttpUtilityValidation
     /// <param name="username">The username to check.</param>
     /// <param name="password">The password to check.</param>
     /// <returns>True if the credentials are valid; otherwise, false.</returns>
-    public static bool IsValidBasicAuth(string username, string password)
-    {
-        return ValidateBasicAuth(username, password).Count == 0;
-    }
+    public static bool IsValidBasicAuth(string username, string password) => ValidateBasicAuth(username, password).Count == 0;
 
     /// <summary>
     /// Determines whether a bearer token is valid.
     /// </summary>
     /// <param name="token">The bearer token to check.</param>
     /// <returns>True if the token is valid; otherwise, false.</returns>
-    public static bool IsValidBearerToken(string token)
-    {
-        return ValidateBearerToken(token).Count == 0;
-    }
+    public static bool IsValidBearerToken(string token) => ValidateBearerToken(token).Count == 0;
 
     /// <summary>
     /// Determines whether a status code is valid.
     /// </summary>
     /// <param name="statusCode">The status code to check.</param>
     /// <returns>True if the status code is valid; otherwise, false.</returns>
-    public static bool IsValidStatusCode(int statusCode)
-    {
-        return ValidateStatusCode(statusCode).Count == 0;
-    }
+    public static bool IsValidStatusCode(int statusCode) => ValidateStatusCode(statusCode).Count == 0;
 
     /// <summary>
     /// Determines whether a base URL is valid.
     /// </summary>
     /// <param name="baseUrl">The base URL to check.</param>
     /// <returns>True if the base URL is valid; otherwise, false.</returns>
-    public static bool IsValidBaseUrl(string baseUrl)
-    {
-        return ValidateBaseUrl(baseUrl).Count == 0;
-    }
+    public static bool IsValidBaseUrl(string baseUrl) => ValidateBaseUrl(baseUrl).Count == 0;
 
     /// <summary>
     /// Determines whether a path is valid.
     /// </summary>
     /// <param name="path">The path to check.</param>
     /// <returns>True if the path is valid; otherwise, false.</returns>
-    public static bool IsValidPath(string path)
-    {
-        return ValidatePath(path).Count == 0;
-    }
+    public static bool IsValidPath(string path) => ValidatePath(path).Count == 0;
 
     /// <summary>
     /// Determines whether query parameters are valid.
     /// </summary>
     /// <param name="parameters">The query parameters to check.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsValidQueryParameters(Dictionary<string, string> parameters)
-    {
-        return ValidateQueryParameters(parameters).Count == 0;
-    }
+    public static bool IsValidQueryParameters(Dictionary<string, string> parameters) => ValidateQueryParameters(parameters).Count == 0;
 
     /// <summary>
     /// Determines whether a Content-Type header is valid.
     /// </summary>
     /// <param name="contentType">The Content-Type header to check.</param>
     /// <returns>True if the Content-Type header is valid; otherwise, false.</returns>
-    public static bool IsValidContentType(string contentType)
-    {
-        return ValidateContentType(contentType).Count == 0;
-    }
+    public static bool IsValidContentType(string contentType) => ValidateContentType(contentType).Count == 0;
 
     /// <summary>
     /// Determines whether a header is valid.
     /// </summary>
     /// <param name="header">The header to check.</param>
     /// <returns>True if the header is valid; otherwise, false.</returns>
-    public static bool IsValidHeader(string header)
-    {
-        return ValidateHeader(header).Count == 0;
-    }
+    public static bool IsValidHeader(string header) => ValidateHeader(header).Count == 0;
 
     /// <summary>
     /// Determines whether a retry attempt is valid.
     /// </summary>
     /// <param name="attempt">The retry attempt to check.</param>
     /// <returns>True if the attempt is valid; otherwise, false.</returns>
-    public static bool IsValidRetryAttempt(int attempt)
-    {
-        return ValidateRetryAttempt(attempt).Count == 0;
-    }
+    public static bool IsValidRetryAttempt(int attempt) => ValidateRetryAttempt(attempt).Count == 0;
 
     /// <summary>
     /// Ensures that username and password are valid for Basic authentication, throwing an exception if not.
