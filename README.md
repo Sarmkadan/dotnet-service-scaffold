@@ -7141,7 +7141,49 @@ if (gcStats.IsValid())
     Console.WriteLine("GC stats passed validation");
 }
 
+
 // Ensure GC stats are valid (throws if invalid)
 gcStats.EnsureValid();
 ```
+
+## ServiceScaffoldExceptionValidation
+
+The `ServiceScaffoldExceptionValidation` class provides a suite of static extension methods to validate `ServiceScaffoldException` and its derived types. It ensures that these exception instances contain valid error codes and messages, and provides mechanisms to check validity or enforce it by throwing an `ArgumentException` if validation fails.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Domain.Exceptions;
+
+// Define an invalid exception instance
+var invalidException = new ServiceValidationException(
+    message: "", // Empty message is invalid
+    errors: new List<string>() // Empty errors is invalid
+);
+
+// Check if valid
+bool isValid = invalidException.IsValid();
+Console.WriteLine($"Is valid: {isValid}"); // false
+
+// Validate and get problems
+var problems = invalidException.Validate();
+Console.WriteLine($"Found {problems.Count} problems:");
+foreach (var problem in problems)
+{
+    Console.WriteLine($"- {problem}");
+}
+
+// Enforce valid state (throws ArgumentException)
+try
+{
+    invalidException.EnsureValid();
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
+
 ```
