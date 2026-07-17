@@ -1996,8 +1996,46 @@ await dbContext.SaveChangesAsync();
 // Verify the audit log was added
 var savedAuditLog = await auditLogRepository.GetByIdAsync(auditLog.Id);
 savedAuditLog.Should().NotBeNull();
-savedAuditLog!.Action.Should().Be("UserLogin");
 
+## CompleteApiUsageExample
+
+The `CompleteApiUsageExample` class serves as a comprehensive demonstration of the service scaffold's API capabilities. It provides a structured workflow for managing users, generating API keys, registering services, and monitoring health, metrics, and audit logs.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// Initialize the API client
+var api = new CompleteApiUsageExample("http://localhost:5000");
+
+try
+{
+    // 1. Register and Login
+    var userId = await api.RegisterUserAsync("john.doe", "john@example.com", "SecurePassword123!");
+    await api.LoginAsync("john.doe", "SecurePassword123!");
+
+    // 2. Create API key and Register Service
+    var apiKey = await api.CreateApiKeyAsync("MyService", new List<string> { "service:read" });
+    var serviceId = await api.RegisterServiceAsync("PaymentService", "https://payments.internal:8443/health", userId);
+
+    // 3. Monitor Service
+    var services = await api.GetServicesAsync();
+    var healthCheck = await api.PerformHealthCheckAsync(serviceId);
+    var metrics = await api.GetMetricsAsync(serviceId);
+
+    // 4. Lifecycle Management
+    await api.DisableServiceAsync(serviceId);
+    await api.EnableServiceAsync(serviceId);
+    await api.ChangePasswordAsync(userId, "SecurePassword123!", "NewPassword456!");
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"API operation failed: {ex.Message}");
+}
+```
 // Test updating an existing audit log
 auditLog.Details = "User logged in from mobile app";
 auditLogRepository.Update(auditLog);
