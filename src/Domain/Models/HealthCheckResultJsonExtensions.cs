@@ -26,6 +26,11 @@ public static class HealthCheckResultJsonExtensions
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
+    private static readonly JsonSerializerOptions _jsonOptionsIndented = new(_jsonOptions)
+    {
+        WriteIndented = true,
+    };
+
     /// <summary>
     /// Serializes a HealthCheckResult instance to a JSON string.
     /// </summary>
@@ -34,30 +39,22 @@ public static class HealthCheckResultJsonExtensions
     /// <returns>A JSON string representation of the HealthCheckResult.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static string ToJson(this HealthCheckResult value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
-    }
+        => JsonSerializer.Serialize(value, indented ? _jsonOptionsIndented : _jsonOptions);
 
     /// <summary>
     /// Deserializes a JSON string to a HealthCheckResult instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized HealthCheckResult instance, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static HealthCheckResult? FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<HealthCheckResult>(json, _jsonOptions);
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<HealthCheckResult>(json, _jsonOptions);
     }
 
     /// <summary>
@@ -66,8 +63,11 @@ public static class HealthCheckResultJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized HealthCheckResult instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out HealthCheckResult? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
