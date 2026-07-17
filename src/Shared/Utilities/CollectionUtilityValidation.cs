@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace DotnetServiceScaffold.Shared.Utilities;
@@ -16,26 +15,29 @@ namespace DotnetServiceScaffold.Shared.Utilities;
 /// Provides validation helpers for collection operations.
 /// Validates parameters and constraints for <see cref="CollectionUtility"/> operations to ensure correct usage.
 /// </summary>
+/// <remarks>
+/// This class contains validation methods that check collection parameters before they are passed to
+/// corresponding methods in the <see cref="CollectionUtility"/> class. All validation methods throw
+/// <see cref="ArgumentNullException"/> for null inputs and return validation error messages for invalid inputs.
+/// </remarks>
 public static class CollectionUtilityValidation
 {
     /// <summary>
-    /// Validates collection operation parameters before they are used with CollectionUtility methods.
-    /// Returns a list of human-readable validation problems.
+    /// Validates collection operation parameters before they are used with <see cref="CollectionUtility"/> methods.
     /// </summary>
     /// <param name="source">The source collection to validate.</param>
     /// <param name="batchSize">The batch size to validate.</param>
     /// <returns>An empty list if valid, otherwise a list of validation error messages.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T>(
         IEnumerable<T>? source,
         int batchSize = 1)
     {
         var problems = new List<string>();
 
-        if (source is null)
-        {
-            problems.Add("Source collection cannot be null.");
-        }
-        else if (!source.Any())
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (!source.Any())
         {
             problems.Add("Source collection is empty.");
         }
@@ -54,12 +56,14 @@ public static class CollectionUtilityValidation
     }
 
     /// <summary>
-    /// Validates collection operation parameters before they are used with CollectionUtility methods.
+    /// Validates collection operation parameters before they are used with <see cref="CollectionUtility"/> methods.
     /// Returns a list of human-readable validation problems.
     /// </summary>
     /// <param name="source">The source collection to validate.</param>
     /// <param name="chunkSize">The chunk size to validate.</param>
+    /// <param name="isChunkValidation">Whether this is chunk validation.</param>
     /// <returns>An empty list if valid, otherwise a list of validation error messages.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T>(
         IEnumerable<T>? source,
         int chunkSize,
@@ -67,11 +71,9 @@ public static class CollectionUtilityValidation
     {
         var problems = new List<string>();
 
-        if (source is null)
-        {
-            problems.Add("Source collection cannot be null.");
-        }
-        else if (!source.Any())
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (!source.Any())
         {
             problems.Add("Source collection is empty.");
         }
@@ -90,12 +92,13 @@ public static class CollectionUtilityValidation
     }
 
     /// <summary>
-    /// Validates collection operation parameters before they are used with CollectionUtility methods.
-    /// Returns a list of human-readable validation problems.
+    /// Validates collection operation parameters before they are used with <see cref="CollectionUtility"/> methods.
     /// </summary>
     /// <param name="first">The first collection to validate.</param>
     /// <param name="second">The second collection to validate.</param>
     /// <returns>An empty list if valid, otherwise a list of validation error messages.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="first"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="second"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T>(
         IEnumerable<T>? first,
         IEnumerable<T>? second)
@@ -103,24 +106,15 @@ public static class CollectionUtilityValidation
     {
         var problems = new List<string>();
 
-        if (first is null && second is null)
-        {
-            problems.Add("Both collections cannot be null.");
-        }
-        else if (first is null)
-        {
-            problems.Add("First collection cannot be null.");
-        }
-        else if (!first.Any())
+        ArgumentNullException.ThrowIfNull(first);
+        ArgumentNullException.ThrowIfNull(second);
+
+        if (!first.Any())
         {
             problems.Add("First collection is empty.");
         }
 
-        if (second is null)
-        {
-            problems.Add("Second collection cannot be null.");
-        }
-        else if (!second.Any())
+        if (!second.Any())
         {
             problems.Add("Second collection is empty.");
         }
@@ -129,23 +123,22 @@ public static class CollectionUtilityValidation
     }
 
     /// <summary>
-    /// Validates collection operation parameters before they are used with CollectionUtility methods.
-    /// Returns a list of human-readable validation problems.
+    /// Validates collection operation parameters before they are used with <see cref="CollectionUtility"/> methods.
     /// </summary>
     /// <param name="source">The source collection to validate.</param>
     /// <param name="predicate">The predicate function to validate.</param>
     /// <returns>An empty list if valid, otherwise a list of validation error messages.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="predicate"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T>(
         IEnumerable<T>? source,
         Func<T, bool>? predicate)
     {
         var problems = new List<string>();
 
-        if (source is null)
-        {
-            problems.Add("Source collection cannot be null.");
-        }
-        else if (!source.Any())
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (!source.Any())
         {
             problems.Add("Source collection is empty.");
         }
@@ -159,12 +152,13 @@ public static class CollectionUtilityValidation
     }
 
     /// <summary>
-    /// Validates collection operation parameters before they are used with CollectionUtility methods.
-    /// Returns a list of human-readable validation problems.
+    /// Validates collection operation parameters before they are used with <see cref="CollectionUtility"/> methods.
     /// </summary>
     /// <param name="source">The source collection to validate.</param>
     /// <param name="keySelector">The key selector function to validate.</param>
     /// <returns>An empty list if valid, otherwise a list of validation error messages.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T, TKey>(
         IEnumerable<T>? source,
         Func<T, TKey>? keySelector)
@@ -172,11 +166,9 @@ public static class CollectionUtilityValidation
     {
         var problems = new List<string>();
 
-        if (source is null)
-        {
-            problems.Add("Source collection cannot be null.");
-        }
-        else if (!source.Any())
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (!source.Any())
         {
             problems.Add("Source collection is empty.");
         }
@@ -195,19 +187,13 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="batchSize">The batch size to validate.</param>
     /// <returns>True if valid, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T>(
         IEnumerable<T>? source,
         int batchSize = 1)
     {
-        try
-        {
-            var problems = Validate(source, batchSize);
-            return problems.Count == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        return !Validate(source, batchSize).Any();
     }
 
     /// <summary>
@@ -215,21 +201,16 @@ public static class CollectionUtilityValidation
     /// </summary>
     /// <param name="source">The source collection to validate.</param>
     /// <param name="chunkSize">The chunk size to validate.</param>
+    /// <param name="isChunkValidation">Whether this is chunk validation.</param>
     /// <returns>True if valid, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T>(
         IEnumerable<T>? source,
         int chunkSize,
         bool isChunkValidation)
     {
-        try
-        {
-            var problems = Validate(source, chunkSize, isChunkValidation);
-            return problems.Count == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        return !Validate(source, chunkSize, isChunkValidation).Any();
     }
 
     /// <summary>
@@ -238,20 +219,15 @@ public static class CollectionUtilityValidation
     /// <param name="first">The first collection to validate.</param>
     /// <param name="second">The second collection to validate.</param>
     /// <returns>True if valid, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="first"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="second"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T>(
         IEnumerable<T>? first,
-        IEnumerable<T>? second)
-        where T : notnull
+        IEnumerable<T>? second) where T : notnull
     {
-        try
-        {
-            var problems = Validate(first, second);
-            return problems.Count == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(first);
+        ArgumentNullException.ThrowIfNull(second);
+        return !Validate(first, second).Any();
     }
 
     /// <summary>
@@ -260,19 +236,14 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="predicate">The predicate function to validate.</param>
     /// <returns>True if valid, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="predicate"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T>(
         IEnumerable<T>? source,
         Func<T, bool>? predicate)
     {
-        try
-        {
-            var problems = Validate(source, predicate);
-            return problems.Count == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        return !Validate(source, predicate).Any();
     }
 
     /// <summary>
@@ -281,20 +252,14 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="keySelector">The key selector function to validate.</param>
     /// <returns>True if valid, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T, TKey>(
         IEnumerable<T>? source,
-        Func<T, TKey>? keySelector)
-        where TKey : notnull
+        Func<T, TKey>? keySelector) where TKey : notnull
     {
-        try
-        {
-            var problems = Validate(source, keySelector);
-            return problems.Count == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        return !Validate(source, keySelector).Any();
     }
 
     /// <summary>
@@ -304,16 +269,18 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="batchSize">The batch size to validate.</param>
     /// <exception cref="ArgumentException">Thrown if validation fails with detailed error messages.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T>(
         IEnumerable<T>? source,
         int batchSize = 1)
     {
         var problems = Validate(source, batchSize);
-
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"Collection operation validation failed:{Environment.NewLine}- {
+                    string.Join($"{Environment.NewLine}- ", problems)
+                }");
         }
     }
 
@@ -324,6 +291,7 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="chunkSize">The chunk size to validate.</param>
     /// <exception cref="ArgumentException">Thrown if validation fails with detailed error messages.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T>(
         IEnumerable<T>? source,
         int chunkSize,
@@ -334,7 +302,9 @@ public static class CollectionUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"Collection operation validation failed:{Environment.NewLine}- {
+                    string.Join($"{Environment.NewLine}- ", problems)
+                }");
         }
     }
 
@@ -345,6 +315,8 @@ public static class CollectionUtilityValidation
     /// <param name="first">The first collection to validate.</param>
     /// <param name="second">The second collection to validate.</param>
     /// <exception cref="ArgumentException">Thrown if validation fails with detailed error messages.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="first"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="second"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T>(
         IEnumerable<T>? first,
         IEnumerable<T>? second)
@@ -355,7 +327,9 @@ public static class CollectionUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"Collection operation validation failed:{Environment.NewLine}- {
+                    string.Join($"{Environment.NewLine}- ", problems)
+                }");
         }
     }
 
@@ -366,6 +340,8 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="predicate">The predicate function to validate.</param>
     /// <exception cref="ArgumentException">Thrown if validation fails with detailed error messages.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="predicate"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T>(
         IEnumerable<T>? source,
         Func<T, bool>? predicate)
@@ -375,7 +351,9 @@ public static class CollectionUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"Collection operation validation failed:{Environment.NewLine}- {
+                    string.Join($"{Environment.NewLine}- ", problems)
+                }");
         }
     }
 
@@ -386,6 +364,8 @@ public static class CollectionUtilityValidation
     /// <param name="source">The source collection to validate.</param>
     /// <param name="keySelector">The key selector function to validate.</param>
     /// <exception cref="ArgumentException">Thrown if validation fails with detailed error messages.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T, TKey>(
         IEnumerable<T>? source,
         Func<T, TKey>? keySelector)
@@ -396,7 +376,9 @@ public static class CollectionUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"Collection operation validation failed:{Environment.NewLine}- {
+                    string.Join($"{Environment.NewLine}- ", problems)
+                }");
         }
     }
 }
