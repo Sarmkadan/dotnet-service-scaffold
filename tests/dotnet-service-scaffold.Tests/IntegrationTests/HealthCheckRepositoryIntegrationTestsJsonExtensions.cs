@@ -35,10 +35,7 @@ public static class HealthCheckRepositoryIntegrationTestsJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
+            ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
             : _jsonSerializerOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -47,17 +44,15 @@ public static class HealthCheckRepositoryIntegrationTestsJsonExtensions
     /// <summary>
     /// Deserializes a JSON string to a <see cref="HealthCheckRepositoryIntegrationTests"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or whitespace.</param>
     /// <returns>The deserialized instance, or null if the JSON is empty or whitespace.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static HealthCheckRepositoryIntegrationTests? FromJson(string json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
-
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         return JsonSerializer.Deserialize<HealthCheckRepositoryIntegrationTests>(json, _jsonSerializerOptions);
     }
@@ -65,12 +60,15 @@ public static class HealthCheckRepositoryIntegrationTestsJsonExtensions
     /// <summary>
     /// Attempts to deserialize a JSON string to a <see cref="HealthCheckRepositoryIntegrationTests"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="json">The JSON string to deserialize. Must not be null or whitespace.</param>
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
     public static bool TryFromJson(string json, out HealthCheckRepositoryIntegrationTests? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         value = default;
 
