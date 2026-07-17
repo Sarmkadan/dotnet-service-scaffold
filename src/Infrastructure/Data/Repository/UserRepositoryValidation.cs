@@ -4,7 +4,6 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
 using DotnetServiceScaffold.Domain.Models;
 
 namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
@@ -26,8 +25,8 @@ public static class UserRepositoryValidation
 
         var problems = new List<string>();
 
-        // Repository validation - ensure dependencies are not null
-        // UserRepository inherits from Repository<T> which has protected internal fields
+        // Validate repository dependencies by checking protected internal fields
+        // These are accessible within the same assembly
         if (value._context is null)
         {
             problems.Add("UserRepository._context is null");
@@ -51,10 +50,7 @@ public static class UserRepositoryValidation
     /// </summary>
     /// <param name="value">The repository instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this UserRepository? value)
-    {
-        return Validate(value).Count == 0;
-    }
+    public static bool IsValid(this UserRepository? value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="UserRepository"/> instance is valid.
@@ -70,7 +66,7 @@ public static class UserRepositoryValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "UserRepository is invalid. Problems: " + string.Join("; ", problems),
+                $"UserRepository is invalid. Problems: {string.Join("; ", problems)}",
                 nameof(value));
         }
     }
