@@ -6,7 +6,7 @@ using System.Globalization;
 namespace DotnetServiceScaffold.Infrastructure.Metrics;
 
 /// <summary>
-/// Extension methods for <see cref="MetricsService"/> that provide additional metric recording capabilities
+/// Extension methods for <see cref="IMetricsService"/> that provide additional metric recording capabilities
 /// and convenience overloads for common scenarios.
 /// </summary>
 public static class MetricsServiceExtensions
@@ -18,8 +18,8 @@ public static class MetricsServiceExtensions
     /// <param name="metricName">Name of the metric to increment.</param>
     /// <param name="value">Amount to increment by (default: 1).</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
     public static void IncrementCounter(
         this MetricsService service,
         string metricName,
@@ -39,8 +39,8 @@ public static class MetricsServiceExtensions
     /// <param name="metricName">Name of the gauge metric.</param>
     /// <param name="value">The gauge value to record.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
     public static void RecordGauge(
         this MetricsService service,
         string metricName,
@@ -60,8 +60,8 @@ public static class MetricsServiceExtensions
     /// <param name="metricName">Name of the timing metric.</param>
     /// <param name="elapsedMs">Elapsed time in milliseconds.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
     public static void RecordTiming(
         this MetricsService service,
         string metricName,
@@ -83,9 +83,9 @@ public static class MetricsServiceExtensions
     /// <param name="operation">The operation to measure.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
     /// <returns>The result of the operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is <see langword="null"/>.</exception>
     public static async Task<T> MeasureAsync<T>(
         this MetricsService service,
         string metricName,
@@ -106,8 +106,8 @@ public static class MetricsServiceExtensions
     /// <param name="service">The metrics service instance.</param>
     /// <param name="metricName">Name of the metric to increment.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
     public static void Increment(this MetricsService service, string metricName, IDictionary<string, string>? tags = null)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -122,8 +122,8 @@ public static class MetricsServiceExtensions
     /// <param name="service">The metrics service instance.</param>
     /// <param name="metricName">Name of the gauge metric.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
     public static void RecordGaugeZero(this MetricsService service, string metricName, IDictionary<string, string>? tags = null)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -141,9 +141,9 @@ public static class MetricsServiceExtensions
     /// <param name="operation">The operation to measure.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is <see langword="null"/>.</exception>
     public static async Task MeasureAsync(
         this MetricsService service,
         string metricName,
@@ -168,9 +168,9 @@ public static class MetricsServiceExtensions
     /// <param name="metricName">Name of the timing metric.</param>
     /// <param name="action">The action to measure.</param>
     /// <param name="tags">Optional tags to associate with the metric.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="metricName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action"/> is <see langword="null"/>.</exception>
     public static void RecordActionTime(
         this MetricsService service,
         string metricName,
@@ -189,7 +189,13 @@ public static class MetricsServiceExtensions
         finally
         {
             sw.Stop();
-            service.RecordTiming(metricName, sw.ElapsedMilliseconds, tags);
+            var elapsedMs = sw.ElapsedMilliseconds;
+		if (elapsedMs < 0)
+		{
+			// Defensive check: Stopwatch should never return negative values, but validate anyway
+			elapsedMs = 0;
+		}
+service.RecordTiming(metricName, elapsedMs, tags);
         }
     }
 }
