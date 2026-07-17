@@ -13,6 +13,9 @@ namespace DotnetServiceScaffold.Tests;
 /// <summary>
 /// Provides JSON serialization and deserialization extensions for <see cref="Result"/> and <see cref="Result{T}"/> types.
 /// </summary>
+/// <remarks>
+/// Static classes are implicitly sealed and cannot be inherited, ensuring consistent behavior across all usages.
+/// </remarks>
 public static class ResultTestsJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
