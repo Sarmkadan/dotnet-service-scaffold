@@ -447,6 +447,63 @@ Console.WriteLine($"Service enabled after re-enable: {apiService.IsEnabled}");
 Console.WriteLine($"Consecutive failures reset: {apiService.ConsecutiveFailures}");
 ```
 
+## DateTimeUtilityValidation
+
+The `DateTimeUtilityValidation` class provides validation helpers for date/time values and operations. It validates DateTime values and parameters used with `DateTimeUtility` methods, ensuring proper date formats, valid ranges, and business rule compliance for age calculations and temporal comparisons.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Shared.Utilities;
+
+// Validate a DateTime value
+var errors = DateTimeUtilityValidation.ValidateDateTime(DateTime.UtcNow);
+if (errors.Count > 0)
+{
+    Console.WriteLine("Validation errors:");
+    foreach (var error in errors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Validate a nullable DateTime
+DateTime? nullableDate = DateTime.Now;
+var nullableErrors = DateTimeUtilityValidation.ValidateDateTime(nullableDate);
+
+// Validate a birth date
+var birthDate = new DateTime(1990, 5, 15);
+var birthErrors = DateTimeUtilityValidation.ValidateBirthDate(birthDate);
+if (DateTimeUtilityValidation.IsValidBirthDate(birthDate))
+{
+    var age = DateTimeUtility.CalculateAge(birthDate);
+    Console.WriteLine($"Age: {age}");
+}
+
+// Validate an ISO 8601 duration string
+var durationErrors = DateTimeUtilityValidation.ValidateDuration("P3DT4H5M6S");
+if (DateTimeUtilityValidation.IsValidDuration("PT2H30M"))
+{
+    var duration = DateTimeUtility.ParseIsoDuration("PT2H30M");
+    Console.WriteLine($"Duration: {duration.TotalHours} hours");
+}
+
+// Use Ensure methods to throw exceptions on validation failure
+try
+{
+    DateTimeUtilityValidation.EnsureValidDateTime(DateTime.MinValue);
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Validate a reference date
+var referenceDate = DateTime.UtcNow.AddDays(-7);
+var refErrors = DateTimeUtilityValidation.ValidateReferenceDate(referenceDate);
+```
+
 ## ServiceController
 
 The `ServiceController` provides API endpoints for service registration and management. It enables registering new services for monitoring, retrieving service information, listing all registered services, managing services by owner, and handling service lifecycle operations including enabling, disabling, and health monitoring. The controller handles validation errors, service not found scenarios, and provides appropriate HTTP status codes for all operations.
