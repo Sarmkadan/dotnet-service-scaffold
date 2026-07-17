@@ -6,6 +6,7 @@
 // =====================================================================
 
 using System.Globalization;
+using System.Linq;
 
 namespace DotnetServiceScaffold.Infrastructure.ServiceMesh;
 
@@ -43,6 +44,10 @@ public static class ServiceMeshOptionsValidation
         {
             problems.Add("ServiceMesh.AdminEndpoint must use http:// or https:// scheme.");
         }
+        else if (uriResult.AbsolutePath != "/" && uriResult.AbsolutePath.EndsWith("/"))
+        {
+            problems.Add("ServiceMesh.AdminEndpoint must not end with a trailing slash.");
+        }
 
         // Validate ReadinessTimeoutSeconds
         if (value.ReadinessTimeoutSeconds <= 0)
@@ -77,10 +82,7 @@ public static class ServiceMeshOptionsValidation
     /// <param name="value">The options to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this ServiceMeshOptions value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this ServiceMeshOptions value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the service mesh configuration options are valid.
