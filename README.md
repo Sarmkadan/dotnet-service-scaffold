@@ -1863,6 +1863,72 @@ var deletedResult = await healthCheckRepository.GetHealthCheckResultsForServiceA
 deletedResult.Should().BeEmpty();
 ```
 
+## AuditLogRepositoryIntegrationTests
+
+The `AuditLogRepositoryIntegrationTests` class provides comprehensive integration tests for the `AuditLogRepository`, validating all public members and edge cases. These tests verify that audit log CRUD operations work correctly with the database, including adding audit logs, retrieving logs by ID, updating existing logs, deleting logs, and handling scenarios with non-existent IDs.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using FluentAssertions;
+using Xunit;
+
+// Initialize the audit log repository (typically via dependency injection)
+var auditLogRepository = new AuditLogRepository(dbContext);
+
+// Create a new audit log entry for testing
+var auditLog = new AuditLog
+{
+    Id = Guid.NewGuid(),
+    Action = "UserLogin",
+    EntityType = "User",
+    EntityId = Guid.NewGuid().ToString(),
+    UserId = Guid.NewGuid(),
+    Timestamp = DateTime.UtcNow,
+    Details = "User logged in from web interface"
+};
+
+// Test adding an audit log to the database
+await auditLogRepository.AddAsync(auditLog);
+await dbContext.SaveChangesAsync();
+
+// Verify the audit log was added
+var savedAuditLog = await auditLogRepository.GetByIdAsync(auditLog.Id);
+savedAuditLog.Should().NotBeNull();
+savedAuditLog!.Action.Should().Be("UserLogin");
+
+// Test updating an existing audit log
+auditLog.Details = "User logged in from mobile app";
+auditLogRepository.Update(auditLog);
+await dbContext.SaveChangesAsync();
+
+// Verify the update
+var updatedAuditLog = await auditLogRepository.GetByIdAsync(auditLog.Id);
+updatedAuditLog.Should().NotBeNull();
+updatedAuditLog!.Details.Should().Be("User logged in from mobile app");
+
+// Test getting all audit logs
+var allAuditLogs = await auditLogRepository.GetAllAsync();
+allAuditLogs.Should().NotBeNull().And.HaveCount(1);
+
+// Test deleting an audit log
+auditLogRepository.Delete(auditLog);
+await dbContext.SaveChangesAsync();
+
+// Verify the audit log was deleted
+var deletedAuditLog = await auditLogRepository.GetByIdAsync(auditLog.Id);
+deletedAuditLog.Should().BeNull();
+
+// Test getting a non-existent audit log
+var nonExistentAuditLog = await auditLogRepository.GetByIdAsync(Guid.NewGuid());
+nonExistentAuditLog.Should().BeNull();
+```
+
 ## ApiKeyRepositoryIntegrationTests
 
 The `ApiKeyRepositoryIntegrationTests` class provides comprehensive integration tests for the `ApiKeyRepository`, validating all public members and edge cases. These tests verify that API key CRUD operations work correctly with the database, including adding, retrieving, updating, and deleting API keys, as well as handling error scenarios like duplicate prefixes and non-existent IDs.
