@@ -11,8 +11,8 @@ using System.Collections.Generic;
 namespace DotnetServiceScaffold.Benchmarks;
 
 /// <summary>
-/// Validation helpers for <see cref="MetricsBenchmarks"/> to ensure benchmark setup is valid
-/// before execution. Validates that the benchmark class is properly configured and ready for benchmarking.
+/// Provides validation methods for <see cref="MetricsBenchmarks"/> instances to ensure they are properly initialized
+/// and ready for benchmark execution. This validation prevents running benchmarks on uninitialized instances.
 /// </summary>
 public static class MetricsBenchmarksValidation
 {
@@ -51,8 +51,12 @@ public static class MetricsBenchmarksValidation
     /// </summary>
     /// <param name="value">The metrics benchmarks instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this MetricsBenchmarks value)
-        => Validate(value).Count == 0;
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return Validate(value).Count == 0;
+    }
 
     /// <summary>
     /// Ensures that the specified <see cref="MetricsBenchmarks"/> instance is valid.
