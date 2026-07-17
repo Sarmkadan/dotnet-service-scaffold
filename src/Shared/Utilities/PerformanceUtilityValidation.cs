@@ -75,7 +75,12 @@ public static class PerformanceUtilityValidation
     /// </summary>
     /// <param name="stats">The memory stats to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this MemoryStats stats) => Validate(stats).Count == 0;
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="stats"/> is null.</exception>
+    public static bool IsValid(this MemoryStats stats)
+    {
+        ArgumentNullException.ThrowIfNull(stats);
+        return Validate(stats).Count == 0;
+    }
 
     /// <summary>
     /// Ensures that the specified <see cref="MemoryStats"/> instance is valid.
@@ -92,7 +97,7 @@ public static class PerformanceUtilityValidation
         {
             throw new ArgumentException(
                 $"MemoryStats instance is not valid. Validation errors:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                string.Join($"{Environment.NewLine}- ", errors)}");
         }
     }
 
@@ -101,7 +106,12 @@ public static class PerformanceUtilityValidation
     /// </summary>
     /// <param name="stats">The GC stats to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this GarbageCollectionStats stats) => Validate(stats).Count == 0;
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="stats"/> is null.</exception>
+    public static bool IsValid(this GarbageCollectionStats stats)
+    {
+        ArgumentNullException.ThrowIfNull(stats);
+        return Validate(stats).Count == 0;
+    }
 
     /// <summary>
     /// Ensures that the specified <see cref="GarbageCollectionStats"/> instance is valid.
@@ -118,7 +128,7 @@ public static class PerformanceUtilityValidation
         {
             throw new ArgumentException(
                 $"GarbageCollectionStats instance is not valid. Validation errors:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)}");
+                string.Join($"{Environment.NewLine}- ", errors)}");
         }
     }
 }
