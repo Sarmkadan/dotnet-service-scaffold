@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 
@@ -45,10 +45,7 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="value">The repository instance to check.</param>
     /// <returns>True if the repository is valid; otherwise, false.</returns>
-    public static bool IsValid(this AuditLogRepository? value)
-    {
-        return Validate(value).Count == 0;
-    }
+    public static bool IsValid(this AuditLogRepository? value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the AuditLogRepository instance is valid, throwing an exception
@@ -100,10 +97,8 @@ public static class AuditLogRepositoryValidation
     /// <param name="userId">The user identifier.</param>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetByUserIdParametersValid(Guid userId, int count = 50)
-    {
-        return ValidateGetByUserIdParameters(userId, count).Count == 0;
-    }
+    public static bool IsGetByUserIdParametersValid(Guid userId, int count = 50) =>
+        ValidateGetByUserIdParameters(userId, count).Count == 0;
 
     /// <summary>
     /// Ensures that the GetByUserIdAsync parameters are valid, throwing an exception
@@ -129,8 +124,11 @@ public static class AuditLogRepositoryValidation
     /// <param name="entityType">The type of entity.</param>
     /// <param name="entityId">The entity identifier.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
-    public static IReadOnlyList<string> ValidateGetByEntityParameters(string? entityType, Guid entityId)
+    /// <exception cref="ArgumentNullException">Thrown if entityType is null.</exception>
+    public static IReadOnlyList<string> ValidateGetByEntityParameters([NotNull] string? entityType, Guid entityId)
     {
+        ArgumentNullException.ThrowIfNull(entityType);
+
         var problems = new List<string>();
 
         if (string.IsNullOrWhiteSpace(entityType))
@@ -151,10 +149,8 @@ public static class AuditLogRepositoryValidation
     /// <param name="entityType">The type of entity.</param>
     /// <param name="entityId">The entity identifier.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetByEntityParametersValid(string? entityType, Guid entityId)
-    {
-        return ValidateGetByEntityParameters(entityType, entityId).Count == 0;
-    }
+    public static bool IsGetByEntityParametersValid(string? entityType, Guid entityId) =>
+        ValidateGetByEntityParameters(entityType, entityId).Count == 0;
 
     /// <summary>
     /// Ensures that the GetByEntityAsync parameters are valid, throwing an exception
@@ -204,10 +200,8 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetRecentLogsParametersValid(int count = 100)
-    {
-        return ValidateGetRecentLogsParameters(count).Count == 0;
-    }
+    public static bool IsGetRecentLogsParametersValid(int count = 100) =>
+        ValidateGetRecentLogsParameters(count).Count == 0;
 
     /// <summary>
     /// Ensures that the GetRecentLogsAsync parameters are valid, throwing an exception
@@ -253,10 +247,8 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of failed actions to return.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetFailedActionsParametersValid(int count = 50)
-    {
-        return ValidateGetFailedActionsParameters(count).Count == 0;
-    }
+    public static bool IsGetFailedActionsParametersValid(int count = 50) =>
+        ValidateGetFailedActionsParameters(count).Count == 0;
 
     /// <summary>
     /// Ensures that the GetFailedActionsAsync parameters are valid, throwing an exception
@@ -302,10 +294,8 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="daysToKeep">The number of days to keep logs.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsDeleteOldLogsParametersValid(int daysToKeep = 90)
-    {
-        return ValidateDeleteOldLogsParameters(daysToKeep).Count == 0;
-    }
+    public static bool IsDeleteOldLogsParametersValid(int daysToKeep = 90) =>
+        ValidateDeleteOldLogsParameters(daysToKeep).Count == 0;
 
     /// <summary>
     /// Ensures that the DeleteOldLogsAsync parameters are valid, throwing an exception
