@@ -1801,6 +1801,72 @@ PropertyInfo[] obsoleteProps = ReflectionUtility.GetPropertiesWithAttribute<Obso
 Console.WriteLine($"Found {obsoleteProps.Length} properties with Obsolete attribute");
 ```
 
+## ApiKeyRepositoryIntegrationTests
+
+The `ApiKeyRepositoryIntegrationTests` class provides comprehensive integration tests for the `ApiKeyRepository`, validating all public members and edge cases. These tests verify that API key CRUD operations work correctly with the database, including adding, retrieving, updating, and deleting API keys, as well as handling error scenarios like duplicate prefixes and non-existent IDs.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using FluentAssertions;
+using Xunit;
+
+// Initialize the API key repository (typically via dependency injection)
+var apiKeyRepository = new ApiKeyRepository(dbContext);
+
+// Create a new API key for testing
+var newApiKey = new ApiKey
+{
+    Id = Guid.NewGuid(),
+    KeyHash = "hashed_api_key_value_here",
+    KeyPrefix = "sk_live_",
+    UserId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
+    ExpiresAt = DateTime.UtcNow.AddDays(90),
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Test adding an API key to the database
+await apiKeyRepository.AddAsync(newApiKey);
+await dbContext.SaveChangesAsync();
+
+// Verify the API key was added
+var retrievedApiKey = await apiKeyRepository.GetByIdAsync(newApiKey.Id);
+retrievedApiKey.Should().NotBeNull();
+retrievedApiKey!.KeyPrefix.Should().Be("sk_live_");
+
+// Test updating an API key
+retrievedApiKey.KeyPrefix = "sk_test_updated_";
+apiKeyRepository.Update(retrievedApiKey);
+await dbContext.SaveChangesAsync();
+
+// Verify the update
+var updatedApiKey = await apiKeyRepository.GetByIdAsync(newApiKey.Id);
+updatedApiKey.Should().NotBeNull();
+updatedApiKey!.KeyPrefix.Should().Be("sk_test_updated_");
+
+// Test getting all API keys
+var allApiKeys = await apiKeyRepository.GetAllAsync();
+allApiKeys.Should().NotBeNull().And.HaveCount(1);
+
+// Test deleting an API key
+apiKeyRepository.Delete(retrievedApiKey);
+await dbContext.SaveChangesAsync();
+
+// Verify the API key was deleted
+var deletedApiKey = await apiKeyRepository.GetByIdAsync(newApiKey.Id);
+deletedApiKey.Should().BeNull();
+
+// Test getting a non-existent API key
+var nonExistentApiKey = await apiKeyRepository.GetByIdAsync(Guid.NewGuid());
+nonExistentApiKey.Should().BeNull();
+```
+
 ## NotificationService
 
 The `NotificationService` provides a unified interface for sending various types of notifications to users and systems, including individual notifications, bulk communications, emails, and critical alerts. It abstracts the underlying delivery mechanisms (email, SMS, push notifications, webhooks, Slack) to allow flexible implementations and easy switching between notification providers. The service includes built-in logging and error handling to ensure reliable notification delivery.
