@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Domain.Models;
@@ -28,7 +27,7 @@ public static class ServiceScaffoldDbContextExtensions
 
         return await context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email.ToLower(CultureInfo.InvariantCulture) == email.ToLower(CultureInfo.InvariantCulture));
+            .FirstOrDefaultAsync(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -36,7 +35,7 @@ public static class ServiceScaffoldDbContextExtensions
     /// </summary>
     /// <param name="context">The database context.</param>
     /// <returns>A list of <see cref="ServiceRegistration"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     public static async Task<IReadOnlyList<ServiceRegistration>> GetServicesAsync(this ServiceScaffoldDbContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -51,8 +50,8 @@ public static class ServiceScaffoldDbContextExtensions
     /// </summary>
     /// <param name="context">The database context.</param>
     /// <param name="userId">The ID of the user.</param>
-    /// <returns>A list of <see cref="AuditLog"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+    /// <returns>A list of <see cref="AuditLog"/> ordered by creation date descending.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     public static async Task<IReadOnlyList<AuditLog>> GetAuditLogsForUserAsync(this ServiceScaffoldDbContext context, Guid userId)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -71,8 +70,8 @@ public static class ServiceScaffoldDbContextExtensions
     /// <param name="key">The configuration key.</param>
     /// <param name="serviceId">The service ID.</param>
     /// <returns>The configuration value if found; otherwise, null.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when context or key is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when key is empty or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> or <paramref name="key"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="key"/> is empty or whitespace.</exception>
     public static async Task<string?> GetConfigurationValueAsync(this ServiceScaffoldDbContext context, string key, Guid serviceId)
     {
         ArgumentNullException.ThrowIfNull(context);
