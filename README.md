@@ -1488,6 +1488,83 @@ var metricsSnapshot = metrics.GetMetricsAsync().Result;
 
 This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection.
 
+## MetricsServiceValidation
+
+The `MetricsServiceValidation` class provides validation helpers for `MetricsService` instances and metric data. It ensures metric names follow naming conventions, validates metric values are within acceptable ranges, and provides comprehensive validation methods for counters, gauges, timings, and tags. This validation layer helps maintain data integrity and prevents invalid metrics from being recorded.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Infrastructure.Metrics;
+
+// Initialize metrics service
+var metricsService = new MetricsService();
+
+// Validate the metrics service instance
+var validationErrors = MetricsServiceValidation.Validate(metricsService);
+if (MetricsServiceValidation.IsValid(metricsService))
+{
+Console.WriteLine("Metrics service is valid");
+}
+
+// Validate metric names before recording
+string metricName = "http_requests_total";
+var nameErrors = MetricsServiceValidation.ValidateMetricName(metricName);
+if (nameErrors.Count == 0)
+{
+Console.WriteLine($"Metric name '{metricName}' is valid");
+}
+
+// Validate counter values
+long requestCount = 42;
+var counterErrors = MetricsServiceValidation.ValidateCounterValue(requestCount);
+if (counterErrors.Count == 0)
+{
+metricsService.IncrementCounter(metricName);
+}
+
+// Validate gauge values (e.g., memory usage)
+double memoryUsage = 75.5;
+var gaugeErrors = MetricsServiceValidation.ValidateGaugeValue(memoryUsage);
+if (gaugeErrors.Count == 0)
+{
+metricsService.RecordGauge("memory.usage_mb", memoryUsage);
+}
+
+// Validate timing values (e.g., request durations)
+long responseTime = 150;
+var timingErrors = MetricsServiceValidation.ValidateTimingValue(responseTime);
+if (timingErrors.Count == 0)
+{
+metricsService.RecordTiming("api.response_time_ms", responseTime);
+}
+
+// Validate metric tags
+var tags = new Dictionary<string, string>
+{
+["method"] = "GET",
+["status"] = "200",
+["endpoint"] = "/api/users"
+};
+var tagErrors = MetricsServiceValidation.ValidateTags(tags);
+if (tagErrors.Count == 0)
+{
+metricsService.IncrementCounter("http.requests", tags);
+}
+
+// Throw exception on invalid service (alternative to checking IsValid)
+try
+{
+MetricsServiceValidation.EnsureValid(metricsService);
+Console.WriteLine("Metrics service is valid and ready for use");
+}
+catch (ArgumentException ex)
+{
+Console.WriteLine($"Validation failed: {ex.Message}");
+}
+```
 
 ## PrometheusFormatterTests
 
