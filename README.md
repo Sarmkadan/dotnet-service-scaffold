@@ -2084,6 +2084,104 @@ await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
 Console.WriteLine("Old health check results cleaned up");
 ```
 
+## ServiceManagementServiceTests
+
+The `ServiceManagementServiceTests` class provides comprehensive unit tests for the `ServiceManagementService` class, validating all public members and edge cases. These tests cover service registration, retrieval, activation state changes, success rate calculations, and error handling scenarios including validation exceptions, service not found scenarios, and owner validation.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+using NSubstitute;
+using Xunit;
+
+// Arrange: Initialize mock dependencies
+var serviceRepository = Substitute.For<IServiceRepository>();
+var userRepository = Substitute.For<IUserRepository>();
+var auditService = Substitute.For<IAuditService>();
+var logger = Substitute.For<ILogger<ServiceManagementService>>();
+
+var serviceManagementService = new ServiceManagementService(
+    serviceRepository,
+    userRepository,
+    auditService,
+    logger
+);
+
+// Act & Assert: Register a new service with valid inputs
+var serviceName = "NewService";
+var endpoint = "http://newservice.com";
+var healthCheckUrl = "http://newservice.com/health";
+var ownerId = Guid.NewGuid();
+var owner = new User { Id = ownerId, Username = "testuser" };
+
+userRepository.GetByIdAsync(ownerId).Returns(owner);
+serviceRepository.GetByNameAsync(serviceName).Returns((ServiceRegistration)null);
+serviceRepository.AddAsync(Arg.Any<ServiceRegistration>()).Returns(ci => ci.Arg<ServiceRegistration>());
+
+var registeredService = await serviceManagementService.RegisterServiceAsync(serviceName, endpoint, healthCheckUrl, ownerId);
+
+Assert.NotNull(registeredService);
+Assert.Equal(serviceName, registeredService.ServiceName);
+Assert.Equal(endpoint, registeredService.Endpoint);
+Assert.Equal(healthCheckUrl, registeredService.HealthCheckUrl);
+Assert.Equal(ownerId, registeredService.OwnerId);
+
+// Act & Assert: Disable a service for maintenance
+var serviceId = registeredService.Id;
+var service = new ServiceRegistration { Id = serviceId, ServiceName = serviceName, IsActive = true };
+serviceRepository.GetByIdAsync(serviceId).Returns(service);
+serviceRepository.UpdateAsync(Arg.Any<ServiceRegistration>()).Returns(ci => ci.Arg<ServiceRegistration>());
+
+var disabledService = await serviceManagementService.DisableServiceAsync(serviceId, "Scheduled maintenance");
+
+Assert.False(disabledService.IsActive);
+Assert.Equal("Scheduled maintenance", disabledService.DeactivationReason);
+
+// Act & Assert: Get service success rate
+var serviceWithMetrics = new ServiceRegistration { 
+    Id = serviceId, 
+    ServiceName = serviceName, 
+    TotalRequests = 100, 
+    SuccessfulRequests = 95 
+};
+serviceRepository.GetByIdAsync(serviceId).Returns(serviceWithMetrics);
+
+var successRate = await serviceManagementService.GetServiceSuccessRateAsync(serviceId);
+
+Assert.Equal(95m, successRate);
+
+// Act & Assert: Enable a previously disabled service
+var disabledServiceWithReason = new ServiceRegistration { 
+    Id = serviceId, 
+    ServiceName = serviceName, 
+    IsActive = false, 
+    DeactivationReason = "Old maintenance reason" 
+};
+serviceRepository.GetByIdAsync(serviceId).Returns(disabledServiceWithReason);
+
+var enabledService = await serviceManagementService.EnableServiceAsync(serviceId);
+
+Assert.True(enabledService.IsActive);
+Assert.Null(enabledService.DeactivationReason);
+
+// Act & Assert: Unregister a service
+var serviceToDelete = new ServiceRegistration { 
+    Id = serviceId, 
+    ServiceName = serviceName, 
+    OwnerId = ownerId 
+};
+serviceRepository.GetByIdAsync(serviceId).Returns(serviceToDelete);
+serviceRepository.DeleteAsync(serviceId).Returns(Task.CompletedTask);
+
+await serviceManagementService.UnregisterServiceAsync(serviceId);
+
+await serviceRepository.Received(1).DeleteAsync(serviceId);
+```
+
 ## FeatureFlagServiceTests
 
 The `FeatureFlagServiceTests` class provides comprehensive unit tests for the `FeatureFlagService` class, validating all public members and edge cases. These tests ensure feature flag functionality works correctly across different scenarios including enabling/disabling features, rollout percentage configuration, and feature registration.
