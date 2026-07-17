@@ -1524,6 +1524,63 @@ metricsService.RecordActionTime("cache.lookup", () =>
 });
 ```
 
+## ServiceDiscoveryServiceExtensions
+
+The `ServiceDiscoveryServiceExtensions` class provides extension methods for the `ServiceDiscoveryService` that simplify service discovery operations. These extensions offer convenient ways to discover healthy endpoints, check service health, retrieve service statistics in batches, filter registered services, and discover services using wildcard patterns.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+using DotnetServiceScaffold.Domain.Models;
+
+// Initialize service discovery (typically via dependency injection)
+var serviceDiscovery = new ServiceDiscoveryService(...);
+
+// Discover a healthy endpoint for a specific service (throws if none available)
+var userServiceEndpoint = await serviceDiscovery.DiscoverHealthyEndpointOrThrowAsync("user-api");
+Console.WriteLine($"Discovered endpoint: {userServiceEndpoint.Endpoint}");
+
+// Check if a service is healthy
+bool isHealthy = await serviceDiscovery.IsServiceHealthyAsync("payment-service");
+Console.WriteLine($"Payment service healthy: {isHealthy}");
+
+// Get statistics for multiple services in a single batch operation
+var serviceNames = new[] { "user-api", "payment-service", "notification-service" };
+var stats = await serviceDiscovery.GetServiceStatsBatchAsync(serviceNames);
+
+foreach (var kvp in stats)
+{
+    Console.WriteLine($"{kvp.Key}: Success Rate = {kvp.Value.SuccessRate:P0}, " +
+                     $"Response Time = {kvp.Value.AverageResponseTimeMs}ms");
+}
+
+// Get count of registered services
+int totalServices = await serviceDiscovery.GetRegisteredServicesCountAsync();
+Console.WriteLine($"Total registered services: {totalServices}");
+
+// Discover services matching a pattern (supports wildcards * and ?)
+var matchingServices = await serviceDiscovery.DiscoverByPatternAsync("*-api");
+Console.WriteLine($"Found {matchingServices.Count} services matching pattern '*-api'");
+
+// Get filtered list of registered services
+var enabledServices = await serviceDiscovery.GetRegisteredServicesAsync(
+    name => name.StartsWith("user", StringComparison.OrdinalIgnoreCase)
+);
+Console.WriteLine($"Found {enabledServices.Count} user services");
+
+// Get statistics for a single service
+var userServiceStats = await serviceDiscovery.GetServiceStatsAsync("user-api");
+if (userServiceStats.IsSuccess && userServiceStats.Value is not null)
+{
+    Console.WriteLine($"User API - Success Rate: {userServiceStats.Value.SuccessRate:P0}, " +
+                     $"Active Instances: {userServiceStats.Value.ActiveInstances}");
+}
+```
+
 ## MetricsBenchmarks
 
 The `MetricsBenchmarks` class provides performance benchmarks for in-process metric collection. It measures the overhead of incrementing counters, recording timings, and retrieving metrics.
