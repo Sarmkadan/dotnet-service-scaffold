@@ -1332,6 +1332,43 @@ Console.WriteLine(matchesPattern); // true
 
 The `CollectionUtility` class provides utility methods for common collection operations including batching, chunking, grouping, filtering, and manipulation. These methods help simplify working with collections by providing functional-style operations that maintain immutability and support LINQ-style chaining.
 
+## CollectionUtilityTests
+
+The `CollectionUtilityTests` class provides comprehensive unit tests for the `CollectionUtility` class, ensuring that collection manipulation methods like null/empty checks, element retrieval with defaults, and pagination function correctly. These tests cover various scenarios, including edge cases and out-of-range inputs, to maintain the reliability of the utility methods.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Shared.Utilities;
+using FluentAssertions;
+using Xunit;
+
+// Arrange: Set up a collection and parameters for testing
+var items = Enumerable.Range(1, 100).ToList();
+var list = new List<int> { 1, 2, 3 };
+
+// Test IsNullOrEmpty checks
+CollectionUtility.IsNullOrEmpty(null as IEnumerable<string>).Should().BeTrue();
+CollectionUtility.IsNullOrEmpty(new List<string>()).Should().BeTrue();
+CollectionUtility.IsNullOrEmpty(new List<string> { "item" }).Should().BeFalse();
+
+// Test GetOrDefault functionality
+CollectionUtility.GetOrDefault(list, 1).Should().Be(2); // Valid index
+CollectionUtility.GetOrDefault(list, -1).Should().Be(default(int)); // Negative index
+CollectionUtility.GetOrDefault(list, 5).Should().Be(default(int)); // Out of range
+
+// Test Paginate functionality
+var pageNumber = 3;
+var pageSize = 10;
+var paginated = CollectionUtility.Paginate(items, pageNumber, pageSize);
+paginated.Should().HaveCount(pageSize);
+paginated.First().Should().Be(21);
+
+// Test Paginate edge case
+var emptyPage = CollectionUtility.Paginate(items, 999, pageSize);
+emptyPage.Should().BeEmpty();
+```
+
 ## CacheAndCollectionTests
 
 The `CacheAndCollectionTests` class provides comprehensive unit tests for cache and collection utilities, verifying all public members and edge cases. It tests password strength validation, range validation, batching operations, partitioning, and in-memory cache functionality, ensuring the utility methods work correctly across different scenarios.
