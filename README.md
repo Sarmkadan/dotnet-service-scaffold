@@ -129,6 +129,39 @@ Assert.True(File.Exists(filePath));
 File.Delete(filePath);
 ```
 
+## BasicServiceSetupExample
+
+The `BasicServiceSetupExample` class demonstrates how to programmatically register and manage services within the scaffold system. It utilizes the API client to handle service lifecycle operations such as registration, enabling/disabling monitoring, listing services, and retrieving detailed status information for specific services.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+
+// Initialize the example with your API key
+var example = new BasicServiceSetupExample("sk_live_your_api_key_here");
+
+// Register a new service
+var serviceId = await example.RegisterServiceAsync(
+    name: "user-api",
+    description: "User authentication API",
+    healthCheckUrl: "https://api.example.com/health",
+    ownerId: "user-1234");
+
+// List registered services
+await example.ListServicesAsync();
+
+// Get detailed information about the registered service
+await example.GetServiceDetailsAsync(serviceId);
+
+// Disable monitoring for the service
+await example.DisableServiceAsync(serviceId);
+
+// Re-enable service monitoring
+await example.EnableServiceAsync(serviceId);
+```
+
 ## Result
 
 The `Result` type is a discriminated union pattern for handling success/failure scenarios in a functional style. It provides a type-safe way to represent operations that may fail without throwing exceptions, enabling better error handling through the type system. The pattern includes both non-generic (`Result`) and generic (`Result<T>`) variants, allowing you to carry successful values or error information throughout your application.
