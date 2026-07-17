@@ -1685,6 +1685,74 @@ var metricsSnapshot = metrics.GetMetricsAsync().Result;
 
 This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection.
 
+## AuditLogRepositoryValidation
+
+The `AuditLogRepositoryValidation` class provides validation helpers for `AuditLogRepository` instances and method parameters. It validates repository state before operations and ensures method parameters like user IDs, entity types, and count values are within acceptable ranges. This validation layer helps maintain data integrity and prevents invalid operations on audit logs.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+
+// Validate an AuditLogRepository instance before use
+var repository = new AuditLogRepository(...);
+var validationErrors = AuditLogRepositoryValidation.Validate(repository);
+if (AuditLogRepositoryValidation.IsValid(repository))
+{
+    Console.WriteLine("AuditLogRepository is valid and ready for use");
+}
+
+// Validate repository parameters using EnsureValid (throws on invalid)
+try
+{
+    AuditLogRepositoryValidation.EnsureValid(repository);
+    Console.WriteLine("Repository validation passed");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Repository validation failed: {ex.Message}");
+}
+
+// Validate GetByUserIdAsync parameters
+var userId = Guid.NewGuid();
+var userLogsErrors = AuditLogRepositoryValidation.ValidateGetByUserIdParameters(userId, count: 100);
+if (AuditLogRepositoryValidation.IsGetByUserIdParametersValid(userId, count: 100))
+{
+    var userLogs = await repository.GetByUserIdAsync(userId, 100);
+}
+
+// Validate GetByEntityAsync parameters
+var entityType = "User";
+var entityId = Guid.NewGuid();
+var entityLogsErrors = AuditLogRepositoryValidation.ValidateGetByEntityParameters(entityType, entityId);
+if (AuditLogRepositoryValidation.IsGetByEntityParametersValid(entityType, entityId))
+{
+    var entityLogs = await repository.GetByEntityAsync(entityType, entityId);
+}
+
+// Validate GetRecentLogsAsync parameters
+var recentLogsErrors = AuditLogRepositoryValidation.ValidateGetRecentLogsParameters(count: 200);
+if (AuditLogRepositoryValidation.IsGetRecentLogsParametersValid(count: 200))
+{
+    var recentLogs = await repository.GetRecentLogsAsync(200);
+}
+
+// Validate GetFailedActionsAsync parameters
+var failedActionsErrors = AuditLogRepositoryValidation.ValidateGetFailedActionsParameters(count: 50);
+if (AuditLogRepositoryValidation.IsGetFailedActionsParametersValid(count: 50))
+{
+    var failedActions = await repository.GetFailedActionsAsync(50);
+}
+
+// Validate DeleteOldLogsAsync parameters
+var deleteParamsErrors = AuditLogRepositoryValidation.ValidateDeleteOldLogsParameters(daysToKeep: 30);
+if (AuditLogRepositoryValidation.IsDeleteOldLogsParametersValid(daysToKeep: 30))
+{
+    await repository.DeleteOldLogsAsync(30);
+}
+```
+
 ## MetricsServiceValidation
 
 The `MetricsServiceValidation` class provides validation helpers for `MetricsService` instances and metric data. It ensures metric names follow naming conventions, validates metric values are within acceptable ranges, and provides comprehensive validation methods for counters, gauges, timings, and tags. This validation layer helps maintain data integrity and prevents invalid metrics from being recorded.
