@@ -39,10 +39,7 @@ public static class HttpClientFactoryValidation
     /// </summary>
     /// <param name="value">The HttpClientFactory instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this HttpClientFactory? value)
-    {
-        return value is not null && Validate(value).Count == 0;
-    }
+    public static bool IsValid(this HttpClientFactory? value) => value is not null && Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="HttpClientFactory"/> instance is valid.
@@ -89,10 +86,7 @@ public static class HttpClientFactoryValidation
     /// </summary>
     /// <param name="name">The client name.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidCreateClient(string? name)
-    {
-        return ValidateCreateClient(name).Count == 0;
-    }
+    public static bool IsValidCreateClient(string? name) => ValidateCreateClient(name).Count == 0;
 
     /// <summary>
     /// Ensures that the parameters for <see cref="HttpClientFactory.CreateClient(string)"/> are valid.
@@ -116,6 +110,7 @@ public static class HttpClientFactoryValidation
     /// <param name="apiKey">The API key to use for authentication.</param>
     /// <param name="name">The client name.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="apiKey"/> is null, empty, or whitespace.</exception>
     public static IReadOnlyList<string> ValidateCreateAuthenticatedClient(string? apiKey, string? name)
     {
         var problems = new List<string>();
@@ -147,10 +142,7 @@ public static class HttpClientFactoryValidation
     /// <param name="apiKey">The API key to use for authentication.</param>
     /// <param name="name">The client name.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidCreateAuthenticatedClient(string? apiKey, string? name)
-    {
-        return ValidateCreateAuthenticatedClient(apiKey, name).Count == 0;
-    }
+    public static bool IsValidCreateAuthenticatedClient(string? apiKey, string? name) => ValidateCreateAuthenticatedClient(apiKey, name).Count == 0;
 
     /// <summary>
     /// Ensures that the parameters for <see cref="HttpClientFactory.CreateAuthenticatedClient(string, string)"/> are valid.
@@ -175,6 +167,7 @@ public static class HttpClientFactoryValidation
     /// <param name="token">The bearer token to use for authentication.</param>
     /// <param name="name">The client name.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="token"/> is null, empty, or whitespace.</exception>
     public static IReadOnlyList<string> ValidateCreateBearerClient(string? token, string? name)
     {
         var problems = new List<string>();
@@ -206,10 +199,7 @@ public static class HttpClientFactoryValidation
     /// <param name="token">The bearer token to use for authentication.</param>
     /// <param name="name">The client name.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidCreateBearerClient(string? token, string? name)
-    {
-        return ValidateCreateBearerClient(token, name).Count == 0;
-    }
+    public static bool IsValidCreateBearerClient(string? token, string? name) => ValidateCreateBearerClient(token, name).Count == 0;
 
     /// <summary>
     /// Ensures that the parameters for <see cref="HttpClientFactory.CreateBearerClient(string, string)"/> are valid.
@@ -234,6 +224,7 @@ public static class HttpClientFactoryValidation
     /// <param name="baseUrl">The base URL for the HTTP client.</param>
     /// <param name="name">The client name.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="baseUrl"/> is null, empty, or whitespace, or not a valid absolute URI with http/https scheme.</exception>
     public static IReadOnlyList<string> ValidateCreateClientWithBaseUrl(string? baseUrl, string? name)
     {
         var problems = new List<string>();
@@ -273,10 +264,7 @@ public static class HttpClientFactoryValidation
     /// <param name="baseUrl">The base URL for the HTTP client.</param>
     /// <param name="name">The client name.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidCreateClientWithBaseUrl(string? baseUrl, string? name)
-    {
-        return ValidateCreateClientWithBaseUrl(baseUrl, name).Count == 0;
-    }
+    public static bool IsValidCreateClientWithBaseUrl(string? baseUrl, string? name) => ValidateCreateClientWithBaseUrl(baseUrl, name).Count == 0;
 
     /// <summary>
     /// Ensures that the parameters for <see cref="HttpClientFactory.CreateClientWithBaseUrl(string, string)"/> are valid.
