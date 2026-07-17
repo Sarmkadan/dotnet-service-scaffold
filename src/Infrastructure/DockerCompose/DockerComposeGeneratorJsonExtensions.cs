@@ -9,6 +9,9 @@ namespace DotnetServiceScaffold.Infrastructure.DockerCompose;
 /// <summary>
 /// Provides System.Text.Json serialization extensions for <see cref="DockerComposeGenerator"/>.
 /// </summary>
+/// <remarks>
+/// This class is static to provide extension methods for DockerComposeGenerator serialization.
+/// </remarks>
 public static class DockerComposeGeneratorExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
@@ -44,7 +47,7 @@ public static class DockerComposeGeneratorExtensions
     /// Deserializes a JSON string to a <see cref="DockerComposeGenerator"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A DockerComposeGenerator instance, or null if deserialization fails.</returns>
+    /// <returns>A DockerComposeGenerator instance, or <see langword="null"/> if deserialization fails.</returns>
     /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static DockerComposeGenerator? FromJson(string json)
     {
@@ -64,8 +67,8 @@ public static class DockerComposeGeneratorExtensions
     /// Attempts to deserialize a JSON string to a <see cref="DockerComposeGenerator"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized DockerComposeGenerator instance, or null if deserialization fails.</param>
-    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <param name="value">Receives the deserialized DockerComposeGenerator instance, or <see langword="null"/> if deserialization fails.</param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out DockerComposeGenerator? value)
     {
