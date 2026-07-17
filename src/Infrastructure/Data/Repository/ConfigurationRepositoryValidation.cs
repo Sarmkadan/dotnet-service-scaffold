@@ -91,8 +91,10 @@ public static class ConfigurationRepositoryValidation
     /// </summary>
     /// <param name="value">The configuration entity to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ServiceConfiguration value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
