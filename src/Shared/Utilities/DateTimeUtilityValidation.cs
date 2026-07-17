@@ -5,6 +5,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace DotnetServiceScaffold.Shared.Utilities;
@@ -20,6 +22,7 @@ public static class DateTimeUtilityValidation
     /// </summary>
     /// <param name="value">The DateTime value to validate.</param>
     /// <returns>A read-only list of validation error messages. Empty if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown when validation fails (should not happen as this is a validation method).</exception>
     public static IReadOnlyList<string> ValidateDateTime(DateTime value)
     {
         var errors = new List<string>();
@@ -36,6 +39,7 @@ public static class DateTimeUtilityValidation
 
         return errors.AsReadOnly();
     }
+
 
     /// <summary>
     /// Validates a nullable DateTime value.
@@ -57,8 +61,11 @@ public static class DateTimeUtilityValidation
     /// </summary>
     /// <param name="value">The ISO 8601 duration string to validate.</param>
     /// <returns>A read-only list of validation error messages. Empty if valid or null.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> ValidateDuration(string? value)
     {
+        ArgumentNullException.ThrowIfNull(value);
+
         if (string.IsNullOrWhiteSpace(value))
         {
             return new[] { "Duration string cannot be null or whitespace." };
@@ -86,6 +93,7 @@ public static class DateTimeUtilityValidation
     /// </summary>
     /// <param name="birthDate">The birth date to validate.</param>
     /// <returns>A read-only list of validation error messages. Empty if valid.</returns>
+    /// <exception cref="ArgumentException"><paramref name="birthDate"/> results in validation errors.</exception>
     public static IReadOnlyList<string> ValidateBirthDate(DateTime birthDate)
     {
         var errors = new List<string>();
@@ -125,40 +133,28 @@ public static class DateTimeUtilityValidation
     /// </summary>
     /// <param name="value">The DateTime value to check.</param>
     /// <returns>True if the value is valid; otherwise, false.</returns>
-    public static bool IsValidDateTime(DateTime value)
-    {
-        return ValidateDateTime(value).Count == 0;
-    }
+    public static bool IsValidDateTime(DateTime value) => ValidateDateTime(value).Count == 0;
 
     /// <summary>
     /// Determines whether a nullable DateTime value is valid.
     /// </summary>
     /// <param name="value">The nullable DateTime value to check.</param>
     /// <returns>True if the value is valid or null; otherwise, false.</returns>
-    public static bool IsValidDateTime(DateTime? value)
-    {
-        return ValidateDateTime(value).Count == 0;
-    }
+    public static bool IsValidDateTime(DateTime? value) => ValidateDateTime(value).Count == 0;
 
     /// <summary>
     /// Determines whether a string duration value is valid.
     /// </summary>
     /// <param name="value">The duration string to check.</param>
     /// <returns>True if the string is valid or null; otherwise, false.</returns>
-    public static bool IsValidDuration(string? value)
-    {
-        return ValidateDuration(value).Count == 0;
-    }
+    public static bool IsValidDuration(string? value) => ValidateDuration(value).Count == 0;
 
     /// <summary>
     /// Determines whether a birth date is valid for age calculation.
     /// </summary>
     /// <param name="birthDate">The birth date to check.</param>
     /// <returns>True if the birth date is valid; otherwise, false.</returns>
-    public static bool IsValidBirthDate(DateTime birthDate)
-    {
-        return ValidateBirthDate(birthDate).Count == 0;
-    }
+    public static bool IsValidBirthDate(DateTime birthDate) => ValidateBirthDate(birthDate).Count == 0;
 
     /// <summary>
     /// Ensures that a DateTime value is valid, throwing an <see cref="ArgumentException"/>
@@ -172,9 +168,9 @@ public static class DateTimeUtilityValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"DateTime value is not valid. Validation errors:\n  - {
-                    string.Join("\n  - ", errors)
-                }");
+                $"DateTime value is not valid. Validation errors:\n - {
+                string.Join("\n - ", errors)
+            }");
         }
     }
 
@@ -190,9 +186,9 @@ public static class DateTimeUtilityValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Nullable DateTime value is not valid. Validation errors:\n  - {
-                    string.Join("\n  - ", errors)
-                }");
+                $"Nullable DateTime value is not valid. Validation errors:\n - {
+                string.Join("\n - ", errors)
+            }");
         }
     }
 
@@ -208,9 +204,9 @@ public static class DateTimeUtilityValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Duration string is not valid. Validation errors:\n  - {
-                    string.Join("\n  - ", errors)
-                }");
+                $"Duration string is not valid. Validation errors:\n - {
+                string.Join("\n - ", errors)
+            }");
         }
     }
 
@@ -226,9 +222,9 @@ public static class DateTimeUtilityValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Birth date is not valid. Validation errors:\n  - {
-                    string.Join("\n  - ", errors)
-                }");
+                $"Birth date is not valid. Validation errors:\n - {
+                string.Join("\n - ", errors)
+            }");
         }
     }
 }
