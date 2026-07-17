@@ -4912,3 +4912,73 @@ app.UseServiceDiscovery(); // Handles self-registration on startup and deregistr
 
 app.Run();
 ```
+
+## ConfigurationRepositoryTests
+
+The `ConfigurationRepositoryTests` class provides comprehensive integration tests for the `ConfigurationRepository` class, verifying all CRUD operations against a real database using Entity Framework Core. It tests adding, retrieving, updating, and deleting service configuration entries, ensuring the repository correctly persists and retrieves configuration data with proper error handling for non-existent entries.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.EntityFrameworkCore;
+
+// Initialize the configuration repository with your DbContext
+var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+    .UseSqlite("Data Source=:memory:")
+    .Options;
+
+var dbContext = new ApplicationDbContext(options);
+var configurationRepository = new ConfigurationRepository(dbContext);
+
+// Add a new configuration entry
+var newConfig = new ServiceConfiguration
+{
+    Id = Guid.NewGuid(),
+    Key = "API_TIMEOUT_SECONDS",
+    Value = "30",
+    ConfigType = "integer",
+    Description = "API timeout configuration",
+    IsSystemConfig = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+await configurationRepository.AddAsync(newConfig);
+Console.WriteLine("Configuration added successfully");
+
+// Get configuration by ID
+var retrievedConfig = await configurationRepository.GetByIdAsync(newConfig.Id);
+if (retrievedConfig != null)
+{
+    Console.WriteLine($"Retrieved configuration: {retrievedConfig.Key} = {retrievedConfig.Value}");
+}
+
+// Get configuration by key
+var configByKey = await configurationRepository.GetByKeyAsync("API_TIMEOUT_SECONDS");
+if (configByKey != null)
+{
+    Console.WriteLine($"Found configuration by key: {configByKey.Key} = {configByKey.Value}");
+}
+
+// Update configuration
+if (retrievedConfig != null)
+{
+    retrievedConfig.Value = "60";
+    retrievedConfig.UpdatedAt = DateTime.UtcNow;
+    await configurationRepository.UpdateAsync(retrievedConfig);
+    Console.WriteLine("Configuration updated successfully");
+}
+
+// Delete configuration
+await configurationRepository.DeleteAsync(newConfig.Id);
+Console.WriteLine("Configuration deleted successfully");
+
+// Verify deletion - should return null
+var deletedConfig = await configurationRepository.GetByIdAsync(newConfig.Id);
+Console.WriteLine($"Configuration exists after deletion: {deletedConfig != null}");
+```
