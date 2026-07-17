@@ -1524,6 +1524,82 @@ metricsService.RecordActionTime("cache.lookup", () =>
 });
 ```
 
+## ServiceDiscoveryOptionsValidation
+
+The `ServiceDiscoveryOptionsValidation` class provides validation helpers for service discovery configuration options. It validates `ServiceDiscoveryOptions`, `DnsDiscoveryOptions`, `RegistryDiscoveryOptions`, and `SelfRegistrationOptions` instances, returning detailed error messages for invalid configurations or throwing exceptions when validation fails. This ensures service discovery settings are properly configured before use.
+
+### Usage Example
+
+```csharp
+using System;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+
+// Create valid service discovery options
+var options = new ServiceDiscoveryOptions
+{
+    CacheTtl = TimeSpan.FromSeconds(30),
+    RefreshInterval = TimeSpan.FromSeconds(15),
+    ResolutionTimeout = TimeSpan.FromSeconds(5),
+    Dns = new DnsDiscoveryOptions
+    {
+        SearchDomain = "example.com",
+        DnsServerAddress = "8.8.8.8",
+        DnsServerPort = 53,
+        DefaultPort = 8080,
+        DefaultScheme = "https",
+        MaxRetries = 3,
+        SocketTimeout = TimeSpan.FromSeconds(2)
+    },
+    Registry = new RegistryDiscoveryOptions
+    {
+        AgentEndpoint = "https://registry.example.com:8500",
+        HeartbeatInterval = TimeSpan.FromSeconds(10)
+    },
+    SelfRegistration = new SelfRegistrationOptions
+    {
+        Enabled = true,
+        ServiceName = "my-service",
+        AdvertisePort = 8080,
+        AdvertiseScheme = "https",
+        HealthCheckPath = "/health"
+    }
+};
+
+// Validate and check if options are valid
+var validationErrors = options.Validate();
+if (options.IsValid())
+{
+    Console.WriteLine("Service discovery options are valid!");
+}
+else
+{
+    Console.WriteLine("Validation errors:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Validate nested options individually
+var dnsValid = options.Dns.IsValid();
+var registryValid = options.Registry.IsValid();
+var selfRegistrationValid = options.SelfRegistration.IsValid();
+
+// Use EnsureValid to throw exception on invalid configuration
+try
+{
+    options.EnsureValid();
+    options.Dns.EnsureValid();
+    options.Registry.EnsureValid();
+    options.SelfRegistration.EnsureValid();
+    Console.WriteLine("All options are valid and ready for use!");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Configuration error: {ex.Message}");
+}
+```
+
 ## ServiceDiscoveryServiceExtensions
 
 The `ServiceDiscoveryServiceExtensions` class provides extension methods for the `ServiceDiscoveryService` that simplify service discovery operations. These extensions offer convenient ways to discover healthy endpoints, check service health, retrieve service statistics in batches, filter registered services, and discover services using wildcard patterns.
