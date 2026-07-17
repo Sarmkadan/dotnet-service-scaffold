@@ -9,6 +9,32 @@
 
 A service-registry / health-monitoring API: ASP.NET Core + EF Core (SQLite, WAL), Serilog, API-key authentication, in-process Prometheus-format metrics. Single project with layered folders (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Presentation`, `src/Shared`), plus xUnit tests and BenchmarkDotNet benchmarks. Entry point is `Program.cs`; several components (rate limiting, caching, service discovery, service mesh) are opt-in via extension methods rather than wired by default.
 
+## ErrorHandlingMiddlewareTests
+
+The `ErrorHandlingMiddlewareTests` class provides comprehensive unit tests for the `ErrorHandlingMiddleware` class, verifying that the middleware correctly intercepts and handles various exceptions during request processing. These tests ensure that the middleware appropriately catches specific exception types—such as `ServiceScaffoldException`, `ArgumentNullException`, `ArgumentException`, `InvalidOperationException`, and `KeyNotFoundException`—and returns the expected HTTP status codes (500, 400, 409, 404), while also validating that generic exceptions return a generic message in production environments.
+
+### Usage Examples
+
+```csharp
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Presentation.Middleware;
+using Xunit;
+
+// Arrange: Initialize middleware tests
+var tests = new ErrorHandlingMiddlewareTests();
+
+// Act & Assert: Verify correct status code mapping for various exceptions
+await tests.InvokeAsync_ShouldCatchGenericExceptionAndReturn500();
+await tests.InvokeAsync_ShouldCatchServiceScaffoldExceptionAndReturn400();
+await tests.InvokeAsync_ShouldCatchArgumentNullExceptionAndReturn400();
+await tests.InvokeAsync_ShouldCatchArgumentExceptionAndReturn400();
+await tests.InvokeAsync_ShouldCatchInvalidOperationExceptionAndReturn409();
+await tests.InvokeAsync_ShouldCatchKeyNotFoundExceptionAndReturn404();
+
+// Verify generic message handling in production scenario
+await tests.InvokeAsync_ShouldReturnGenericMessageInProduction();
+```
+
 ## DeploymentConfigurationTests
 
 The `DeploymentConfigurationTests` class provides comprehensive unit tests for the `DeploymentConfiguration` class, ensuring that infrastructure deployment artifacts—such as systemd service units, Caddy reverse proxy configurations, environment files, and deployment guides—are generated correctly with expected security settings and configuration values. These tests validate the integrity of the infrastructure-as-code generation logic, confirming that all generated files adhere to required production standards.
