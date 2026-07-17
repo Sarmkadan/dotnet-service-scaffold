@@ -982,6 +982,31 @@ propagatedResult.ErrorCode.Should().Be("ERR_SRC");
 mapperInvoked.Should().BeFalse(); // Mapper should not be invoked for failed results
 ```
 
+## ResultTestsJsonExtensions
+
+The `ResultTestsJsonExtensions` class provides convenient extension methods for serializing `Result` and `Result<T>` objects to JSON strings and deserializing them back to result types. It simplifies working with JSON in tests or other scenarios by offering both standard and try-based deserialization approaches, handling `JsonSerializerOptions` internally.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Shared.Models;
+using DotnetServiceScaffold.Tests;
+
+// Serialize a successful Result to JSON
+var success = Result.Success();
+string json = success.ToJson();
+
+// Deserialize from JSON back to Result
+var result = ResultTestsJsonExtensions.FromJson(json);
+
+// Try to deserialize to generic Result<int>
+var genericJson = Result.Success(42).ToJson();
+if (ResultTestsJsonExtensions.TryFromJson<int>(genericJson, out var genericResult))
+{
+    Console.WriteLine(genericResult?.Value); // Output: 42
+}
+```
+
 ## AuditServiceTests
 
 The `AuditServiceTests` class provides comprehensive unit tests for the `AuditService` class, validating all public members and edge cases. These tests cover audit log creation with proper timestamps, retrieval of audit logs by user and entity, and verification that the audit service correctly interacts with the repository layer, ensuring comprehensive audit trail functionality.
