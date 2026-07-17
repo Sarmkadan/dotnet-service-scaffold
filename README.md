@@ -56,6 +56,53 @@ Assert.Contains("# Deployment Guide for my-service", guide);
 Assert.Contains("sudo useradd -r -s /bin/false serviceuser", guide);
 ```
 
+## DockerComposeGeneratorTests
+
+The `DockerComposeGeneratorTests` class provides comprehensive unit tests for the `DockerComposeGenerator` class, verifying that the generated `docker-compose.yml` file content correctly incorporates service configurations, health checks, reverse proxy settings (Caddy), caching (Redis), monitoring (Prometheus), and resource limits. These tests ensure the generator accurately handles various configuration scenarios, including optional features and environment variable injection, and validates the file writing functionality.
+
+### Usage Examples
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.DockerCompose;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Xunit;
+
+// Arrange: Initialize generator and options
+var logger = Substitute.For<ILogger<DockerComposeGenerator>>();
+var generator = new DockerComposeGenerator(logger);
+
+var options = new DockerComposeOptions
+{
+    ServiceName = "my-api",
+    ImageName = "my-api:1.0",
+    HostPort = 8080,
+    ContainerPort = 8080,
+    IncludeCaddy = true,
+    CaddyDomain = "example.com",
+    IncludeRedis = true,
+    CpuLimit = "1",
+    MemoryLimit = "512M"
+};
+
+// Act: Generate YAML and verify configuration
+var yaml = generator.Generate(options);
+
+// Assert: Verify YAML content
+Assert.Contains("my-api:", yaml);
+Assert.Contains("image: my-api:1.0", yaml);
+Assert.Contains("caddy:", yaml);
+Assert.Contains("example.com", yaml);
+Assert.Contains("redis:", yaml);
+Assert.Contains("memory: 1G", yaml);
+
+// Act: Write to file and verify
+var filePath = "docker-compose.test.yml";
+await generator.WriteToFileAsync(options, filePath);
+Assert.True(File.Exists(filePath));
+File.Delete(filePath);
+```
+
 ## Result
 
 The `Result` type is a discriminated union pattern for handling success/failure scenarios in a functional style. It provides a type-safe way to represent operations that may fail without throwing exceptions, enabling better error handling through the type system. The pattern includes both non-generic (`Result`) and generic (`Result<T>`) variants, allowing you to carry successful values or error information throughout your application.
