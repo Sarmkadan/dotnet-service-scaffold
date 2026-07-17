@@ -2164,6 +2164,65 @@ await auditService.CleanupOldLogsAsync(daysToKeep: 90);
 Console.WriteLine("Old audit logs cleaned up");
 ```
 
+## UserRepositoryTests
+
+The `UserRepositoryTests` class provides comprehensive unit tests for the `UserRepository` class, verifying all CRUD operations and edge cases. It tests user creation, retrieval by ID and username, updates, and deletions, ensuring the repository correctly interacts with the database layer and handles both success and failure scenarios.
+
+### Usage Examples
+
+```csharp
+using System;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+
+// Initialize an in-memory database for testing
+var connection = new SqliteConnection("DataSource=:memory:");
+connection.Open();
+
+var dbContextOptions = new DbContextOptionsBuilder<ServiceScaffoldDbContext>()
+    .UseSqlite(connection)
+    .Options;
+
+// Create database schema
+using var context = new ServiceScaffoldDbContext(dbContextOptions);
+context.Database.EnsureCreated();
+
+// Create repository instance
+var userRepository = new UserRepository(context);
+
+// Test adding a user
+var newUser = new User
+{
+    Id = Guid.NewGuid(),
+    Username = "testuser",
+    Email = "test@example.com",
+    FullName = "Test User"
+};
+
+await userRepository.AddUserAsync(newUser);
+
+// Test getting user by ID
+var retrievedUser = await userRepository.GetUserByIdAsync(newUser.Id);
+Console.WriteLine(retrievedUser?.Username); // "testuser"
+
+// Test getting user by username
+var userByUsername = await userRepository.GetUserByUsernameAsync("testuser");
+Console.WriteLine(userByUsername?.Email); // "test@example.com"
+
+// Test updating user
+retrievedUser.FullName = "Updated User";
+await userRepository.UpdateUserAsync(retrievedUser);
+
+// Test deleting user
+await userRepository.DeleteUserAsync(newUser.Id);
+
+// Clean up
+connection.Close();
+connection.Dispose();
+```
+
 ## ConfigurationService
 
 The `ConfigurationService` provides centralized management of application and service configurations, enabling runtime configuration retrieval and modification. It supports both system-wide and service-specific configurations, with type-safe methods for retrieving common configuration types (integers, booleans, strings, TimeSpans). The service handles configuration validation, audit logging, and provides comprehensive error handling for configuration operations.
