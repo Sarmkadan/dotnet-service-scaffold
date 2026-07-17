@@ -166,6 +166,70 @@ Assert.True(File.Exists(filePath));
 File.Delete(filePath);
 ```
 
+## JsonResponseFormatterExtensions
+
+The `JsonResponseFormatterExtensions` class provides extension methods for the `JsonResponseFormatter` that add convenience helpers while preserving the original formatter's behavior and configuration. These extensions enable synchronous formatting, safe formatting attempts, custom serialization options, media type validation, and discovery of supported media type patterns.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Text.Json;
+using DotnetServiceScaffold.Infrastructure.Formatting;
+
+// Initialize the JSON response formatter
+var formatter = new JsonResponseFormatter();
+
+// Format data synchronously (blocks on the async implementation)
+var userData = new { Name = "John Doe", Email = "john@example.com", Age = 30 };
+string jsonOutput = formatter.Format(userData);
+Console.WriteLine(jsonOutput);
+// Output: {"Name":"John Doe","Email":"john@example.com","Age":30}
+
+// Safely attempt formatting without throwing exceptions
+if (formatter.TryFormat(userData, out string? safeOutput))
+{
+    Console.WriteLine("Successfully formatted: " + safeOutput);
+}
+else
+{
+    Console.WriteLine("Failed to format data");
+}
+
+// Format with custom JsonSerializerOptions for specific formatting requirements
+var options = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+};
+string formattedWithOptions = formatter.FormatWithOptions(userData, options);
+Console.WriteLine(formattedWithOptions);
+// Output with indentation and camelCase property names
+
+// Validate that a media type can be formatted before attempting to use it
+try
+{
+    formatter.EnsureCanFormat("application/json");
+    Console.WriteLine("Media type is supported");
+}
+catch (InvalidOperationException ex)
+{
+    Console.WriteLine("Unsupported media type: " + ex.Message);
+}
+
+// Get all supported media type patterns
+var supportedPatterns = formatter.GetSupportedMediaTypePatterns();
+Console.WriteLine("Supported patterns:");
+foreach (var pattern in supportedPatterns)
+{
+    Console.WriteLine("- " + pattern);
+}
+// Output: Supported patterns:
+// - application/json
+// - application/json+*
+// - *+json
+```
+
 ## BasicServiceSetupExample
 
 The `BasicServiceSetupExample` class demonstrates how to programmatically register and manage services within the scaffold system. It utilizes the API client to handle service lifecycle operations such as registration, enabling/disabling monitoring, listing services, and retrieving detailed status information for specific services.
