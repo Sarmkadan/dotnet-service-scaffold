@@ -86,8 +86,10 @@ public static class ResponseFormatterFactoryValidation
     /// </summary>
     /// <param name="value">The response formatter factory to check.</param>
     /// <returns><see langword="true"/> if the factory is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ResponseFormatterFactory value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         return value.Validate().Count == 0;
     }
 
