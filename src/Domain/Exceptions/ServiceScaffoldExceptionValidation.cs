@@ -3,7 +3,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Globalization;
 
@@ -111,11 +111,10 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this ServiceNotFoundException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 
     /// <summary>
@@ -178,7 +177,6 @@ public static class ServiceScaffoldExceptionValidation
     public static void EnsureValid(this ServiceValidationException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
 
         var problems = Validate(value);
         if (problems.Count > 0)
@@ -221,11 +219,10 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this HealthCheckException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 
     /// <summary>
@@ -247,7 +244,7 @@ public static class ServiceScaffoldExceptionValidation
     /// <summary>
     /// Determines whether a <see cref="UnauthorizedException"/> instance is valid.
     /// </summary>
-    /// <param name="value">The exception to validate.</param>
+    /// <param name="value">The exception to check.</param>
     /// <returns>True if valid; otherwise false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this UnauthorizedException? value)
@@ -260,11 +257,10 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this UnauthorizedException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 
     /// <summary>
@@ -299,11 +295,10 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this InvalidApiKeyException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 
     /// <summary>
@@ -338,11 +333,10 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this DataAccessException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 
     /// <summary>
@@ -377,11 +371,10 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this ConfigurationException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 
     /// <summary>
@@ -416,10 +409,9 @@ public static class ServiceScaffoldExceptionValidation
     /// </summary>
     /// <param name="value">The exception to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value"/> is invalid, containing the validation problems.</exception>
     public static void EnsureValid(this ResourceExhaustedException? value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        value.EnsureValid();
+        EnsureValid((ServiceScaffoldException)value);
     }
 }
