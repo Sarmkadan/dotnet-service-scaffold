@@ -7,14 +7,17 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace DotnetServiceScaffold.Shared.Utilities;
 
 /// <summary>
-/// Provides System.Text.Json serialization and deserialization extensions for validation.
-/// Since ValidationUtility is a static class, these extension methods provide JSON
-/// serialization capabilities for validation-related operations and data structures.
+/// Provides System.Text.Json serialization and deserialization extensions for validation result messages.
 /// </summary>
+/// <remarks>
+/// This class provides extension methods for serializing and deserializing validation result messages
+/// to and from JSON format, enabling consistent handling of validation results across the application.
+/// </remarks>
 public static class ValidationUtilityJsonExtensions
 {
     /// <summary>
@@ -27,6 +30,8 @@ public static class ValidationUtilityJsonExtensions
         WriteIndented = false,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNameCaseInsensitive = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
     /// <summary>
@@ -35,16 +40,13 @@ public static class ValidationUtilityJsonExtensions
     /// <param name="validationResult">The validation result message to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
     /// <returns>A JSON string representation of the validation result.</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="validationResult"/> is null or empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="validationResult"/> is <see langword="null"/>.</exception>
     public static string ToJson(this string validationResult, bool indented = false)
     {
-        ArgumentException.ThrowIfNullOrEmpty(validationResult);
+        ArgumentNullException.ThrowIfNull(validationResult);
 
         var options = indented
-            ? new JsonSerializerOptions(JsonOptions)
-            {
-                WriteIndented = true,
-            }
+            ? new JsonSerializerOptions(JsonOptions) { WriteIndented = true }
             : JsonOptions;
 
         return JsonSerializer.Serialize(new { Message = validationResult }, options);
@@ -54,11 +56,12 @@ public static class ValidationUtilityJsonExtensions
     /// Deserializes a JSON string into a validation result message.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>A validation result message if successful; otherwise, null.</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is null or empty.</exception>
-    public static string? FromJson(string json)
+    /// <returns>A validation result message if successful; otherwise, <see langword="null"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
+    public static string? FromJson(string? json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
@@ -75,12 +78,13 @@ public static class ValidationUtilityJsonExtensions
     /// Attempts to deserialize a JSON string into a validation result message.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the validation result message if successful; otherwise, null.</param>
-    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is null or empty.</exception>
-    public static bool TryFromJson(string json, out string? value)
+    /// <param name="value">Receives the validation result message if successful; otherwise, <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty or whitespace.</exception>
+    public static bool TryFromJson(string? json, out string? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         try
         {
