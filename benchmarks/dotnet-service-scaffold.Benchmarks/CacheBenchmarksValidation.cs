@@ -21,17 +21,17 @@ public static class CacheBenchmarksValidation
     /// </summary>
     /// <param name="value">The benchmark instance to validate.</param>
     /// <returns>An empty list if valid; otherwise, a list of human-readable validation errors.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this CacheBenchmarks? value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
         var errors = new List<string>();
 
-        // Validate benchmark instance is not default
-        if (value.GetType() == typeof(CacheBenchmarks))
+        // Validate that the cache service is initialized
+        if (value.GetCache() is null)
         {
-            errors.Add("Benchmark instance is of the base CacheBenchmarks type and should be a derived type with configured services.");
+            errors.Add("Cache service is not initialized.");
         }
 
         return errors.AsReadOnly();
@@ -42,17 +42,14 @@ public static class CacheBenchmarksValidation
     /// </summary>
     /// <param name="value">The benchmark instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValid(this CacheBenchmarks? value)
-    {
-        return Validate(value).Count == 0;
-    }
+    public static bool IsValid(this CacheBenchmarks? value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that a <see cref="CacheBenchmarks"/> instance is in a valid state.
     /// </summary>
     /// <param name="value">The benchmark instance to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not valid, containing a list of validation errors.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">The <paramref name="value"/> is not valid, containing a list of validation errors.</exception>
     public static void EnsureValid(this CacheBenchmarks? value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -61,8 +58,7 @@ public static class CacheBenchmarksValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                "The CacheBenchmarks instance is not valid. " +
-                string.Join(" ", errors),
+                $"The CacheBenchmarks instance is not valid. {string.Join(" ", errors)}",
                 nameof(value));
         }
     }
