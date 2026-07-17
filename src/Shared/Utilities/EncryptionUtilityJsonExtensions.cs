@@ -17,6 +17,12 @@ namespace DotnetServiceScaffold.Shared.Utilities;
 public static class EncryptionUtilityJsonExtensions
 {
     /// <summary>
+    /// Seals the class to prevent inheritance and improve performance.
+    /// </summary>
+    static EncryptionUtilityJsonExtensions()
+    {
+    }
+    /// <summary>
     /// JSON serialization options with camelCase naming policy for consistent JSON output.
     /// </summary>
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
@@ -37,7 +43,9 @@ public static class EncryptionUtilityJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true } : _jsonOptions;
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
         return JsonSerializer.Serialize(value, options);
     }
 
@@ -52,7 +60,9 @@ public static class EncryptionUtilityJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true } : _jsonOptions;
+        var options = indented
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            : _jsonOptions;
         return JsonSerializer.Serialize(value, options);
     }
 
@@ -61,15 +71,15 @@ public static class EncryptionUtilityJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A string instance, or null if the JSON is empty or whitespace.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static string? FromJson(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<string>(json, _jsonOptions);
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<string>(json, _jsonOptions);
     }
 
     /// <summary>
@@ -77,15 +87,15 @@ public static class EncryptionUtilityJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A byte array instance, or null if the JSON is empty or whitespace.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static byte[]? FromJsonToByteArray(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+        ArgumentNullException.ThrowIfNull(json);
 
-        return JsonSerializer.Deserialize<byte[]>(json, _jsonOptions);
+        return string.IsNullOrWhiteSpace(json)
+            ? null
+            : JsonSerializer.Deserialize<byte[]>(json, _jsonOptions);
     }
 
     /// <summary>
@@ -94,9 +104,12 @@ public static class EncryptionUtilityJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized string, or null if deserialization fails.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out string? value)
     {
         value = null;
+
+        ArgumentNullException.ThrowIfNull(json);
 
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -120,9 +133,12 @@ public static class EncryptionUtilityJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized byte array, or null if deserialization fails.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out byte[]? value)
     {
         value = null;
+
+        ArgumentNullException.ThrowIfNull(json);
 
         if (string.IsNullOrWhiteSpace(json))
         {
