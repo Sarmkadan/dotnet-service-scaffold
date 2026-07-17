@@ -40,6 +40,12 @@ public class CacheBenchmarks
     [GlobalCleanup]
     public void Cleanup() => _cache.Dispose();
 
+    /// <summary>
+    /// Gets the cache service instance for validation purposes.
+    /// </summary>
+    /// <returns>The cache service instance, or null if not initialized.</returns>
+    internal InMemoryCacheService? GetCache() => _cache;
+
     [Benchmark(Description = "GetAsync — cache hit (warm key)")]
     public ValueTask<CachedServiceList?> CacheHit()
         => _cache.GetAsync<CachedServiceList>("services:all");
