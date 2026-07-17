@@ -1046,6 +1046,68 @@ var metricsSnapshot = metrics.GetMetricsAsync().Result;
 
 This example demonstrates how to use the `MetricsBenchmarks` class to measure the performance of metric collection.
 
+
+## PrometheusFormatterTests
+
+The `PrometheusFormatterTests` class provides comprehensive unit tests for the `PrometheusFormatter` class, which converts application metrics into Prometheus exposition format. It verifies correct formatting of counter, gauge, and timer metrics, handles edge cases like null inputs and empty collections, validates metric name sanitization, and ensures proper handling of tagged metrics with labels.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Collections.Generic;
+using DotnetServiceScaffold.Infrastructure.Metrics;
+
+// Initialize the Prometheus formatter
+var formatter = new PrometheusFormatter();
+
+// Format counter metrics
+var counterMetrics = new Dictionary<string, object>
+{
+    ["http.requests"] = new { type = "counter", value = 42.0 }
+};
+string counterOutput = formatter.Format(counterMetrics, "app");
+Console.WriteLine(counterOutput);
+// Output contains: # TYPE app_http_requests counter
+//                app_http_requests_total 42
+
+// Format gauge metrics
+var gaugeMetrics = new Dictionary<string, object>
+{
+    ["memory.used"] = new { type = "gauge", value = 128.5 }
+};
+string gaugeOutput = formatter.Format(gaugeMetrics, "app");
+Console.WriteLine(gaugeOutput);
+// Output contains: # TYPE app_memory_used gauge
+//                app_memory_used 128.5
+
+// Format timer metrics with multiple series
+var timerMetrics = new Dictionary<string, object>
+{
+    ["db.query"] = new { type = "timer", totalMs = 500.0, count = 10L, avgMs = 50.0, minMs = 5L, maxMs = 150L }
+};
+string timerOutput = formatter.Format(timerMetrics, "app");
+Console.WriteLine(timerOutput);
+// Output contains: app_db_query_sum 500
+//                app_db_query_count 10
+//                app_db_query_min_ms 5
+//                app_db_query_max_ms 150
+
+// Handle tagged metrics with labels
+var taggedMetrics = new Dictionary<string, object>
+{
+    ["http.requests[method=GET,status=200]"] = new { type = "counter", value = 10.0 }
+};
+string taggedOutput = formatter.Format(taggedMetrics, "svc");
+Console.WriteLine(taggedOutput);
+// Output contains: svc_http_requests_total{method="GET",status="200"} 10
+
+// Empty metrics collection returns empty string
+var emptyMetrics = new Dictionary<string, object>();
+string emptyOutput = formatter.Format(emptyMetrics, "app");
+Console.WriteLine(emptyOutput); // ""
+```
+
 ## PerformanceUtility
 
 The `PerformanceUtility` class provides performance monitoring and measurement utilities for tracking execution time, memory usage, CPU utilization, and garbage collection statistics. It includes methods for measuring synchronous and asynchronous operations, retrieving system resource usage, and formatting performance data for logging and monitoring purposes.
