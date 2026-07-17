@@ -27,6 +27,7 @@ public static class ServiceDiscoveryServiceExtensions
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>The selected healthy service endpoint.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="serviceName"/> is null or empty.</exception>
     /// <exception cref="InvalidOperationException">No healthy instances found for the service.</exception>
     public static async Task<ServiceDiscoveryRecord> DiscoverHealthyEndpointOrThrowAsync(
         this ServiceDiscoveryService service,
@@ -86,18 +87,13 @@ public static class ServiceDiscoveryServiceExtensions
     /// </summary>
     /// <param name="service">The service discovery service.</param>
     /// <param name="serviceNames">Names of the services to get statistics for.</param>
-    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>A dictionary mapping service names to their statistics.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceNames"/> is <see langword="null"/>.</exception>
     public static async Task<IReadOnlyDictionary<string, ServiceDiscoveryStats>> GetServiceStatsBatchAsync(
         this ServiceDiscoveryService service,
         params string[] serviceNames)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-        ArgumentNullException.ThrowIfNull(serviceNames);
-
-        return await service.GetServiceStatsBatchAsync(serviceNames.AsEnumerable());
-    }
+        => await GetServiceStatsBatchAsync(service, (IEnumerable<string>)serviceNames, default);
 
     /// <summary>
     /// Gets all registered service names and filters them by a predicate.
@@ -158,7 +154,9 @@ public static class ServiceDiscoveryServiceExtensions
 
         return discoveryTasks
             .Where(t => t.IsCompletedSuccessfully)
-            .SelectMany(t => t.Result.IsSuccess && t.Result.Value is not null ? t.Result.Value : Array.Empty<ServiceDiscoveryRecord>())
+            .SelectMany(t => t.Result.IsSuccess && t.Result.Value is not null
+                ? t.Result.Value
+                : Array.Empty<ServiceDiscoveryRecord>())
             .ToList()
             .AsReadOnly();
     }
