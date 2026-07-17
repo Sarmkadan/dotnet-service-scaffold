@@ -526,6 +526,82 @@ propagatedResult.ErrorCode.Should().Be("ERR_SRC");
 mapperInvoked.Should().BeFalse(); // Mapper should not be invoked for failed results
 ```
 
+## AuditServiceTests
+
+The `AuditServiceTests` class provides comprehensive unit tests for the `AuditService` class, validating all public members and edge cases. These tests cover audit log creation with proper timestamps, retrieval of audit logs by user and entity, and verification that the audit service correctly interacts with the repository layer, ensuring comprehensive audit trail functionality.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using NSubstitute;
+using FluentAssertions;
+
+// Initialize the audit service with a mock repository
+var auditLogRepository = Substitute.For<IAuditLogRepository>();
+var auditService = new AuditService(auditLogRepository);
+
+// Create a test user ID and entity information
+var userId = Guid.NewGuid();
+var entityType = "User";
+var entityId = Guid.NewGuid();
+var action = "Create";
+var details = "User account created";
+
+// Test logging an audit entry
+auditLogRepository.AddAuditLogAsync(Arg.Any<AuditLog>()).Returns(Task.CompletedTask);
+auditLogRepository.GetAuditLogsByUserIdAsync(userId).Returns(new List<AuditLog> { new AuditLog
+{
+    UserId = userId,
+    EntityType = entityType,
+    EntityId = entityId,
+    Action = action,
+    Details = details,
+    CreatedAt = DateTime.UtcNow
+}});
+auditLogRepository.GetAuditLogsByEntityAsync(entityType, entityId).Returns(new List<AuditLog> { new AuditLog
+{
+    UserId = userId,
+    EntityType = entityType,
+    EntityId = entityId,
+    Action = action,
+    Details = details,
+    CreatedAt = DateTime.UtcNow
+}});
+
+// Log an audit entry
+await auditService.LogAuditAsync(userId, entityType, entityId, action, details);
+
+// Verify the audit log was added to the repository
+auditLogRepository.Received(1).AddAuditLogAsync(Arg.Is<AuditLog>(log =>
+    log.UserId == userId &&
+    log.EntityType == entityType &&
+    log.EntityId == entityId &&
+    log.Action == action &&
+    log.Details == details &&
+    log.CreatedAt != default
+));
+
+// Retrieve audit logs for a user
+var userLogs = await auditService.GetAuditLogsForUserAsync(userId);
+userLogs.Should().ContainSingle(log => log.UserId == userId);
+
+// Retrieve audit logs for an entity
+var entityLogs = await auditService.GetAuditLogsForEntityAsync(entityType, entityId);
+entityLogs.Should().ContainSingle(log => log.EntityId == entityId);
+
+// Test empty result scenarios
+var emptyUserLogs = await auditService.GetAuditLogsForUserAsync(Guid.NewGuid());
+emptyUserLogs.Should().BeEmpty();
+
+var emptyEntityLogs = await auditService.GetAuditLogsForEntityAsync("Service", Guid.NewGuid());
+emptyEntityLogs.Should().BeEmpty();
+```
+
 ## StringUtilityTests
 
 The `StringUtilityTests` class provides comprehensive unit tests for the `StringUtility` class, verifying all public members and edge cases. It tests string truncation, case conversion, sensitive data masking, email validation, and null/empty input handling, ensuring the utility methods work correctly across different scenarios.
