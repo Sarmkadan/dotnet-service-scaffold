@@ -1,6 +1,8 @@
 #nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -39,15 +41,16 @@ public static class JsonResponseFormatterExtensions
     /// <param name="result">When the method returns <c>true</c>, contains the JSON string; otherwise <c>null</c>.</param>
     /// <returns><c>true</c> if formatting succeeded; otherwise <c>false</c>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="formatter"/> is <c>null</c>.</exception>
-    public static bool TryFormat(this JsonResponseFormatter formatter, object? data, out string? result)
+    public static bool TryFormat(this JsonResponseFormatter formatter, object? data, [NotNullWhen(true)] out string? result)
     {
         ArgumentNullException.ThrowIfNull(formatter);
+
         try
         {
             result = formatter.Format(data);
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
         {
             result = null;
             return false;
