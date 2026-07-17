@@ -2084,6 +2084,59 @@ await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
 Console.WriteLine("Old health check results cleaned up");
 ```
 
+## FeatureFlagServiceTests
+
+The `FeatureFlagServiceTests` class provides comprehensive unit tests for the `FeatureFlagService` class, validating all public members and edge cases. These tests ensure feature flag functionality works correctly across different scenarios including enabling/disabling features, rollout percentage configuration, and feature registration.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Linq;
+using DotnetServiceScaffold.Application.Services;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+
+// Initialize the feature flag service with a logger
+var logger = Substitute.For<ILogger<FeatureFlagService>>();
+var featureFlagService = new FeatureFlagService(logger);
+
+// Register a new feature with default enabled state
+featureFlagService.RegisterFeature("new_dashboard", "Enables the new dashboard interface");
+
+// Check if a feature is enabled
+bool isDashboardEnabled = featureFlagService.IsEnabled("new_dashboard");
+Console.WriteLine($"New dashboard enabled: {isDashboardEnabled}");
+
+// Enable a feature
+featureFlagService.EnableFeature("new_dashboard");
+bool isEnabledAfterEnable = featureFlagService.IsEnabled("new_dashboard");
+Console.WriteLine($"Feature enabled after EnableFeature: {isEnabledAfterEnable}");
+
+// Disable a feature
+featureFlagService.DisableFeature("new_dashboard");
+bool isDisabledAfterDisable = featureFlagService.IsEnabled("new_dashboard");
+Console.WriteLine($"Feature enabled after DisableFeature: {isDisabledAfterDisable}");
+
+// Set rollout percentage for gradual feature rollout
+featureFlagService.SetRolloutPercentage("new_dashboard", 50);
+var flag = featureFlagService.GetFlag("new_dashboard");
+Console.WriteLine($"Rollout percentage: {flag?.RolloutPercentage}%");
+
+// Register a feature with specific enabled state
+featureFlagService.RegisterFeature("experimental_api", "Experimental API endpoints", enabled: false);
+bool isExperimentalEnabled = featureFlagService.IsEnabled("experimental_api");
+Console.WriteLine($"Experimental API enabled: {isExperimentalEnabled}");
+
+// Get all registered flags
+var allFlags = featureFlagService.GetAllFlags().ToList();
+Console.WriteLine($"Total registered flags: {allFlags.Count}");
+foreach (var f in allFlags)
+{
+    Console.WriteLine($"- {f.Name}: {(f.IsEnabled ? "Enabled" : "Disabled")}");
+}
+```
+
 ## HealthCheckServiceTests
 
 The `HealthCheckServiceTests` class provides comprehensive unit tests for the `HealthCheckService` class, ensuring that health monitoring functionality works correctly across various scenarios. These tests validate health check operations, error handling, and repository interactions, providing confidence in the reliability of the health monitoring system.
