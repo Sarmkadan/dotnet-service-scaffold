@@ -10,6 +10,10 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Provides validation helpers for <see cref="UpstreamCluster"/> instances.
 /// </summary>
+/// <remarks>
+/// This static class offers extension methods to validate <see cref="UpstreamCluster"/> objects,
+/// ensuring they meet business rules before being used in the service mesh.
+/// </remarks>
 public static class UpstreamClusterValidation
 {
     /// <summary>
@@ -25,13 +29,13 @@ public static class UpstreamClusterValidation
         var errors = new List<string>();
 
         // Validate Name
-        if (string.IsNullOrWhiteSpace(value.Name))
+    if (string.IsNullOrWhiteSpace(value.Name))
         {
             errors.Add("Name cannot be null or whitespace.");
         }
 
         // Validate Endpoint
-        if (string.IsNullOrWhiteSpace(value.Endpoint))
+    if (string.IsNullOrWhiteSpace(value.Endpoint))
         {
             errors.Add("Endpoint cannot be null or whitespace.");
         }
@@ -47,7 +51,7 @@ public static class UpstreamClusterValidation
             errors.Add("TotalHosts cannot be negative.");
         }
 
-        if (value.TotalHosts < value.HealthyHosts)
+        else if (value.TotalHosts < value.HealthyHosts)
         {
             errors.Add("TotalHosts cannot be less than HealthyHosts.");
         }
@@ -66,6 +70,7 @@ public static class UpstreamClusterValidation
     /// </summary>
     /// <param name="value">The cluster to validate.</param>
     /// <returns>True if valid; otherwise, false.</returns>
+/// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this UpstreamCluster? value) =>
         value is not null && Validate(value).Count == 0;
 
