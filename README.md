@@ -5391,3 +5391,84 @@ Console.WriteLine("Configuration deleted successfully");
 var deletedConfig = await configurationRepository.GetByIdAsync(newConfig.Id);
 Console.WriteLine($"Configuration exists after deletion: {deletedConfig != null}");
 ```
+
+## UserServiceTests
+
+The `UserServiceTests` class provides comprehensive unit tests for the `UserService` class, validating all public members and edge cases. These tests cover user retrieval by ID, user creation with validation, user updates, and user deletion scenarios, ensuring the service handles both success and failure cases correctly.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+using NSubstitute;
+
+// Initialize the user service with mocked dependencies
+var userRepository = Substitute.For<IUserRepository>();
+var userService = new UserService(userRepository);
+
+// Test GetUserByIdAsync with existing user
+var existingUserId = Guid.NewGuid();
+var existingUser = new User { Id = existingUserId, Username = "testuser", Email = "test@example.com" };
+userRepository.GetUserByIdAsync(existingUserId).Returns(existingUser);
+
+var retrievedUser = await userService.GetUserByIdAsync(existingUserId);
+Console.WriteLine(retrievedUser?.Username); // "testuser"
+
+// Test GetUserByIdAsync with non-existent user
+var nonExistentId = Guid.NewGuid();
+userRepository.GetUserByIdAsync(nonExistentId).Returns((User)null);
+
+var nullUser = await userService.GetUserByIdAsync(nonExistentId);
+Console.WriteLine(nullUser); // null
+
+// Test CreateUserAsync with new user
+var newUser = new User { Username = "newuser", Email = "new@example.com" };
+userRepository.GetUserByUsernameAsync(newUser.Username).Returns((User)null);
+
+var createdUser = await userService.CreateUserAsync(newUser);
+Console.WriteLine(createdUser?.Username); // "newuser"
+
+// Test CreateUserAsync with duplicate username (should throw exception)
+var duplicateUser = new User { Username = "existinguser", Email = "existing@example.com" };
+userRepository.GetUserByUsernameAsync(duplicateUser.Username).Returns(duplicateUser);
+
+try
+{
+    await userService.CreateUserAsync(duplicateUser);
+    Console.WriteLine("Exception should have been thrown");
+}
+catch (ServiceScaffoldException ex)
+{
+    Console.WriteLine(ex.Message); // "Username 'existinguser' is already taken."
+}
+
+// Test UpdateUserAsync with existing user
+var updateUser = new User { Id = existingUserId, Username = "updateduser", Email = "updated@example.com" };
+userRepository.GetUserByIdAsync(existingUserId).Returns(existingUser);
+
+await userService.UpdateUserAsync(updateUser);
+Console.WriteLine("User updated successfully");
+
+// Test UpdateUserAsync with non-existent user (should throw exception)
+var nonExistentUser = new User { Id = Guid.NewGuid(), Username = "nonexistent", Email = "none@example.com" };
+userRepository.GetUserByIdAsync(nonExistentUser.Id).Returns((User)null);
+
+try
+{
+    await userService.UpdateUserAsync(nonExistentUser);
+    Console.WriteLine("Exception should have been thrown");
+}
+catch (ServiceScaffoldException ex)
+{
+    Console.WriteLine(ex.Message); // "User with ID '[guid]' not found."
+}
+
+// Test DeleteUserAsync with existing user
+userRepository.GetUserByIdAsync(existingUserId).Returns(existingUser);
+
+await userService.DeleteUserAsync(existingUserId);
+Console.WriteLine("User deleted successfully");
+```
