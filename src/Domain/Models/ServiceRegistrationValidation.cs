@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 using DotnetServiceScaffold.Domain.Enums;
 
 namespace DotnetServiceScaffold.Domain.Models;
@@ -24,7 +24,7 @@ public static class ServiceRegistrationValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = new List<string>();
+        var errors = new List<string>(32); // Pre-allocate capacity for common error count
 
         // Required string properties
         if (string.IsNullOrWhiteSpace(value.ServiceName))
@@ -139,8 +139,7 @@ public static class ServiceRegistrationValidation
         {
             errors.Add("SuccessfulRequests cannot be negative.");
         }
-
-        if (value.SuccessfulRequests > value.TotalRequests)
+        else if (value.SuccessfulRequests > value.TotalRequests)
         {
             errors.Add("SuccessfulRequests cannot exceed TotalRequests.");
         }
@@ -173,9 +172,10 @@ public static class ServiceRegistrationValidation
     /// </summary>
     /// <param name="value">The service registration to check.</param>
     /// <returns>True if valid; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ServiceRegistration? value)
     {
-        return value?.Validate().Count == 0;
+        return value is not null && value.Validate().Count == 0;
     }
 
     /// <summary>
