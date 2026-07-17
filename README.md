@@ -1282,6 +1282,55 @@ await benchmarks.Cleanup();
 
 This example demonstrates how to use the `DatabaseBenchmarks` class to measure the performance of database operations.
 
+## CacheBenchmarksExtensions
+
+The `CacheBenchmarksExtensions` class provides extension methods for working with cached service data in benchmark scenarios. It offers convenience methods to retrieve healthy and unhealthy services, count services by health status, find services by ID or name, and calculate health percentages from the cached service list.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Benchmarks;
+
+// Initialize the cache benchmarks
+var benchmarks = new CacheBenchmarks();
+
+// Get all healthy services from cache
+var healthyServices = await benchmarks.GetHealthyServicesAsync();
+Console.WriteLine($"Healthy services count: {healthyServices.Count}");
+
+// Get all unhealthy services from cache
+var unhealthyServices = await benchmarks.GetUnhealthyServicesAsync();
+Console.WriteLine($"Unhealthy services count: {unhealthyServices.Count}");
+
+// Get counts of healthy and unhealthy services
+var healthyCount = await benchmarks.GetHealthyServiceCountAsync();
+var unhealthyCount = await benchmarks.GetUnhealthyServiceCountAsync();
+Console.WriteLine($"Service health summary - Healthy: {healthyCount}, Unhealthy: {unhealthyCount}");
+
+// Find a specific service by ID
+var serviceById = await benchmarks.GetServiceByIdAsync("svc-12345678");
+if (serviceById != null)
+{
+    Console.WriteLine($"Found service by ID: {serviceById.Name} (Status: {serviceById.IsHealthy})");
+}
+
+// Find a specific service by name
+var serviceByName = await benchmarks.GetServiceByNameAsync("user-api");
+if (serviceByName != null)
+{
+    Console.WriteLine($"Found service by name: {serviceByName.Id} (Status: {serviceByName.IsHealthy})");
+}
+
+// Calculate health percentages
+var healthyPercentage = await benchmarks.GetHealthyPercentageAsync();
+var unhealthyPercentage = await benchmarks.GetUnhealthyPercentageAsync();
+Console.WriteLine($"Health distribution - Healthy: {healthyPercentage}%, Unhealthy: {unhealthyPercentage}%");
+```
+
+This example demonstrates how to use the `CacheBenchmarksExtensions` methods to query and analyze cached service data efficiently.
+
 ## MetricsBenchmarks
 
 The `MetricsBenchmarks` class provides performance benchmarks for in-process metric collection. It measures the overhead of incrementing counters, recording timings, and retrieving metrics.
