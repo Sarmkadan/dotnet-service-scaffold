@@ -7212,3 +7212,30 @@ catch (ArgumentException ex)
 ```
 
 ```
+## UserRepositoryTestsExtensions
+
+`UserRepositoryTestsExtensions` provides a set of static helper methods for `UserRepositoryTests` to streamline integration tests. It simplifies creating test users, verifying their existence, and managing multiple users in the database, ensuring clean and maintainable test setups for `UserRepository`.
+
+### Usage Example
+
+```csharp
+using System.Threading.Tasks;
+using Xunit;
+using FluentAssertions;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+
+// This example assumes it is within a method of a class inheriting from UserRepositoryTests
+[Fact]
+public async Task ShouldPerformUserTestOperations()
+{
+    // Create a test user and get the repository instance
+    var (user, repository) = await this.CreateTestUserWithResultAsync("jdoe", "jdoe@example.com");
+
+    // Assert the user exists in the database
+    await this.AssertUserExistsAsync(repository, "jdoe", "jdoe@example.com");
+
+    // Check if user exists by email
+    bool exists = await this.AssertUserWithEmailExistsAsync(repository, "jdoe@example.com");
+    exists.Should().BeTrue();
+}
+```
