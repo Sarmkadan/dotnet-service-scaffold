@@ -2084,6 +2084,76 @@ await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
 Console.WriteLine("Old health check results cleaned up");
 ```
 
+## HealthCheckServiceTests
+
+The `HealthCheckServiceTests` class provides comprehensive unit tests for the `HealthCheckService` class, ensuring that health monitoring functionality works correctly across various scenarios. These tests validate health check operations, error handling, and repository interactions, providing confidence in the reliability of the health monitoring system.
+
+### Usage Examples
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Enums;
+using NSubstitute;
+using Xunit;
+
+// Arrange: Initialize test dependencies
+var healthCheckRepository = Substitute.For<IHealthCheckRepository>();
+var serviceRepository = Substitute.For<IServiceRepository>();
+var httpClient = new HttpClient();
+var logger = Substitute.For<ILogger<HealthCheckService>>();
+var healthCheckService = new HealthCheckService(healthCheckRepository, serviceRepository, httpClient, logger);
+
+// Test: PerformHealthCheckAsync with healthy service
+var healthyServiceId = Guid.NewGuid();
+
+healthCheckRepository.GetByIdAsync(healthyServiceId).Returns(new ServiceRegistration
+{
+    Id = healthyServiceId,
+    ServiceName = "Test Service",
+    IsEnabled = true,
+    TimeoutSeconds = 5
+});
+
+healthCheckRepository.AddAsync(Arg.Any<HealthCheckResult>()).Returns(Task.CompletedTask);
+
+// Act: Perform health check
+var result = await healthCheckService.PerformHealthCheckAsync(healthyServiceId);
+
+// Assert: Verify result
+Assert.Equal(HealthStatus.Healthy, result.Status);
+
+// Test: GetServiceHealthHistoryAsync to retrieve historical health data
+var history = await healthCheckService.GetServiceHealthHistoryAsync(healthyServiceId, count: 20);
+Assert.Empty(history); // No history yet
+
+// Test: GetServiceSuccessRateAsync to calculate success metrics
+var successRate = await healthCheckService.GetServiceSuccessRateAsync(healthyServiceId, minutesBack: 60);
+Assert.Equal(100m, successRate); // 100% success rate with no failures
+
+// Test: GetServiceHealthStatusAsync to check current status
+var status = await healthCheckService.GetServiceHealthStatusAsync(healthyServiceId);
+Assert.Equal("Healthy", status);
+
+// Test: GetFailedChecksAsync to find recent failures
+var failedChecks = await healthCheckService.GetFailedChecksAsync(healthyServiceId, hoursBack: 24);
+Assert.Empty(failedChecks);
+
+// Test: CreateHealthCheckResultAsync for manual health check recording
+var manualResult = await healthCheckService.CreateHealthCheckResultAsync(
+    healthyServiceId,
+    statusCode: 200,
+    responseTimeMs: 125,
+    errorMessage: null
+);
+Assert.Equal(HealthStatus.Healthy, manualResult.Status);
+Assert.Equal(125, manualResult.ResponseTimeMs);
+
+// Test: CleanupOldResultsAsync to remove old health check data
+await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
+```
+
 ## ServiceManagementService
 
 The `ServiceManagementService` provides comprehensive service registration and lifecycle management capabilities for the service scaffold platform. It handles service registration, retrieval, updates, and status management including enabling, disabling, and health monitoring. The service integrates with the service repository for data persistence, user repository for ownership validation, and audit service for compliance tracking, enabling complete service lifecycle management with full audit trails.
