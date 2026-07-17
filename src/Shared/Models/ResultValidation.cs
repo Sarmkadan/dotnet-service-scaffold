@@ -19,7 +19,7 @@ public static class ResultValidation
     /// Validates a <see cref="Result"/> instance and returns a list of human-readable problems.
     /// </summary>
     /// <param name="value">The result to validate.</param>
-    /// <returns>A list of validation problems; empty if valid.</returns>
+    /// <returns>An empty list if valid; otherwise, a list of validation problems.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this Result? value)
     {
@@ -48,7 +48,7 @@ public static class ResultValidation
     /// </summary>
     /// <typeparam name="T">The value type.</typeparam>
     /// <param name="value">The result to validate.</param>
-    /// <returns>A list of validation problems; empty if valid.</returns>
+    /// <returns>An empty list if valid; otherwise, a list of validation problems.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate<T>(this Result<T>? value)
     {
@@ -80,9 +80,10 @@ public static class ResultValidation
             {
                 problems.Add("Successful result with string value must not be empty or whitespace.");
             }
-            else if (value.Value is IFormattable formattable)
+            else if (value.Value is IFormattable && !typeof(T).IsValueType)
             {
                 // For numeric types, dates, etc. - check for default values
+                // Skip value types as they may legitimately have default values
                 if (EqualityComparer<T>.Default.Equals(value.Value, default!))
                 {
                     problems.Add($"Successful result must not contain default value of type {typeof(T).Name}.");
