@@ -40,7 +40,6 @@ public static class NotificationServiceJsonExtensions
     public static string ToJson(this NotificationService value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
-
         return JsonSerializer.Serialize(value, indented ? _jsonOptionsIndented : _jsonOptions);
     }
 
@@ -54,7 +53,6 @@ public static class NotificationServiceJsonExtensions
     public static NotificationService? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-
         return JsonSerializer.Deserialize<NotificationService>(json, _jsonOptions);
     }
 
