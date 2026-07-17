@@ -13,8 +13,15 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Provides System.Text.Json serialization extensions for <see cref="AuditServiceTests"/>.
 /// </summary>
+/// <remarks>
+/// This class provides JSON serialization and deserialization utilities for <see cref="AuditServiceTests"/>,
+/// enabling consistent JSON handling across test scenarios.
+/// </remarks>
 public static class AuditServiceTestsJsonExtensions
 {
+    // Seal the class as it's a pure utility class with no inheritance needed
+    private const string DefaultDateFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -76,12 +83,6 @@ public static class AuditServiceTestsJsonExtensions
     /// Gets the JSON serializer options with indentation enabled.
     /// </summary>
     /// <returns>Configured <see cref="JsonSerializerOptions"/> with indentation.</returns>
-    private static JsonSerializerOptions GetIndentedOptions()
-    {
-        var options = new JsonSerializerOptions(_jsonSerializerOptions)
-        {
-            WriteIndented = true
-        };
-        return options;
-    }
+    private static JsonSerializerOptions GetIndentedOptions() =>
+        new(_jsonSerializerOptions) { WriteIndented = true };
 }
