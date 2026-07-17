@@ -126,6 +126,11 @@ public static class ServiceDiscoveryOptionsValidation
         {
             problems.Add($"ServiceDiscovery.Registry.AgentEndpoint must be a valid absolute URI, but was '{value.AgentEndpoint}'.");
         }
+        else if (!value.AgentEndpoint.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                 !value.AgentEndpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            problems.Add("ServiceDiscovery.Registry.AgentEndpoint must use 'http://' or 'https://' scheme.");
+        }
 
         if (value.HeartbeatInterval <= TimeSpan.Zero)
         {
@@ -188,10 +193,7 @@ public static class ServiceDiscoveryOptionsValidation
     /// <param name="value">The options instance to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static bool IsValid(this ServiceDiscoveryOptions value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this ServiceDiscoveryOptions value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the provided <see cref="ServiceDiscoveryOptions"/> instance is valid.
@@ -217,10 +219,7 @@ public static class ServiceDiscoveryOptionsValidation
     /// <param name="value">The options instance to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static bool IsValid(this DnsDiscoveryOptions value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this DnsDiscoveryOptions value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the provided <see cref="DnsDiscoveryOptions"/> instance is valid.
@@ -246,10 +245,7 @@ public static class ServiceDiscoveryOptionsValidation
     /// <param name="value">The options instance to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static bool IsValid(this RegistryDiscoveryOptions value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this RegistryDiscoveryOptions value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the provided <see cref="RegistryDiscoveryOptions"/> instance is valid.
@@ -275,10 +271,7 @@ public static class ServiceDiscoveryOptionsValidation
     /// <param name="value">The options instance to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
-    public static bool IsValid(this SelfRegistrationOptions value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this SelfRegistrationOptions value) => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the provided <see cref="SelfRegistrationOptions"/> instance is valid.
@@ -303,8 +296,10 @@ public static class ServiceDiscoveryOptionsValidation
     /// </summary>
     /// <param name="address">The address string to validate.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="address"/> is <see langword="null"/>.</exception>
     private static bool IsValidIpAddress(string address)
     {
+        ArgumentNullException.ThrowIfNull(address);
         return System.Net.IPAddress.TryParse(address, out _);
     }
 }
