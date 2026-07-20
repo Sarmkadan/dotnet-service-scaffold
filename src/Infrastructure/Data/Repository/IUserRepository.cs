@@ -22,4 +22,6 @@ public interface IUserRepository : IRepository<User>
     Task<bool> EmailExistsAsync(string email);
 
     Task<User?> GetWithApiKeysAsync(Guid userId);
+
+    Task<IEnumerable<User>> SearchUsersAsync(string query, int page, int pageSize);
 }

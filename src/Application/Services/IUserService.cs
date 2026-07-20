@@ -51,4 +51,6 @@ public interface IUserService
 
     Task<User?> GetUserWithApiKeysAsync(Guid userId);
     Task<User?> ValidateApiKeyAsync(string apiKey);
+
+    Task<IEnumerable<User>> SearchUsersAsync(string query, int page = 1, int pageSize = 10);
 }

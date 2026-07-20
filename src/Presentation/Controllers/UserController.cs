@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Domain.Exceptions;
@@ -206,8 +206,60 @@ public class UserController : ControllerBase
             return StatusCode(500, new { error = "Error unlocking user" });
         }
     }
-}
 
-public record RegisterRequest(string Email, string FullName, string Password);
-public record LoginRequest(string Email, string Password);
-public record ChangePasswordRequest(string OldPassword, string NewPassword);
+    /// <summary>
+    /// Searches for users by name or email (case-insensitive) with pagination.
+    /// </summary>
+    /// <param name="q">Search query to match against user email or full name</param>
+    /// <param name="page">Page number (1-based)</param>
+    /// <param name="pageSize">Number of items per page (max 100)</param>
+    [HttpGet("search")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SearchUsers([FromQuery] string q, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            _logger.LogWarning("Search query parameter 'q' is required");
+            return BadRequest(new { error = "Search query parameter 'q' is required" });
+        }
+
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        try
+        {
+            var users = await _userService.SearchUsersAsync(q, page, pageSize);
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    results = users.Select(u => new
+                    {
+                        u.Id,
+                        u.Email,
+                        u.FullName,
+                        u.IsActive,
+                        u.CreatedAt,
+                        u.LastLoginAt
+                    }),
+                    page,
+                    pageSize,
+                    total = users.Count()
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching users with query: {Query}", q);
+            return StatusCode(500, new { error = "Error searching users" });
+        }
+    }
+
+    public record RegisterRequest(string Email, string FullName, string Password);
+    public record LoginRequest(string Email, string Password);
+    public record ChangePasswordRequest(string OldPassword, string NewPassword);
+}
