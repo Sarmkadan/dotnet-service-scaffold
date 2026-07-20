@@ -6,9 +6,8 @@
 
 using System.Net;
 using DotnetServiceScaffold.Domain.Exceptions;
+using DotnetServiceScaffold.Infrastructure.Formatting;
 using Serilog;
-
-namespace DotnetServiceScaffold.Presentation.Middleware;
 
 /// <summary>
 /// Global exception handling middleware that catches all unhandled exceptions
@@ -49,24 +48,14 @@ public class ErrorHandlingMiddleware
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var response = context.Response;
-        response.ContentType = "application/json";
-
-        var errorId = Guid.NewGuid().ToString();
-        var timestamp = DateTime.UtcNow;
-
-        var errorResponse = new
-        {
-            errorId,
-            timestamp,
-            message = exception.Message,
-            type = exception.GetType().Name
-        };
+        response.ContentType = "application/problem+json";
 
         // Log the exception with full context
+        var errorId = Guid.NewGuid().ToString();
         _logger.LogError(exception, "Unhandled exception occurred. ErrorId: {ErrorId}", errorId);
 
         // Map exceptions to HTTP status codes
-        response.StatusCode = exception switch
+        var statusCode = exception switch
         {
             ServiceScaffoldException => (int)HttpStatusCode.BadRequest,
             ArgumentNullException => (int)HttpStatusCode.BadRequest,
@@ -76,18 +65,31 @@ public class ErrorHandlingMiddleware
             _ => (int)HttpStatusCode.InternalServerError
         };
 
+        response.StatusCode = statusCode;
+
         // In production, hide internal details
         if (!context.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment())
         {
-            return response.WriteAsJsonAsync(new
-            {
-                errorId,
-                timestamp,
-                message = "An error occurred processing your request. Please contact support with the error ID.",
-                statusCode = response.StatusCode
-            });
+            var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
+                context,
+                statusCode: statusCode,
+                detail: "An error occurred processing your request. Please contact support with the error ID.",
+                errorCode: "INTERNAL_ERROR"
+            );
+
+            return response.WriteAsJsonAsync(problemDetails);
         }
 
-        return response.WriteAsJsonAsync(errorResponse);
+        // In development, include full details
+        var devProblemDetails = ProblemDetailsFactory.CreateProblemDetails(
+            context,
+            exception,
+            statusCode: statusCode
+        );
+
+        // Add errorId to extensions
+        devProblemDetails.Extensions["errorId"] = errorId;
+
+        return response.WriteAsJsonAsync(devProblemDetails);
     }
 }
