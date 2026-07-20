@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Linq.Expressions;
 using DotnetServiceScaffold.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -67,5 +68,117 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         }
 
         await SaveChangesAsync();
+    }
+
+    public async Task<PagedResult<AuditLog>> GetFilteredAsync(
+        Expression<Func<AuditLog, bool>>? predicate = null,
+        int page = 1,
+        int pageSize = 50)
+    {
+        var query = _dbSet.AsQueryable();
+
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        query = query.OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<AuditLog>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        };
+    }
+
+    public async Task<PagedResult<AuditLog>> GetByDateRangeAsync(
+        DateTimeOffset from,
+        DateTimeOffset to,
+        int page = 1,
+        int pageSize = 50)
+    {
+        var query = _dbSet
+            .Where(a => a.CreatedAt >= from.UtcDateTime)
+            .Where(a => a.CreatedAt <= to.UtcDateTime);
+
+        query = query.OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<AuditLog>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        };
+    }
+
+    public async Task<PagedResult<AuditLog>> GetByEntityTypeAsync(
+        string entityType,
+        int page = 1,
+        int pageSize = 50)
+    {
+        var query = _dbSet
+            .Where(a => a.EntityType == entityType)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<AuditLog>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        };
+    }
+
+    public async Task<PagedResult<AuditLog>> GetByUserIdPagedAsync(
+        Guid userId,
+        int page = 1,
+        int pageSize = 50)
+    {
+        var query = _dbSet
+            .Where(a => a.UserId == userId)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<AuditLog>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        };
     }
 }
