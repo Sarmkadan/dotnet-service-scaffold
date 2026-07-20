@@ -340,4 +340,28 @@ public class UserService : IUserService
     {
         return BCrypt.Net.BCrypt.Verify(password, hash);
     }
+
+    public async Task<IEnumerable<User>> SearchUsersAsync(string query, int page = 1, int pageSize = 10)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            _logger.LogDebug("Search query is empty, returning empty result");
+            return Enumerable.Empty<User>();
+        }
+
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        try
+        {
+            _logger.LogInformation("Searching users with query: {Query}, page: {Page}, pageSize: {PageSize}", query, page, pageSize);
+            return await _userRepository.SearchUsersAsync(query, page, pageSize);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching users with query: {Query}", query);
+            throw new DataAccessException($"Error searching users: {query}", ex);
+        }
+    }
 }
