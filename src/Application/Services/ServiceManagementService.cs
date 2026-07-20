@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using DotnetServiceScaffold.Domain.Enums;
 using DotnetServiceScaffold.Domain.Exceptions;
 using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Data.Repository;
@@ -129,7 +130,18 @@ public class ServiceManagementService : IServiceManagementService
         if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
-        await _serviceRepository.DeleteAsync(serviceId);
+        service.Status = ServiceStatus.Disabled;
+ service.Events.Add(new ServiceEvent
+ {
+     ServiceId = service.Id,
+     EventType = ServiceEventType.ServiceDown,
+     Message = "Service unregistered",
+     Severity = "Info",
+     CreatedAt = DateTime.UtcNow
+ });
+
+ await _serviceRepository.UpdateAsync(service);
+ await _serviceRepository.DeleteAsync(serviceId);
 
         await _auditService.LogActionAsync(null, "Delete", "ServiceRegistration", serviceId,
             $"Unregistered service {service.ServiceName}");

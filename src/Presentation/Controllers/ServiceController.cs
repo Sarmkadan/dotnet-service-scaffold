@@ -250,6 +250,32 @@ public class ServiceController : ControllerBase
     }
 
     /// <summary>
+    /// Deregisters a service by removing it from monitoring.
+    /// </summary>
+    [HttpDelete("{serviceId}/registration")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeregisterService(Guid serviceId)
+    {
+        try
+        {
+            await _serviceManagementService.UnregisterServiceAsync(serviceId);
+
+            return NoContent();
+        }
+        catch (ServiceNotFoundException ex)
+        {
+            _logger.LogWarning("Service not found for deregistration: {ServiceId}", serviceId);
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deregistering service {ServiceId}", serviceId);
+            return StatusCode(500, new { error = "Error deregistering service" });
+        }
+    }
+
+    /// <summary>
     /// Gets unhealthy services that need attention.
     /// </summary>
     [HttpGet("health/unhealthy")]
