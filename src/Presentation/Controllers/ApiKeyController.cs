@@ -7,6 +7,7 @@
 using System;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Application.Extensions;
 using DotnetServiceScaffold.Shared.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -79,8 +80,7 @@ public class ApiKeyController : ControllerBase
             // This would typically involve updating the data store to mark the previous
             // secret as revoked and persisting the new secret.
 
-            // Write an audit log entry
-            // Assuming IAuditService exposes a LogAsync(string message) method.
+            // Write an audit log entry using the extension method
             await _auditService.LogAsync($"User {userId} rotated API key {id}");
 
             _logger.LogInformation("User {UserId} rotated API key {ApiKeyId}", userId, id);
