@@ -22,7 +22,9 @@ public class ResponseFormatterFactory : IResponseFormatterFactory
         {
             { "application/json", new JsonResponseFormatter() },
             { "text/csv", new CsvResponseFormatter() },
-            { "application/csv", new CsvResponseFormatter() }
+            { "application/csv", new CsvResponseFormatter() },
+            { "application/xml", new XmlResponseFormatter() },
+            { "text/xml", new XmlResponseFormatter() }
         };
 
         _defaultFormatter = _formatters["application/json"];
