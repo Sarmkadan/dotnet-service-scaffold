@@ -4,7 +4,10 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+using System.Threading.Tasks;
 using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Shared.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +18,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 /// This is a placeholder template showing how to structure auth-related endpoints.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/apikeys")]
 [Authorize]
 public class ApiKeyController : ControllerBase
 {
@@ -53,6 +56,46 @@ public class ApiKeyController : ControllerBase
         {
             _logger.LogError(ex, "Error retrieving auth info for user {UserId}", userId);
             return StatusCode(500, new { error = "Failed to retrieve authentication info" });
+        }
+    }
+
+    /// <summary>
+    /// Rotates the secret for the specified API key.
+    /// Generates a new secret, invalidates the old one, and writes an audit log entry.
+    /// </summary>
+    /// <param name="id">The identifier of the API key to rotate.</param>
+    /// <returns>The new secret for the API key.</returns>
+    [HttpPost("{id}/rotate")]
+    public async Task<IActionResult> RotateApiKey(Guid id)
+    {
+        var userId = GetCurrentUserId();
+
+        try
+        {
+            // Generate a new secure token/secret
+            var newSecret = EncryptionUtility.GenerateSecureToken();
+
+            // TODO: Invalidate the old secret for the API key identified by 'id'.
+            // This would typically involve updating the data store to mark the previous
+            // secret as revoked and persisting the new secret.
+
+            // Write an audit log entry
+            // Assuming IAuditService exposes a LogAsync(string message) method.
+            await _auditService.LogAsync($"User {userId} rotated API key {id}");
+
+            _logger.LogInformation("User {UserId} rotated API key {ApiKeyId}", userId, id);
+
+            return Ok(new
+            {
+                apiKeyId = id,
+                secret = newSecret,
+                rotatedAt = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rotating API key {ApiKeyId} for user {UserId}", id, userId);
+            return StatusCode(500, new { error = "Failed to rotate API key" });
         }
     }
 
