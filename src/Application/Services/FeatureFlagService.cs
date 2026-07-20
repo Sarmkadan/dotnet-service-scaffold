@@ -2,8 +2,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
+using System.Security.Cryptography;
+using System.Text;
 using Serilog;
 
 namespace DotnetServiceScaffold.Application.Services;
@@ -35,6 +37,26 @@ public class FeatureFlagService : IFeatureFlagService
     }
 
     /// <summary>
+    /// Gets a stable bucket (0-99) for a user and feature combination using SHA256 hashing.
+    /// Ensures the same user always gets the same bucket for consistent feature rollout.
+    /// </summary>
+    private int GetStableBucket(Guid userId, string featureName)
+    {
+        // Combine user ID and feature name for feature-specific bucketing
+        var input = $"{userId}:{featureName}";
+
+        // Use SHA256 for consistent distribution
+        using var sha256 = SHA256.Create();
+        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+        // Convert hash to a number between 0-99
+        // Take first 4 bytes and convert to uint, then modulo 100
+        var hashValue = BitConverter.ToUInt32(hashBytes, 0) % 100;
+
+        return (int)hashValue;
+    }
+
+    /// <summary>
     /// Checks if a feature is enabled.
     /// </summary>
     public bool IsEnabled(string featureName)
@@ -60,11 +82,11 @@ public class FeatureFlagService : IFeatureFlagService
         if (!_flags.TryGetValue(featureName, out var flag))
             return false;
 
-        // Simple user-based rollout: hash user ID to determine inclusion
+        // Stable hash bucketing: use SHA256 for consistent distribution across 0-99 buckets
         if (flag.RolloutPercentage < 100)
         {
-            var hash = userId.GetHashCode() % 100;
-            return hash < flag.RolloutPercentage;
+            var bucket = GetStableBucket(userId, featureName);
+            return bucket < flag.RolloutPercentage;
         }
 
         return true;
