@@ -109,6 +109,25 @@ public class MetricsService : IMetricsService
     }
 
     /// <summary>
+    /// Records a histogram metric with explicit bucket boundaries.
+    /// </summary>
+    public void RecordHistogram(string metricName, double value, double[] buckets, IDictionary<string, string>? tags = null)
+    {
+        var key = BuildMetricKey(metricName, tags);
+
+        _metrics.AddOrUpdate(key,
+            new MetricValue { Type = MetricType.Histogram, Value = value, Buckets = buckets, Count = 1 },
+            (_, existing) =>
+            {
+                existing.Value += value;
+                existing.Count++;
+                return existing;
+            });
+
+        _logger.LogDebug("Histogram metric {MetricName} recorded value {Value} with {BucketCount} buckets", metricName, value, buckets.Length);
+    }
+
+    /// <summary>
     /// Gets all recorded metrics as a dictionary suitable for serialization.
     /// </summary>
     public Task<Dictionary<string, object>> GetMetricsAsync()
@@ -120,17 +139,27 @@ public class MetricsService : IMetricsService
             var metric = kvp.Value;
             var typeName = _typeNames.GetValueOrDefault(metric.Type, "unknown");
 
-            object metricData = metric.Type == MetricType.Timer
-                ? new
-                {
-                    type    = typeName,
-                    totalMs = metric.Value,
-                    count   = metric.Count,
-                    avgMs   = metric.Count > 0 ? metric.Value / metric.Count : 0,
-                    minMs   = metric.Min,
-                    maxMs   = metric.Max
-                }
-                : new { type = typeName, value = metric.Value };
+        object metricData = metric.Type switch
+        {
+            MetricType.Timer => new
+            {
+                type = typeName,
+                totalMs = metric.Value,
+                count = metric.Count,
+                avgMs = metric.Count > 0 ? metric.Value / metric.Count : 0,
+                minMs = metric.Min,
+                maxMs = metric.Max
+            },
+            MetricType.Histogram when metric.Buckets != null && metric.BucketCounts != null => new
+            {
+                type = typeName,
+                sum = metric.BucketSum ?? metric.Value,
+                count = metric.Count,
+                buckets = metric.Buckets,
+                bucketCounts = metric.BucketCounts
+            },
+            _ => new { type = typeName, value = metric.Value }
+        };
 
             result[kvp.Key] = metricData;
         }
@@ -199,6 +228,9 @@ internal class MetricValue
     public long Count { get; set; }
     public long Min { get; set; } = long.MaxValue;
     public long Max { get; set; }
+    public double[]? Buckets { get; set; }
+    public long[]? BucketCounts { get; set; }
+    public long? BucketSum { get; set; }
 }
 
 /// <summary>
@@ -208,5 +240,6 @@ internal enum MetricType
 {
     Counter,
     Gauge,
-    Timer
+    Timer,
+    Histogram
 }

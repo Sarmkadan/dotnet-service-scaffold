@@ -33,6 +33,11 @@ public interface IMetricsService
     Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null);
 
     /// <summary>
+    /// Records a histogram metric with explicit bucket boundaries.
+    /// </summary>
+    void RecordHistogram(string metricName, double value, double[] buckets, IDictionary<string, string>? tags = null);
+
+    /// <summary>
     /// Gets all recorded metrics as a dictionary.
     /// </summary>
     Task<Dictionary<string, object>> GetMetricsAsync();
