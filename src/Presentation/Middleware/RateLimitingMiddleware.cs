@@ -2,9 +2,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace DotnetServiceScaffold.Presentation.Middleware;
 
@@ -18,7 +19,7 @@ public class RateLimitingMiddleware
     private readonly RequestDelegate _next;
     private readonly RateLimitOptions _options;
     private readonly ILogger<RateLimitingMiddleware> _logger;
-    private static readonly ConcurrentDictionary<string, TokenBucket> _buckets = new();
+    private static readonly ConcurrentDictionary<string, TokenBucketState> _buckets = new();
 
     public RateLimitingMiddleware(
         RequestDelegate next,
@@ -48,28 +49,28 @@ public class RateLimitingMiddleware
             ? _options.AuthenticatedRequestsPerMinute
             : _options.AnonymousRequestsPerMinute;
 
-        var bucket = _buckets.AddOrUpdate(clientId,
-            new TokenBucket(limit),
-            (_, existing) => existing);
+        var bucket = _buckets.GetOrAdd(clientId, _ => new TokenBucketState(limit));
 
-        if (!bucket.AllowRequest(limit))
+        if (!bucket.TryTakeToken())
         {
             _logger.LogWarning("Rate limit exceeded for client {ClientId}", clientId);
             context.Response.StatusCode = 429;
             context.Response.ContentType = "application/json";
+            var retryAfter = bucket.GetRetryAfterSeconds();
+            context.Response.Headers["Retry-After"] = retryAfter.ToString();
 
             await context.Response.WriteAsJsonAsync(new
             {
                 error = "Too Many Requests",
                 message = "Rate limit exceeded. Please try again later.",
-                retryAfter = bucket.GetRetryAfterSeconds()
+                retryAfter = retryAfter
             });
             return;
         }
 
         // Add rate limit headers to response
         context.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
-        context.Response.Headers["X-RateLimit-Remaining"] = bucket.GetRemainingTokens(limit).ToString();
+        context.Response.Headers["X-RateLimit-Remaining"] = bucket.GetRemainingTokens().ToString();
 
         await _next(context);
     }
@@ -89,72 +90,82 @@ public class RateLimitingMiddleware
         var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return $"ip:{remoteIp}";
     }
-}
-
-/// <summary>
-/// Token bucket implementation for rate limiting. Implements the token bucket algorithm
-/// where tokens are refilled at a fixed rate. Requests consume one token.
-/// </summary>
-public class TokenBucket
-{
-    private double _tokens;
-    private DateTime _lastRefillTime;
-    private const double TokensPerSecond = 1.0 / 60.0; // One request per second max
-
-    public TokenBucket(int capacity)
-    {
-        _tokens = capacity;
-        _lastRefillTime = DateTime.UtcNow;
-    }
 
     /// <summary>
-    /// Check if a request is allowed. Refills tokens based on elapsed time,
-    /// then consumes one token if available.
+    /// Token bucket state for a specific client.
     /// </summary>
-    public bool AllowRequest(int capacity)
+    private sealed class TokenBucketState
     {
-        RefillTokens(capacity);
-        if (_tokens >= 1)
+        public double Tokens { get; set; }
+        public DateTime LastRefillTime { get; set; }
+        public int Capacity { get; set; }
+
+        public TokenBucketState(int capacity)
         {
-            _tokens--;
-            return true;
+            Capacity = capacity;
+            Tokens = capacity;
+            LastRefillTime = DateTime.UtcNow;
         }
-        return false;
-    }
 
-    /// <summary>
-    /// Refills the token bucket based on elapsed time since last refill.
-    /// </summary>
-    private void RefillTokens(int capacity)
-    {
-        var now = DateTime.UtcNow;
-        var elapsed = (now - _lastRefillTime).TotalSeconds;
-        var tokensToAdd = elapsed * TokensPerSecond;
+        /// <summary>
+        /// Atomically checks if a request is allowed and decrements tokens if available.
+        /// </summary>
+        public bool TryTakeToken()
+        {
+            lock (this)
+            {
+                RefillTokens();
+                if (Tokens >= 1)
+                {
+                    Tokens--;
+                    return true;
+                }
+                return false;
+            }
+        }
 
-        _tokens = Math.Min(capacity, _tokens + tokensToAdd);
-        _lastRefillTime = now;
-    }
+        /// <summary>
+        /// Atomically gets remaining tokens.
+        /// </summary>
+        public int GetRemainingTokens()
+        {
+            lock (this)
+            {
+                RefillTokens();
+                return (int)Math.Floor(Tokens);
+            }
+        }
 
-    /// <summary>
-    /// Returns the number of remaining tokens for the current window.
-    /// </summary>
-    public int GetRemainingTokens(int capacity)
-    {
-        RefillTokens(capacity);
-        return (int)Math.Floor(_tokens);
-    }
+        /// <summary>
+        /// Atomically gets the retry-after seconds.
+        /// </summary>
+        public int GetRetryAfterSeconds()
+        {
+            lock (this)
+            {
+                if (Tokens >= 1)
+                    return 0;
 
-    /// <summary>
-    /// Returns the number of seconds to wait before the next request is allowed.
-    /// </summary>
-    public int GetRetryAfterSeconds()
-    {
-        if (_tokens >= 1)
-            return 0;
+                var tokensNeeded = 1 - Tokens;
+                var secondsNeeded = tokensNeeded / TokensPerSecond;
+                return (int)Math.Ceiling(secondsNeeded);
+            }
+        }
 
-        var tokensNeeded = 1 - _tokens;
-        var secondsNeeded = tokensNeeded / TokensPerSecond;
-        return (int)Math.Ceiling(secondsNeeded);
+        /// <summary>
+        /// Refills the token bucket based on elapsed time since last refill.
+        /// </summary>
+        private void RefillTokens()
+        {
+            var now = DateTime.UtcNow;
+            var elapsed = (now - LastRefillTime).TotalSeconds;
+            var tokensToAdd = elapsed * TokensPerSecond;
+
+            Tokens = Math.Min(Capacity, Tokens + tokensToAdd);
+            LastRefillTime = now;
+        }
+
+        private const double TokensPerSecond = 1.0 / 60.0; // One request per second max
     }
 }
 
