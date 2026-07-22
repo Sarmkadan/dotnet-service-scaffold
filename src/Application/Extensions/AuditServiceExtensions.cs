@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Application.Services;
@@ -12,43 +12,90 @@ using DotnetServiceScaffold.Application.Services;
 namespace DotnetServiceScaffold.Application.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAuditService"/> to provide async logging
-/// capabilities without requiring changes to the original interface definition.
+/// Extension methods for <see cref="IAuditService"/> to provide convenience methods
+/// for audit logging without requiring changes to the original interface definition.
 /// </summary>
 public static class AuditServiceExtensions
 {
     /// <summary>
-    /// Logs a message asynchronously. If the underlying <see cref="IAuditService"/>
-    /// implementation provides a synchronous <c>Log(string)</c> method, it will be
-    /// invoked via reflection. If it already provides an async <c>LogAsync(string)</c>
-    /// method, that method will be called directly. Otherwise, this method completes
-    /// immediately.
+    /// Logs a simple audit message with default values.
     /// </summary>
-    /// <param name="auditService">The audit service instance.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="cancellationToken">Optional cancellation token (currently unused).</param>
+    /// <param name="auditService">The audit service instance. Must not be null.</param>
+    /// <param name="message">The message to log. Must not be null or empty.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public static Task LogAsync(this IAuditService auditService, string message, CancellationToken cancellationToken = default)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="auditService"/> or <paramref name="message"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="message"/> is empty.</exception>
+    public static Task LogAsync(
+        this IAuditService auditService,
+        [DisallowNull] string message,
+        CancellationToken cancellationToken = default)
     {
-        // Try to find an existing async LogAsync method (in case the interface was later extended)
-        var asyncMethod = auditService.GetType().GetMethod("LogAsync", new[] { typeof(string), typeof(CancellationToken) });
-        if (asyncMethod != null && asyncMethod.ReturnType == typeof(Task))
-        {
-            // Invoke the existing async method
-            var result = asyncMethod.Invoke(auditService, new object[] { message, cancellationToken });
-            return (Task)result!;
-        }
+        ArgumentNullException.ThrowIfNull(auditService);
+        ArgumentException.ThrowIfNullOrEmpty(message);
 
-        // Fallback to a synchronous Log(string) method if it exists
-        var syncMethod = auditService.GetType().GetMethod("Log", new[] { typeof(string) });
-        if (syncMethod != null)
-        {
-            var result = syncMethod.Invoke(auditService, new object[] { message });
-            // If the synchronous method returns a Task, return it; otherwise, wrap in a completed task.
-            return result is Task task ? task : Task.CompletedTask;
-        }
+        return auditService.LogActionAsync(
+            userId: null,
+            action: "MessageLogged",
+            entityType: "System",
+            entityId: null,
+            description: message);
+    }
 
-        // No known logging method – complete immediately.
-        return Task.CompletedTask;
+    /// <summary>
+    /// Logs an audit action with user context.
+    /// </summary>
+    /// <param name="auditService">The audit service instance. Must not be null.</param>
+    /// <param name="userId">The ID of the user performing the action.</param>
+    /// <param name="action">The name of the action. Must not be null or empty.</param>
+    /// <param name="entityType">The type of the affected entity. Must not be null or empty.</param>
+    /// <param name="entityId">The ID of the affected entity.</param>
+    /// <param name="description">Additional details about the action. Can be null.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="auditService"/>, <paramref name="action"/>, or <paramref name="entityType"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="action"/> or <paramref name="entityType"/> is empty.</exception>
+    public static Task LogActionAsync(
+        this IAuditService auditService,
+        Guid? userId,
+        [DisallowNull] string action,
+        [DisallowNull] string entityType,
+        Guid? entityId,
+        string? description = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(auditService);
+        ArgumentException.ThrowIfNullOrEmpty(action);
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
+
+        return auditService.LogActionAsync(userId, action, entityType, entityId, description);
+    }
+
+    /// <summary>
+    /// Logs a failed action with user context.
+    /// </summary>
+    /// <param name="auditService">The audit service instance. Must not be null.</param>
+    /// <param name="userId">The ID of the user performing the action.</param>
+    /// <param name="action">The name of the action. Must not be null or empty.</param>
+    /// <param name="entityType">The type of the affected entity. Must not be null or empty.</param>
+    /// <param name="reason">The reason for the failure. Must not be null or empty.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="auditService"/>, <paramref name="action"/>, <paramref name="entityType"/>, or <paramref name="reason"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="action"/>, <paramref name="entityType"/>, or <paramref name="reason"/> is empty.</exception>
+    public static Task LogFailedActionAsync(
+        this IAuditService auditService,
+        Guid? userId,
+        [DisallowNull] string action,
+        [DisallowNull] string entityType,
+        [DisallowNull] string reason,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(auditService);
+        ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(entityType);
+        ArgumentNullException.ThrowIfNull(reason);
+
+        return auditService.LogFailedActionAsync(userId, action, entityType, reason);
     }
 }
