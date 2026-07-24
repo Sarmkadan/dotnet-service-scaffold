@@ -5,6 +5,7 @@
 // =============================================================================
 
 using System.Diagnostics;
+using DotnetServiceScaffold.Infrastructure.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -58,6 +59,13 @@ public static class ProblemDetailsFactory
         else if (context.TraceIdentifier != null)
         {
             problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+        }
+
+        // Add correlation ID from LogContextService if available
+        var logContextService = context.RequestServices.GetService<ILogContextService>();
+        if (logContextService?.CorrelationId != null)
+        {
+            problemDetails.Extensions["correlationId"] = logContextService.CorrelationId;
         }
 
         // Add error code if provided
