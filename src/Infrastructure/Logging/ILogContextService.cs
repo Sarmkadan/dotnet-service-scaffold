@@ -1,22 +1,38 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
+
+using System.Diagnostics;
 
 namespace DotnetServiceScaffold.Infrastructure.Logging;
 
 /// <summary>
 /// Provides scoped log context management for enriching structured log entries
 /// with request-specific properties such as correlation IDs and user identity.
+/// Uses <see cref="AsyncLocal{T}"/> to ensure proper flow across async boundaries.
 /// </summary>
 public interface ILogContextService
 {
+    /// <summary>
+    /// Gets or sets the current activity ID from <see cref="Activity.Current"/>.
+    /// </summary>
+    string? ActivityId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the W3C traceparent header value (trace-id:parent-id:span-id:flags).
+    /// </summary>
+    string? TraceParent { get; set; }
+
     /// <summary>Gets or sets the correlation ID for the current request.</summary>
     string? CorrelationId { get; set; }
 
     /// <summary>Gets or sets the authenticated user ID for the current request.</summary>
     string? UserId { get; set; }
+
+    /// <summary>
+    /// Ensures the correlation ID is initialized if not already set.
+    /// Uses the current Activity's TraceId if available, otherwise generates a new one.
+    /// </summary>
+    /// <returns>The initialized correlation ID.</returns>
+    string InitializeCorrelationId();
 
     /// <summary>
     /// Pushes all tracked properties onto the Serilog log context and returns

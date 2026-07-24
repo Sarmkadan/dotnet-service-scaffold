@@ -97,6 +97,7 @@ public static class ServiceCollectionExtensions
                 TimeSpan.FromSeconds(options.CircuitBreakerBreakDurationSeconds));
         });
         services.AddTransient<ResilientHttpMessageHandler>();
+            services.AddTransient<CorrelationIdDelegatingHandler>();
 
         services.AddHttpClient("external-api", (provider, client) =>
         {
@@ -104,6 +105,7 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
             client.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
         })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
             .AddHttpMessageHandler<ResilientHttpMessageHandler>()
             .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
@@ -122,6 +124,7 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(30);
             client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
         })
+            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
             .AddHttpMessageHandler<ResilientHttpMessageHandler>();
 
         services.AddHttpClient<IWebhookClient, WebhookClient>(client =>

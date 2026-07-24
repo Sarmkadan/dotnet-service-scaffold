@@ -1,5 +1,10 @@
 #nullable enable
 
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
 using System.Diagnostics;
 using Serilog.Context;
 
@@ -29,6 +34,40 @@ public static class LogContextServiceExtensions
     }
 
     /// <summary>
+    /// Ensures the correlation ID is initialized and adds common request-scoped properties.
+    /// Uses W3C trace context if available, otherwise generates a new correlation ID.
+    /// </summary>
+    /// <param name="service">The log context service instance.</param>
+    /// <param name="userId">The user ID associated with the request.</param>
+    /// <param name="operationName">The name of the operation being performed.</param>
+    /// <returns>The initialized correlation ID.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
+    public static string InitializeRequestContext(this ILogContextService service, string? userId = null, string? operationName = null)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        // Initialize correlation ID (uses W3C trace context if available)
+        var correlationId = service.InitializeCorrelationId();
+
+        // Add request-specific properties
+        service.AddProperty("CorrelationId", correlationId);
+        service.AddProperty("RequestId", Guid.NewGuid().ToString("N"));
+
+        if (userId is not null)
+        {
+            service.AddProperty("UserId", userId);
+            service.UserId = userId;
+        }
+
+        if (operationName is not null)
+        {
+            service.AddProperty("Operation", operationName);
+        }
+
+        return correlationId;
+    }
+
+    /// <summary>
     /// Adds common request-scoped properties to the log context for structured logging.
     /// Includes correlation ID, user ID, operation name, and timing information.
     /// </summary>
@@ -38,6 +77,7 @@ public static class LogContextServiceExtensions
     /// <param name="operationName">The name of the operation being performed.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="correlationId"/> is null or whitespace.</exception>
+    [Obsolete("Use InitializeRequestContext instead. This method does not initialize W3C trace context.")]
     public static void AddRequestProperties(this ILogContextService service, string correlationId, string? userId, string? operationName = null)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -126,16 +166,16 @@ public static class LogContextServiceExtensions
     /// <param name="service">The log context service instance.</param>
     /// <param name="actionName">The name of the action being measured.</param>
     /// <param name="action">The action to measure.</param>
-    /// <returns>A <see cref="Stopwatch"/> instance that can be used for further timing measurements.</returns>
+    /// <returns>A <see cref="System.Diagnostics.Stopwatch"/> instance that can be used for further timing measurements.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/>, <paramref name="actionName"/>, or <paramref name="action"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="actionName"/> is null or whitespace.</exception>
-    public static Stopwatch MeasureExecutionTime(this ILogContextService service, string actionName, Action action)
+    public static System.Diagnostics.Stopwatch MeasureExecutionTime(this ILogContextService service, string actionName, Action action)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentException.ThrowIfNullOrWhiteSpace(actionName);
         ArgumentNullException.ThrowIfNull(action);
 
-        var stopwatch = Stopwatch.StartNew();
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         service.AddProperty("MeasuredAction", actionName);
 
         try
@@ -158,16 +198,16 @@ public static class LogContextServiceExtensions
     /// <param name="service">The log context service instance.</param>
     /// <param name="actionName">The name of the action being measured.</param>
     /// <param name="func">The function to measure.</param>
-    /// <returns>A tuple containing the result of the function and a <see cref="Stopwatch"/> instance.</returns>
+    /// <returns>A tuple containing the result of the function and a <see cref="System.Diagnostics.Stopwatch"/> instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/>, <paramref name="actionName"/>, or <paramref name="func"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="actionName"/> is null or whitespace.</exception>
-    public static (T Result, Stopwatch Stopwatch) MeasureExecutionTime<T>(this ILogContextService service, string actionName, Func<T> func)
+    public static (T Result, System.Diagnostics.Stopwatch Stopwatch) MeasureExecutionTime<T>(this ILogContextService service, string actionName, Func<T> func)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentException.ThrowIfNullOrWhiteSpace(actionName);
         ArgumentNullException.ThrowIfNull(func);
 
-        var stopwatch = Stopwatch.StartNew();
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         service.AddProperty("MeasuredAction", actionName);
 
         T result;
