@@ -74,22 +74,6 @@ public sealed class ServiceDiscoveryRecord
     public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Gets or sets the UTC timestamp of the last heartbeat sent by this instance.
-    /// Used for TTL-based staleness detection in registry mode.
-    /// </summary>
-    public DateTime? LastHeartbeatUtc { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether this instance is marked as stale (hasn't sent a heartbeat within the stale threshold).
-    /// </summary>
-    public bool IsStale { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether this instance has been evicted from the registry.
-    /// </summary>
-    public bool IsEvicted { get; set; }
-
-    /// <summary>
     /// Gets or sets the DNS time-to-live in seconds if this record originated from a DNS lookup.
     /// <see langword="null"/> for registry-sourced records.
     /// </summary>
@@ -113,20 +97,8 @@ public sealed class ServiceDiscoveryRecord
     public bool IsAlive(TimeSpan? staleThreshold = null)
     {
         var threshold = staleThreshold ?? TimeSpan.FromMinutes(5);
-
-        // Check if instance is evicted or explicitly marked as stale
-        if (IsEvicted || IsStale)
-            return false;
-
-        // Check health status
-        if (HealthStatus is DiscoveryHealthStatus.Critical)
-            return false;
-
-        // Check time since last seen
-        if ((DateTime.UtcNow - LastSeenAt) >= threshold)
-            return false;
-
-        return true;
+        return HealthStatus is not DiscoveryHealthStatus.Critical
+            && (DateTime.UtcNow - LastSeenAt) < threshold;
     }
 
     /// <summary>

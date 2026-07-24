@@ -182,6 +182,52 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     }
 
     /// <inheritdoc/>
+    public async Task UpdateHeartbeatAsync(CancellationToken cancellationToken = default)
+    {
+        if (!_options.SelfRegistration.Enabled)
+        {
+            _logger.LogDebug("Self-registration is disabled, skipping heartbeat update");
+            return;
+        }
+
+        var provider = PickWritableProvider();
+
+        // Create a heartbeat record for the current instance
+        var heartbeatRecord = new ServiceDiscoveryRecord
+        {
+            InstanceId = _selfInstanceId,
+            ServiceName = _options.SelfRegistration.ServiceName ?? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "dotnet-service",
+            Host = _options.SelfRegistration.AdvertiseHost ?? System.Net.Dns.GetHostName(),
+            Port = _options.SelfRegistration.AdvertisePort,
+            Scheme = _options.SelfRegistration.AdvertiseScheme,
+            Version = _options.SelfRegistration.Version,
+            Tags = [.. _options.SelfRegistration.Tags],
+            Metadata = new Dictionary<string, string>(),
+            Source = DiscoverySource.LocalRegistry,
+            HealthStatus = DiscoveryHealthStatus.Passing,
+            LastHeartbeatUtc = DateTime.UtcNow,
+            RegisteredAt = DateTime.UtcNow,
+            LastSeenAt = DateTime.UtcNow
+        };
+
+        if (!string.IsNullOrEmpty(_options.SelfRegistration.Version))
+            heartbeatRecord.Metadata["version"] = _options.SelfRegistration.Version;
+
+        // Send heartbeat to registry
+        var result = await provider.RegisterAsync(heartbeatRecord, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogDebug("Heartbeat updated for instance {InstanceId} via {Provider}", _selfInstanceId, provider.ProviderName);
+        }
+        else
+        {
+            _logger.LogWarning("Failed to update heartbeat for instance {InstanceId} via {Provider}: {Error}",
+                _selfInstanceId, provider.ProviderName, result.ErrorMessage);
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<Result<ServiceDiscoveryStats>> GetServiceStatsAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
@@ -194,9 +240,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         var stats = new ServiceDiscoveryStats(
             ServiceName: serviceName,
             TotalInstances: records.Count,
-            HealthyInstances: records.Count(r => r.HealthStatus == DiscoveryHealthStatus.Passing),
-            DegradedInstances: records.Count(r => r.HealthStatus == DiscoveryHealthStatus.Warning),
-            CriticalInstances: records.Count(r => r.HealthStatus == DiscoveryHealthStatus.Critical),
+            HealthyInstances: records.Count(r => r.HealthStatus == DiscoveryHealthStatus.Passing && !r.IsStale && !r.IsEvicted),
+            DegradedInstances: records.Count(r => r.HealthStatus == DiscoveryHealthStatus.Warning && !r.IsStale && !r.IsEvicted),
+            CriticalInstances: records.Count(r => r.HealthStatus == DiscoveryHealthStatus.Critical && !r.IsStale && !r.IsEvicted),
+            StaleInstances: records.Count(r => r.IsStale && !r.IsEvicted),
+            EvictedInstances: records.Count(r => r.IsEvicted),
             LastResolvedAt: meta?.LastResolvedAt,
             CacheExpiresAt: meta?.CacheExpiresAt,
             ActiveSource: meta?.Source ?? DiscoverySource.Unknown);
@@ -307,6 +355,8 @@ public static class ServiceDiscoveryExtensions
         services.AddSingleton<DnsServiceDiscoveryProvider>();
         services.AddSingleton<RegistryServiceDiscoveryProvider>();
         services.AddSingleton<IServiceDiscoveryService, ServiceDiscoveryService>();
+    services.AddSingleton<IHostedService, ServiceHeartbeatBackgroundService>();
+    services.AddSingleton<IHostedService, ServiceStaleEvictionBackgroundService>();
 
         return services;
     }
