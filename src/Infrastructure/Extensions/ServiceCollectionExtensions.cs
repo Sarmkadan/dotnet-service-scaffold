@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Infrastructure.Caching;
@@ -11,6 +11,7 @@ using DotnetServiceScaffold.Infrastructure.Formatting;
 using DotnetServiceScaffold.Infrastructure.Http;
 using DotnetServiceScaffold.Infrastructure.Integration;
 using DotnetServiceScaffold.Infrastructure.Logging;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 using DotnetServiceScaffold.Presentation.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,8 +104,8 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
             client.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
         })
-        .AddHttpMessageHandler<ResilientHttpMessageHandler>()
-        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+            .AddHttpMessageHandler<ResilientHttpMessageHandler>()
+            .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
         services.AddHttpClient("webhook", (provider, client) =>
         {
@@ -112,7 +113,7 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(10); // Specific timeout for webhooks
             client.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
         })
-        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+            .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
         services.AddHttpClient<IExternalApiClient, ExternalApiClient>(client =>
         {
@@ -121,7 +122,7 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(30);
             client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
         })
-        .AddHttpMessageHandler<ResilientHttpMessageHandler>();
+            .AddHttpMessageHandler<ResilientHttpMessageHandler>();
 
         services.AddHttpClient<IWebhookClient, WebhookClient>(client =>
         {
@@ -145,6 +146,50 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<ICacheService, InMemoryCacheService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers service discovery infrastructure including providers and the orchestrating service.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configuration">Application configuration for binding options.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="services"/> is <see langword="null"/>.
+    /// <paramref name="configuration"/> is <see langword="null"/>.
+    /// </exception>
+    public static IServiceCollection AddServiceDiscovery(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        services.Configure<ServiceDiscoveryOptions>(
+            configuration.GetSection(ServiceDiscoveryOptions.SectionName));
+
+        services.AddHttpClient(RegistryServiceDiscoveryProvider.HttpClientName, (sp, client) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<ServiceDiscoveryOptions>>().Value;
+            client.BaseAddress = new Uri(opts.Registry.AgentEndpoint);
+            client.Timeout = opts.ResolutionTimeout + TimeSpan.FromSeconds(2);
+            client.DefaultRequestHeaders.Add(
+                "User-Agent",
+                $"dotnet-service-scaffold/{typeof(ServiceDiscoveryProviderSelector).Assembly.GetName().Version}");
+
+            if (!string.IsNullOrEmpty(opts.Registry.AclToken))
+                client.DefaultRequestHeaders.Add("X-Consul-Token", opts.Registry.AclToken);
+        });
+
+        services.AddSingleton<DnsServiceDiscoveryProvider>();
+        services.AddSingleton<RegistryServiceDiscoveryProvider>();
+        services.AddSingleton<InMemoryServiceDiscoveryProvider>();
+        services.AddSingleton<IServiceDiscoveryProviderSelector, ServiceDiscoveryProviderSelector>();
+        services.AddSingleton<IServiceDiscoveryService, ServiceDiscoveryService>();
+        services.AddSingleton<IHostedService, ServiceHeartbeatBackgroundService>();
+        services.AddSingleton<IHostedService, ServiceStaleEvictionBackgroundService>();
 
         return services;
     }
@@ -176,9 +221,9 @@ public static class ServiceCollectionExtensions
         {
             options.DefaultScheme = ApiKeyAuthenticationOptions.DefaultScheme;
         })
-        .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
-            ApiKeyAuthenticationOptions.DefaultScheme,
-            null);
+            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+                ApiKeyAuthenticationOptions.DefaultScheme,
+                null);
 
         services.AddSingleton(_ => new RateLimitOptions
         {
