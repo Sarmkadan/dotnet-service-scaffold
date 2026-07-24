@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DotnetServiceScaffold.Infrastructure.Data;
 
@@ -82,5 +83,42 @@ public static class ServiceScaffoldDbContextExtensions
             .FirstOrDefaultAsync(c => c.Key == key && c.ServiceId == serviceId);
 
         return config?.Value;
+    }
+
+    /// <summary>
+    /// Executes a database operation with automatic retry for SQLite busy errors.
+    /// </summary>
+    /// <param name="context">The database context.</param>
+    /// <param name="operation">The database operation to execute.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> or <paramref name="operation"/> is null.</exception>
+    public static async Task ExecuteWithRetryAsync(this ServiceScaffoldDbContext context, Func<Task> operation)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(operation);
+
+        await context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await operation();
+        });
+    }
+
+    /// <summary>
+    /// Executes a database operation with automatic retry for SQLite busy errors.
+    /// </summary>
+    /// <typeparam name="T">The return type.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="operation">The database operation to execute.</param>
+    /// <returns>The result of the operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> or <paramref name="operation"/> is null.</exception>
+    public static async Task<T> ExecuteWithRetryAsync<T>(this ServiceScaffoldDbContext context, Func<Task<T>> operation)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(operation);
+
+        return await context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            return await operation();
+        });
     }
 }

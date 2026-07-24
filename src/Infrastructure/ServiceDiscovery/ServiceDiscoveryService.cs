@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Caching;
+using DotnetServiceScaffold.Infrastructure.Data;
 using DotnetServiceScaffold.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -48,6 +49,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     private readonly ICacheService _cache;
     private readonly ServiceDiscoveryOptions _options;
     private readonly ILogger<ServiceDiscoveryService> _logger;
+    private readonly ServiceScaffoldDbContext _dbContext;
 
     private readonly ConcurrentDictionary<string, int> _roundRobinCounters = new();
     private readonly ConcurrentDictionary<string, ResolutionMeta> _metaCache = new();
@@ -66,12 +68,14 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         IServiceDiscoveryProviderSelector providerSelector,
         ICacheService cache,
         IOptions<ServiceDiscoveryOptions> options,
-        ILogger<ServiceDiscoveryService> logger)
+        ILogger<ServiceDiscoveryService> logger,
+        ServiceScaffoldDbContext dbContext)
     {
         _providerSelector = providerSelector ?? throw new ArgumentNullException(nameof(providerSelector));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
         // Get the active provider for this instance
         _provider = _providerSelector.GetProvider();
@@ -162,8 +166,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         if (!string.IsNullOrEmpty(self.Version))
             record.Metadata["version"] = self.Version;
 
-        // Use the active provider for self-registration
-        var result = await _provider.RegisterAsync(record, cancellationToken);
+        // Use the active provider for self-registration with retry for SQLite busy errors
+        var result = await _dbContext.ExecuteWithRetryAsync(async () =>
+        {
+            return await _provider.RegisterAsync(record, cancellationToken);
+        });
 
         if (result.IsSuccess)
             _logger.LogInformation("Self-registered as {ServiceName} ({InstanceId}) via {Provider}", name, _selfInstanceId, _provider.ProviderName);

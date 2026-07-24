@@ -23,40 +23,43 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configure DotnetServiceScaffoldOptions with validation
 builder.Services.AddOptions<DotnetServiceScaffoldOptions>()
-    .Bind(builder.Configuration.GetSection("ApplicationSettings"))
-    .ValidateOnStart();
+.Bind(builder.Configuration.GetSection("ApplicationSettings"))
+.ValidateOnStart();
 
 var structuredLoggingOptions = builder.Configuration
-    .GetSection("StructuredLogging")
-    .Get<StructuredLoggingOptions>() ?? new StructuredLoggingOptions();
+.GetSection("StructuredLogging")
+.Get<StructuredLoggingOptions>() ?? new StructuredLoggingOptions();
 
 var minimumLevel = Enum.TryParse<LogEventLevel>(
     structuredLoggingOptions.MinimumLevel,
     ignoreCase: true,
     out var parsedMinimumLevel)
-    ? parsedMinimumLevel
-    : LogEventLevel.Information;
+? parsedMinimumLevel
+: LogEventLevel.Information;
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Is(minimumLevel)
-    .EnrichFromOptions(structuredLoggingOptions)
-    .WriteTo.Console(
-        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File(
-        "logs/scaffold-.txt",
-        rollingInterval: RollingInterval.Day,
-        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .CreateLogger();
+.MinimumLevel.Is(minimumLevel)
+.EnrichFromOptions(structuredLoggingOptions)
+.WriteTo.Console(
+    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+.WriteTo.File(
+    "logs/scaffold-.txt",
+    rollingInterval: RollingInterval.Day,
+    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+.CreateLogger();
 
 builder.Host.UseSerilog();
 
 // Register Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                      "Data Source=scaffold.db";
+    "Data Source=scaffold.db";
 
 builder.Services.AddDbContext<ServiceScaffoldDbContext>((provider, options) =>
 {
-	options.UseSqlite(connectionString);
+    // Add busy_timeout to handle concurrent SQLite writes and prevent SQLITE_BUSY errors
+    // busy_timeout=5000 means SQLite will wait up to 5 seconds for a lock to be released
+    var sqliteConnectionString = $"{connectionString};busy_timeout=5000";
+    options.UseSqlite(sqliteConnectionString);
 });
 
 // Register Repositories
@@ -81,11 +84,11 @@ builder.Services.AddSingleton<IPrometheusFormatter, PrometheusFormatter>();
 
 // Register HTTP Client for health checks
 builder.Services.AddHttpClient<IHealthCheckService, HealthCheckService>()
-    .ConfigureHttpClient(client =>
-    {
-        client.Timeout = TimeSpan.FromSeconds(30);
-        client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
-    });
+.ConfigureHttpClient(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+});
 
 // Add controllers and API support
 builder.Services.AddControllers();
@@ -100,19 +103,19 @@ builder.Services.AddSwaggerGen();
 // SqliteHealthCheck verifies file accessibility and available disk space.
 // AddDbContextCheck verifies that EF Core can reach the database.
 var sqliteDbPath = connectionString
-    .Split(';', StringSplitOptions.RemoveEmptyEntries)
-    .Select(p => p.Trim())
-    .FirstOrDefault(p => p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-    ?.Substring("Data Source=".Length) ?? "scaffold.db";
+.Split(';', StringSplitOptions.RemoveEmptyEntries)
+.Select(p => p.Trim())
+.FirstOrDefault(p => p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+?.Substring("Data Source=".Length) ?? "scaffold.db";
 
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ServiceScaffoldDbContext>("database")
-    .Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
-        "sqlite-file",
-        _ => new SqliteHealthCheck(sqliteDbPath),
-        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
-        tags: ["db", "sqlite", "live"]))
-    .AddCheck<MemoryHealthCheck>("memory", tags: ["system", "live"]);
+.AddDbContextCheck<ServiceScaffoldDbContext>("database")
+.Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
+    "sqlite-file",
+    _ => new SqliteHealthCheck(sqliteDbPath),
+    failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+    tags: ["db", "sqlite", "live"]))
+.AddCheck<MemoryHealthCheck>("memory", tags: ["system", "live"]);
 
 var app = builder.Build();
 
