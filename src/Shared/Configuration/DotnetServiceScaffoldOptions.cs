@@ -210,6 +210,26 @@ public sealed class DotnetServiceScaffoldOptions
     /// <example>/app/backups</example>
     public string BackupDirectory { get; set; } = "/app/backups";
 
+        /// <summary>
+        /// Gets or sets the metrics endpoint protection mode.
+        /// Options: Disabled, ApiKey, LocalhostOnly
+        /// - Disabled: Metrics endpoint is publicly accessible (INSECURE - not recommended for production)
+        /// - ApiKey: Metrics endpoint requires API key authentication (recommended)
+        /// - LocalhostOnly: Metrics endpoint only accessible from localhost (127.0.0.1)
+        /// </summary>
+        /// <example>ApiKey</example>
+        public string MetricsProtectionMode { get; set; } = "ApiKey";
+
+        /// <summary>
+        /// Gets or sets the metrics API key for authentication.
+        /// Only used when MetricsProtectionMode is set to ApiKey.
+        /// </summary>
+        /// <example>metrics_sk_live_1234567890abcdef</example>
+        [RegularExpression(
+            "^[a-zA-Z0-9_]+$",
+            ErrorMessage = "MetricsApiKey must contain only alphanumeric characters and underscores")]
+        public string MetricsApiKey { get; set; } = string.Empty;
+
     /// <summary>
     /// Validates the configuration options using DataAnnotations.
     /// </summary>
