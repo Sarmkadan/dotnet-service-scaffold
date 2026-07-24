@@ -119,15 +119,30 @@ public static class ServiceCollectionExtensions
         })
             .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
-        services.AddHttpClient<IExternalApiClient, ExternalApiClient>(client =>
-        {
-            // Configure the typed client to use the "external-api" configuration
-            // Or just configure it here directly
-            client.Timeout = TimeSpan.FromSeconds(30);
-            client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
-        })
-            .AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
-            .AddHttpMessageHandler<ResilientHttpMessageHandler>();
+services.AddHttpClient<IExternalReadClient, ExternalApiClient>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+})
+.AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
+.AddHttpMessageHandler<ResilientHttpMessageHandler>();
+
+services.AddHttpClient<IExternalWriteClient, ExternalApiClient>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+})
+.AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
+.AddHttpMessageHandler<ResilientHttpMessageHandler>();
+
+// Register the deprecated composite interface for backward compatibility
+services.AddTransient<IExternalApiClient>(provider =>
+{
+    var readClient = provider.GetRequiredService<IExternalReadClient>();
+    var writeClient = provider.GetRequiredService<IExternalWriteClient>();
+    return new ExternalApiClientAdapter(readClient, writeClient);
+});
+
 
         services.AddHttpClient<IWebhookClient, WebhookClient>(client =>
         {

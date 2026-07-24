@@ -13,8 +13,9 @@ namespace DotnetServiceScaffold.Infrastructure.Integration;
 /// <summary>
 /// Generic HTTP client for calling external APIs. Handles JSON serialization,
 /// error responses, and provides a clean interface for common HTTP operations.
+/// Implements both IExternalReadClient and IExternalWriteClient interfaces.
 /// </summary>
-public class ExternalApiClient : IExternalApiClient
+public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<ExternalApiClient> _logger;
@@ -177,15 +178,4 @@ public class ExternalApiClient : IExternalApiClient
             request.Headers.Add(header.Key, header.Value);
         }
     }
-}
-
-/// <summary>
-/// Interface for external API client.
-/// </summary>
-public interface IExternalApiClient
-{
-    Task<T?> GetAsync<T>(string url, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default);
-    Task<T?> PostAsync<T>(string url, object payload, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default);
-    Task<T?> PutAsync<T>(string url, object payload, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default);
-    Task<bool> DeleteAsync(string url, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default);
 }
