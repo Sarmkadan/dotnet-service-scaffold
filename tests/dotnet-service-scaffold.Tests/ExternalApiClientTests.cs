@@ -12,7 +12,6 @@ namespace DotnetServiceScaffold.Tests;
 
 public class ExternalApiClientTests
 {
-    private readonly Mock<ICustomHttpClientFactory> _httpClientFactoryMock;
     private readonly Mock<ILogger<ExternalApiClient>> _loggerMock;
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
     private readonly HttpClient _httpClient;
@@ -20,20 +19,15 @@ public class ExternalApiClientTests
 
     public ExternalApiClientTests()
     {
-        _httpClientFactoryMock = new Mock<ICustomHttpClientFactory>();
         _loggerMock = new Mock<ILogger<ExternalApiClient>>();
         _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
-        
+
         _httpClient = new HttpClient(_httpMessageHandlerMock.Object)
         {
             BaseAddress = new Uri("http://localhost/")
         };
 
-        _httpClientFactoryMock
-            .Setup(x => x.CreateClient("external-api"))
-            .Returns(_httpClient);
-
-        _sut = new ExternalApiClient(_httpClientFactoryMock.Object, _loggerMock.Object);
+        _sut = new ExternalApiClient(_httpClient, _loggerMock.Object);
     }
 
     [Fact]
