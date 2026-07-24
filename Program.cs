@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -181,13 +182,79 @@ app.MapGet("/status", async (ServiceScaffoldDbContext context) =>
 .WithName("Status")
 .WithDescription("Returns the current service status");
 
-app.MapGet("/metrics", async (IMetricsService metricsService, IPrometheusFormatter prometheusFormatter) =>
+// Metrics endpoint with configurable protection
+app.MapGet("/metrics", async (
+    HttpContext context,
+    IMetricsService metricsService,
+    IPrometheusFormatter prometheusFormatter,
+    IOptions<DotnetServiceScaffoldOptions> options) =>
 {
-    var metrics = await metricsService.GetMetricsAsync();
-    var text = prometheusFormatter.Format(metrics, "scaffold");
-    return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+    var config = options.Value;
+
+    try
+    {
+        // Check if metrics endpoint should be protected
+        if (config.MetricsProtectionMode.Equals("Disabled", StringComparison.OrdinalIgnoreCase))
+        {
+            // Metrics endpoint is publicly accessible (INSECURE - not recommended for production)
+            var metrics = await metricsService.GetMetricsAsync();
+            var text = prometheusFormatter.Format(metrics, "scaffold");
+            return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+        }
+        else if (config.MetricsProtectionMode.Equals("LocalhostOnly", StringComparison.OrdinalIgnoreCase))
+        {
+            // Metrics endpoint only accessible from localhost
+            var remoteIpAddress = context.Connection.RemoteIpAddress;
+            if (remoteIpAddress == null || !IPAddress.IsLoopback(remoteIpAddress))
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(new { error = "Forbidden", message = "Metrics endpoint is restricted to localhost access only." });
+                return Results.Empty;
+            }
+
+            var metrics = await metricsService.GetMetricsAsync();
+            var text = prometheusFormatter.Format(metrics, "scaffold");
+            return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+        }
+        else
+        {
+            // Default: ApiKey authentication required (recommended)
+            // Check for API key in header
+            if (!context.Request.Headers.TryGetValue("X-Api-Key", out var apiKeyHeaderValues) ||
+                string.IsNullOrWhiteSpace(apiKeyHeaderValues.FirstOrDefault()))
+            {
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(new { error = "Unauthorized", message = "API key is required for metrics endpoint. Provide it in the X-Api-Key header." });
+                return Results.Empty;
+            }
+
+            var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
+            var validMetricsKey = config.MetricsApiKey;
+
+            if (string.IsNullOrWhiteSpace(validMetricsKey) || !providedApiKey.Equals(validMetricsKey, StringComparison.Ordinal))
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(new { error = "Forbidden", message = "Invalid metrics API key." });
+                return Results.Empty;
+            }
+
+            var metrics = await metricsService.GetMetricsAsync();
+            var text = prometheusFormatter.Format(metrics, "scaffold");
+            return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Error generating metrics");
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new { error = "Internal Server Error", message = "Failed to generate metrics." });
+        return Results.Empty;
+    }
 })
-.AllowAnonymous()
 .WithName("Prometheus Metrics")
 .WithDescription("Exposes metrics in Prometheus text format");
 
