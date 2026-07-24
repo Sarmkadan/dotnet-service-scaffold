@@ -9,25 +9,42 @@ using System.Reflection;
 using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Caching;
 using DotnetServiceScaffold.Shared.Models;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 
 /// <summary>
-/// Orchestrates DNS-based and registry-based service discovery with caching,
-/// configurable load balancing, and self-registration lifecycle management.
+/// Orchestrates service discovery with caching, load balancing, and self-registration lifecycle management.
+/// This service acts as a policy layer that coordinates between pluggable <see cref="IServiceDiscoveryProvider"/> backends
+/// and applies cross-cutting concerns like caching, health filtering, and load balancing.
 /// </summary>
+/// <remarks>
+/// <para>
+/// The <see cref="ServiceDiscoveryService"/> is the high-level orchestrator that provides a consistent abstraction
+/// over various <see cref="IServiceDiscoveryProvider"/> implementations (DNS, Registry, InMemory, etc.).
+/// </para>
+/// <para>
+/// Responsibilities:
+/// <list type="bullet">
+///   <item>Caching resolved service instances</item>
+///   <item>Applying load balancing strategies</item>
+///   <item>Health status filtering</item>
+///   <item>Self-registration lifecycle management</item>
+///   <item>Statistics aggregation</item>
+/// </list>
+/// </para>
+/// <para>
+/// The actual backend operations (register, resolve, deregister) are delegated to the configured
+/// <see cref="IServiceDiscoveryProvider"/> which is selected by <see cref="IServiceDiscoveryProviderSelector"/>.
+/// </para>
+/// </remarks>
 public sealed class ServiceDiscoveryService : IServiceDiscoveryService
 {
     private const string CacheKeyPrefix = "discovery:";
 
-    private readonly DnsServiceDiscoveryProvider _dnsProvider;
-    private readonly RegistryServiceDiscoveryProvider _registryProvider;
+    private readonly IServiceDiscoveryProvider _provider;
+    private readonly IServiceDiscoveryProviderSelector _providerSelector;
     private readonly ICacheService _cache;
     private readonly ServiceDiscoveryOptions _options;
     private readonly ILogger<ServiceDiscoveryService> _logger;
@@ -38,27 +55,36 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     private Guid _selfInstanceId = Guid.NewGuid();
 
     /// <summary>
-    /// Initialises a new <see cref="ServiceDiscoveryService"/> with both resolution providers.
+    /// Initialises a new <see cref="ServiceDiscoveryService"/> with provider selection and caching.
     /// </summary>
+    /// <param name="providerSelector">Strategy for selecting the appropriate provider based on configuration.</param>
+    /// <param name="cache">Cache service for storing resolved instances.</param>
+    /// <param name="options">Service discovery configuration options.</param>
+    /// <param name="logger">Logger instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown if any required parameter is null.</exception>
     public ServiceDiscoveryService(
-        DnsServiceDiscoveryProvider dnsProvider,
-        RegistryServiceDiscoveryProvider registryProvider,
+        IServiceDiscoveryProviderSelector providerSelector,
         ICacheService cache,
         IOptions<ServiceDiscoveryOptions> options,
         ILogger<ServiceDiscoveryService> logger)
     {
-        _dnsProvider = dnsProvider;
-        _registryProvider = registryProvider;
-        _cache = cache;
-        _options = options.Value;
-        _logger = logger;
+        _providerSelector = providerSelector ?? throw new ArgumentNullException(nameof(providerSelector));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        // Get the active provider for this instance
+        _provider = _providerSelector.GetProvider();
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceName"/> is null.</exception>
     public async Task<Result<IReadOnlyList<ServiceDiscoveryRecord>>> DiscoverAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(serviceName);
+
         if (!_options.Enabled)
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(Array.Empty<ServiceDiscoveryRecord>());
 
@@ -70,8 +96,10 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(cached);
         }
 
-        var result = await ResolveFromProvidersAsync(serviceName, cancellationToken);
+        // Delegate resolution to the selected provider
+        var result = await _provider.ResolveAsync(serviceName, cancellationToken);
 
+        // Cache successful results with healthy instances
         if (result.IsSuccess && result.Value is { Count: > 0 } instances)
         {
             await _cache.SetAsync(cacheKey, instances, _options.CacheTtl);
@@ -85,10 +113,13 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceName"/> is null.</exception>
     public async Task<Result<ServiceDiscoveryRecord>> SelectEndpointAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(serviceName);
+
         var discovery = await DiscoverAsync(serviceName, cancellationToken);
         if (!discovery.IsSuccess)
             return Result<ServiceDiscoveryRecord>.Failure(discovery.ErrorMessage!, discovery.ErrorCode);
@@ -97,10 +128,12 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         if (alive.Count == 0)
             return Result<ServiceDiscoveryRecord>.Failure($"No healthy instances found for service '{serviceName}'.", "NO_HEALTHY_INSTANCES");
 
+        // Apply load balancing strategy to select a single endpoint
         return Result<ServiceDiscoveryRecord>.Success(SelectByStrategy(alive, serviceName));
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
     public async Task<Result> RegisterSelfAsync(CancellationToken cancellationToken = default)
     {
         var self = _options.SelfRegistration;
@@ -108,8 +141,8 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
             return Result.Success();
 
         var name = self.ServiceName
-            ?? Assembly.GetEntryAssembly()?.GetName().Name
-            ?? "dotnet-service";
+        ?? Assembly.GetEntryAssembly()?.GetName().Name
+        ?? "dotnet-service";
 
         var host = self.AdvertiseHost ?? System.Net.Dns.GetHostName();
 
@@ -129,43 +162,49 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         if (!string.IsNullOrEmpty(self.Version))
             record.Metadata["version"] = self.Version;
 
-        var provider = PickWritableProvider();
-        var result = await provider.RegisterAsync(record, cancellationToken);
+        // Use the active provider for self-registration
+        var result = await _provider.RegisterAsync(record, cancellationToken);
 
         if (result.IsSuccess)
-            _logger.LogInformation("Self-registered as {ServiceName} ({InstanceId}) via {Provider}", name, _selfInstanceId, provider.ProviderName);
+            _logger.LogInformation("Self-registered as {ServiceName} ({InstanceId}) via {Provider}", name, _selfInstanceId, _provider.ProviderName);
         else
-            _logger.LogWarning("Self-registration failed via {Provider}: {Error}", provider.ProviderName, result.ErrorMessage);
+            _logger.LogWarning("Self-registration failed via {Provider}: {Error}", _provider.ProviderName, result.ErrorMessage);
 
         return result;
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
     public async Task<Result> DeregisterSelfAsync(CancellationToken cancellationToken = default)
     {
         if (!_options.SelfRegistration.Enabled)
             return Result.Success();
 
-        var provider = PickWritableProvider();
-        var result = await provider.DeregisterAsync(_selfInstanceId, cancellationToken);
+        // Use the active provider for self-deregistration
+        var result = await _provider.DeregisterAsync(_selfInstanceId, cancellationToken);
 
         if (result.IsSuccess)
-            _logger.LogInformation("Self-deregistered instance {InstanceId} via {Provider}", _selfInstanceId, provider.ProviderName);
+            _logger.LogInformation("Self-deregistered instance {InstanceId} via {Provider}", _selfInstanceId, _provider.ProviderName);
 
         return result;
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
     public async Task<Result<IReadOnlyList<string>>> GetRegisteredServicesAsync(
         CancellationToken cancellationToken = default)
     {
-        if (_options.Mode is DiscoveryMode.Dns)
-            return Result<IReadOnlyList<string>>.Failure("Service catalog enumeration requires Registry or Hybrid mode.", "DNS_READ_ONLY");
+        // Only registry-based providers support service catalog enumeration
+        if (_provider is RegistryServiceDiscoveryProvider registryProvider)
+        {
+            return await registryProvider.GetAllServiceNamesAsync(cancellationToken);
+        }
 
-        return await _registryProvider.GetAllServiceNamesAsync(cancellationToken);
+        return Result<IReadOnlyList<string>>.Failure("Service catalog enumeration requires a registry-based provider.", "PROVIDER_UNSUPPORTED");
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
     public async Task RefreshAsync(string? serviceName = null, CancellationToken cancellationToken = default)
     {
         if (serviceName is not null)
@@ -182,6 +221,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
     public async Task UpdateHeartbeatAsync(CancellationToken cancellationToken = default)
     {
         if (!_options.SelfRegistration.Enabled)
@@ -190,13 +230,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
             return;
         }
 
-        var provider = PickWritableProvider();
-
-        // Create a heartbeat record for the current instance
+        // Use the active provider to send heartbeat
         var heartbeatRecord = new ServiceDiscoveryRecord
         {
             InstanceId = _selfInstanceId,
-            ServiceName = _options.SelfRegistration.ServiceName ?? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "dotnet-service",
+            ServiceName = _options.SelfRegistration.ServiceName ?? Assembly.GetEntryAssembly()?.GetName().Name ?? "dotnet-service",
             Host = _options.SelfRegistration.AdvertiseHost ?? System.Net.Dns.GetHostName(),
             Port = _options.SelfRegistration.AdvertisePort,
             Scheme = _options.SelfRegistration.AdvertiseScheme,
@@ -213,25 +251,28 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         if (!string.IsNullOrEmpty(_options.SelfRegistration.Version))
             heartbeatRecord.Metadata["version"] = _options.SelfRegistration.Version;
 
-        // Send heartbeat to registry
-        var result = await provider.RegisterAsync(heartbeatRecord, cancellationToken);
+        // Send heartbeat to the active provider
+        var result = await _provider.RegisterAsync(heartbeatRecord, cancellationToken);
 
         if (result.IsSuccess)
         {
-            _logger.LogDebug("Heartbeat updated for instance {InstanceId} via {Provider}", _selfInstanceId, provider.ProviderName);
+            _logger.LogDebug("Heartbeat updated for instance {InstanceId} via {Provider}", _selfInstanceId, _provider.ProviderName);
         }
         else
         {
             _logger.LogWarning("Failed to update heartbeat for instance {InstanceId} via {Provider}: {Error}",
-                _selfInstanceId, provider.ProviderName, result.ErrorMessage);
+                _selfInstanceId, _provider.ProviderName, result.ErrorMessage);
         }
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceName"/> is null.</exception>
     public async Task<Result<ServiceDiscoveryStats>> GetServiceStatsAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(serviceName);
+
         var discovery = await DiscoverAsync(serviceName, cancellationToken);
         var records = discovery.IsSuccess ? discovery.Value! : Array.Empty<ServiceDiscoveryRecord>();
 
@@ -252,42 +293,14 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         return Result<ServiceDiscoveryStats>.Success(stats);
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    private async Task<Result<IReadOnlyList<ServiceDiscoveryRecord>>> ResolveFromProvidersAsync(
-        string serviceName,
-        CancellationToken cancellationToken)
-    {
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(_options.ResolutionTimeout);
-
-        return _options.Mode switch
-        {
-            DiscoveryMode.Registry => await _registryProvider.ResolveAsync(serviceName, cts.Token),
-            DiscoveryMode.Dns => await _dnsProvider.ResolveAsync(serviceName, cts.Token),
-            DiscoveryMode.Hybrid => await ResolveHybridAsync(serviceName, cts.Token),
-            _ => Result<IReadOnlyList<ServiceDiscoveryRecord>>.Failure("Unknown discovery mode.", "INVALID_MODE")
-        };
-    }
-
-    private async Task<Result<IReadOnlyList<ServiceDiscoveryRecord>>> ResolveHybridAsync(
-        string serviceName,
-        CancellationToken cancellationToken)
-    {
-        var registryResult = await _registryProvider.ResolveAsync(serviceName, cancellationToken);
-        if (registryResult.IsSuccess && registryResult.Value!.Count > 0)
-            return registryResult;
-
-        _logger.LogDebug("Registry returned no instances for {ServiceName}; falling back to DNS", serviceName);
-        return await _dnsProvider.ResolveAsync(serviceName, cancellationToken);
-    }
+    // ── Load Balancing Strategy Implementation ────────────────────────────────────
 
     private ServiceDiscoveryRecord SelectByStrategy(List<ServiceDiscoveryRecord> instances, string serviceName) =>
         _options.LoadBalancing switch
         {
             LoadBalancingStrategy.Random => instances[Random.Shared.Next(instances.Count)],
             LoadBalancingStrategy.Weighted => SelectWeighted(instances),
-            LoadBalancingStrategy.Priority => instances.MinBy(r => r.Priority)!,
+            LoadBalancingStrategy.Priority => instances.MinBy(r => r.Priority)!, // Safe because instances is non-empty
             _ => SelectRoundRobin(instances, serviceName)
         };
 
@@ -309,89 +322,8 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
             if (roll < cumulative) return instance;
         }
 
-        return instances[^1];
+        return instances[^1]; // Fallback to last instance
     }
-
-    private IServiceDiscoveryProvider PickWritableProvider() =>
-        _options.Mode is DiscoveryMode.Dns ? _dnsProvider : _registryProvider;
 
     private sealed record ResolutionMeta(DateTime LastResolvedAt, DateTime CacheExpiresAt, DiscoverySource Source);
-}
-
-/// <summary>
-/// Extension methods for registering the service discovery infrastructure in
-/// the ASP.NET Core dependency injection container.
-/// </summary>
-public static class ServiceDiscoveryExtensions
-{
-    /// <summary>
-    /// Registers all service discovery components — both DNS and registry providers,
-    /// the orchestrating <see cref="IServiceDiscoveryService"/>, and a named
-    /// <see cref="System.Net.Http.HttpClient"/> for registry communication.
-    /// </summary>
-    /// <param name="services">The DI service collection.</param>
-    /// <param name="configuration">Application configuration used to bind <see cref="ServiceDiscoveryOptions"/>.</param>
-    /// <returns>The same <see cref="IServiceCollection"/> for fluent chaining.</returns>
-    public static IServiceCollection AddServiceDiscovery(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        services.Configure<ServiceDiscoveryOptions>(
-            configuration.GetSection(ServiceDiscoveryOptions.SectionName));
-
-        services.AddHttpClient(RegistryServiceDiscoveryProvider.HttpClientName, (sp, client) =>
-        {
-            var opts = sp.GetRequiredService<IOptions<ServiceDiscoveryOptions>>().Value;
-            client.BaseAddress = new Uri(opts.Registry.AgentEndpoint);
-            client.Timeout = opts.ResolutionTimeout + TimeSpan.FromSeconds(2);
-            client.DefaultRequestHeaders.Add(
-                "User-Agent",
-                $"dotnet-service-scaffold/{typeof(ServiceDiscoveryExtensions).Assembly.GetName().Version}");
-
-            if (!string.IsNullOrEmpty(opts.Registry.AclToken))
-                client.DefaultRequestHeaders.Add("X-Consul-Token", opts.Registry.AclToken);
-        });
-
-        services.AddSingleton<DnsServiceDiscoveryProvider>();
-        services.AddSingleton<RegistryServiceDiscoveryProvider>();
-        services.AddSingleton<IServiceDiscoveryService, ServiceDiscoveryService>();
-    services.AddSingleton<IHostedService, ServiceHeartbeatBackgroundService>();
-    services.AddSingleton<IHostedService, ServiceStaleEvictionBackgroundService>();
-
-        return services;
-    }
-
-    /// <summary>
-    /// Wires up application-lifetime hooks that self-register this service instance with the
-    /// discovery backend on startup and deregister it on graceful shutdown.
-    /// Only active when <see cref="SelfRegistrationOptions.Enabled"/> is <see langword="true"/>.
-    /// </summary>
-    /// <param name="app">The built web application.</param>
-    /// <returns>The same <see cref="WebApplication"/> for fluent chaining.</returns>
-    public static WebApplication UseServiceDiscovery(this WebApplication app)
-    {
-        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-        var discovery = app.Services.GetRequiredService<IServiceDiscoveryService>();
-        var logger = app.Services.GetRequiredService<ILogger<ServiceDiscoveryService>>();
-
-        lifetime.ApplicationStarted.Register(() =>
-        {
-            _ = Task.Run(async () =>
-            {
-                var result = await discovery.RegisterSelfAsync();
-                if (!result.IsSuccess)
-                    logger.LogWarning("Service self-registration failed: {Error}", result.ErrorMessage);
-            });
-        });
-
-        lifetime.ApplicationStopping.Register(() =>
-        {
-            _ = Task.Run(async () =>
-            {
-                await discovery.DeregisterSelfAsync();
-            });
-        });
-
-        return app;
-    }
 }
