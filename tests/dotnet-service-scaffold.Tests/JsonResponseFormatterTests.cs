@@ -72,9 +72,9 @@ public sealed class JsonResponseFormatterTests
     }
 
     [Fact]
-    public async Task FormatAsync_NonSerializableObject_ThrowsInvalidOperationException()
+    public async Task FormatAsync_NonSerializableObject_ThrowsNotSupportedException()
     {
         var payload = new { Action = (Action)(() => { }) };
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await _formatter.FormatAsync(payload));
+        await Assert.ThrowsAsync<NotSupportedException>(async () => await _formatter.FormatAsync(payload));
     }
 }
