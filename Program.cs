@@ -137,6 +137,7 @@ if (structuredLoggingOptions.EnableCorrelationId)
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseExceptionHandler();
 app.MapControllers();
 
 // Health check endpoint with detailed JSON response

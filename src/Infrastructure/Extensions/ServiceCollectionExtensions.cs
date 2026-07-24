@@ -11,6 +11,7 @@ using DotnetServiceScaffold.Infrastructure.Formatting;
 using DotnetServiceScaffold.Infrastructure.Http;
 using DotnetServiceScaffold.Infrastructure.Integration;
 using DotnetServiceScaffold.Infrastructure.Logging;
+using DotnetServiceScaffold.Infrastructure.Middleware;
 using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 using DotnetServiceScaffold.Presentation.Middleware;
 using Microsoft.AspNetCore.Authentication;
@@ -96,6 +97,7 @@ public static class ServiceCollectionExtensions
                 options.CircuitBreakerFailureThreshold,
                 TimeSpan.FromSeconds(options.CircuitBreakerBreakDurationSeconds));
         });
+        services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddTransient<ResilientHttpMessageHandler>();
             services.AddTransient<CorrelationIdDelegatingHandler>();
 
