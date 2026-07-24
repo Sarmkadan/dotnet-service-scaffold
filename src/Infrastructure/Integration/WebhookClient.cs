@@ -4,15 +4,31 @@
 // CTO & Software Architect
 // =====================================================================
 
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Infrastructure.Data;
+using DotnetServiceScaffold.Infrastructure.Metrics;
 using DotnetServiceScaffold.Shared.Utilities;
 using Serilog;
 
 namespace DotnetServiceScaffold.Infrastructure.Integration;
+
+/// <summary>
+/// Metadata captured for a single webhook delivery attempt, used both for the
+/// per-request metrics surfaced through <see cref="IMetricsService"/> and for
+/// the attempt history persisted on dead-lettered deliveries.
+/// </summary>
+/// <param name="AttemptNumber">1-based index of the attempt.</param>
+/// <param name="StatusCode">HTTP status code returned, or null if no response was received.</param>
+/// <param name="LatencyMs">Round-trip latency of the attempt, in milliseconds.</param>
+/// <param name="ErrorMessage">Error message captured for the attempt, if any.</param>
+/// <param name="AttemptedAt">Timestamp the attempt was made.</param>
+public sealed record WebhookAttemptRecord(int AttemptNumber, int? StatusCode, long LatencyMs, string? ErrorMessage, DateTime AttemptedAt);
 
 /// <summary>
 /// Client for sending webhook payloads to external endpoints with security features.
@@ -25,15 +41,32 @@ public class WebhookClient : IWebhookClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<WebhookClient> _logger;
+    private readonly ServiceScaffoldDbContext _dbContext;
+    private readonly IMetricsService _metricsService;
     private const int MaxRetries = 3;
     private const int InitialRetryDelayMs = 1000;
     private const string SignatureHeaderName = "X-Signature";
     private const string SignatureAlgorithm = "HMAC-SHA256";
 
-    public WebhookClient(HttpClient httpClient, ILogger<WebhookClient> logger)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebhookClient"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client used to deliver webhook requests.</param>
+    /// <param name="logger">Logger used for delivery diagnostics.</param>
+    /// <param name="dbContext">Database context used to persist dead-lettered deliveries.</param>
+    /// <param name="metricsService">Metrics sink used to surface delivery-attempt metadata.</param>
+    /// <exception cref="ArgumentNullException">Thrown if any dependency is null.</exception>
+    public WebhookClient(HttpClient httpClient, ILogger<WebhookClient> logger, ServiceScaffoldDbContext dbContext, IMetricsService metricsService)
     {
+        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(metricsService);
+
         _httpClient = httpClient;
         _logger = logger;
+        _dbContext = dbContext;
+        _metricsService = metricsService;
     }
 
     /// <summary>
@@ -59,11 +92,19 @@ public class WebhookClient : IWebhookClient
             "Sending webhook {WebhookId} to {Url} for event type {EventType}",
             webhookId, HttpUtility.MaskSensitiveUrl(webhookUrl), eventType ?? "unknown");
 
+        var json = JsonSerializer.Serialize(payload);
+        var attempts = new List<WebhookAttemptRecord>(MaxRetries);
+        var metricTags = new Dictionary<string, string> { ["event_type"] = eventType ?? "unknown" };
+
         for (int attempt = 0; attempt < MaxRetries; attempt++)
         {
+            var stopwatch = Stopwatch.StartNew();
+            int? statusCode = null;
+            string? errorMessage = null;
+            var retryable = true;
+
             try
             {
-                var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 // Add webhook-specific headers
@@ -80,43 +121,66 @@ public class WebhookClient : IWebhookClient
 
                 // _httpClient already has timeout configured
                 var response = await _httpClient.PostAsync(webhookUrl, content, cancellationToken);
+                stopwatch.Stop();
+                statusCode = (int)response.StatusCode;
 
                 if (response.IsSuccessStatusCode)
                 {
+                    RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: true, metricTags);
                     _logger.LogInformation(
                         "Webhook {WebhookId} delivered successfully with status {StatusCode}",
                         webhookId, response.StatusCode);
                     return true;
                 }
 
-                if (!HttpUtility.IsRetryableStatusCode((int)response.StatusCode))
+                retryable = HttpUtility.IsRetryableStatusCode(statusCode.Value);
+                errorMessage = $"Non-success status code {statusCode}";
+
+                if (!retryable)
                 {
                     _logger.LogWarning(
                         "Webhook {WebhookId} failed with non-retryable status {StatusCode}",
                         webhookId, response.StatusCode);
-                    return false;
                 }
-
-                _logger.LogWarning(
-                    "Webhook {WebhookId} failed with status {StatusCode}, will retry (attempt {Attempt}/{MaxRetries})",
-                    webhookId, response.StatusCode, attempt + 1, MaxRetries);
+                else
+                {
+                    _logger.LogWarning(
+                        "Webhook {WebhookId} failed with status {StatusCode}, will retry (attempt {Attempt}/{MaxRetries})",
+                        webhookId, response.StatusCode, attempt + 1, MaxRetries);
+                }
             }
             catch (HttpRequestException ex)
             {
+                stopwatch.Stop();
+                errorMessage = ex.Message;
                 _logger.LogWarning(ex,
                     "Webhook {WebhookId} HTTP error on attempt {Attempt}/{MaxRetries}",
                     webhookId, attempt + 1, MaxRetries);
             }
             catch (OperationCanceledException)
             {
+                stopwatch.Stop();
+                attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, "cancelled", DateTime.UtcNow));
+                RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: false, metricTags);
                 _logger.LogWarning("Webhook {WebhookId} was cancelled", webhookId);
                 return false;
             }
             catch (Exception ex)
             {
+                stopwatch.Stop();
+                errorMessage = ex.Message;
                 _logger.LogError(ex,
                     "Webhook {WebhookId} unexpected error on attempt {Attempt}/{MaxRetries}",
                     webhookId, attempt + 1, MaxRetries);
+            }
+
+            attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, errorMessage, DateTime.UtcNow));
+            RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: false, metricTags);
+
+            if (!retryable)
+            {
+                await PersistDeadLetterAsync(webhookId, webhookUrl, json, eventType, attempts, cancellationToken);
+                return false;
             }
 
             // Wait before retry with exponential backoff
@@ -128,7 +192,87 @@ public class WebhookClient : IWebhookClient
         }
 
         _logger.LogError("Webhook {WebhookId} failed after {MaxRetries} attempts", webhookId, MaxRetries);
+        await PersistDeadLetterAsync(webhookId, webhookUrl, json, eventType, attempts, cancellationToken);
         return false;
+    }
+
+    /// <summary>
+    /// Replays a previously dead-lettered webhook delivery. On success the dead letter
+    /// is marked resolved; on failure its attempt history and last-failure metadata are updated.
+    /// </summary>
+    /// <param name="deadLetterId">Identifier of the dead-lettered delivery to replay.</param>
+    /// <param name="webhookSecret">Optional secret used to re-sign the payload for this replay.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the replayed delivery succeeded, false otherwise.</returns>
+    /// <exception cref="ArgumentException">Thrown if no dead letter with the given identifier exists.</exception>
+    public async Task<bool> ReplayDeadLetterAsync(Guid deadLetterId, string? webhookSecret = null, CancellationToken cancellationToken = default)
+    {
+        var deadLetter = await _dbContext.WebhookDeadLetters.FindAsync(new object?[] { deadLetterId }, cancellationToken)
+            ?? throw new ArgumentException($"No dead-lettered webhook found with id {deadLetterId}", nameof(deadLetterId));
+
+        var payload = JsonSerializer.Deserialize<JsonElement>(deadLetter.PayloadJson);
+        var delivered = await SendWebhookAsync(deadLetter.WebhookUrl, payload, deadLetter.EventType, webhookSecret, cancellationToken);
+
+        if (delivered)
+        {
+            deadLetter.MarkResolved();
+        }
+        else
+        {
+            deadLetter.LastAttemptAt = DateTime.UtcNow;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return delivered;
+    }
+
+    /// <summary>
+    /// Records latency, status code, and outcome metrics for a single delivery attempt.
+    /// </summary>
+    private void RecordAttemptMetrics(int attemptNumber, int? statusCode, long latencyMs, bool success, IDictionary<string, string> tags)
+    {
+        var attemptTags = new Dictionary<string, string>(tags)
+        {
+            ["attempt"] = attemptNumber.ToString(),
+            ["outcome"] = success ? "success" : "failure",
+            ["status_code"] = statusCode?.ToString() ?? "none",
+        };
+
+        _metricsService.RecordTiming("webhook.delivery.latency_ms", latencyMs, attemptTags);
+        _metricsService.IncrementCounter("webhook.delivery.attempts", tags: attemptTags);
+    }
+
+    /// <summary>
+    /// Persists a permanently-failed delivery to the dead-letter table for operator inspection and replay.
+    /// </summary>
+    private async Task PersistDeadLetterAsync(string webhookId, string webhookUrl, string payloadJson, string? eventType, List<WebhookAttemptRecord> attempts, CancellationToken cancellationToken)
+    {
+        var lastAttempt = attempts[^1];
+        var deadLetter = new WebhookDeadLetter
+        {
+            Id = Guid.NewGuid(),
+            WebhookId = webhookId,
+            WebhookUrl = webhookUrl,
+            PayloadJson = payloadJson,
+            EventType = eventType,
+            AttemptCount = attempts.Count,
+            LastStatusCode = lastAttempt.StatusCode,
+            LastLatencyMs = lastAttempt.LatencyMs,
+            LastErrorMessage = lastAttempt.ErrorMessage,
+            AttemptHistoryJson = JsonSerializer.Serialize(attempts),
+        };
+
+        _dbContext.WebhookDeadLetters.Add(deadLetter);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _metricsService.IncrementCounter("webhook.delivery.dead_lettered");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to persist dead letter for webhook {WebhookId}", webhookId);
+        }
     }
 
     /// <summary>
@@ -329,4 +473,13 @@ public interface IWebhookClient
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if delivery was successful, false otherwise.</returns>
     Task<bool> SendWebhookAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Replays a previously dead-lettered webhook delivery.
+    /// </summary>
+    /// <param name="deadLetterId">Identifier of the dead-lettered delivery to replay.</param>
+    /// <param name="webhookSecret">Optional secret used to re-sign the payload for this replay.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the replayed delivery succeeded, false otherwise.</returns>
+    Task<bool> ReplayDeadLetterAsync(Guid deadLetterId, string? webhookSecret = null, CancellationToken cancellationToken = default);
 }
