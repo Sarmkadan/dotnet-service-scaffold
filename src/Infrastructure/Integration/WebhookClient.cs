@@ -23,16 +23,16 @@ namespace DotnetServiceScaffold.Infrastructure.Integration;
 /// </summary>
 public class WebhookClient : IWebhookClient
 {
-    private readonly ICustomHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<WebhookClient> _logger;
     private const int MaxRetries = 3;
     private const int InitialRetryDelayMs = 1000;
     private const string SignatureHeaderName = "X-Signature";
     private const string SignatureAlgorithm = "HMAC-SHA256";
 
-    public WebhookClient(ICustomHttpClientFactory httpClientFactory, ILogger<WebhookClient> logger)
+    public WebhookClient(HttpClient httpClient, ILogger<WebhookClient> logger)
     {
-        _httpClientFactory = httpClientFactory;
+        _httpClient = httpClient;
         _logger = logger;
     }
 
@@ -63,9 +63,6 @@ public class WebhookClient : IWebhookClient
         {
             try
             {
-                var client = _httpClientFactory.CreateClient("webhook");
-                client.Timeout = TimeSpan.FromSeconds(10);
-
                 var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -81,7 +78,8 @@ public class WebhookClient : IWebhookClient
                     content.Headers.Add(SignatureHeaderName, $"{SignatureAlgorithm}={signature}");
                 }
 
-                var response = await client.PostAsync(webhookUrl, content, cancellationToken);
+                // _httpClient already has timeout configured
+                var response = await _httpClient.PostAsync(webhookUrl, content, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {

@@ -16,12 +16,12 @@ namespace DotnetServiceScaffold.Infrastructure.Integration;
 /// </summary>
 public class ExternalApiClient : IExternalApiClient
 {
-    private readonly ICustomHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<ExternalApiClient> _logger;
 
-    public ExternalApiClient(ICustomHttpClientFactory httpClientFactory, ILogger<ExternalApiClient> logger)
+    public ExternalApiClient(HttpClient httpClient, ILogger<ExternalApiClient> logger)
     {
-        _httpClientFactory = httpClientFactory;
+        _httpClient = httpClient;
         _logger = logger;
     }
 
@@ -32,7 +32,6 @@ public class ExternalApiClient : IExternalApiClient
     {
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
-        var client = _httpClientFactory.CreateClient("external-api");
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         AddHeaders(request, headers);
@@ -41,7 +40,7 @@ public class ExternalApiClient : IExternalApiClient
         {
             _logger.LogDebug("GET request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await client.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
             return await HandleResponse<T>(response, url);
         }
         catch (Exception ex)
@@ -58,7 +57,6 @@ public class ExternalApiClient : IExternalApiClient
     {
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
-        var client = _httpClientFactory.CreateClient("external-api");
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
 
         var json = JsonSerializer.Serialize(payload);
@@ -70,7 +68,7 @@ public class ExternalApiClient : IExternalApiClient
         {
             _logger.LogDebug("POST request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await client.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
             return await HandleResponse<T>(response, url);
         }
         catch (Exception ex)
@@ -87,7 +85,6 @@ public class ExternalApiClient : IExternalApiClient
     {
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
-        var client = _httpClientFactory.CreateClient("external-api");
         using var request = new HttpRequestMessage(HttpMethod.Put, url);
 
         var json = JsonSerializer.Serialize(payload);
@@ -99,7 +96,7 @@ public class ExternalApiClient : IExternalApiClient
         {
             _logger.LogDebug("PUT request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await client.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
             return await HandleResponse<T>(response, url);
         }
         catch (Exception ex)
@@ -116,7 +113,6 @@ public class ExternalApiClient : IExternalApiClient
     {
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
-        var client = _httpClientFactory.CreateClient("external-api");
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
 
         AddHeaders(request, headers);
@@ -125,7 +121,7 @@ public class ExternalApiClient : IExternalApiClient
         {
             _logger.LogDebug("DELETE request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await client.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)

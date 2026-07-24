@@ -8,11 +8,13 @@ using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Infrastructure.Caching;
 using DotnetServiceScaffold.Infrastructure.DockerCompose;
 using DotnetServiceScaffold.Infrastructure.Formatting;
+using DotnetServiceScaffold.Infrastructure.Http;
 using DotnetServiceScaffold.Infrastructure.Integration;
 using DotnetServiceScaffold.Infrastructure.Logging;
 using DotnetServiceScaffold.Presentation.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace DotnetServiceScaffold.Infrastructure.Extensions;
 
@@ -75,13 +77,57 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddHttpClient<IExternalApiClient, ExternalApiClient>();
-        services.AddHttpClient<IWebhookClient, WebhookClient>();
+        services.AddOptions<HttpClientOptions>()
+            .BindConfiguration("HttpClient")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<HttpClientOptions>, HttpClientOptionsValidator>();
 
-        services.AddScoped<ICustomHttpClientFactory, HttpClientFactory>(provider =>
-            new HttpClientFactory(
-                provider.GetRequiredService<System.Net.Http.IHttpClientFactory>(),
-                provider.GetRequiredService<ILogger<HttpClientFactory>>()));
+        services.AddOptions<ResilienceOptions>()
+            .BindConfiguration("Resilience")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<ResilienceOptions>, ResilienceOptionsValidator>();
+        services.AddSingleton(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<ResilienceOptions>>().Value;
+            return new CircuitBreakerState(
+                options.CircuitBreakerFailureThreshold,
+                TimeSpan.FromSeconds(options.CircuitBreakerBreakDurationSeconds));
+        });
+        services.AddTransient<ResilientHttpMessageHandler>();
+
+        services.AddHttpClient("external-api", (provider, client) =>
+        {
+            var options = provider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            client.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
+        })
+        .AddHttpMessageHandler<ResilientHttpMessageHandler>()
+        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
+        services.AddHttpClient("webhook", (provider, client) =>
+        {
+            var options = provider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(10); // Specific timeout for webhooks
+            client.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
+        })
+        .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
+        services.AddHttpClient<IExternalApiClient, ExternalApiClient>(client =>
+        {
+            // Configure the typed client to use the "external-api" configuration
+            // Or just configure it here directly
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+        })
+        .AddHttpMessageHandler<ResilientHttpMessageHandler>();
+
+        services.AddHttpClient<IWebhookClient, WebhookClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+        });
 
         services.AddSingleton<IResponseFormatterFactory, ResponseFormatterFactory>();
 
