@@ -41,6 +41,8 @@ public class ServiceScaffoldDbContext : DbContext
 
 	public DbSet<ServiceConfiguration> ServiceConfigurations { get; set; } = null!;
 
+	public DbSet<WebhookDeadLetter> WebhookDeadLetters { get; set; } = null!;
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
@@ -134,6 +136,17 @@ public class ServiceScaffoldDbContext : DbContext
 			entity.Property(e => e.Key).IsRequired();
 			entity.Property(e => e.Value).IsRequired();
 			entity.HasIndex(e => new { e.Key, e.ServiceId }).IsUnique();
+		});
+
+		// WebhookDeadLetter configuration
+		modelBuilder.Entity<WebhookDeadLetter>(entity =>
+		{
+			entity.HasKey(e => e.Id);
+			entity.Property(e => e.WebhookUrl).IsRequired();
+			entity.Property(e => e.PayloadJson).IsRequired();
+			entity.Property(e => e.AttemptHistoryJson).IsRequired();
+			entity.HasIndex(e => new { e.IsResolved, e.CreatedAt })
+				.IsDescending(false, true);
 		});
 	}
 
