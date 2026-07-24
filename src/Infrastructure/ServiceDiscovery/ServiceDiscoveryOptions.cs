@@ -30,6 +30,23 @@ public sealed class ServiceDiscoveryOptions
     /// <summary>Gets or sets the background poll interval used when watching for instance changes.</summary>
     public TimeSpan RefreshInterval { get; set; } = TimeSpan.FromSeconds(15);
 
+        /// <summary>
+        /// Gets or sets the heartbeat TTL that determines when a service instance is considered stale.
+        /// Instances that haven't sent a heartbeat within this period are marked as stale.
+        /// </summary>
+        public TimeSpan HeartbeatStaleThreshold { get; set; } = TimeSpan.FromMinutes(3);
+
+        /// <summary>
+        /// Gets or sets the eviction TTL that determines when a stale service instance is removed.
+        /// Stale instances are evicted after this additional period of inactivity.
+        /// </summary>
+        public TimeSpan EvictionThreshold { get; set; } = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// Gets or sets the interval at which the stale eviction background service runs.
+        /// </summary>
+        public TimeSpan StaleEvictionInterval { get; set; } = TimeSpan.FromMinutes(1);
+
     /// <summary>Gets or sets the per-call timeout applied to individual resolution requests.</summary>
     public TimeSpan ResolutionTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
