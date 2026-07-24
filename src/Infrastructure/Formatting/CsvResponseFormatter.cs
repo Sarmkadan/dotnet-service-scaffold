@@ -2,7 +2,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using System.Reflection;
 using System.Text;
@@ -15,12 +15,14 @@ namespace DotnetServiceScaffold.Infrastructure.Formatting;
 /// </summary>
 public class CsvResponseFormatter : IResponseFormatter
 {
-    public string MediaType => "text/csv";
+    public string MediaType => "text/csv; charset=utf-8";
 
     /// <summary>
     /// Formats a collection of objects as CSV. Generates a header row from property names
     /// and creates a row for each object in the collection.
     /// </summary>
+    /// <param name="data">The data to format as CSV.</param>
+    /// <returns>A CSV-formatted string.</returns>
     public Task<string> FormatAsync(object? data)
     {
         if (data is null)
@@ -87,26 +89,55 @@ public class CsvResponseFormatter : IResponseFormatter
     /// <summary>
     /// Determines if this formatter can handle the given media type.
     /// </summary>
+    /// <param name="mediaType">The media type to check.</param>
+    /// <returns>True if this formatter can handle the media type; otherwise, false.</returns>
     public bool CanFormat(string mediaType)
     {
         return !string.IsNullOrEmpty(mediaType) &&
-               (mediaType.StartsWith("text/csv", StringComparison.OrdinalIgnoreCase) ||
-                mediaType.StartsWith("application/csv", StringComparison.OrdinalIgnoreCase));
+            (mediaType.StartsWith("text/csv", StringComparison.OrdinalIgnoreCase) ||
+             mediaType.StartsWith("application/csv", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
-    /// Escapes a field value for CSV format. Wraps fields containing special characters
-    /// in quotes and escapes existing quotes.
+    /// Escapes a field value for CSV format according to RFC 4180.
     /// </summary>
+    /// <remarks>
+    /// Properly escapes fields containing:
+    /// - The delimiter (comma)
+    /// - The quote character (double quote)
+    /// - Carriage return or line feed characters
+    /// Also neutralizes CSV formula injection by prefixing fields starting with =, +, -, or @
+    /// when they could be interpreted as formulas in Excel.
+    /// </remarks>
+    /// <param name="field">The field value to escape.</param>
+    /// <returns>The properly escaped field value.</returns>
     private string EscapeField(string field)
     {
         if (string.IsNullOrEmpty(field))
             return string.Empty;
 
-        // If field contains comma, quotes, or newlines, wrap in quotes and escape existing quotes
-        if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))
+        // Neutralize CSV formula injection attacks
+        // Excel interprets fields starting with =, +, -, @ as formulas
+        // Prefix with a space to prevent formula execution while preserving data
+        if (field.StartsWith('=') || field.StartsWith('+') || field.StartsWith('-') || field.StartsWith('@'))
         {
-            return "\"" + field.Replace("\"", "\"\"") + "\"";
+            field = " " + field;
+        }
+
+        // Check if field needs quoting according to RFC 4180:
+        // - Contains delimiter (comma)
+        // - Contains quote character (double quote)
+        // - Contains CRLF
+        // - Contains whitespace characters that could be problematic in Excel
+        bool needsQuoting = field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r') ||
+                           field.Contains('\t') || field.Contains('\f') || field.Contains('\v');
+
+        if (needsQuoting)
+        {
+            // Escape existing quotes by doubling them
+            var escaped = field.Replace("\"", "\"\"");
+            // Wrap in quotes
+            return "\"" + escaped + "\"";
         }
 
         return field;
