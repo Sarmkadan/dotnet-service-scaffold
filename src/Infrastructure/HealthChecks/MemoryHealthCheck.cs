@@ -1,7 +1,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -29,29 +29,59 @@ public class MemoryHealthCheck : IHealthCheck
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        var totalMemoryBytes = GC.GetTotalMemory(false);
-        var data = new Dictionary<string, object>
-        {
-            { "totalMemoryBytes", totalMemoryBytes },
-            { "totalMemoryMB", totalMemoryBytes / (1024 * 1024) }
-        };
+        // Memory operations are generally fast, but enforce timeout for consistency
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
 
-        if (totalMemoryBytes > _unhealthyThresholdBytes)
+        try
         {
-            return Task.FromResult(HealthCheckResult.Unhealthy(
-                $"Memory usage above unhealthy threshold: {totalMemoryBytes / (1024 * 1024)} MB",
-                data: data));
+            // Calculate memory usage with timeout
+            var totalMemoryBytes = GC.GetTotalMemory(false);
+
+            var data = new Dictionary<string, object>
+            {
+                { "totalMemoryBytes", totalMemoryBytes },
+                { "totalMemoryMB", totalMemoryBytes / (1024 * 1024) }
+            };
+
+            if (totalMemoryBytes > _unhealthyThresholdBytes)
+            {
+                return Task.FromResult(HealthCheckResult.Unhealthy(
+                    $"Memory usage above unhealthy threshold: {totalMemoryBytes / (1024 * 1024)} MB",
+                    data: data));
+            }
+
+            if (totalMemoryBytes > _degradedThresholdBytes)
+            {
+                return Task.FromResult(HealthCheckResult.Degraded(
+                    $"Memory usage above degraded threshold: {totalMemoryBytes / (1024 * 1024)} MB",
+                    data: data));
+            }
+
+            return Task.FromResult(HealthCheckResult.Healthy(
+                $"Memory usage is within limits: {totalMemoryBytes / (1024 * 1024)} MB",
+                data));
         }
-
-        if (totalMemoryBytes > _degradedThresholdBytes)
+        catch (OperationCanceledException)
         {
+            var data = new Dictionary<string, object>
+            {
+                { "timeout", true },
+                { "thresholdSeconds", 2 }
+            };
             return Task.FromResult(HealthCheckResult.Degraded(
-                $"Memory usage above degraded threshold: {totalMemoryBytes / (1024 * 1024)} MB",
+                "Timeout while checking memory usage.",
                 data: data));
         }
-
-        return Task.FromResult(HealthCheckResult.Healthy(
-            $"Memory usage is within limits: {totalMemoryBytes / (1024 * 1024)} MB",
-            data: data));
+        catch (Exception ex)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "error", ex.Message }
+            };
+            return Task.FromResult(HealthCheckResult.Unhealthy(
+                "Error while checking memory usage.",
+                ex, data));
+        }
     }
 }

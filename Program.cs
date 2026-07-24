@@ -110,8 +110,8 @@ builder.Services.AddHealthChecks()
         "sqlite-file",
         _ => new SqliteHealthCheck(sqliteDbPath),
         failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
-        tags: ["db", "sqlite"]))
-    .AddCheck<MemoryHealthCheck>("memory", tags: ["system"]);
+        tags: ["db", "sqlite", "live"]))
+    .AddCheck<MemoryHealthCheck>("memory", tags: ["system", "live"]);
 
 var app = builder.Build();
 

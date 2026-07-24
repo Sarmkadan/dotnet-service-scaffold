@@ -2,9 +2,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Diagnostics;
 
 namespace DotnetServiceScaffold.Infrastructure.HealthChecks;
 
@@ -23,14 +24,19 @@ public class SqliteHealthCheck : IHealthCheck
     /// </param>
     public SqliteHealthCheck(string databasePath, long degradedDiskSpaceThresholdBytes = 512 * 1024 * 1024)
     {
+        ArgumentException.ThrowIfNullOrEmpty(databasePath);
         _databasePath = databasePath;
         _degradedDiskSpaceThresholdBytes = degradedDiskSpaceThresholdBytes;
     }
 
-    public Task<HealthCheckResult> CheckHealthAsync(
+    public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
+        // Enforce timeout to prevent hung SQLite operations from stalling health checks
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
+
         var data = new Dictionary<string, object>();
 
         // Resolve the full path so diagnostics show an unambiguous location.
@@ -48,9 +54,9 @@ public class SqliteHealthCheck : IHealthCheck
 
             if (availableBytes < _degradedDiskSpaceThresholdBytes)
             {
-                return Task.FromResult(HealthCheckResult.Degraded(
+                return HealthCheckResult.Degraded(
                     $"Low disk space: {availableBytes / (1024 * 1024)} MB available on {driveInfo.Name}",
-                    data: data));
+                    data: data);
             }
         }
         catch (Exception ex)
@@ -66,18 +72,24 @@ public class SqliteHealthCheck : IHealthCheck
             {
                 Directory.CreateDirectory(directory);
                 var probe = Path.Combine(directory, $".write-probe-{Guid.NewGuid():N}");
-                File.WriteAllText(probe, string.Empty);
+                await File.WriteAllTextAsync(probe, string.Empty, timeoutCts.Token);
                 File.Delete(probe);
                 data["fileExists"] = false;
-                return Task.FromResult(HealthCheckResult.Healthy(
+                return HealthCheckResult.Healthy(
                     "SQLite database file will be created on first write; directory is writable.",
-                    data));
+                    data);
+            }
+            catch (OperationCanceledException)
+            {
+                return HealthCheckResult.Degraded(
+                    "Timeout while checking SQLite database directory writability.",
+                    data: data);
             }
             catch (Exception ex)
             {
-                return Task.FromResult(HealthCheckResult.Unhealthy(
+                return HealthCheckResult.Unhealthy(
                     $"SQLite database directory is not writable: {ex.Message}",
-                    ex, data));
+                    ex, data);
             }
         }
 
@@ -86,27 +98,39 @@ public class SqliteHealthCheck : IHealthCheck
         // Verify the file is readable.
         try
         {
-            using var fs = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 4096, useAsync: true);
+        }
+        catch (OperationCanceledException)
+        {
+            return HealthCheckResult.Degraded(
+                "Timeout while checking SQLite database file readability.",
+                data: data);
         }
         catch (Exception ex)
         {
-            return Task.FromResult(HealthCheckResult.Unhealthy(
+            return HealthCheckResult.Unhealthy(
                 $"SQLite database file is not readable: {ex.Message}",
-                ex, data));
+                ex, data);
         }
 
         // Verify the file is writable.
         try
         {
-            using var fs = File.Open(fullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, bufferSize: 4096, useAsync: true);
+        }
+        catch (OperationCanceledException)
+        {
+            return HealthCheckResult.Degraded(
+                "Timeout while checking SQLite database file writability.",
+                data: data);
         }
         catch (Exception ex)
         {
-            return Task.FromResult(HealthCheckResult.Degraded(
+            return HealthCheckResult.Degraded(
                 $"SQLite database file is read-only: {ex.Message}",
-                ex, data));
+                ex, data);
         }
 
-        return Task.FromResult(HealthCheckResult.Healthy("SQLite database file is accessible and writable.", data));
+        return HealthCheckResult.Healthy("SQLite database file is accessible and writable.", data);
     }
 }
