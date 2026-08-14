@@ -4,6 +4,9 @@
 // CTO & Software Architect
 // =====================================================================
 
+using System;
+using System.Collections;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -15,25 +18,27 @@ namespace DotnetServiceScaffold.Infrastructure.Formatting;
 /// </summary>
 public class CsvResponseFormatter : IResponseFormatter
 {
+    /// <inheritdoc />
     public string MediaType => "text/csv; charset=utf-8";
 
     /// <summary>
     /// Formats a collection of objects as CSV. Generates a header row from property names
     /// and creates a row for each object in the collection.
     /// </summary>
-    /// <param name="data">The data to format as CSV.</param>
+    /// <param name="data">The data to format as CSV. Must not be <c>null</c>.</param>
     /// <returns>A CSV-formatted string.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="data"/> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the formatter fails to serialize the supplied data.</exception>
     public Task<string> FormatAsync(object? data)
     {
-        if (data is null)
-            return Task.FromResult(string.Empty);
+        ArgumentNullException.ThrowIfNull(data);
 
         try
         {
             var sb = new StringBuilder();
 
-            // Handle IEnumerable collections
-            if (data is System.Collections.IEnumerable enumerable && !(data is string))
+            // Handle IEnumerable collections (but not a plain string)
+            if (data is IEnumerable enumerable && !(data is string))
             {
                 var items = enumerable.Cast<object>().ToList();
 
@@ -89,14 +94,12 @@ public class CsvResponseFormatter : IResponseFormatter
     /// <summary>
     /// Determines if this formatter can handle the given media type.
     /// </summary>
-    /// <param name="mediaType">The media type to check.</param>
+    /// <param name="mediaType">The media type to check. Must not be <c>null</c>.</param>
     /// <returns>True if this formatter can handle the media type; otherwise, false.</returns>
-    public bool CanFormat(string mediaType)
-    {
-        return !string.IsNullOrEmpty(mediaType) &&
-            (mediaType.StartsWith("text/csv", StringComparison.OrdinalIgnoreCase) ||
-             mediaType.StartsWith("application/csv", StringComparison.OrdinalIgnoreCase));
-    }
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mediaType"/> is <c>null</c>.</exception>
+    public bool CanFormat(string mediaType) =>
+        (mediaType.StartsWith("text/csv", StringComparison.OrdinalIgnoreCase) ||
+         mediaType.StartsWith("application/csv", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// Escapes a field value for CSV format according to RFC 4180.
@@ -124,20 +127,21 @@ public class CsvResponseFormatter : IResponseFormatter
             field = " " + field;
         }
 
-        // Check if field needs quoting according to RFC 4180:
-        // - Contains delimiter (comma)
-        // - Contains quote character (double quote)
-        // - Contains CRLF
-        // - Contains whitespace characters that could be problematic in Excel
-        bool needsQuoting = field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r') ||
-                           field.Contains('\t') || field.Contains('\f') || field.Contains('\v');
+        // Determine if quoting is required per RFC 4180
+        bool needsQuoting = field.Contains(',') ||
+                            field.Contains('"') ||
+                            field.Contains('\n') ||
+                            field.Contains('\r') ||
+                            field.Contains('\t') ||
+                            field.Contains('\f') ||
+                            field.Contains('\v');
 
         if (needsQuoting)
         {
             // Escape existing quotes by doubling them
             var escaped = field.Replace("\"", "\"\"");
             // Wrap in quotes
-            return "\"" + escaped + "\"";
+            return $"\"{escaped}\"";
         }
 
         return field;
