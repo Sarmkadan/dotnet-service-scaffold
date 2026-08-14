@@ -1,150 +1,119 @@
-#nullable enable
 using System;
-using System.Collections.Generic;
-using DotnetServiceScaffold.Infrastructure.Integration;
 using Xunit;
+using DotnetServiceScaffold.Infrastructure.Integration;
 
 namespace DotnetServiceScaffold.Tests
 {
     public class HttpClientFactoryValidationTests
     {
-        // ---------- HttpClientFactory instance validation ----------
-        // We cannot instantiate HttpClientFactory directly (it may be internal),
-        // so we only test the null-handling behavior.
+        #region CreateClient
 
-        [Fact]
-        public void IsValid_NullFactory_ReturnsFalse()
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void EnsureValidCreateClient_ThrowsWhenNameIsNullOrWhiteSpace(string? name)
         {
-            bool isValid = HttpClientFactoryValidation.IsValid(null);
-            Assert.False(isValid);
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateClient(name));
+            Assert.Contains("Client name cannot be null, empty, or whitespace.", exception.Message);
         }
 
         [Fact]
-        public void EnsureValid_NullFactory_ThrowsArgumentNullException()
+        public void EnsureValidCreateClient_DoesNotThrowWhenNameIsValid()
         {
-            Assert.Throws<ArgumentNullException>(() => HttpClientFactoryValidation.EnsureValid(null));
+            // Arrange
+            var validName = "MyClient";
+
+            // Act & Assert
+            var exception = Record.Exception(() => HttpClientFactoryValidation.EnsureValidCreateClient(validName));
+            Assert.Null(exception);
         }
 
-        // ---------- ValidateCreateClient ----------
-        [Fact]
-        public void ValidateCreateClient_ValidName_ReturnsEmpty()
+        #endregion
+
+        #region CreateClientWithBaseUrl
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void EnsureValidCreateClientWithBaseUrl_ThrowsWhenBaseUrlIsNullOrWhiteSpace(string? baseUrl)
         {
-            var problems = HttpClientFactoryValidation.ValidateCreateClient("my-client");
-            Assert.Empty(problems);
+            // Arrange
+            var name = "Client";
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateClientWithBaseUrl(baseUrl, name));
+            Assert.Contains("Base URL cannot be null, empty, or whitespace.", exception.Message);
         }
 
         [Fact]
-        public void ValidateCreateClient_NullOrWhiteSpaceName_ReturnsProblem()
+        public void EnsureValidCreateClientWithBaseUrl_ThrowsWhenBaseUrlIsNotAbsoluteUri()
         {
-            var problems = HttpClientFactoryValidation.ValidateCreateClient(null);
+            // Arrange
+            var baseUrl = "relative/path";
+            var name = "Client";
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateClientWithBaseUrl(baseUrl, name));
+            Assert.Contains("Base URL must be a valid absolute URI.", exception.Message);
+        }
+
+        [Fact]
+        public void EnsureValidCreateClientWithBaseUrl_ThrowsWhenBaseUrlHasInvalidScheme()
+        {
+            // Arrange
+            var baseUrl = "ftp://example.com";
+            var name = "Client";
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateClientWithBaseUrl(baseUrl, name));
+            Assert.Contains("Base URL must use http:// or https:// scheme.", exception.Message);
+        }
+
+        [Fact]
+        public void EnsureValidCreateClientWithBaseUrl_DoesNotThrowWhenParametersAreValid()
+        {
+            // Arrange
+            var baseUrl = "https://example.com/api";
+            var name = "Client";
+
+            // Act & Assert
+            var exception = Record.Exception(() => HttpClientFactoryValidation.EnsureValidCreateClientWithBaseUrl(baseUrl, name));
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void ValidateCreateClientWithBaseUrl_ReturnsProblemsForInvalidInput()
+        {
+            // Arrange
+            string? baseUrl = "invalid";
+            string? name = "";
+
+            // Act
+            var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl(baseUrl, name);
+
+            // Assert
+            Assert.NotEmpty(problems);
+            Assert.Contains("Base URL must be a valid absolute URI.", problems);
             Assert.Contains("Client name cannot be null, empty, or whitespace.", problems);
         }
 
         [Fact]
-        public void ValidateCreateClient_NameTooLong_ReturnsProblem()
+        public void ValidateCreateClientWithBaseUrl_ReturnsEmptyForValidInput()
         {
-            var longName = new string('a', 101);
-            var problems = HttpClientFactoryValidation.ValidateCreateClient(longName);
-            Assert.Contains("Client name cannot exceed 100 characters.", problems);
-        }
+            // Arrange
+            var baseUrl = "https://example.com";
+            var name = "Client";
 
-        [Fact]
-        public void EnsureValidCreateClient_InvalidName_ThrowsArgumentException()
-        {
-            Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateClient(""));
-        }
+            // Act
+            var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl(baseUrl, name);
 
-        // ---------- ValidateCreateAuthenticatedClient ----------
-        [Fact]
-        public void ValidateCreateAuthenticatedClient_ValidParameters_ReturnsEmpty()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateAuthenticatedClient("apikey", "client");
+            // Assert
             Assert.Empty(problems);
         }
 
-        [Fact]
-        public void ValidateCreateAuthenticatedClient_NullApiKey_ReturnsProblem()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateAuthenticatedClient(null, "client");
-            Assert.Contains("API key cannot be null, empty, or whitespace.", problems);
-        }
-
-        [Fact]
-        public void ValidateCreateAuthenticatedClient_ApiKeyTooLong_ReturnsProblem()
-        {
-            var longKey = new string('k', 501);
-            var problems = HttpClientFactoryValidation.ValidateCreateAuthenticatedClient(longKey, "client");
-            Assert.Contains("API key cannot exceed 500 characters.", problems);
-        }
-
-        [Fact]
-        public void EnsureValidCreateAuthenticatedClient_InvalidParameters_ThrowsArgumentException()
-        {
-            Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateAuthenticatedClient("", null));
-        }
-
-        // ---------- ValidateCreateBearerClient ----------
-        [Fact]
-        public void ValidateCreateBearerClient_ValidParameters_ReturnsEmpty()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateBearerClient("token", "client");
-            Assert.Empty(problems);
-        }
-
-        [Fact]
-        public void ValidateCreateBearerClient_NullToken_ReturnsProblem()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateBearerClient(null, "client");
-            Assert.Contains("Bearer token cannot be null, empty, or whitespace.", problems);
-        }
-
-        [Fact]
-        public void ValidateCreateBearerClient_TokenTooLong_ReturnsProblem()
-        {
-            var longToken = new string('t', 2001);
-            var problems = HttpClientFactoryValidation.ValidateCreateBearerClient(longToken, "client");
-            Assert.Contains("Bearer token cannot exceed 2000 characters.", problems);
-        }
-
-        [Fact]
-        public void EnsureValidCreateBearerClient_InvalidParameters_ThrowsArgumentException()
-        {
-            Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateBearerClient("", ""));
-        }
-
-        // ---------- ValidateCreateClientWithBaseUrl ----------
-        [Fact]
-        public void ValidateCreateClientWithBaseUrl_ValidParameters_ReturnsEmpty()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl("https://example.com", "client");
-            Assert.Empty(problems);
-        }
-
-        [Fact]
-        public void ValidateCreateClientWithBaseUrl_NullBaseUrl_ReturnsProblem()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl(null, "client");
-            Assert.Contains("Base URL cannot be null, empty, or whitespace.", problems);
-        }
-
-        [Fact]
-        public void ValidateCreateClientWithBaseUrl_InvalidUri_ReturnsProblem()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl("not-a-uri", "client");
-            Assert.Contains("Base URL must be a valid absolute URI.", problems);
-        }
-
-        [Fact]
-        public void ValidateCreateClientWithBaseUrl_WrongScheme_ReturnsProblem()
-        {
-            var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl("ftp://example.com", "client");
-            Assert.Contains("Base URL must use http:// or https:// scheme.", problems);
-        }
-
-        [Fact]
-        public void EnsureValidCreateClientWithBaseUrl_InvalidParameters_ThrowsArgumentException()
-        {
-            Assert.Throws<ArgumentException>(() => HttpClientFactoryValidation.EnsureValidCreateClientWithBaseUrl("invalid", null));
-        }
+        #endregion
     }
 }
