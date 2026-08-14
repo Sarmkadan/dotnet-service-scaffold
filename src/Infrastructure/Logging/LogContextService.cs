@@ -6,6 +6,8 @@
 // =============================================================================
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Serilog.Context;
 
@@ -20,9 +22,6 @@ public sealed class LogContextService : ILogContextService
 {
     // AsyncLocal ensures values flow correctly across async/await boundaries
     private static readonly AsyncLocal<ContextState> _currentContext = new();
-
-    // Thread-safe storage for custom properties within the current async context
-    private readonly ConcurrentDictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets the current activity ID from <see cref="Activity.Current"/>.
@@ -57,13 +56,15 @@ public sealed class LogContextService : ILogContextService
     /// </summary>
     public string? CorrelationId
     {
-        get => _currentContext.Value?.CorrelationId ?? _properties.GetValueOrDefault("CorrelationId")?.ToString();
+        get => _currentContext.Value?.CorrelationId ??
+               CurrentContext.CustomProperties.GetValueOrDefault("CorrelationId")?.ToString();
+
         set
         {
             var context = _currentContext.Value ?? new ContextState();
             context.CorrelationId = value;
             _currentContext.Value = context;
-            _properties["CorrelationId"] = value;
+            CurrentContext.CustomProperties["CorrelationId"] = value;
         }
     }
 
@@ -72,13 +73,15 @@ public sealed class LogContextService : ILogContextService
     /// </summary>
     public string? UserId
     {
-        get => _currentContext.Value?.UserId ?? _properties.GetValueOrDefault("UserId")?.ToString();
+        get => _currentContext.Value?.UserId ??
+               CurrentContext.CustomProperties.GetValueOrDefault("UserId")?.ToString();
+
         set
         {
             var context = _currentContext.Value ?? new ContextState();
             context.UserId = value;
             _currentContext.Value = context;
-            _properties["UserId"] = value;
+            CurrentContext.CustomProperties["UserId"] = value;
         }
     }
 
@@ -122,14 +125,15 @@ public sealed class LogContextService : ILogContextService
     public void AddProperty(string key, object? value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        _properties[key] = value;
+        CurrentContext.CustomProperties[key] = value;
     }
 
     /// <summary>
     /// Returns a snapshot of all currently tracked properties.
     /// </summary>
-    /// <returns>A read-only dictionary of properties.</returns>
-    public IReadOnlyDictionary<string, object?> GetProperties() => _properties.AsReadOnly();
+    /// <returns>A read‑only dictionary of properties.</returns>
+    public IReadOnlyDictionary<string, object?> GetProperties()
+        => new ReadOnlyDictionary<string, object?>(CurrentContext.CustomProperties);
 
     /// <summary>
     /// Pushes all tracked properties onto the Serilog log context and returns
@@ -138,41 +142,53 @@ public sealed class LogContextService : ILogContextService
     /// <returns>An <see cref="IDisposable"/> that pops the context when disposed.</returns>
     public IDisposable PushProperties()
     {
-        // Get current context state
+        // Ensure a ContextState exists for the current async flow
         var contextState = _currentContext.Value ?? new ContextState();
 
-        // Create a snapshot of properties to push
-        var propertiesToPush = new Dictionary<string, object?>(_properties, StringComparer.OrdinalIgnoreCase);
+        // Snapshot of custom properties before pushing
+        var snapshot = new Dictionary<string, object?>(CurrentContext.CustomProperties,
+            StringComparer.OrdinalIgnoreCase);
 
-        // Add AsyncLocal context properties
+        // Add AsyncLocal context properties to the snapshot
         if (contextState.CorrelationId is not null)
         {
-            propertiesToPush["CorrelationId"] = contextState.CorrelationId;
-        }
-        if (contextState.UserId is not null)
-        {
-            propertiesToPush["UserId"] = contextState.UserId;
-        }
-        if (contextState.ActivityId is not null)
-        {
-            propertiesToPush["ActivityId"] = contextState.ActivityId;
-        }
-        if (contextState.TraceParent is not null)
-        {
-            propertiesToPush["TraceParent"] = contextState.TraceParent;
+            snapshot["CorrelationId"] = contextState.CorrelationId;
         }
 
-        var disposables = new List<IDisposable>(propertiesToPush.Count);
-        foreach (var (key, value) in propertiesToPush)
+        if (contextState.UserId is not null)
+        {
+            snapshot["UserId"] = contextState.UserId;
+        }
+
+        if (contextState.ActivityId is not null)
+        {
+            snapshot["ActivityId"] = contextState.ActivityId;
+        }
+
+        if (contextState.TraceParent is not null)
+        {
+            snapshot["TraceParent"] = contextState.TraceParent;
+        }
+
+        // Push each property onto Serilog's LogContext
+        var disposables = new List<IDisposable>(snapshot.Count);
+        foreach (var (key, value) in snapshot)
         {
             disposables.Add(LogContext.PushProperty(key, value));
         }
 
-        return new CompositeDisposable(disposables);
+        // Return a disposable that restores the custom‑property dictionary
+        // to its previous state when the scope ends.
+        return new ScopeDisposable(this, disposables, snapshot);
     }
 
     /// <summary>
-    /// Context state that flows with AsyncLocal across async boundaries.
+    /// Gets the current <see cref="ContextState"/> instance, creating one if necessary.
+    /// </summary>
+    private ContextState CurrentContext => _currentContext.Value ??= new ContextState();
+
+    /// <summary>
+    /// Context state that flows with <see cref="AsyncLocal{T}"/> across async boundaries.
     /// </summary>
     private sealed class ContextState
     {
@@ -180,19 +196,31 @@ public sealed class LogContextService : ILogContextService
         public string? UserId { get; set; }
         public string? ActivityId { get; set; }
         public string? TraceParent { get; set; }
+
+        // Holds custom properties that are scoped to the async flow.
+        public ConcurrentDictionary<string, object?> CustomProperties { get; } =
+            new(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
-    /// Composite disposable that disposes all child disposables in reverse order.
+    /// Disposable that restores the custom‑property dictionary to a previous snapshot
+    /// and disposes the Serilog <see cref="LogContext"/> pushes.
     /// </summary>
-    private sealed class CompositeDisposable : IDisposable
+    private sealed class ScopeDisposable : IDisposable
     {
-        private readonly IReadOnlyList<IDisposable> _items;
+        private readonly LogContextService _service;
+        private readonly IReadOnlyList<IDisposable> _logDisposables;
+        private readonly Dictionary<string, object?> _previousProperties;
         private bool _disposed;
 
-        internal CompositeDisposable(IReadOnlyList<IDisposable> items)
+        internal ScopeDisposable(
+            LogContextService service,
+            IReadOnlyList<IDisposable> logDisposables,
+            Dictionary<string, object?> previousProperties)
         {
-            _items = items;
+            _service = service;
+            _logDisposables = logDisposables;
+            _previousProperties = previousProperties;
         }
 
         public void Dispose()
@@ -203,10 +231,19 @@ public sealed class LogContextService : ILogContextService
             }
 
             _disposed = true;
-            // Dispose in reverse order (LIFO) to properly nest contexts
-            for (var index = _items.Count - 1; index >= 0; index--)
+
+            // Restore the custom‑property dictionary to its previous snapshot.
+            var current = _service.CurrentContext.CustomProperties;
+            current.Clear();
+            foreach (var kvp in _previousProperties)
             {
-                _items[index].Dispose();
+                current[kvp.Key] = kvp.Value;
+            }
+
+            // Dispose the Serilog pushes in reverse order (LIFO).
+            for (var i = _logDisposables.Count - 1; i >= 0; i--)
+            {
+                _logDisposables[i].Dispose();
             }
         }
     }
