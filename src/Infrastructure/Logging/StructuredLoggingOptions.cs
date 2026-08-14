@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using Microsoft.Extensions.Logging;
+
 namespace DotnetServiceScaffold.Infrastructure.Logging;
 
 /// <summary>
@@ -32,4 +34,22 @@ public sealed class StructuredLoggingOptions
 
     /// <summary>Minimum log level for the structured logging pipeline override.</summary>
     public string MinimumLevel { get; set; } = "Information";
+
+    /// <summary>
+    /// Validates the configuration options ensuring required fields are set and have valid values.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// Thrown when any required property is null, empty, or has an invalid value.
+    /// </exception>
+    public void Validate()
+    {
+        ArgumentException.ThrowIfNullOrEmpty(ApplicationName, nameof(ApplicationName));
+        ArgumentException.ThrowIfNullOrEmpty(CorrelationIdHeader, nameof(CorrelationIdHeader));
+        ArgumentException.ThrowIfNullOrEmpty(MinimumLevel, nameof(MinimumLevel));
+
+        if (!Enum.TryParse<LogLevel>(MinimumLevel, true, out _))
+        {
+            throw new ArgumentException($"'{MinimumLevel}' is not a valid log level.", nameof(MinimumLevel));
+        }
+    }
 }
