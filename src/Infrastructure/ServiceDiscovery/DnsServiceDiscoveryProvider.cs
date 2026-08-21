@@ -21,7 +21,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 /// Sends raw UDP DNS queries to the configured nameserver so that SRV record types —
 /// not exposed by <see cref="System.Net.Dns"/> — can be interrogated directly.
 /// </summary>
-public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider
+public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDnsServiceDiscoveryProvider
 {
     private const ushort DnsTypeA = 1;
     private const ushort DnsTypeSrv = 33;
