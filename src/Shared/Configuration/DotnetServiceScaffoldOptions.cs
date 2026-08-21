@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Shared.Configuration;
 /// Root configuration options for the DotnetServiceScaffold application.
 /// Binds from the "ApplicationSettings" section in appsettings.json.
 /// </summary>
-public sealed class DotnetServiceScaffoldOptions
+public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
 {
     /// <summary>
     /// Gets or sets the health check interval in seconds.
