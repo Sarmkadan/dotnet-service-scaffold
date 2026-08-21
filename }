@@ -1,2 +1,1 @@
-
-This test class covers the happy path for each major public method, edge cases (null inputs, empty collections, boundary values), and error paths (expected exceptions). The test methods are designed to be concise and focused on specific scenarios, making it easier to identify and fix issues.
+feat(domain): add fluent builder for HealthCheckResult
