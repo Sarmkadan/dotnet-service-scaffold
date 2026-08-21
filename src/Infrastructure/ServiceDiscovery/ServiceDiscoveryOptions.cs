@@ -10,7 +10,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 /// Root configuration for the service discovery subsystem.
 /// Bind from the <c>"ServiceDiscovery"</c> section in <c>appsettings.json</c>.
 /// </summary>
-public sealed class ServiceDiscoveryOptions
+public sealed class ServiceDiscoveryOptions : IServiceDiscoveryOptions
 {
     /// <summary>The <c>appsettings.json</c> section key used for configuration binding.</summary>
     public const string SectionName = "ServiceDiscovery";
@@ -58,6 +58,18 @@ public sealed class ServiceDiscoveryOptions
 
     /// <summary>Gets or sets self-registration settings for the current service instance.</summary>
     public SelfRegistrationOptions SelfRegistration { get; set; } = new();
+
+    public string SearchDomain { get => Dns.SearchDomain; set => Dns.SearchDomain = value; }
+    public bool PreferSrvRecords { get => Dns.PreferSrvRecords; set => Dns.PreferSrvRecords = value; }
+    public string DnsServerAddress { get => Dns.DnsServerAddress; set => Dns.DnsServerAddress = value; }
+    public int DnsServerPort { get => Dns.DnsServerPort; set => Dns.DnsServerPort = value; }
+    public int DefaultPort { get => Dns.DefaultPort; set => Dns.DefaultPort = value; }
+    public string DefaultScheme { get => Dns.DefaultScheme; set => Dns.DefaultScheme = value; }
+    public int MaxRetries { get => Dns.MaxRetries; set => Dns.MaxRetries = value; }
+    public TimeSpan SocketTimeout { get => Dns.SocketTimeout; set => Dns.SocketTimeout = value; }
+    public string AgentEndpoint { get => Registry.AgentEndpoint; set => Registry.AgentEndpoint = value; }
+    public string? AclToken { get => Registry.AclToken; set => Registry.AclToken = value; }
+    public bool OnlyHealthyInstances { get => Registry.OnlyHealthyInstances; set => Registry.OnlyHealthyInstances = value; }
 }
 
 /// <summary>DNS-specific settings for service-instance resolution.</summary>
