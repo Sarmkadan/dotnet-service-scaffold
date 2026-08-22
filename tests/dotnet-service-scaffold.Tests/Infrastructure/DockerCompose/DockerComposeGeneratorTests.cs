@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+namespace DotnetServiceScaffold.Tests.Infrastructure.DockerCompose;
+
 using DotnetServiceScaffold.Infrastructure.DockerCompose;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,7 @@ using Xunit;
 /// <summary>
 /// Tests for the DockerComposeGenerator class.
 /// </summary>
-public class DockerComposeGeneratorTests
+public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
 {
     private readonly IDockerComposeGenerator _generator;
 
