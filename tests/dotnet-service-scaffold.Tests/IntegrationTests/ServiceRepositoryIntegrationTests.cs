@@ -18,7 +18,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Integration tests for the ServiceRepository class.
 /// </summary>
-public class ServiceRepositoryIntegrationTests : IntegrationTestBase
+public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegrationTestBase
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ServiceRepositoryIntegrationTests"/> class.
