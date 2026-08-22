@@ -51,6 +51,14 @@ public class ProblemDetailsFactoryTests
     }
 
     /// <summary>
+    /// Asynchronously creates a new HttpContext instance with the specified environment.
+    /// </summary>
+    private async Task<HttpContext> CreateHttpContextAsync(bool isDevelopment = false, CancellationToken cancellationToken = default)
+    {
+        return await Task.FromResult(CreateHttpContext(isDevelopment));
+    }
+
+    /// <summary>
     /// Retrieves the response body of the specified HttpContext instance.
     /// </summary>
     private async Task<string> GetResponseBody(HttpContext context)
