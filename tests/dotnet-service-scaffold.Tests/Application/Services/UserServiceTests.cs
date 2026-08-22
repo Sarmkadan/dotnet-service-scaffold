@@ -17,7 +17,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Tests for the UserService class.
 /// </summary>
-public class UserServiceTests
+public class UserServiceTests : IUserServiceTests
 {
     private readonly IUserRepository _userRepository;
     private readonly UserService _userService;
