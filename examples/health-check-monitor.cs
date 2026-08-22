@@ -15,7 +15,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class HealthCheckMonitorExample
+public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 {
     private readonly string _apiKey;
     private readonly string _baseUrl;
