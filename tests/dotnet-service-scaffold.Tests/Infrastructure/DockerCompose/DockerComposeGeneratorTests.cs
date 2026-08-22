@@ -49,6 +49,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         yaml.Should().Contain("8080:8080");
     }
 
+    public async Task Generate_ShouldContainServiceName_WhenOptionsProvidedAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldContainServiceName_WhenOptionsProvided();
+    }
+
     /// <summary>
     /// Verifies that the generated YAML includes a health check.
     /// </summary>
@@ -61,6 +67,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
 
         yaml.Should().Contain("healthcheck:");
         yaml.Should().Contain("http://localhost:5001/health");
+    }
+
+    public async Task Generate_ShouldIncludeHealthCheckAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldIncludeHealthCheck();
     }
 
     /// <summary>
@@ -83,6 +95,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         yaml.Should().Contain("caddy-data:");
     }
 
+    public async Task Generate_ShouldIncludeCaddy_WhenRequestedAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldIncludeCaddy_WhenRequested();
+    }
+
     /// <summary>
     /// Verifies that the generated YAML does not include Caddy when not requested.
     /// </summary>
@@ -94,6 +112,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         var yaml = _generator.Generate(options);
 
         yaml.Should().NotContain("caddy:");
+    }
+
+    public async Task Generate_ShouldNotIncludeCaddy_WhenNotRequestedAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldNotIncludeCaddy_WhenNotRequested();
     }
 
     /// <summary>
@@ -108,6 +132,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
 
         yaml.Should().Contain("redis:");
         yaml.Should().Contain("redis:7-alpine");
+    }
+
+    public async Task Generate_ShouldIncludeRedis_WhenRequestedAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldIncludeRedis_WhenRequested();
     }
 
     /// <summary>
@@ -127,6 +157,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         yaml.Should().Contain("MY_VAR: hello");
     }
 
+    public async Task Generate_ShouldIncludeExtraEnvVars_WhenProvidedAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldIncludeExtraEnvVars_WhenProvided();
+    }
+
     /// <summary>
     /// Verifies that an <see cref="ArgumentNullException"/> is thrown when options are null.
     /// </summary>
@@ -136,6 +172,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         var act = () => _generator.Generate(null!);
 
         act.Should().Throw<ArgumentNullException>();
+    }
+
+    public async Task Generate_ShouldThrow_WhenOptionsIsNullAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldThrow_WhenOptionsIsNull();
     }
 
     /// <summary>
@@ -149,6 +191,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         var yaml = _generator.Generate(options);
 
         yaml.Should().Contain("metrics_path: /metrics");
+    }
+
+    public async Task Generate_ShouldIncludePrometheusComment_WhenRequestedAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldIncludePrometheusComment_WhenRequested();
     }
 
     /// <summary>
@@ -168,6 +216,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
 
         yaml.Should().Contain("cpus: '2'");
         yaml.Should().Contain("memory: 1G");
+    }
+
+    public async Task Generate_ShouldIncludeResourceLimitsAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        Generate_ShouldIncludeResourceLimits();
     }
 
     /// <summary>
