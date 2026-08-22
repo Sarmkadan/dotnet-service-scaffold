@@ -15,7 +15,7 @@ using Xunit;
 /// <summary>
 /// Integration tests for the AuditLogRepository.
 /// </summary>
-public class AuditLogRepositoryIntegrationTests : IntegrationTestBase
+public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrationTestBase
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AuditLogRepositoryIntegrationTests"/> class.
