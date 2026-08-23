@@ -20,47 +20,47 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
     {
     }
 
-    public async Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId, int count = 50)
+    public async Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId, int count = 50, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId)
+    public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(a => a.EntityType == entityType && a.EntityId == entityId)
             .OrderByDescending(a => a.CreatedAt)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100)
+    public async Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50)
+    public async Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(a => a.Status == "Failure")
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task DeleteOldLogsAsync(int daysToKeep = 90)
+    public async Task DeleteOldLogsAsync(int daysToKeep = 90, CancellationToken cancellationToken = default)
     {
         var threshold = DateTime.UtcNow.AddDays(-daysToKeep);
 
         var oldLogs = await _dbSet
             .Where(a => a.CreatedAt < threshold)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (var log in oldLogs)
         {

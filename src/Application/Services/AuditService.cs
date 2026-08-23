@@ -47,29 +47,34 @@ public class AuditService : IAuditService
         _logger.LogInformation("Audit log: {Action} on {EntityType} {EntityId}", action, entityType, entityId);
     }
 
-    public async Task<AuditLog?> GetAuditLogAsync(Guid logId)
+    public async Task<AuditLog?> GetAuditLogAsync(Guid logId, CancellationToken cancellationToken = default)
     {
-        return await _auditLogRepository.GetByIdAsync(logId);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _auditLogRepository.GetByIdAsync(logId, cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetUserAuditLogsAsync(Guid userId, int count = 50)
+    public async Task<IEnumerable<AuditLog>> GetUserAuditLogsAsync(Guid userId, int count = 50, CancellationToken cancellationToken = default)
     {
-        return await _auditLogRepository.GetByUserIdAsync(userId, count);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _auditLogRepository.GetByUserIdAsync(userId, count, cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetEntityAuditLogsAsync(string entityType, Guid entityId)
+    public async Task<IEnumerable<AuditLog>> GetEntityAuditLogsAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
     {
-        return await _auditLogRepository.GetByEntityAsync(entityType, entityId);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _auditLogRepository.GetByEntityAsync(entityType, entityId, cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100)
+    public async Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100, CancellationToken cancellationToken = default)
     {
-        return await _auditLogRepository.GetRecentLogsAsync(count);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _auditLogRepository.GetRecentLogsAsync(count, cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50)
+    public async Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50, CancellationToken cancellationToken = default)
     {
-        return await _auditLogRepository.GetFailedActionsAsync(count);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _auditLogRepository.GetFailedActionsAsync(count, cancellationToken);
     }
 
     public async Task LogFailedActionAsync(Guid? userId, string action, string entityType, string reason)

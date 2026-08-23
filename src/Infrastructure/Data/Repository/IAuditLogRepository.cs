@@ -14,15 +14,15 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public interface IAuditLogRepository : IRepository<AuditLog>
 {
-    Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId, int count = 50);
+    Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId, int count = 50, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId);
+    Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100);
+    Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50);
+    Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50, CancellationToken cancellationToken = default);
 
-    Task DeleteOldLogsAsync(int daysToKeep = 90);
+    Task DeleteOldLogsAsync(int daysToKeep = 90, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets audit logs with composable filtering predicates.
