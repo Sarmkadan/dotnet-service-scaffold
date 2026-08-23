@@ -26,12 +26,13 @@ public class Repository<T> : IRepository<T> where T : class
 		_logger = logger;
 	}
 
-	public virtual async Task<T?> GetByIdAsync(Guid id)
+	public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
+		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
 			_logger.LogDebug("Retrieving entity of type {EntityType} with ID {Id}", typeof(T).Name, id);
-			return await _dbSet.FindAsync(id);
+			return await _dbSet.FindAsync(new object?[] { id }, cancellationToken);
 		}
 		catch (Exception ex)
 		{
@@ -40,12 +41,13 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
-	public virtual async Task<IEnumerable<T>> GetAllAsync()
+	public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
+		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
 			_logger.LogDebug("Retrieving all entities of type {EntityType}", typeof(T).Name);
-			return await _dbSet.ToListAsync();
+			return await _dbSet.ToListAsync(cancellationToken);
 		}
 		catch (Exception ex)
 		{
@@ -54,12 +56,13 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
-	public virtual async Task<T> AddAsync(T entity)
+	public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
 	{
+		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
 			_logger.LogDebug("Adding new entity of type {EntityType}", typeof(T).Name);
-			var entry = await _dbSet.AddAsync(entity);
+			var entry = await _dbSet.AddAsync(entity, cancellationToken);
 			await SaveChangesAsync();
 			_logger.LogInformation("Entity of type {EntityType} added successfully", typeof(T).Name);
 			return entry.Entity;
@@ -71,8 +74,9 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
-	public virtual async Task<T> UpdateAsync(T entity)
+	public virtual async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default)
 	{
+		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
 			_logger.LogDebug("Updating entity of type {EntityType}", typeof(T).Name);
@@ -108,12 +112,13 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
-	public virtual async Task<bool> ExistsAsync(Guid id)
+	public virtual async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
 	{
+		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
 			_logger.LogDebug("Checking existence of entity of type {EntityType} with ID {Id}", typeof(T).Name, id);
-			return await _dbSet.FindAsync(id) is not null;
+			return await _dbSet.FindAsync(new object?[] { id }, cancellationToken) is not null;
 		}
 		catch (Exception ex)
 		{
