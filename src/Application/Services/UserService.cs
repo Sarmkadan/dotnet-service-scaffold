@@ -27,8 +27,9 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<User> CreateUserAsync(string email, string fullName, string password)
+    public async Task<User> CreateUserAsync(string email, string fullName, string password, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentNullException(nameof(email), "Email is required");
         if (string.IsNullOrWhiteSpace(fullName))
@@ -58,7 +59,7 @@ public class UserService : IUserService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var created = await _userRepository.AddAsync(user);
+            var created = await _userRepository.AddAsync(user, cancellationToken);
             _logger.LogInformation("User created: {Email}", email);
             return created;
         }
@@ -73,8 +74,9 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<User?> GetUserByEmailAsync(string email)
+    public async Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentNullException(nameof(email), "Email is required");
 
@@ -89,8 +91,9 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<User?> AuthenticateUserAsync(string email, string password)
+    public async Task<User?> AuthenticateUserAsync(string email, string password, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentNullException(nameof(email), "Email is required");
         if (string.IsNullOrWhiteSpace(password))
@@ -114,13 +117,13 @@ public class UserService : IUserService
             if (!VerifyPasswordHash(password, user.PasswordHash))
             {
                 user.RecordFailedLoginAttempt();
-                await _userRepository.UpdateAsync(user);
+                await _userRepository.UpdateAsync(user, cancellationToken);
                 _logger.LogWarning("Failed login attempt for {Email}", email);
                 return null;
             }
 
             user.RecordSuccessfulLogin();
-            await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateAsync(user, cancellationToken);
             _logger.LogInformation("User authenticated successfully: {Email}", email);
             return user;
         }
@@ -131,8 +134,9 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<User> UpdateUserAsync(User user)
+    public async Task<User> UpdateUserAsync(User user, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (user == null)
             throw new ArgumentNullException(nameof(user), "User is required");
 
@@ -142,7 +146,7 @@ public class UserService : IUserService
         try
         {
             user.UpdatedAt = DateTime.UtcNow;
-            var updated = await _userRepository.UpdateAsync(user);
+            var updated = await _userRepository.UpdateAsync(user, cancellationToken);
             _logger.LogInformation("User updated: {Email}", user.Email);
             return updated;
         }
@@ -175,8 +179,9 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<IEnumerable<User>> GetActiveUsersAsync()
+    public async Task<IEnumerable<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             return await _userRepository.GetActiveUsersAsync();
