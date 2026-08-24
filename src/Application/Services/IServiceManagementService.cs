@@ -13,15 +13,15 @@ namespace DotnetServiceScaffold.Application.Services;
 /// </summary>
 public interface IServiceManagementService
 {
-    Task<ServiceRegistration> RegisterServiceAsync(string serviceName, string endpoint, string healthCheckUrl, Guid ownerId);
+    Task<ServiceRegistration> RegisterServiceAsync(string serviceName, string endpoint, string healthCheckUrl, Guid ownerId, CancellationToken cancellationToken = default);
 
-    Task<ServiceRegistration?> GetServiceAsync(Guid serviceId);
+    Task<ServiceRegistration?> GetServiceAsync(Guid serviceId, CancellationToken cancellationToken = default);
 
     Task<ServiceRegistration?> GetServiceByNameAsync(string serviceName);
 
-    Task<IEnumerable<ServiceRegistration>> GetServicesByOwnerAsync(Guid ownerId);
+    Task<IEnumerable<ServiceRegistration>> GetServicesByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ServiceRegistration>> GetAllServicesAsync();
+    Task<IEnumerable<ServiceRegistration>> GetAllServicesAsync(CancellationToken cancellationToken = default);
 
     Task<ServiceRegistration> UpdateServiceAsync(ServiceRegistration service);
 
@@ -29,7 +29,7 @@ public interface IServiceManagementService
 
     Task<IEnumerable<ServiceRegistration>> GetUnhealthyServicesAsync();
 
-    Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason);
+    Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason, CancellationToken cancellationToken = default);
 
     Task<ServiceRegistration> EnableServiceAsync(Guid serviceId);
 
