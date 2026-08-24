@@ -38,15 +38,15 @@ public class MemoryHealthCheck : IHealthCheck
     /// Thrown when any threshold is outside valid range or thresholds are not in ascending order.
     /// </exception>
     public MemoryHealthCheck(
-        double healthyThresholdPercent = 70,
-        double degradedThresholdPercent = 85,
-        double unhealthyThresholdPercent = 95)
+        double healthyThresholdPercent = MemoryHealthCheckConstants.DefaultHealthyThresholdPercent,
+        double degradedThresholdPercent = MemoryHealthCheckConstants.DefaultDegradedThresholdPercent,
+        double unhealthyThresholdPercent = MemoryHealthCheckConstants.DefaultUnhealthyThresholdPercent)
     {
-        if (healthyThresholdPercent is < 1 or > 99)
+        if (healthyThresholdPercent is < MemoryHealthCheckConstants.MinThresholdPercent or > MemoryHealthCheckConstants.MaxThresholdPercent)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(healthyThresholdPercent),
-                $"Healthy threshold must be between 1 and 99, got {healthyThresholdPercent}.");
+                $"Healthy threshold must be between {MemoryHealthCheckConstants.MinThresholdPercent} and {MemoryHealthCheckConstants.MaxThresholdPercent}, got {healthyThresholdPercent}.");
         }
 
         if (degradedThresholdPercent <= healthyThresholdPercent)
@@ -56,11 +56,11 @@ public class MemoryHealthCheck : IHealthCheck
                 $"Degraded threshold must be greater than healthy threshold ({healthyThresholdPercent}), got {degradedThresholdPercent}.");
         }
 
-        if (degradedThresholdPercent > 99)
+        if (degradedThresholdPercent > MemoryHealthCheckConstants.MaxThresholdPercent)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(degradedThresholdPercent),
-                $"Degraded threshold must be between {healthyThresholdPercent + 1} and 99, got {degradedThresholdPercent}.");
+                $"Degraded threshold must be between {healthyThresholdPercent + 1} and {MemoryHealthCheckConstants.MaxThresholdPercent}, got {degradedThresholdPercent}.");
         }
 
         if (unhealthyThresholdPercent <= degradedThresholdPercent)
@@ -70,11 +70,11 @@ public class MemoryHealthCheck : IHealthCheck
                 $"Unhealthy threshold must be greater than degraded threshold ({degradedThresholdPercent}), got {unhealthyThresholdPercent}.");
         }
 
-        if (unhealthyThresholdPercent > 99)
+        if (unhealthyThresholdPercent > MemoryHealthCheckConstants.MaxThresholdPercent)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(unhealthyThresholdPercent),
-                $"Unhealthy threshold must be between {degradedThresholdPercent + 1} and 99, got {unhealthyThresholdPercent}.");
+                $"Unhealthy threshold must be between {degradedThresholdPercent + 1} and {MemoryHealthCheckConstants.MaxThresholdPercent}, got {unhealthyThresholdPercent}.");
         }
 
         _healthyThresholdPercent = healthyThresholdPercent;
@@ -88,7 +88,7 @@ public class MemoryHealthCheck : IHealthCheck
     {
         // Memory operations are generally fast, but enforce timeout for consistency
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(MemoryHealthCheckConstants.TimeoutSeconds));
 
         try
         {
@@ -108,11 +108,11 @@ public class MemoryHealthCheck : IHealthCheck
             var data = new Dictionary<string, object>
             {
                 ["memoryLoadBytes"] = memoryLoadBytes,
-                ["memoryLoadMB"] = memoryLoadBytes / (1024 * 1024),
+                ["memoryLoadMB"] = memoryLoadBytes / MemoryHealthCheckConstants.BytesToMegabytesFactor,
                 ["totalAvailableMemoryBytes"] = totalAvailableMemoryBytes,
-                ["totalAvailableMemoryMB"] = totalAvailableMemoryBytes / (1024 * 1024),
+                ["totalAvailableMemoryMB"] = totalAvailableMemoryBytes / MemoryHealthCheckConstants.BytesToMegabytesFactor,
                 ["heapSizeBytes"] = heapSizeBytes,
-                ["heapSizeMB"] = heapSizeBytes / (1024 * 1024),
+                ["heapSizeMB"] = heapSizeBytes / MemoryHealthCheckConstants.BytesToMegabytesFactor,
                 ["memoryUsagePercent"] = Math.Round(memoryUsagePercent, 2),
                 ["healthyThresholdPercent"] = _healthyThresholdPercent,
                 ["degradedThresholdPercent"] = _degradedThresholdPercent,
@@ -149,7 +149,7 @@ public class MemoryHealthCheck : IHealthCheck
             var data = new Dictionary<string, object>
             {
                 ["timeout"] = true,
-                ["thresholdSeconds"] = 2
+                ["thresholdSeconds"] = MemoryHealthCheckConstants.TimeoutSeconds
             };
             return Task.FromResult(HealthCheckResult.Degraded(
                 "Timeout while checking memory usage.",
