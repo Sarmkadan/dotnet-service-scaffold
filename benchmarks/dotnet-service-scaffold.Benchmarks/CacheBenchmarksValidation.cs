@@ -31,7 +31,7 @@ public static class CacheBenchmarksValidation
         // Validate that the cache service is initialized
         if (value.GetCache() is null)
         {
-            errors.Add("Cache service is not initialized.");
+            errors.Add(CacheBenchmarksValidationConstants.CacheServiceNotInitializedErrorMessage);
         }
 
         return errors.AsReadOnly();
@@ -58,7 +58,7 @@ public static class CacheBenchmarksValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"The CacheBenchmarks instance is not valid. {string.Join(" ", errors)}",
+                $"{CacheBenchmarksValidationConstants.CacheBenchmarksInvalidErrorMessagePrefix}{string.Join(" ", errors)}",
                 nameof(value));
         }
     }
