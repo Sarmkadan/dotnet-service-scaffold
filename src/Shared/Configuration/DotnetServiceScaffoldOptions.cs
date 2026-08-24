@@ -1,9 +1,5 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace DotnetServiceScaffold.Shared.Configuration;
@@ -12,7 +8,7 @@ namespace DotnetServiceScaffold.Shared.Configuration;
 /// Root configuration options for the DotnetServiceScaffold application.
 /// Binds from the "ApplicationSettings" section in appsettings.json.
 /// </summary>
-public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
+public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions, IEquatable<DotnetServiceScaffoldOptions>
 {
     /// <summary>
     /// Gets or sets the health check interval in seconds.
@@ -247,5 +243,47 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
         }
 
         return isValid;
+    }
+
+    public bool Equals(DotnetServiceScaffoldOptions? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return HealthCheckInterval == other.HealthCheckInterval &&
+               HealthCheckTimeout == other.HealthCheckTimeout &&
+               MaxConcurrentHealthChecks == other.MaxConcurrentHealthChecks &&
+               MaintenanceMode == other.MaintenanceMode &&
+               AuditLogRetentionDays == other.AuditLogRetentionDays &&
+               HealthCheckResultRetentionDays == other.HealthCheckResultRetentionDays &&
+               MaxFailedLoginAttempts == other.MaxFailedLoginAttempts &&
+               AccountLockoutDurationMinutes == other.AccountLockoutDurationMinutes;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as DotnetServiceScaffoldOptions);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            HealthCheckInterval,
+            HealthCheckTimeout,
+            MaxConcurrentHealthChecks,
+            MaintenanceMode,
+            AuditLogRetentionDays,
+            HealthCheckResultRetentionDays,
+            MaxFailedLoginAttempts,
+            AccountLockoutDurationMinutes);
+    }
+
+    public static bool operator ==(DotnetServiceScaffoldOptions? left, DotnetServiceScaffoldOptions? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(DotnetServiceScaffoldOptions? left, DotnetServiceScaffoldOptions? right)
+    {
+        return !Equals(left, right);
     }
 }
