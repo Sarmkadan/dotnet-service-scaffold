@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Text.Json;
 using DotnetServiceScaffold.Infrastructure.Integration;
@@ -10,12 +11,43 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests;
 
-public class ExternalApiClientExtensionsTests
+public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExtensionsTests>
 {
     private readonly Mock<ILogger<ExternalApiClient>> _loggerMock;
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
     private readonly HttpClient _httpClient;
     private readonly ExternalApiClient _sut;
+
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public string? Status { get; set; }
+
+    public bool Equals(ExternalApiClientExtensionsTests? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Id == other.Id && Name == other.Name && Status == other.Status;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as ExternalApiClientExtensionsTests);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, Status);
+    }
+
+    public static bool operator ==(ExternalApiClientExtensionsTests? left, ExternalApiClientExtensionsTests? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ExternalApiClientExtensionsTests? left, ExternalApiClientExtensionsTests? right)
+    {
+        return !Equals(left, right);
+    }
 
     public ExternalApiClientExtensionsTests()
     {
