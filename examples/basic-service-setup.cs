@@ -11,6 +11,7 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 public class BasicServiceSetupExample
@@ -33,8 +34,11 @@ public class BasicServiceSetupExample
         string name,
         string description,
         string healthCheckUrl,
-        string ownerId)
+        string ownerId,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var request = new
         {
             name = name,
@@ -55,8 +59,8 @@ public class BasicServiceSetupExample
         };
         httpRequest.Headers.Add("X-API-Key", _apiKey);
 
-        var response = await _httpClient.SendAsync(httpRequest);
-        var responseJson = await response.Content.ReadAsStringAsync();
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -70,7 +74,7 @@ public class BasicServiceSetupExample
                 .GetProperty("data")
                 .GetProperty("id")
                 .GetString();
-            return serviceId;
+            return serviceId!;
         }
     }
 
