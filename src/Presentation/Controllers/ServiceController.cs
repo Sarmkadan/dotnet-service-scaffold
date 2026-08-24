@@ -36,8 +36,9 @@ public class ServiceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> RegisterService([FromBody] RegisterServiceRequest request)
+    public async Task<IActionResult> RegisterService([FromBody] RegisterServiceRequest request, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -47,7 +48,8 @@ public class ServiceController : ControllerBase
                 request.ServiceName,
                 request.Endpoint,
                 request.HealthCheckUrl,
-                request.OwnerId);
+                request.OwnerId,
+                cancellationToken);
 
             return CreatedAtAction(nameof(GetService), new { serviceId = service.Id }, new
             {
@@ -80,11 +82,12 @@ public class ServiceController : ControllerBase
     [HttpGet("{serviceId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetService(Guid serviceId)
+    public async Task<IActionResult> GetService(Guid serviceId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var service = await _serviceManagementService.GetServiceAsync(serviceId);
+            var service = await _serviceManagementService.GetServiceAsync(serviceId, cancellationToken);
 
             if (service is null)
             {
@@ -123,11 +126,12 @@ public class ServiceController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ListServices()
+    public async Task<IActionResult> ListServices(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var services = await _serviceManagementService.GetAllServicesAsync();
+            var services = await _serviceManagementService.GetAllServicesAsync(cancellationToken);
 
             return Ok(new
             {
@@ -155,11 +159,12 @@ public class ServiceController : ControllerBase
     /// </summary>
     [HttpGet("owner/{ownerId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetServicesByOwner(Guid ownerId)
+    public async Task<IActionResult> GetServicesByOwner(Guid ownerId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var services = await _serviceManagementService.GetServicesByOwnerAsync(ownerId);
+            var services = await _serviceManagementService.GetServicesByOwnerAsync(ownerId, cancellationToken);
 
             return Ok(new
             {
@@ -187,11 +192,12 @@ public class ServiceController : ControllerBase
     [HttpPost("{serviceId}/disable")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DisableService(Guid serviceId, [FromBody] DisableServiceRequest request)
+    public async Task<IActionResult> DisableService(Guid serviceId, [FromBody] DisableServiceRequest request, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var service = await _serviceManagementService.DisableServiceAsync(serviceId, request.Reason);
+            var service = await _serviceManagementService.DisableServiceAsync(serviceId, request.Reason, cancellationToken);
 
             return Ok(new
             {

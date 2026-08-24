@@ -38,7 +38,8 @@ public class ServiceManagementService : IServiceManagementService
         string serviceName,
         string endpoint,
         string healthCheckUrl,
-        Guid ownerId)
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
     {
         var errors = new List<string>();
 
@@ -60,7 +61,7 @@ public class ServiceManagementService : IServiceManagementService
         if (errors.Count > 0)
             throw new ServiceValidationException(errors);
 
-        var owner = await _userRepository.GetByIdAsync(ownerId);
+        var owner = await _userRepository.GetByIdAsync(ownerId, cancellationToken);
         if (owner is null)
             throw new ServiceScaffoldException("Service owner not found", "OWNER_NOT_FOUND");
 
@@ -83,7 +84,7 @@ public class ServiceManagementService : IServiceManagementService
         if (!service.IsValid())
             throw new ServiceValidationException("Service configuration is invalid");
 
-        var registered = await _serviceRepository.AddAsync(service);
+        var registered = await _serviceRepository.AddAsync(service, cancellationToken);
 
         await _auditService.LogActionAsync(ownerId, "Create", "ServiceRegistration", service.Id,
             $"Registered service {serviceName}");
@@ -92,9 +93,9 @@ public class ServiceManagementService : IServiceManagementService
         return registered;
     }
 
-    public async Task<ServiceRegistration?> GetServiceAsync(Guid serviceId)
+    public async Task<ServiceRegistration?> GetServiceAsync(Guid serviceId, CancellationToken cancellationToken = default)
     {
-        return await _serviceRepository.GetByIdAsync(serviceId);
+        return await _serviceRepository.GetByIdAsync(serviceId, cancellationToken);
     }
 
     public async Task<ServiceRegistration?> GetServiceByNameAsync(string serviceName)
@@ -102,14 +103,14 @@ public class ServiceManagementService : IServiceManagementService
         return await _serviceRepository.GetByNameAsync(serviceName);
     }
 
-    public async Task<IEnumerable<ServiceRegistration>> GetServicesByOwnerAsync(Guid ownerId)
+    public async Task<IEnumerable<ServiceRegistration>> GetServicesByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
         return await _serviceRepository.GetByOwnerAsync(ownerId);
     }
 
-    public async Task<IEnumerable<ServiceRegistration>> GetAllServicesAsync()
+    public async Task<IEnumerable<ServiceRegistration>> GetAllServicesAsync(CancellationToken cancellationToken = default)
     {
-        return await _serviceRepository.GetAllAsync();
+        return await _serviceRepository.GetAllAsync(cancellationToken);
     }
 
     public async Task<ServiceRegistration> UpdateServiceAsync(ServiceRegistration service)
@@ -131,17 +132,17 @@ public class ServiceManagementService : IServiceManagementService
             throw new ServiceNotFoundException(serviceId);
 
         service.Status = ServiceStatus.Disabled;
- service.Events.Add(new ServiceEvent
- {
-     ServiceId = service.Id,
-     EventType = ServiceEventType.ServiceDown,
-     Message = "Service unregistered",
-     Severity = "Info",
-     CreatedAt = DateTime.UtcNow
- });
+        service.Events.Add(new ServiceEvent
+        {
+            ServiceId = service.Id,
+            EventType = ServiceEventType.ServiceDown,
+            Message = "Service unregistered",
+            Severity = "Info",
+            CreatedAt = DateTime.UtcNow
+        });
 
- await _serviceRepository.UpdateAsync(service);
- await _serviceRepository.DeleteAsync(serviceId);
+        await _serviceRepository.UpdateAsync(service);
+        await _serviceRepository.DeleteAsync(serviceId);
 
         await _auditService.LogActionAsync(null, "Delete", "ServiceRegistration", serviceId,
             $"Unregistered service {service.ServiceName}");
@@ -154,14 +155,14 @@ public class ServiceManagementService : IServiceManagementService
         return await _serviceRepository.GetUnhealthyServicesAsync();
     }
 
-    public async Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason)
+    public async Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason, CancellationToken cancellationToken = default)
     {
-        var service = await _serviceRepository.GetByIdAsync(serviceId);
+        var service = await _serviceRepository.GetByIdAsync(serviceId, cancellationToken);
         if (service is null)
             throw new ServiceNotFoundException(serviceId);
 
         service.Disable(reason);
-        await _serviceRepository.UpdateAsync(service);
+        await _serviceRepository.UpdateAsync(service, cancellationToken);
 
         await _auditService.LogActionAsync(null, "Update", "ServiceRegistration", serviceId,
             $"Disabled service: {reason}");
@@ -169,7 +170,6 @@ public class ServiceManagementService : IServiceManagementService
         _logger.LogInformation("Service disabled: {ServiceId} - {Reason}", serviceId, reason);
         return service;
     }
-
     public async Task<ServiceRegistration> EnableServiceAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
