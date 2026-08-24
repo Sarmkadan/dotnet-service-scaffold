@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Records audit trails for system actions performed by users.
 /// </summary>
-public sealed class AuditLog
+public sealed class AuditLog : IEquatable<AuditLog>
 {
     [Key]
     public Guid Id { get; set; }
@@ -51,6 +51,40 @@ public sealed class AuditLog
 
     [StringLength(1000)]
     public string? Description { get; set; }
+
+    public bool Equals(AuditLog? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Id.Equals(other.Id) &&
+               UserId.Equals(other.UserId) &&
+               Equals(User, other.User) &&
+               ActionName == other.ActionName &&
+               EntityType == other.EntityType &&
+               EntityId.Equals(other.EntityId) &&
+               OldValues == other.OldValues &&
+               NewValues == other.NewValues;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || (obj is AuditLog other && Equals(other));
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, UserId, User, ActionName, EntityType, EntityId, OldValues, NewValues);
+    }
+
+    public static bool operator ==(AuditLog? left, AuditLog? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(AuditLog? left, AuditLog? right)
+    {
+        return !Equals(left, right);
+    }
 
     /// <summary>
     /// Creates a summary of the audit log entry for display purposes.
