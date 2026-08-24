@@ -14,7 +14,7 @@ namespace DotnetServiceScaffold.Infrastructure.Data;
 /// <summary>
 /// Entity Framework Core DbContext for the service scaffold platform.
 /// </summary>
-public class ServiceScaffoldDbContext : DbContext
+public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbContext>
 {
     private readonly ILogger<ServiceScaffoldDbContext> _logger;
 
@@ -24,6 +24,44 @@ public class ServiceScaffoldDbContext : DbContext
         : base(options)
     {
         _logger = logger;
+    }
+
+    public bool Equals(ServiceScaffoldDbContext? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Users.Equals(other.Users) &&
+               ServiceRegistrations.Equals(other.ServiceRegistrations) &&
+               HealthCheckResults.Equals(other.HealthCheckResults) &&
+               ServiceMetrics.Equals(other.ServiceMetrics) &&
+               ServiceEvents.Equals(other.ServiceEvents) &&
+               ApiKeys.Equals(other.ApiKeys) &&
+               AuditLogs.Equals(other.AuditLogs) &&
+               ServiceConfigurations.Equals(other.ServiceConfigurations);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((ServiceScaffoldDbContext)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Users, ServiceRegistrations, HealthCheckResults, ServiceMetrics, ServiceEvents, ApiKeys, AuditLogs, ServiceConfigurations);
+    }
+
+    public static bool operator ==(ServiceScaffoldDbContext? left, ServiceScaffoldDbContext? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ServiceScaffoldDbContext? left, ServiceScaffoldDbContext? right)
+    {
+        return !Equals(left, right);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
