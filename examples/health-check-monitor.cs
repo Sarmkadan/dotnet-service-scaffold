@@ -61,15 +61,16 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Get health check history for a service
     /// </summary>
-    public async Task<List<HealthCheckEntry>> GetHealthHistoryAsync(string serviceId, int days = 7)
+    public async Task<List<HealthCheckEntry>> GetHealthHistoryAsync(string serviceId, int days = 7, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
             $"{_baseUrl}/api/healthcheck/{serviceId}/history?days={days}&limit=1000");
         httpRequest.Headers.Add("X-API-Key", _apiKey);
 
-        var response = await _httpClient.SendAsync(httpRequest);
-        var responseJson = await response.Content.ReadAsStringAsync();
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -102,15 +103,16 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Get failed health checks
     /// </summary>
-    public async Task<List<HealthCheckEntry>> GetFailuresAsync(string serviceId, int limit = 50)
+    public async Task<List<HealthCheckEntry>> GetFailuresAsync(string serviceId, int limit = 50, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
             $"{_baseUrl}/api/healthcheck/{serviceId}/failures?limit={limit}");
         httpRequest.Headers.Add("X-API-Key", _apiKey);
 
-        var response = await _httpClient.SendAsync(httpRequest);
-        var responseJson = await response.Content.ReadAsStringAsync();
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -244,10 +246,11 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Generate health report
     /// </summary>
-    public async Task<string> GenerateHealthReportAsync(string serviceName, string serviceId, int days = 7)
+    public async Task<string> GenerateHealthReportAsync(string serviceName, string serviceId, int days = 7, CancellationToken cancellationToken = default)
     {
-        var history = await GetHealthHistoryAsync(serviceId, days);
-        var failures = await GetFailuresAsync(serviceId);
+        cancellationToken.ThrowIfCancellationRequested();
+        var history = await GetHealthHistoryAsync(serviceId, days, cancellationToken);
+        var failures = await GetFailuresAsync(serviceId, 50, cancellationToken);
 
         var report = new System.Text.StringBuilder();
         report.AppendLine($"=== Health Report: {serviceName} ===");
@@ -301,12 +304,12 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
             // Get recent history
             Console.WriteLine("=== Health History (Last 7 days) ===\n");
-            var history = await monitor.GetHealthHistoryAsync(serviceId, 7);
+            var history = await monitor.GetHealthHistoryAsync(serviceId, 7, CancellationToken.None);
             monitor.AnalyzeTrends(history);
 
             // Get failures
             Console.WriteLine("\n=== Recent Failures ===\n");
-            var failures = await monitor.GetFailuresAsync(serviceId, 10);
+            var failures = await monitor.GetFailuresAsync(serviceId, 10, CancellationToken.None);
             foreach (var failure in failures)
             {
                 Console.WriteLine($"{failure.CheckedAt:yyyy-MM-dd HH:mm:ss} - {failure.Status} ({failure.StatusCode})");
@@ -314,7 +317,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
             // Generate report
             Console.WriteLine("\n=== Health Report ===\n");
-            var report = await monitor.GenerateHealthReportAsync(serviceName, serviceId);
+            var report = await monitor.GenerateHealthReportAsync(serviceName, serviceId, 7, CancellationToken.None);
             Console.WriteLine(report);
 
             // Monitor continuously (uncomment to run)
