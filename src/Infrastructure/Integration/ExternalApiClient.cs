@@ -61,7 +61,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
 
         var json = JsonSerializer.Serialize(payload);
-        request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        request.Content = new StringContent(json, System.Text.Encoding.UTF8, ExternalApiClientConstants.ContentTypeJson);
 
         AddHeaders(request, headers);
 
@@ -89,7 +89,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
         using var request = new HttpRequestMessage(HttpMethod.Put, url);
 
         var json = JsonSerializer.Serialize(payload);
-        request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        request.Content = new StringContent(json, System.Text.Encoding.UTF8, ExternalApiClientConstants.ContentTypeJson);
 
         AddHeaders(request, headers);
 
