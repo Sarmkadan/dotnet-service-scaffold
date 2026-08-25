@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 
@@ -15,13 +16,32 @@ namespace DotnetServiceScaffold.Shared.Utilities;
 /// </summary>
 public static class ReflectionUtility
 {
+    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> PublicPropertiesCache = new();
+
+    private static readonly ConcurrentDictionary<(Type Type, string Name), PropertyInfo?> PropertyCache = new();
+
     /// <summary>
     /// Gets all public properties of a type.
+    /// Results are cached per type to avoid repeated reflection overhead.
     /// </summary>
     public static PropertyInfo[] GetPublicProperties(Type type)
     {
-        return type.GetProperties(
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        return PublicPropertiesCache.GetOrAdd(
+            type,
+            static t => t.GetProperties(
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
+    }
+
+    /// <summary>
+    /// Gets a cached public instance property by name.
+    /// </summary>
+    private static PropertyInfo? GetCachedProperty(Type type, string propertyName)
+    {
+        return PropertyCache.GetOrAdd(
+            (type, propertyName),
+            static key => key.Type.GetProperty(
+                key.Name,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
     }
 
     /// <summary>
@@ -30,9 +50,7 @@ public static class ReflectionUtility
     /// </summary>
     public static object? GetPropertyValue(object obj, string propertyName)
     {
-        var property = obj.GetType().GetProperty(
-            propertyName,
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        var property = GetCachedProperty(obj.GetType(), propertyName);
 
         return property?.GetValue(obj);
     }
@@ -43,9 +61,7 @@ public static class ReflectionUtility
     /// </summary>
     public static bool SetPropertyValue(object obj, string propertyName, object? value)
     {
-        var property = obj.GetType().GetProperty(
-            propertyName,
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        var property = GetCachedProperty(obj.GetType(), propertyName);
 
         if (property is null || !property.CanWrite)
             return false;
