@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Infrastructure.Logging;
 /// Configuration options for the structured logging pipeline.
 /// Bound from the "StructuredLogging" section in appsettings.json.
 /// </summary>
-public sealed class StructuredLoggingOptions
+public sealed class StructuredLoggingOptions : IStructuredLoggingOptions
 {
     /// <summary>Name of the application included in every log entry.</summary>
     public string ApplicationName { get; set; } = "DotnetServiceScaffold";
