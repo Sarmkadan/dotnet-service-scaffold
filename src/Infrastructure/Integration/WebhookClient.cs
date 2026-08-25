@@ -148,6 +148,7 @@ public class WebhookClient : IWebhookClient
             int? statusCode = null;
             string? errorMessage = null;
             var retryable = true;
+            HttpResponseMessage? response = null;
 
             try
             {
@@ -166,7 +167,7 @@ public class WebhookClient : IWebhookClient
                 }
 
                 // _httpClient already has timeout configured
-                using var response = await _httpClient.PostAsync(webhookUrl, content, cancellationToken);
+                response = await _httpClient.PostAsync(webhookUrl, content, cancellationToken);
                 stopwatch.Stop();
                 statusCode = (int)response.StatusCode;
 
@@ -229,6 +230,18 @@ public class WebhookClient : IWebhookClient
                 _logger.LogError(ex,
                     "Webhook {WebhookId} unexpected error on attempt {Attempt}/{MaxRetries}",
                     webhookId, attempt + 1, MaxRetries);
+
+                // Unexpected exceptions are not retried: log and return a failure result
+                // instead of silently swallowing the error and masking the underlying fault.
+                attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, errorMessage, DateTime.UtcNow));
+                RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: false, metricTags);
+                await PersistDeadLetterAsync(webhookId, webhookUrl, json, eventType, attempts, cancellationToken);
+                return WebhookDeliveryResult.Failure(statusCode, errorMessage, attempts);
+            }
+            finally
+            {
+                // Ensure the response is disposed on every path (success, failure, exception).
+                response?.Dispose();
             }
 
             attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, errorMessage, DateTime.UtcNow));
