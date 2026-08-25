@@ -41,7 +41,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
         {
             _logger.LogDebug("GET request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             return await HandleResponse<T>(response, url);
         }
         catch (Exception ex)
@@ -69,7 +69,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
         {
             _logger.LogDebug("POST request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             return await HandleResponse<T>(response, url);
         }
         catch (Exception ex)
@@ -97,7 +97,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
         {
             _logger.LogDebug("PUT request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             return await HandleResponse<T>(response, url);
         }
         catch (Exception ex)
@@ -122,7 +122,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
         {
             _logger.LogDebug("DELETE request to {Url}", HttpUtility.MaskSensitiveUrl(url));
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
