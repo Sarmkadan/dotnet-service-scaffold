@@ -19,7 +19,7 @@ namespace DotnetServiceScaffold.Benchmarks;
 /// </summary>
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-public class MetricsBenchmarks
+public class MetricsBenchmarks : IMetricsBenchmarks
 {
     private MetricsService _metrics = default!;
 
