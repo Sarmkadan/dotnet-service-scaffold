@@ -41,6 +41,7 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }
