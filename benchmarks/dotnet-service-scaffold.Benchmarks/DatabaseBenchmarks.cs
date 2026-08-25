@@ -21,7 +21,7 @@ namespace DotnetServiceScaffold.Benchmarks;
 /// </summary>
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-public class DatabaseBenchmarks : IDisposable
+public class DatabaseBenchmarks : IDisposable, IDatabaseBenchmarks
 {
     private ServiceScaffoldDbContext _dbContext = default!;
     private SqliteConnection _connection = default!;
