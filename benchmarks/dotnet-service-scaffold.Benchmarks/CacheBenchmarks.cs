@@ -18,7 +18,7 @@ namespace DotnetServiceScaffold.Benchmarks;
 /// </summary>
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-public class CacheBenchmarks
+public class CacheBenchmarks : ICacheBenchmarks
 {
     private InMemoryCacheService _cache = default!;
 
