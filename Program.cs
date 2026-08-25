@@ -12,6 +12,7 @@ using DotnetServiceScaffold.Infrastructure.Extensions;
 using DotnetServiceScaffold.Infrastructure.HealthChecks;
 using DotnetServiceScaffold.Infrastructure.Logging;
 using DotnetServiceScaffold.Infrastructure.Metrics;
+using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 using DotnetServiceScaffold.Shared.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -25,6 +26,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOptions<DotnetServiceScaffoldOptions>()
 .Bind(builder.Configuration.GetSection("ApplicationSettings"))
 .ValidateOnStart();
+
+// Startup validation for service discovery options (endpoints, ports, timeouts).
+builder.Services.AddSingleton<IValidateOptions<ServiceDiscoveryOptions>, ServiceDiscoveryOptionsValidator>();
 
 var structuredLoggingOptions = builder.Configuration
 .GetSection("StructuredLogging")
