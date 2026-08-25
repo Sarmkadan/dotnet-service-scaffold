@@ -16,7 +16,7 @@ namespace DotnetServiceScaffold.Benchmarks;
 /// </summary>
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-public class StringBenchmarks
+public class StringBenchmarks : IStringBenchmarks
 {
     private const string CamelCaseInput = "userAccountServiceManager";
     private const string PascalCaseInput = "UserAccountServiceManager";
