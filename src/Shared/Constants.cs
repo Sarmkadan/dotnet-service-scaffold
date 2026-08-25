@@ -16,7 +16,34 @@ public static class Constants
     public const string Author = "Vladyslav Zaiets";
     public const string AuthorWebsite = "https://sarmkadan.com";
 
-    public static class Defaults
+    public const string Admin = "Admin";
+    public const string ServiceOwner = "ServiceOwner";
+    public const string Operator = "Operator";
+    public const string Viewer = "Viewer";
+
+    public const string ValidationError = "VALIDATION_ERROR";
+    public const string NotFound = "NOT_FOUND";
+    public const string Unauthorized = "UNAUTHORIZED";
+    public const string InternalError = "INTERNAL_ERROR";
+    public const string ServiceDisabled = "SERVICE_DISABLED";
+    public const string HealthCheckFailed = "HEALTH_CHECK_FAILED";
+
+    public const string HealthCheckIntervalKey = "HealthCheckInterval";
+    public const string HealthCheckTimeoutKey = "HealthCheckTimeout";
+    public const string MaxConcurrentHealthChecksKey = "MaxConcurrentHealthChecks";
+    public const string LoggingLevelKey = "LoggingLevel";
+    public const string MaintenanceModeKey = "MaintenanceMode";
+    public const string ApiRateLimitKey = "ApiRateLimit";
+
+    public static class Routes
+    {
+    }
+
+    public static class CacheKeys
+    {
+    }
+
+    public static class Limits
     {
         public const int HealthCheckIntervalSeconds = 60;
         public const int HealthCheckTimeoutSeconds = 10;
@@ -30,38 +57,10 @@ public static class Constants
         public const int HealthCheckResultRetentionDays = 30;
     }
 
-    public static class Roles
-    {
-        public const string Admin = "Admin";
-        public const string ServiceOwner = "ServiceOwner";
-        public const string Operator = "Operator";
-        public const string Viewer = "Viewer";
-    }
-
     public static class Headers
     {
         public const string ApiKeyHeader = "X-API-Key";
         public const string UserAgentHeader = "User-Agent";
         public const string TraceIdHeader = "X-Trace-Id";
-    }
-
-    public static class Errors
-    {
-        public const string ValidationError = "VALIDATION_ERROR";
-        public const string NotFound = "NOT_FOUND";
-        public const string Unauthorized = "UNAUTHORIZED";
-        public const string InternalError = "INTERNAL_ERROR";
-        public const string ServiceDisabled = "SERVICE_DISABLED";
-        public const string HealthCheckFailed = "HEALTH_CHECK_FAILED";
-    }
-
-    public static class ConfigurationKeys
-    {
-        public const string HealthCheckIntervalKey = "HealthCheckInterval";
-        public const string HealthCheckTimeoutKey = "HealthCheckTimeout";
-        public const string MaxConcurrentHealthChecksKey = "MaxConcurrentHealthChecks";
-        public const string LoggingLevelKey = "LoggingLevel";
-        public const string MaintenanceModeKey = "MaintenanceMode";
-        public const string ApiRateLimitKey = "ApiRateLimit";
     }
 }
