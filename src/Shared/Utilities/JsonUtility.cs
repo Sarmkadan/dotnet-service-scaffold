@@ -41,11 +41,37 @@ public static class JsonUtility
     };
 
     /// <summary>
+    /// Web-optimized JSON serializer options (camelCase, case-insensitive, allows trailing commas, numbers from strings).
+    /// </summary>
+    private static readonly JsonSerializerOptions WebDefaultOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        AllowTrailingCommas = true,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+        }
+    };
+
+    /// <summary>
     /// Serializes an object to JSON string using default options.
     /// </summary>
     public static string Serialize<T>(T obj)
     {
         return JsonSerializer.Serialize(obj, DefaultOptions);
+    }
+
+    /// <summary>
+    /// Serializes an object to JSON string using web-optimized options.
+    /// </summary>
+    public static string SerializeWeb<T>(T obj)
+    {
+        return JsonSerializer.Serialize(obj, WebDefaultOptions);
     }
 
     /// <summary>
