@@ -5,6 +5,8 @@
 // =============================================================================
 
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
@@ -53,6 +55,17 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
             return AuthenticateResult.NoResult();
         }
 
+        // Compare every supplied X-Api-Key header value against the first one in
+        // constant time. Ordinary string equality on secrets leaks timing
+        // information that can be exploited in timing attacks.
+        foreach (var headerValue in apiKeyHeaderValues)
+        {
+            if (string.IsNullOrWhiteSpace(headerValue) || !FixedTimeEquals(headerValue, providedApiKey))
+            {
+                return AuthenticateResult.Fail("Invalid API key");
+            }
+        }
+
         try
         {
             // Validate the API key against the database
@@ -97,6 +110,25 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
             error = "Unauthorized",
             message = "API key is required. Provide it in the X-Api-Key header."
         });
+    }
+
+    /// <summary>
+    /// Constant-time comparison of two API key strings. Length is compared first
+    /// (length alone is not secret); the byte comparison runs in fixed time via
+    /// <see cref="CryptographicOperations.FixedTimeEquals"/> to prevent timing attacks.
+    /// </summary>
+    private static bool FixedTimeEquals(string? left, string? right)
+    {
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
+        var leftBytes = Encoding.UTF8.GetBytes(left);
+        var rightBytes = Encoding.UTF8.GetBytes(right);
+
+        return leftBytes.Length == rightBytes.Length
+            && CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
     }
 }
 
