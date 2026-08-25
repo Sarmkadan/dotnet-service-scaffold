@@ -31,6 +31,34 @@ namespace DotnetServiceScaffold.Infrastructure.Integration;
 public sealed record WebhookAttemptRecord(int AttemptNumber, int? StatusCode, long LatencyMs, string? ErrorMessage, DateTime AttemptedAt);
 
 /// <summary>
+/// Describes the outcome of a webhook delivery attempt sequence, giving callers a clear
+/// result object (status, attempts, error) instead of forcing them to infer failures from
+/// a boolean or catch exceptions.
+/// </summary>
+/// <param name="Delivered">True if the endpoint accepted the payload.</param>
+/// <param name="StatusCode">HTTP status code of the final attempt, or null if no response was received.</param>
+/// <param name="AttemptCount">Total number of attempts made.</param>
+/// <param name="ErrorMessage">Error message from the final attempt, if any.</param>
+/// <param name="Attempts">History of every attempt made during delivery.</param>
+/// <param name="Cancelled">True when delivery stopped because the caller's cancellation token fired.</param>
+public sealed record WebhookDeliveryResult(
+    bool Delivered,
+    int? StatusCode,
+    int AttemptCount,
+    string? ErrorMessage,
+    IReadOnlyList<WebhookAttemptRecord> Attempts,
+    bool Cancelled)
+{
+    /// <summary>Creates a result for a successfully delivered webhook.</summary>
+    public static WebhookDeliveryResult Success(int statusCode, IReadOnlyList<WebhookAttemptRecord> attempts) =>
+        new(true, statusCode, attempts.Count, null, attempts, Cancelled: false);
+
+    /// <summary>Creates a result for a webhook that was not delivered.</summary>
+    public static WebhookDeliveryResult Failure(int? statusCode, string? errorMessage, IReadOnlyList<WebhookAttemptRecord> attempts, bool cancelled = false) =>
+        new(false, statusCode, attempts.Count, errorMessage, attempts, cancelled);
+}
+
+/// <summary>
 /// Client for sending webhook payloads to external endpoints with security features.
 /// Implements:
 /// - SSRF protection for webhook URLs
@@ -82,6 +110,24 @@ public class WebhookClient : IWebhookClient
     /// <exception cref="ArgumentException">Thrown if webhookUrl is invalid or blocked by SSRF protection.</exception>
     public async Task<bool> SendWebhookAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default)
     {
+        var result = await DeliverAsync(webhookUrl, payload, eventType, webhookSecret, cancellationToken);
+        return result.Delivered;
+    }
+
+    /// <summary>
+    /// Sends a webhook payload to the specified URL with automatic retry on failure and returns
+    /// a detailed delivery result describing every attempt instead of reducing the outcome to a boolean.
+    /// </summary>
+    /// <param name="webhookUrl">The destination URL for the webhook. Must be HTTPS and not localhost/internal.</param>
+    /// <param name="payload">The payload object to send.</param>
+    /// <param name="eventType">Optional event type identifier.</param>
+    /// <param name="webhookSecret">Optional secret for HMAC-SHA256 payload signing. If provided, signature header will be added.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="WebhookDeliveryResult"/> describing the delivery outcome.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if webhookUrl or payload is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if webhookUrl is invalid or blocked by SSRF protection.</exception>
+    public async Task<WebhookDeliveryResult> DeliverAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(webhookUrl);
         ArgumentNullException.ThrowIfNull(payload);
 
@@ -120,17 +166,18 @@ public class WebhookClient : IWebhookClient
                 }
 
                 // _httpClient already has timeout configured
-                var response = await _httpClient.PostAsync(webhookUrl, content, cancellationToken);
+                using var response = await _httpClient.PostAsync(webhookUrl, content, cancellationToken);
                 stopwatch.Stop();
                 statusCode = (int)response.StatusCode;
 
                 if (response.IsSuccessStatusCode)
                 {
+                    attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, null, DateTime.UtcNow));
                     RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: true, metricTags);
                     _logger.LogInformation(
                         "Webhook {WebhookId} delivered successfully with status {StatusCode}",
                         webhookId, response.StatusCode);
-                    return true;
+                    return WebhookDeliveryResult.Success(statusCode.Value, attempts);
                 }
 
                 retryable = HttpUtility.IsRetryableStatusCode(statusCode.Value);
@@ -157,13 +204,23 @@ public class WebhookClient : IWebhookClient
                     "Webhook {WebhookId} HTTP error on attempt {Attempt}/{MaxRetries}",
                     webhookId, attempt + 1, MaxRetries);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
+                // Caller requested cancellation - do not retry or dead-letter.
                 stopwatch.Stop();
                 attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, "cancelled", DateTime.UtcNow));
                 RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: false, metricTags);
                 _logger.LogWarning("Webhook {WebhookId} was cancelled", webhookId);
-                return false;
+                return WebhookDeliveryResult.Failure(statusCode, "cancelled", attempts, cancelled: true);
+            }
+            catch (OperationCanceledException ex)
+            {
+                // HttpClient timeouts surface as TaskCanceledException while the caller's token is still live.
+                stopwatch.Stop();
+                errorMessage = "request timed out";
+                _logger.LogWarning(ex,
+                    "Webhook {WebhookId} timed out on attempt {Attempt}/{MaxRetries}",
+                    webhookId, attempt + 1, MaxRetries);
             }
             catch (Exception ex)
             {
@@ -180,7 +237,7 @@ public class WebhookClient : IWebhookClient
             if (!retryable)
             {
                 await PersistDeadLetterAsync(webhookId, webhookUrl, json, eventType, attempts, cancellationToken);
-                return false;
+                return WebhookDeliveryResult.Failure(statusCode, errorMessage, attempts);
             }
 
             // Wait before retry with exponential backoff
@@ -193,7 +250,8 @@ public class WebhookClient : IWebhookClient
 
         _logger.LogError("Webhook {WebhookId} failed after {MaxRetries} attempts", webhookId, MaxRetries);
         await PersistDeadLetterAsync(webhookId, webhookUrl, json, eventType, attempts, cancellationToken);
-        return false;
+        var lastAttempt = attempts[^1];
+        return WebhookDeliveryResult.Failure(lastAttempt.StatusCode, lastAttempt.ErrorMessage, attempts);
     }
 
     /// <summary>
@@ -211,19 +269,22 @@ public class WebhookClient : IWebhookClient
             ?? throw new ArgumentException($"No dead-lettered webhook found with id {deadLetterId}", nameof(deadLetterId));
 
         var payload = JsonSerializer.Deserialize<JsonElement>(deadLetter.PayloadJson);
-        var delivered = await SendWebhookAsync(deadLetter.WebhookUrl, payload, deadLetter.EventType, webhookSecret, cancellationToken);
+        var result = await DeliverAsync(deadLetter.WebhookUrl, payload, deadLetter.EventType, webhookSecret, cancellationToken);
 
-        if (delivered)
+        if (result.Delivered)
         {
             deadLetter.MarkResolved();
         }
         else
         {
+            _logger.LogWarning(
+                "Replay of dead letter {DeadLetterId} failed: {ErrorMessage}",
+                deadLetterId, result.ErrorMessage ?? "unknown error");
             deadLetter.LastAttemptAt = DateTime.UtcNow;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return delivered;
+        return result.Delivered;
     }
 
     /// <summary>
