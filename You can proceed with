@@ -1,0 +1,2 @@
+dotnet build
+git commit -m "fix(healthcheck): correct memory threshold logic and fallback for unlimited memory"
