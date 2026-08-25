@@ -19,45 +19,45 @@ public class UserRepository : Repository<User>, IUserRepository
     {
     }
 
-    public async Task<User?> GetByEmailAsync(string email)
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Querying user by email: {Email}", email);
-        return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
+        return await _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 
-    public async Task<IEnumerable<User>> GetActiveUsersAsync()
+    public async Task<IEnumerable<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Querying active users");
         return await _dbSet
             .Where(u => u.IsActive && !u.IsLocked)
             .OrderBy(u => u.FullName)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<User>> GetLockedUsersAsync()
+    public async Task<IEnumerable<User>> GetLockedUsersAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Querying locked users");
         return await _dbSet
             .Where(u => u.IsLocked && u.LockedUntil > DateTime.UtcNow)
             .OrderByDescending(u => u.LockedUntil)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> EmailExistsAsync(string email)
+    public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Checking if email exists: {Email}", email);
-        return await _dbSet.AnyAsync(u => u.Email == email);
+        return await _dbSet.AnyAsync(u => u.Email == email, cancellationToken);
     }
 
-    public async Task<User?> GetWithApiKeysAsync(Guid userId)
+    public async Task<User?> GetWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Querying user with API keys: {UserId}", userId);
         return await _dbSet
             .Include(u => u.ApiKeys)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
     }
 
-    public async Task<IEnumerable<User>> SearchUsersAsync(string query, int page, int pageSize)
+    public async Task<IEnumerable<User>> SearchUsersAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -74,6 +74,6 @@ public class UserRepository : Repository<User>, IUserRepository
             .OrderBy(u => u.FullName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 }
