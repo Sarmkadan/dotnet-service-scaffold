@@ -17,10 +17,10 @@ public static class ExceptionExtensionsJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        PropertyNameCaseInsensitive = true,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        PropertyNamingPolicy = ExceptionExtensionsJsonExtensionsConstants.DefaultPropertyNamingPolicy,
+        WriteIndented = ExceptionExtensionsJsonExtensionsConstants.DefaultWriteIndented,
+        PropertyNameCaseInsensitive = ExceptionExtensionsJsonExtensionsConstants.PropertyNameCaseInsensitiveEnabled,
+        DefaultIgnoreCondition = ExceptionExtensionsJsonExtensionsConstants.DefaultIgnoreCondition
     };
 
     /// <summary>
@@ -30,7 +30,7 @@ public static class ExceptionExtensionsJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation for readability</param>
     /// <returns>A JSON string representation of the exception</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
-    public static string ToJson(this Exception exception, bool indented = false)
+    public static string ToJson(this Exception exception, bool indented = ExceptionExtensionsJsonExtensionsConstants.DefaultWriteIndented)
     {
         ArgumentNullException.ThrowIfNull(exception);
 
