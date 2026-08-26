@@ -202,7 +202,7 @@ public static class ServiceDiscoveryServiceExtensions
 
     private static bool MatchesPattern(string input, string pattern)
     {
-        if (pattern == "*")
+        if (pattern == ServiceDiscoveryServiceExtensionsConstants.WildcardAsterisk)
             return true;
 
         var regexPattern = System.Text.RegularExpressions.Regex.Escape(pattern)
