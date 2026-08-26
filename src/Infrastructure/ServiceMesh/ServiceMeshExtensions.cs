@@ -10,7 +10,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceMesh;
 /// Configuration options for the service mesh sidecar proxy integration.
 /// Bind this section from appsettings.json under the "ServiceMesh" key.
 /// </summary>
-public class ServiceMeshOptions
+public class ServiceMeshOptions : IServiceMeshOptions
 {
     /// <summary>Configuration section key used in appsettings.json.</summary>
     public const string SectionName = "ServiceMesh";
