@@ -24,141 +24,141 @@ public static class ServiceRegistrationValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = new List<string>(32); // Pre-allocate capacity for common error count
+        var errors = new List<string>(ServiceRegistrationValidationConstants.InitialErrorCapacity);
 
         // Required string properties
         if (string.IsNullOrWhiteSpace(value.ServiceName))
         {
-            errors.Add("ServiceName is required and cannot be empty or whitespace.");
+            errors.Add(ServiceRegistrationValidationConstants.ServiceNameRequiredError);
         }
-        else if (value.ServiceName.Length > 255)
+        else if (value.ServiceName.Length > ServiceRegistrationValidationConstants.MaxServiceNameLength)
         {
-            errors.Add("ServiceName must be 255 characters or less.");
+            errors.Add(ServiceRegistrationValidationConstants.ServiceNameTooLongError);
         }
 
         if (string.IsNullOrWhiteSpace(value.HealthCheckUrl))
         {
-            errors.Add("HealthCheckUrl is required and cannot be empty or whitespace.");
+            errors.Add(ServiceRegistrationValidationConstants.HealthCheckUrlRequiredError);
         }
         else if (!Uri.TryCreate(value.HealthCheckUrl, UriKind.Absolute, out _) &&
                  !Uri.TryCreate(value.HealthCheckUrl, UriKind.Relative, out _))
         {
-            errors.Add("HealthCheckUrl must be a valid URI.");
+            errors.Add(ServiceRegistrationValidationConstants.HealthCheckUrlInvalidError);
         }
 
         if (string.IsNullOrWhiteSpace(value.Version))
         {
-            errors.Add("Version is required and cannot be empty or whitespace.");
+            errors.Add(ServiceRegistrationValidationConstants.VersionRequiredError);
         }
-        else if (value.Version.Length > 50)
+        else if (value.Version.Length > ServiceRegistrationValidationConstants.MaxVersionLength)
         {
-            errors.Add("Version must be 50 characters or less.");
+            errors.Add(ServiceRegistrationValidationConstants.VersionTooLongError);
         }
 
         if (string.IsNullOrWhiteSpace(value.Endpoint))
         {
-            errors.Add("Endpoint is required and cannot be empty or whitespace.");
+            errors.Add(ServiceRegistrationValidationConstants.EndpointRequiredError);
         }
-        else if (value.Endpoint.Length > 255)
+        else if (value.Endpoint.Length > ServiceRegistrationValidationConstants.MaxEndpointLength)
         {
-            errors.Add("Endpoint must be 255 characters or less.");
+            errors.Add(ServiceRegistrationValidationConstants.EndpointTooLongError);
         }
 
         // Required Guid properties
         if (value.OwnerId == Guid.Empty)
         {
-            errors.Add("OwnerId is required and cannot be empty.");
+            errors.Add(ServiceRegistrationValidationConstants.OwnerIdRequiredError);
         }
 
         // DateTime properties
         if (value.CreatedAt == default)
         {
-            errors.Add("CreatedAt must be set to a valid DateTime.");
+            errors.Add(ServiceRegistrationValidationConstants.CreatedAtRequiredError);
         }
-        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(ServiceRegistrationValidationConstants.FutureDateTimeToleranceMinutes))
         {
-            errors.Add("CreatedAt cannot be in the future.");
+            errors.Add(ServiceRegistrationValidationConstants.CreatedAtFutureError);
         }
 
         if (value.UpdatedAt == default)
         {
-            errors.Add("UpdatedAt must be set to a valid DateTime.");
+            errors.Add(ServiceRegistrationValidationConstants.UpdatedAtRequiredError);
         }
-        else if (value.UpdatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.UpdatedAt > DateTime.UtcNow.AddMinutes(ServiceRegistrationValidationConstants.FutureDateTimeToleranceMinutes))
         {
-            errors.Add("UpdatedAt cannot be in the future.");
+            errors.Add(ServiceRegistrationValidationConstants.UpdatedAtFutureError);
         }
         else if (value.UpdatedAt < value.CreatedAt)
         {
-            errors.Add("UpdatedAt cannot be earlier than CreatedAt.");
+            errors.Add(ServiceRegistrationValidationConstants.UpdatedAtEarlierThanCreatedAtError);
         }
 
         if (value.LastHealthCheckAt.HasValue)
         {
-            if (value.LastHealthCheckAt.Value > DateTime.UtcNow.AddMinutes(5))
+            if (value.LastHealthCheckAt.Value > DateTime.UtcNow.AddMinutes(ServiceRegistrationValidationConstants.FutureDateTimeToleranceMinutes))
             {
-                errors.Add("LastHealthCheckAt cannot be in the future.");
+                errors.Add(ServiceRegistrationValidationConstants.LastHealthCheckAtFutureError);
             }
             else if (value.LastHealthCheckAt.Value < value.CreatedAt)
             {
-                errors.Add("LastHealthCheckAt cannot be earlier than CreatedAt.");
+                errors.Add(ServiceRegistrationValidationConstants.LastHealthCheckAtEarlierThanCreatedAtError);
             }
         }
 
         // Numeric properties with business rules
         if (value.HealthCheckIntervalSeconds <= 0)
         {
-            errors.Add("HealthCheckIntervalSeconds must be greater than zero.");
+            errors.Add(ServiceRegistrationValidationConstants.HealthCheckIntervalSecondsPositiveError);
         }
-        else if (value.HealthCheckIntervalSeconds > 86400) // 24 hours
+        else if (value.HealthCheckIntervalSeconds > ServiceRegistrationValidationConstants.MaxHealthCheckIntervalSeconds)
         {
-            errors.Add("HealthCheckIntervalSeconds cannot exceed 86400 seconds (24 hours).");
+            errors.Add(ServiceRegistrationValidationConstants.HealthCheckIntervalSecondsTooLargeError);
         }
 
         if (value.TimeoutSeconds <= 0)
         {
-            errors.Add("TimeoutSeconds must be greater than zero.");
+            errors.Add(ServiceRegistrationValidationConstants.TimeoutSecondsPositiveError);
         }
-        else if (value.TimeoutSeconds > 300) // 5 minutes
+        else if (value.TimeoutSeconds > ServiceRegistrationValidationConstants.MaxTimeoutSeconds)
         {
-            errors.Add("TimeoutSeconds cannot exceed 300 seconds (5 minutes).");
+            errors.Add(ServiceRegistrationValidationConstants.TimeoutSecondsTooLargeError);
         }
 
         // Business logic validations
         if (value.ConsecutiveFailures < 0)
         {
-            errors.Add("ConsecutiveFailures cannot be negative.");
+            errors.Add(ServiceRegistrationValidationConstants.ConsecutiveFailuresNegativeError);
         }
 
         if (value.TotalRequests < 0)
         {
-            errors.Add("TotalRequests cannot be negative.");
+            errors.Add(ServiceRegistrationValidationConstants.TotalRequestsNegativeError);
         }
 
         if (value.SuccessfulRequests < 0)
         {
-            errors.Add("SuccessfulRequests cannot be negative.");
+            errors.Add(ServiceRegistrationValidationConstants.SuccessfulRequestsNegativeError);
         }
         else if (value.SuccessfulRequests > value.TotalRequests)
         {
-            errors.Add("SuccessfulRequests cannot exceed TotalRequests.");
+            errors.Add(ServiceRegistrationValidationConstants.SuccessfulRequestsExceedTotalError);
         }
 
         // SystemdServiceName length validation
-        if (!string.IsNullOrEmpty(value.SystemdServiceName) && value.SystemdServiceName.Length > 500)
+        if (!string.IsNullOrEmpty(value.SystemdServiceName) && value.SystemdServiceName.Length > ServiceRegistrationValidationConstants.MaxSystemdServiceNameLength)
         {
-            errors.Add("SystemdServiceName must be 500 characters or less.");
+            errors.Add(ServiceRegistrationValidationConstants.SystemdServiceNameTooLongError);
         }
 
         // Cross-field validation
         if (value.IsEnabled && value.Status == ServiceStatus.Disabled)
         {
-            errors.Add("A service cannot be enabled while having Disabled status.");
+            errors.Add(ServiceRegistrationValidationConstants.EnabledWithDisabledStatusError);
         }
 
         if (value.Status == ServiceStatus.Disabled && !value.IsEnabled)
         {
-            errors.Add("A disabled service must have IsEnabled set to false.");
+            errors.Add(ServiceRegistrationValidationConstants.DisabledWithoutIsEnabledError);
         }
 
         // Navigation properties are validated separately if needed
@@ -196,6 +196,6 @@ public static class ServiceRegistrationValidation
         }
 
         throw new ArgumentException(
-            $"ServiceRegistration is invalid. Validation errors: {string.Join(" ", errors)}");
+            string.Format(ServiceRegistrationValidationConstants.InvalidRegistrationFormat, string.Join(" ", errors)));
     }
 }
