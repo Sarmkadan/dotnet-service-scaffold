@@ -219,9 +219,9 @@ public class MetricsService : IMetricsService
 }
 
 /// <summary>
-/// Internal class representing a metric value with type and statistics.
+/// Class representing a metric value with type and statistics.
 /// </summary>
-internal class MetricValue
+public class MetricValue
 {
     public MetricType Type { get; set; }
     public double Value { get; set; }
@@ -236,7 +236,7 @@ internal class MetricValue
 /// <summary>
 /// Enum for metric types.
 /// </summary>
-internal enum MetricType
+public enum MetricType
 {
     Counter,
     Gauge,
