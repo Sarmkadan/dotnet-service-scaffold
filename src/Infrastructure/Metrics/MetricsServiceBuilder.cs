@@ -4,7 +4,7 @@ using System;
 namespace DotnetServiceScaffold.Infrastructure.Metrics
 {
     /// <summary>
-    /// Builder for creating <see cref="MetricValue"/> instances with fluent interface.
+    /// Builder for creating <see cref="MetricValue"/> instances with a fluent interface.
     /// </summary>
     public class MetricsServiceBuilder
     {
@@ -99,17 +99,12 @@ namespace DotnetServiceScaffold.Infrastructure.Metrics
         /// <exception cref="ArgumentException">If <paramref name="buckets"/> is null or empty.</exception>
         public MetricsServiceBuilder WithBuckets(double[] buckets)
         {
-            if (buckets == null)
-            {
-                throw new ArgumentException("Buckets cannot be null.", nameof(buckets));
-            }
-
+            ArgumentNullException.ThrowIfNull(buckets);
             if (buckets.Length == 0)
             {
                 throw new ArgumentException("Buckets cannot be empty.", nameof(buckets));
             }
 
-            // Validate that buckets are sorted in ascending order
             for (int i = 1; i < buckets.Length; i++)
             {
                 if (buckets[i] <= buckets[i - 1])
@@ -131,9 +126,10 @@ namespace DotnetServiceScaffold.Infrastructure.Metrics
         /// <exception cref="ArgumentException">If <paramref name="bucketCounts"/> is null or doesn't match buckets length.</exception>
         public MetricsServiceBuilder WithBucketCounts(long[] bucketCounts)
         {
-            if (bucketCounts == null)
+            ArgumentNullException.ThrowIfNull(bucketCounts);
+            if (bucketCounts.Length == 0)
             {
-                throw new ArgumentException("Bucket counts cannot be null.", nameof(bucketCounts));
+                throw new ArgumentException("Bucket counts cannot be empty.", nameof(bucketCounts));
             }
 
             if (_bucketsSet && bucketCounts.Length != _buckets.Length)
@@ -181,64 +177,37 @@ namespace DotnetServiceScaffold.Infrastructure.Metrics
                 Value = _value
             };
 
-            // Set properties based on metric type
             switch (_type)
             {
                 case MetricType.Counter:
-                    // Counter only uses Value; Count, Min, Max are not used
                     if (_countSet || _minSet || _maxSet || _bucketsSet || _bucketCountsSet || _bucketSumSet)
                     {
                         throw new ArgumentException("Counter metrics should not set Count, Min, Max, Buckets, BucketCounts, or BucketSum.");
                     }
                     break;
                 case MetricType.Gauge:
-                    // Gauge only uses Value; Count, Min, Max are not used
                     if (_countSet || _minSet || _maxSet || _bucketsSet || _bucketCountsSet || _bucketSumSet)
                     {
                         throw new ArgumentException("Gauge metrics should not set Count, Min, Max, Buckets, BucketCounts, or BucketSum.");
                     }
                     break;
                 case MetricType.Timer:
-                    // Timer requires Count, Min, Max
-                    if (!_countSet)
-                    {
-                        throw new ArgumentException("Timer metric requires Count to be set.", nameof(_count));
-                    }
-                    if (!_minSet)
-                    {
-                        throw new ArgumentException("Timer metric requires Min to be set.", nameof(_min));
-                    }
-                    if (!_maxSet)
-                    {
-                        throw new ArgumentException("Timer metric requires Max to be set.", nameof(_max));
-                    }
+                    if (!_countSet) throw new ArgumentException("Timer metric requires Count to be set.", nameof(_count));
+                    if (!_minSet) throw new ArgumentException("Timer metric requires Min to be set.", nameof(_min));
+                    if (!_maxSet) throw new ArgumentException("Timer metric requires Max to be set.", nameof(_max));
                     metric.Count = _count;
                     metric.Min = _min;
                     metric.Max = _max;
-                    // Timer should not set Buckets, BucketCounts, BucketSum
                     if (_bucketsSet || _bucketCountsSet || _bucketSumSet)
                     {
                         throw new ArgumentException("Timer metrics should not set Buckets, BucketCounts, or BucketSum.");
                     }
                     break;
                 case MetricType.Histogram:
-                    // Histogram requires Buckets
-                    if (!_bucketsSet)
-                    {
-                        throw new ArgumentException("Histogram metric requires Buckets to be set.", nameof(_buckets));
-                    }
+                    if (!_bucketsSet) throw new ArgumentException("Histogram metric requires Buckets to be set.", nameof(_buckets));
                     metric.Buckets = _buckets;
-                    // If BucketCounts is set, use it; otherwise, we'll leave it null (will be set on first update)
-                    if (_bucketCountsSet)
-                    {
-                        metric.BucketCounts = _bucketCounts;
-                    }
-                    // If BucketSum is set, use it
-                    if (_bucketSumSet)
-                    {
-                        metric.BucketSum = _bucketSum;
-                    }
-                    // Histogram should not set Min, Max
+                    if (_bucketCountsSet) metric.BucketCounts = _bucketCounts;
+                    if (_bucketSumSet) metric.BucketSum = _bucketSum;
                     if (_minSet || _maxSet)
                     {
                         throw new ArgumentException("Histogram metrics should not set Min or Max.");
@@ -273,11 +242,11 @@ namespace DotnetServiceScaffold.Infrastructure.Metrics
                 _bucketSum = template.BucketSum,
                 _typeSet = true,
                 _valueSet = true,
-                _countSet = template.Count != 0 || template.Type == MetricType.Timer || template.Type == MetricType.Histogram, // Assume set if non-zero or type requires it
-                _minSet = template.Type == MetricType.Timer, // Timer sets Min/Max
+                _countSet = template.Count != 0 || template.Type is MetricType.Timer or MetricType.Histogram,
+                _minSet = template.Type == MetricType.Timer,
                 _maxSet = template.Type == MetricType.Timer,
-                _bucketsSet = template.Buckets != null,
-                _bucketCountsSet = template.BucketCounts != null,
+                _bucketsSet = template.Buckets is not null,
+                _bucketCountsSet = template.BucketCounts is not null,
                 _bucketSumSet = template.BucketSum.HasValue
             };
         }
