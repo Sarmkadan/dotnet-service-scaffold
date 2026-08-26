@@ -17,9 +17,9 @@ public static class ServiceScaffoldDbContextJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = ServiceScaffoldDbContextJsonExtensionsConstants.PropertyNamingPolicy,
+        WriteIndented = ServiceScaffoldDbContextJsonExtensionsConstants.WriteIndented,
+        PropertyNameCaseInsensitive = ServiceScaffoldDbContextJsonExtensionsConstants.PropertyNameCaseInsensitive,
     };
 
     /// <summary>
