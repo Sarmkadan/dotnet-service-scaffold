@@ -41,12 +41,16 @@ public class ServiceScaffoldException : Exception
 public class ServiceNotFoundException : ServiceScaffoldException
 {
     public ServiceNotFoundException(Guid serviceId)
-        : base($"Service with ID {serviceId} not found", "SERVICE_NOT_FOUND")
+        : base(
+            string.Format(ServiceScaffoldExceptionConstants.ServiceIdNotFoundMessageFormat, serviceId),
+            ServiceScaffoldExceptionConstants.ServiceNotFoundErrorCode)
     {
     }
 
     public ServiceNotFoundException(string serviceName)
-        : base($"Service '{serviceName}' not found", "SERVICE_NOT_FOUND")
+        : base(
+            string.Format(ServiceScaffoldExceptionConstants.ServiceNameNotFoundMessageFormat, serviceName),
+            ServiceScaffoldExceptionConstants.ServiceNotFoundErrorCode)
     {
     }
 }
@@ -59,13 +63,17 @@ public class ServiceValidationException : ServiceScaffoldException
     public List<string> Errors { get; set; } = new();
 
     public ServiceValidationException(string message)
-        : base(message, "VALIDATION_ERROR")
+        : base(message, ServiceScaffoldExceptionConstants.ValidationErrorCode)
     {
         Errors.Add(message);
     }
 
     public ServiceValidationException(List<string> errors)
-        : base($"Validation failed: {string.Join("; ", errors)}", "VALIDATION_ERROR")
+        : base(
+            string.Format(
+                ServiceScaffoldExceptionConstants.ValidationFailedMessageFormat,
+                string.Join(ServiceScaffoldExceptionConstants.ErrorSeparator, errors)),
+            ServiceScaffoldExceptionConstants.ValidationErrorCode)
     {
         Errors = errors;
     }
@@ -77,7 +85,9 @@ public class ServiceValidationException : ServiceScaffoldException
 public class HealthCheckException : ServiceScaffoldException
 {
     public HealthCheckException(Guid serviceId, string reason)
-        : base($"Health check failed for service {serviceId}: {reason}", "HEALTH_CHECK_FAILED")
+        : base(
+            string.Format(ServiceScaffoldExceptionConstants.HealthCheckFailedMessageFormat, serviceId, reason),
+            ServiceScaffoldExceptionConstants.HealthCheckFailedErrorCode)
     {
     }
 }
@@ -87,8 +97,8 @@ public class HealthCheckException : ServiceScaffoldException
 /// </summary>
 public class UnauthorizedException : ServiceScaffoldException
 {
-    public UnauthorizedException(string message = "Unauthorized access")
-        : base(message, "UNAUTHORIZED")
+    public UnauthorizedException(string message = ServiceScaffoldExceptionConstants.DefaultUnauthorizedMessage)
+        : base(message, ServiceScaffoldExceptionConstants.UnauthorizedErrorCode)
     {
     }
 }
@@ -98,8 +108,8 @@ public class UnauthorizedException : ServiceScaffoldException
 /// </summary>
 public class InvalidApiKeyException : ServiceScaffoldException
 {
-    public InvalidApiKeyException(string reason = "Invalid API key")
-        : base(reason, "INVALID_API_KEY")
+    public InvalidApiKeyException(string reason = ServiceScaffoldExceptionConstants.DefaultInvalidApiKeyMessage)
+        : base(reason, ServiceScaffoldExceptionConstants.InvalidApiKeyErrorCode)
     {
     }
 }
@@ -110,7 +120,7 @@ public class InvalidApiKeyException : ServiceScaffoldException
 public class DataAccessException : ServiceScaffoldException
 {
     public DataAccessException(string message, Exception innerException)
-        : base(message, "DATA_ACCESS_ERROR", innerException)
+        : base(message, ServiceScaffoldExceptionConstants.DataAccessErrorCode, innerException)
     {
     }
 }
@@ -121,7 +131,7 @@ public class DataAccessException : ServiceScaffoldException
 public class ConfigurationException : ServiceScaffoldException
 {
     public ConfigurationException(string message)
-        : base(message, "CONFIGURATION_ERROR")
+        : base(message, ServiceScaffoldExceptionConstants.ConfigurationErrorCode)
     {
     }
 }
@@ -132,7 +142,9 @@ public class ConfigurationException : ServiceScaffoldException
 public class ResourceExhaustedException : ServiceScaffoldException
 {
     public ResourceExhaustedException(string resource)
-        : base($"Resource limit exceeded for {resource}", "RESOURCE_EXHAUSTED")
+        : base(
+            string.Format(ServiceScaffoldExceptionConstants.ResourceExhaustedMessageFormat, resource),
+            ServiceScaffoldExceptionConstants.ResourceExhaustedErrorCode)
     {
     }
 }
