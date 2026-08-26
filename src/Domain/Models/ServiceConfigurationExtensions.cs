@@ -32,7 +32,7 @@ public static class ServiceConfigurationExtensions
             return result;
         }
 
-        return 0;
+        return ServiceConfigurationExtensionsConstants.DefaultNumericValue;
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public static class ServiceConfigurationExtensions
             return result;
         }
 
-        return 0;
+        return ServiceConfigurationExtensionsConstants.DefaultDecimalValue;
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public static class ServiceConfigurationExtensions
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        if (string.Equals(configuration.Value, newValue, StringComparison.Ordinal))
+        if (string.Equals(configuration.Value, newValue, ServiceConfigurationExtensionsConstants.OrdinalComparison))
         {
             return false;
         }
@@ -118,7 +118,7 @@ public static class ServiceConfigurationExtensions
     /// <param name="configuration">The service configuration</param>
     /// <param name="defaultValue">The default value to return if configuration is null or empty</param>
     /// <returns>The configuration value or the default value</returns>
-    public static string GetValueOrDefault(this ServiceConfiguration? configuration, string defaultValue = "")
+    public static string GetValueOrDefault(this ServiceConfiguration? configuration, string defaultValue = ServiceConfigurationExtensionsConstants.DefaultStringValue)
     {
         if (configuration is null || string.IsNullOrEmpty(configuration.Value))
         {
@@ -137,7 +137,7 @@ public static class ServiceConfigurationExtensions
     public static bool IsSystemConfiguration(this ServiceConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
-        return configuration.IsSystemConfig || configuration.Key.StartsWith("System.", StringComparison.Ordinal);
+        return configuration.IsSystemConfig || configuration.Key.StartsWith(ServiceConfigurationExtensionsConstants.SystemKeyPrefix, ServiceConfigurationExtensionsConstants.OrdinalComparison);
     }
 
     /// <summary>
