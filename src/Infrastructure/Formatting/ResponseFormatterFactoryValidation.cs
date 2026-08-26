@@ -27,7 +27,7 @@ public static class ResponseFormatterFactoryValidation
         // Validate formatters dictionary
         if (value.GetSupportedMediaTypes().Count() == 0)
         {
-            problems.Add("ResponseFormatterFactory has no registered formatters.");
+            problems.Add(ResponseFormatterFactoryValidationConstants.NoRegisteredFormatters);
         }
 
         // Validate default formatter
@@ -36,12 +36,12 @@ public static class ResponseFormatterFactoryValidation
             var defaultFormatter = value.GetFormatter(null);
             if (defaultFormatter is null)
             {
-                problems.Add("ResponseFormatterFactory default formatter is null.");
+                problems.Add(ResponseFormatterFactoryValidationConstants.DefaultFormatterIsNull);
             }
         }
         catch (Exception ex)
         {
-            problems.Add($"ResponseFormatterFactory default formatter retrieval failed: {ex.Message}");
+            problems.Add(string.Format(ResponseFormatterFactoryValidationConstants.DefaultFormatterRetrievalFailed, ex.Message));
         }
 
         // Validate individual formatters
@@ -50,19 +50,19 @@ public static class ResponseFormatterFactoryValidation
         {
             if (string.IsNullOrWhiteSpace(mediaType))
             {
-                problems.Add("ResponseFormatterFactory contains formatter with null or whitespace media type.");
+                problems.Add(ResponseFormatterFactoryValidationConstants.FormatterMediaTypeIsNullOrWhiteSpace);
                 continue;
             }
 
             var formatter = value.GetFormatter(mediaType);
             if (formatter is null)
             {
-                problems.Add($"ResponseFormatterFactory formatter for media type '{mediaType}' is null.");
+                problems.Add(string.Format(ResponseFormatterFactoryValidationConstants.FormatterForMediaTypeIsNull, mediaType));
             }
 
             if (!value.IsMediaTypeSupported(mediaType))
             {
-                problems.Add($"ResponseFormatterFactory reports media type '{mediaType}' as not supported despite being registered.");
+                problems.Add(string.Format(ResponseFormatterFactoryValidationConstants.MediaTypeNotSupportedDespiteRegistered, mediaType));
             }
         }
 
@@ -74,8 +74,7 @@ public static class ResponseFormatterFactoryValidation
 
         if (duplicateCheck.Count > 0)
         {
-            problems.Add(
-                $"ResponseFormatterFactory contains duplicate media type registrations: {string.Join(", ", duplicateCheck.Select(g => $"'{g.Key}'"))}.");
+            problems.Add(string.Format(ResponseFormatterFactoryValidationConstants.DuplicateMediaTypeRegistrations, string.Join(", ", duplicateCheck.Select(g => $"'{g.Key}'"))));
         }
 
         return problems.AsReadOnly();
