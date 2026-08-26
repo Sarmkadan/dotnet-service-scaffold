@@ -104,6 +104,7 @@ public static class ValidationUtilityJsonExtensions
     /// </summary>
     private sealed class ValidationResultDto
     {
+        [JsonPropertyName(ValidationUtilityJsonExtensionsConstants.MessagePropertyName)]
         public string? Message { get; set; }
     }
 }
