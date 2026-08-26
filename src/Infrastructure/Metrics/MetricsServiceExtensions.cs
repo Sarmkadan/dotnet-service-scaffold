@@ -113,7 +113,7 @@ public static class MetricsServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(metricName);
 
-        service.IncrementCounter(metricName, 1, tags);
+        service.IncrementCounter(metricName, MetricsServiceExtensionsConstants.DefaultCounterIncrement, tags);
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public static class MetricsServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(metricName);
 
-        service.RecordGauge(metricName, 0, tags);
+        service.RecordGauge(metricName, MetricsServiceExtensionsConstants.ZeroGaugeValue, tags);
     }
 
     /// <summary>
@@ -190,12 +190,12 @@ public static class MetricsServiceExtensions
         {
             sw.Stop();
             var elapsedMs = sw.ElapsedMilliseconds;
-		if (elapsedMs < 0)
-		{
-			// Defensive check: Stopwatch should never return negative values, but validate anyway
-			elapsedMs = 0;
-		}
-service.RecordTiming(metricName, elapsedMs, tags);
+            if (elapsedMs < MetricsServiceExtensionsConstants.MinimumElapsedMilliseconds)
+            {
+                // Defensive check: Stopwatch should never return negative values, but validate anyway
+                elapsedMs = MetricsServiceExtensionsConstants.MinimumElapsedMilliseconds;
+            }
+            service.RecordTiming(metricName, elapsedMs, tags);
         }
     }
 }
