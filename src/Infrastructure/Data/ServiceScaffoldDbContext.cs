@@ -14,7 +14,7 @@ namespace DotnetServiceScaffold.Infrastructure.Data;
 /// <summary>
 /// Entity Framework Core DbContext for the service scaffold platform.
 /// </summary>
-public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbContext>
+public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbContext>, IServiceScaffoldDbContext
 {
     private readonly ILogger<ServiceScaffoldDbContext> _logger;
 
