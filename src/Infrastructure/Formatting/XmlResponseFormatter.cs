@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Infrastructure.Formatting;
 /// Formatter for XML responses. Handles serialization of objects to XML using
 /// System.Xml.Serialization.XmlSerializer with consistent formatting and null handling.
 /// </summary>
-public class XmlResponseFormatter : IResponseFormatter
+public class XmlResponseFormatter : IResponseFormatter, IXmlResponseFormatter
 {
     public string MediaType => "application/xml";
 
