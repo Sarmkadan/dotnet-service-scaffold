@@ -74,18 +74,22 @@ public static class AuditLogRepositoryValidation
     /// <param name="userId">The user identifier.</param>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
-    public static IReadOnlyList<string> ValidateGetByUserIdParameters(Guid userId, int count = 50)
+    public static IReadOnlyList<string> ValidateGetByUserIdParameters(
+        Guid userId,
+        int count = AuditLogRepositoryValidationConstants.DefaultGetByUserIdCount)
     {
         var problems = new List<string>();
 
         if (count <= 0)
         {
-            problems.Add("Count must be greater than zero.");
+            problems.Add(AuditLogRepositoryValidationConstants.CountMustBeGreaterThanZero);
         }
 
-        if (count > 1000)
+        if (count > AuditLogRepositoryValidationConstants.MaxCount)
         {
-            problems.Add("Count exceeds maximum allowed value of 1000.");
+            problems.Add(string.Format(
+                AuditLogRepositoryValidationConstants.CountExceedsMaximumAllowedValueFormat,
+                AuditLogRepositoryValidationConstants.MaxCount));
         }
 
         return problems.AsReadOnly();
@@ -97,7 +101,9 @@ public static class AuditLogRepositoryValidation
     /// <param name="userId">The user identifier.</param>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetByUserIdParametersValid(Guid userId, int count = 50) =>
+    public static bool IsGetByUserIdParametersValid(
+        Guid userId,
+        int count = AuditLogRepositoryValidationConstants.DefaultGetByUserIdCount) =>
         ValidateGetByUserIdParameters(userId, count).Count == 0;
 
     /// <summary>
@@ -107,14 +113,17 @@ public static class AuditLogRepositoryValidation
     /// <param name="userId">The user identifier.</param>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <exception cref="ArgumentException">Thrown if the parameters are invalid.</exception>
-    public static void EnsureGetByUserIdParametersValid(Guid userId, int count = 50)
+    public static void EnsureGetByUserIdParametersValid(
+        Guid userId,
+        int count = AuditLogRepositoryValidationConstants.DefaultGetByUserIdCount)
     {
         var problems = ValidateGetByUserIdParameters(userId, count);
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"GetByUserIdAsync parameters are invalid. Problems: {string.Join(" ", problems)}");
+            throw new ArgumentException(string.Format(
+                AuditLogRepositoryValidationConstants.GetByUserIdParametersInvalidFormat,
+                string.Join(" ", problems)));
         }
     }
 
@@ -133,11 +142,13 @@ public static class AuditLogRepositoryValidation
 
         if (string.IsNullOrWhiteSpace(entityType))
         {
-            problems.Add("Entity type cannot be null or whitespace.");
+            problems.Add(AuditLogRepositoryValidationConstants.EntityTypeCannotBeNullOrWhiteSpace);
         }
-        else if (entityType.Length > 100)
+        else if (entityType.Length > AuditLogRepositoryValidationConstants.MaxEntityTypeLength)
         {
-            problems.Add("Entity type exceeds maximum length of 100 characters.");
+            problems.Add(string.Format(
+                AuditLogRepositoryValidationConstants.EntityTypeExceedsMaxLengthFormat,
+                AuditLogRepositoryValidationConstants.MaxEntityTypeLength));
         }
 
         return problems.AsReadOnly();
@@ -168,8 +179,9 @@ public static class AuditLogRepositoryValidation
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"GetByEntityAsync parameters are invalid. Problems: {string.Join(" ", problems)}");
+            throw new ArgumentException(string.Format(
+                AuditLogRepositoryValidationConstants.GetByEntityParametersInvalidFormat,
+                string.Join(" ", problems)));
         }
     }
 
@@ -178,18 +190,21 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
-    public static IReadOnlyList<string> ValidateGetRecentLogsParameters(int count = 100)
+    public static IReadOnlyList<string> ValidateGetRecentLogsParameters(
+        int count = AuditLogRepositoryValidationConstants.DefaultGetRecentLogsCount)
     {
         var problems = new List<string>();
 
         if (count <= 0)
         {
-            problems.Add("Count must be greater than zero.");
+            problems.Add(AuditLogRepositoryValidationConstants.CountMustBeGreaterThanZero);
         }
 
-        if (count > 1000)
+        if (count > AuditLogRepositoryValidationConstants.MaxCount)
         {
-            problems.Add("Count exceeds maximum allowed value of 1000.");
+            problems.Add(string.Format(
+                AuditLogRepositoryValidationConstants.CountExceedsMaximumAllowedValueFormat,
+                AuditLogRepositoryValidationConstants.MaxCount));
         }
 
         return problems.AsReadOnly();
@@ -200,7 +215,8 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetRecentLogsParametersValid(int count = 100) =>
+    public static bool IsGetRecentLogsParametersValid(
+        int count = AuditLogRepositoryValidationConstants.DefaultGetRecentLogsCount) =>
         ValidateGetRecentLogsParameters(count).Count == 0;
 
     /// <summary>
@@ -209,14 +225,16 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of logs to return.</param>
     /// <exception cref="ArgumentException">Thrown if the parameters are invalid.</exception>
-    public static void EnsureGetRecentLogsParametersValid(int count = 100)
+    public static void EnsureGetRecentLogsParametersValid(
+        int count = AuditLogRepositoryValidationConstants.DefaultGetRecentLogsCount)
     {
         var problems = ValidateGetRecentLogsParameters(count);
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"GetRecentLogsAsync parameters are invalid. Problems: {string.Join(" ", problems)}");
+            throw new ArgumentException(string.Format(
+                AuditLogRepositoryValidationConstants.GetRecentLogsParametersInvalidFormat,
+                string.Join(" ", problems)));
         }
     }
 
@@ -225,18 +243,21 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of failed actions to return.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
-    public static IReadOnlyList<string> ValidateGetFailedActionsParameters(int count = 50)
+    public static IReadOnlyList<string> ValidateGetFailedActionsParameters(
+        int count = AuditLogRepositoryValidationConstants.DefaultGetFailedActionsCount)
     {
         var problems = new List<string>();
 
         if (count <= 0)
         {
-            problems.Add("Count must be greater than zero.");
+            problems.Add(AuditLogRepositoryValidationConstants.CountMustBeGreaterThanZero);
         }
 
-        if (count > 1000)
+        if (count > AuditLogRepositoryValidationConstants.MaxCount)
         {
-            problems.Add("Count exceeds maximum allowed value of 1000.");
+            problems.Add(string.Format(
+                AuditLogRepositoryValidationConstants.CountExceedsMaximumAllowedValueFormat,
+                AuditLogRepositoryValidationConstants.MaxCount));
         }
 
         return problems.AsReadOnly();
@@ -247,7 +268,8 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of failed actions to return.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsGetFailedActionsParametersValid(int count = 50) =>
+    public static bool IsGetFailedActionsParametersValid(
+        int count = AuditLogRepositoryValidationConstants.DefaultGetFailedActionsCount) =>
         ValidateGetFailedActionsParameters(count).Count == 0;
 
     /// <summary>
@@ -256,14 +278,16 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="count">The maximum number of failed actions to return.</param>
     /// <exception cref="ArgumentException">Thrown if the parameters are invalid.</exception>
-    public static void EnsureGetFailedActionsParametersValid(int count = 50)
+    public static void EnsureGetFailedActionsParametersValid(
+        int count = AuditLogRepositoryValidationConstants.DefaultGetFailedActionsCount)
     {
         var problems = ValidateGetFailedActionsParameters(count);
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"GetFailedActionsAsync parameters are invalid. Problems: {string.Join(" ", problems)}");
+            throw new ArgumentException(string.Format(
+                AuditLogRepositoryValidationConstants.GetFailedActionsParametersInvalidFormat,
+                string.Join(" ", problems)));
         }
     }
 
@@ -272,18 +296,21 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="daysToKeep">The number of days to keep logs.</param>
     /// <returns>A list of human-readable validation problems; empty if valid.</returns>
-    public static IReadOnlyList<string> ValidateDeleteOldLogsParameters(int daysToKeep = 90)
+    public static IReadOnlyList<string> ValidateDeleteOldLogsParameters(
+        int daysToKeep = AuditLogRepositoryValidationConstants.DefaultDeleteOldLogsDaysToKeep)
     {
         var problems = new List<string>();
 
         if (daysToKeep <= 0)
         {
-            problems.Add("Days to keep must be greater than zero.");
+            problems.Add(AuditLogRepositoryValidationConstants.DaysToKeepMustBeGreaterThanZero);
         }
 
-        if (daysToKeep > 3650) // ~10 years
+        if (daysToKeep > AuditLogRepositoryValidationConstants.MaxDeleteOldLogsDaysToKeep)
         {
-            problems.Add("Days to keep exceeds maximum allowed value of 3650 days (~10 years).");
+            problems.Add(string.Format(
+                AuditLogRepositoryValidationConstants.DaysToKeepExceedsMaximumAllowedValueFormat,
+                AuditLogRepositoryValidationConstants.MaxDeleteOldLogsDaysToKeep));
         }
 
         return problems.AsReadOnly();
@@ -294,7 +321,8 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="daysToKeep">The number of days to keep logs.</param>
     /// <returns>True if the parameters are valid; otherwise, false.</returns>
-    public static bool IsDeleteOldLogsParametersValid(int daysToKeep = 90) =>
+    public static bool IsDeleteOldLogsParametersValid(
+        int daysToKeep = AuditLogRepositoryValidationConstants.DefaultDeleteOldLogsDaysToKeep) =>
         ValidateDeleteOldLogsParameters(daysToKeep).Count == 0;
 
     /// <summary>
@@ -303,14 +331,16 @@ public static class AuditLogRepositoryValidation
     /// </summary>
     /// <param name="daysToKeep">The number of days to keep logs.</param>
     /// <exception cref="ArgumentException">Thrown if the parameters are invalid.</exception>
-    public static void EnsureDeleteOldLogsParametersValid(int daysToKeep = 90)
+    public static void EnsureDeleteOldLogsParametersValid(
+        int daysToKeep = AuditLogRepositoryValidationConstants.DefaultDeleteOldLogsDaysToKeep)
     {
         var problems = ValidateDeleteOldLogsParameters(daysToKeep);
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"DeleteOldLogsAsync parameters are invalid. Problems: {string.Join(" ", problems)}");
+            throw new ArgumentException(string.Format(
+                AuditLogRepositoryValidationConstants.DeleteOldLogsParametersInvalidFormat,
+                string.Join(" ", problems)));
         }
     }
 }
