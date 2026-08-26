@@ -31,7 +31,7 @@ public static class CollectionUtilityValidation
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate<T>(
         IEnumerable<T>? source,
-        int batchSize = 1)
+        int batchSize = CollectionUtilityValidationConstants.DefaultBatchSize)
     {
         var problems = new List<string>();
 
@@ -39,17 +39,17 @@ public static class CollectionUtilityValidation
 
         if (!source.Any())
         {
-            problems.Add("Source collection is empty.");
+            problems.Add(CollectionUtilityValidationConstants.SourceCollectionEmpty);
         }
 
         if (batchSize <= 0)
         {
-            problems.Add("Batch size must be a positive integer.");
+            problems.Add(CollectionUtilityValidationConstants.BatchSizeMustBePositive);
         }
 
-        if (batchSize > 1_000_000)
+        if (batchSize > CollectionUtilityValidationConstants.MaxBatchOrChunkSize)
         {
-            problems.Add("Batch size is excessively large (maximum 1,000,000).");
+            problems.Add(CollectionUtilityValidationConstants.BatchSizeExceedsMaximum);
         }
 
         return problems.AsReadOnly();
@@ -75,17 +75,17 @@ public static class CollectionUtilityValidation
 
         if (!source.Any())
         {
-            problems.Add("Source collection is empty.");
+            problems.Add(CollectionUtilityValidationConstants.SourceCollectionEmpty);
         }
 
         if (chunkSize <= 0)
         {
-            problems.Add("Chunk size must be a positive integer.");
+            problems.Add(CollectionUtilityValidationConstants.ChunkSizeMustBePositive);
         }
 
-        if (chunkSize > 1_000_000)
+        if (chunkSize > CollectionUtilityValidationConstants.MaxBatchOrChunkSize)
         {
-            problems.Add("Chunk size is excessively large (maximum 1,000,000).");
+            problems.Add(CollectionUtilityValidationConstants.ChunkSizeExceedsMaximum);
         }
 
         return problems.AsReadOnly();
@@ -111,12 +111,12 @@ public static class CollectionUtilityValidation
 
         if (!first.Any())
         {
-            problems.Add("First collection is empty.");
+            problems.Add(CollectionUtilityValidationConstants.FirstCollectionEmpty);
         }
 
         if (!second.Any())
         {
-            problems.Add("Second collection is empty.");
+            problems.Add(CollectionUtilityValidationConstants.SecondCollectionEmpty);
         }
 
         return problems.AsReadOnly();
@@ -140,12 +140,12 @@ public static class CollectionUtilityValidation
 
         if (!source.Any())
         {
-            problems.Add("Source collection is empty.");
+            problems.Add(CollectionUtilityValidationConstants.SourceCollectionEmpty);
         }
 
         if (predicate is null)
         {
-            problems.Add("Predicate function cannot be null.");
+            problems.Add(CollectionUtilityValidationConstants.PredicateCannotBeNull);
         }
 
         return problems.AsReadOnly();
@@ -170,12 +170,12 @@ public static class CollectionUtilityValidation
 
         if (!source.Any())
         {
-            problems.Add("Source collection is empty.");
+            problems.Add(CollectionUtilityValidationConstants.SourceCollectionEmpty);
         }
 
         if (keySelector is null)
         {
-            problems.Add("Key selector function cannot be null.");
+            problems.Add(CollectionUtilityValidationConstants.KeySelectorCannotBeNull);
         }
 
         return problems.AsReadOnly();
@@ -190,7 +190,7 @@ public static class CollectionUtilityValidation
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static bool IsValid<T>(
         IEnumerable<T>? source,
-        int batchSize = 1)
+        int batchSize = CollectionUtilityValidationConstants.DefaultBatchSize)
     {
         ArgumentNullException.ThrowIfNull(source);
         return !Validate(source, batchSize).Any();
@@ -272,15 +272,12 @@ public static class CollectionUtilityValidation
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T>(
         IEnumerable<T>? source,
-        int batchSize = 1)
+        int batchSize = CollectionUtilityValidationConstants.DefaultBatchSize)
     {
         var problems = Validate(source, batchSize);
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)
-                }");
+            throw new ArgumentException(BuildValidationFailureMessage(problems));
         }
     }
 
@@ -301,10 +298,7 @@ public static class CollectionUtilityValidation
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)
-                }");
+            throw new ArgumentException(BuildValidationFailureMessage(problems));
         }
     }
 
@@ -326,10 +320,7 @@ public static class CollectionUtilityValidation
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)
-                }");
+            throw new ArgumentException(BuildValidationFailureMessage(problems));
         }
     }
 
@@ -350,10 +341,7 @@ public static class CollectionUtilityValidation
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)
-                }");
+            throw new ArgumentException(BuildValidationFailureMessage(problems));
         }
     }
 
@@ -375,10 +363,17 @@ public static class CollectionUtilityValidation
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"Collection operation validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)
-                }");
+            throw new ArgumentException(BuildValidationFailureMessage(problems));
         }
     }
+
+    /// <summary>
+    /// Builds the aggregate validation failure message from the individual problems.
+    /// </summary>
+    /// <param name="problems">The validation problems to include.</param>
+    /// <returns>The formatted validation failure message.</returns>
+    private static string BuildValidationFailureMessage(IReadOnlyList<string> problems) =>
+        $"{CollectionUtilityValidationConstants.ValidationFailedHeader}{Environment.NewLine}{CollectionUtilityValidationConstants.ProblemBullet}{
+            string.Join(Environment.NewLine + CollectionUtilityValidationConstants.ProblemBullet, problems)
+        }";
 }
