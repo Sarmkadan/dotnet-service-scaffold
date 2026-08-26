@@ -19,22 +19,22 @@ public class ServiceRegistration
     public Guid Id { get; set; }
 
     [Required]
-    [StringLength(255)]
+    [StringLength(ServiceRegistrationConstants.ServiceNameMaxLength)]
     public required string ServiceName { get; set; }
 
-    [StringLength(1000)]
+    [StringLength(ServiceRegistrationConstants.DescriptionMaxLength)]
     public string? Description { get; set; }
 
     [Required]
-    [StringLength(500)]
+    [StringLength(ServiceRegistrationConstants.HealthCheckUrlMaxLength)]
     public required string HealthCheckUrl { get; set; }
 
     [Required]
-    [StringLength(50)]
+    [StringLength(ServiceRegistrationConstants.VersionMaxLength)]
     public required string Version { get; set; }
 
     [Required]
-    [StringLength(255)]
+    [StringLength(ServiceRegistrationConstants.EndpointMaxLength)]
     public required string Endpoint { get; set; }
 
     public ServiceStatus Status { get; set; } = ServiceStatus.Unknown;
@@ -50,9 +50,9 @@ public class ServiceRegistration
 
     public User? Owner { get; set; }
 
-    public int HealthCheckIntervalSeconds { get; set; } = 60;
+    public int HealthCheckIntervalSeconds { get; set; } = ServiceRegistrationConstants.DefaultHealthCheckIntervalSeconds;
 
-    public int TimeoutSeconds { get; set; } = 10;
+    public int TimeoutSeconds { get; set; } = ServiceRegistrationConstants.DefaultTimeoutSeconds;
 
     public bool IsEnabled { get; set; } = true;
 
@@ -62,7 +62,7 @@ public class ServiceRegistration
 
     public int SuccessfulRequests { get; set; }
 
-    [StringLength(500)]
+    [StringLength(ServiceRegistrationConstants.SystemdServiceNameMaxLength)]
     public string? SystemdServiceName { get; set; }
 
     // Navigation
@@ -92,7 +92,7 @@ public class ServiceRegistration
     public decimal GetSuccessRate()
     {
         if (TotalRequests == 0)
-            return 100m;
+            return ServiceRegistrationConstants.SuccessRatePercentage;
 
         return (decimal)SuccessfulRequests / TotalRequests * 100;
     }
@@ -119,7 +119,7 @@ public class ServiceRegistration
         TotalRequests++;
         ConsecutiveFailures++;
 
-        if (ConsecutiveFailures >= 3)
+        if (ConsecutiveFailures >= ServiceRegistrationConstants.UnhealthyFailureThreshold)
             Status = ServiceStatus.Unhealthy;
         else
             Status = ServiceStatus.Degraded;
@@ -157,7 +157,7 @@ public class ServiceRegistration
         {
             ServiceId = Id,
             EventType = ServiceEventType.ServiceEnabled,
-            Message = "Service re-enabled",
+            Message = ServiceRegistrationConstants.ServiceReEnabledMessage,
             CreatedAt = DateTime.UtcNow
         });
     }
