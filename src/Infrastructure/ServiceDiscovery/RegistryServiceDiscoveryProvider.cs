@@ -20,7 +20,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 /// HTTP service registry API. Supports health-filtered queries, ACL tokens, and
 /// polling-based watch streams.
 /// </summary>
-public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
+public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider, IRegistryServiceDiscoveryProvider
 {
     internal const string HttpClientName = "ServiceDiscovery.Registry";
 
