@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Stores configuration parameters for services and the platform.
 /// </summary>
-public class ServiceConfiguration
+public class ServiceConfiguration : IServiceConfiguration
 {
     [Key]
     public Guid Id { get; set; }
