@@ -10,8 +10,58 @@ namespace DotnetServiceScaffold.Infrastructure.Configuration;
 /// Deployment configuration options for systemd service and Caddy reverse proxy.
 /// Provides templates and helpers for deploying the application in production environments.
 /// </summary>
-public class DeploymentConfiguration
+public class DeploymentConfiguration : IDeploymentConfiguration
 {
+    /// <summary>
+    /// Gets or sets the service name.
+    /// </summary>
+    public string ServiceName { get; set; } = "dotnet-scaffold";
+
+    /// <summary>
+    /// Gets or sets the service description.
+    /// </summary>
+    public string ServiceDescription { get; set; } = "DotNet Service Scaffold Application";
+
+    /// <summary>
+    /// Gets or sets the service user.
+    /// </summary>
+    public string ServiceUser { get; set; } = "scaffold";
+
+    /// <summary>
+    /// Gets or sets the application path.
+    /// </summary>
+    public string ApplicationPath { get; set; } = "/opt/scaffold";
+
+    /// <summary>
+    /// Gets or sets the data path.
+    /// </summary>
+    public string DataPath { get; set; } = "/var/lib/scaffold";
+
+    /// <summary>
+    /// Gets or sets the log path.
+    /// </summary>
+    public string LogPath { get; set; } = "/var/log/scaffold";
+
+    /// <summary>
+    /// Gets or sets the server domain.
+    /// </summary>
+    public string ServerDomain { get; set; } = "example.com";
+
+    /// <summary>
+    /// Gets or sets the application port.
+    /// </summary>
+    public int ApplicationPort { get; set; } = 5000;
+
+    /// <summary>
+    /// Gets or sets the dotnet path.
+    /// </summary>
+    public string DotnetPath { get; set; } = "/usr/bin/dotnet";
+
+    /// <summary>
+    /// Gets or sets the service version.
+    /// </summary>
+    public string ServiceVersion { get; set; } = "1.0.0";
+
     /// <summary>
     /// Generates a systemd service unit file for the application.
     /// </summary>
