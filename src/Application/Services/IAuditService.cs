@@ -31,15 +31,15 @@ public interface IAuditService
     /// <returns>The audit log if found, otherwise null</returns>
     Task<AuditLog?> GetAuditLogAsync(Guid logId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AuditLog>> GetUserAuditLogsAsync(Guid userId, int count = 50, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AuditLog>> GetUserAuditLogsAsync(Guid userId, int count = IAuditServiceConstants.DefaultGetUserAuditLogsCount, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<AuditLog>> GetEntityAuditLogsAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = IAuditServiceConstants.DefaultGetRecentLogsCount, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = IAuditServiceConstants.DefaultGetFailedActionsCount, CancellationToken cancellationToken = default);
 
     Task LogFailedActionAsync(Guid? userId, string action, string entityType, string reason);
 
-    Task CleanupOldLogsAsync(int daysToKeep = 90);
+    Task CleanupOldLogsAsync(int daysToKeep = IAuditServiceConstants.DefaultCleanupOldLogsDaysToKeep);
 }
