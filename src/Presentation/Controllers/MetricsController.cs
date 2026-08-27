@@ -15,7 +15,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 /// Provides endpoints for monitoring application health and performance characteristics.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route(MetricsControllerConstants.RouteTemplate)]
 [Authorize]
 public class MetricsController : ControllerBase
 {
@@ -42,7 +42,7 @@ public class MetricsController : ControllerBase
         {
             var metrics = await _metricsService.GetMetricsAsync();
 
-            _logger.LogDebug("Retrieved metrics ({MetricCount} metrics)", metrics.Count);
+            _logger.LogDebug(MetricsControllerConstants.LogRetrievedMetrics, metrics.Count);
 
             return Ok(new
             {
@@ -53,8 +53,10 @@ public class MetricsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving metrics");
-            return StatusCode(500, new { error = "Failed to retrieve metrics" });
+            _logger.LogError(ex, MetricsControllerConstants.LogErrorRetrievingMetrics);
+            return StatusCode(
+                MetricsControllerConstants.StatusCodeInternalServerError,
+                new { error = MetricsControllerConstants.ErrorFailedRetrieveMetrics });
         }
     }
 
@@ -64,7 +66,7 @@ public class MetricsController : ControllerBase
     /// <param name="category">The metric category to filter by (e.g., "http", "database", "cache")</param>
     /// <response code="200">Returns filtered metrics</response>
     /// <response code="401">If not authenticated</response>
-    [HttpGet("category/{category}")]
+    [HttpGet(MetricsControllerConstants.CategoryRoute)]
     public async Task<IActionResult> GetMetricsByCategory(string category)
     {
         try
@@ -77,8 +79,9 @@ public class MetricsController : ControllerBase
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             _logger.LogDebug(
-                "Retrieved metrics for category '{Category}' ({MetricCount} metrics)",
-                category, filtered.Count);
+                MetricsControllerConstants.LogRetrievedMetricsByCategory,
+                category,
+                filtered.Count);
 
             return Ok(new
             {
@@ -90,8 +93,10 @@ public class MetricsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving metrics for category '{Category}'", category);
-            return StatusCode(500, new { error = "Failed to retrieve metrics" });
+            _logger.LogError(ex, MetricsControllerConstants.LogErrorRetrievingMetricsByCategory, category);
+            return StatusCode(
+                MetricsControllerConstants.StatusCodeInternalServerError,
+                new { error = MetricsControllerConstants.ErrorFailedRetrieveMetrics });
         }
     }
 
@@ -100,23 +105,27 @@ public class MetricsController : ControllerBase
     /// </summary>
     /// <response code="204">If successfully reset</response>
     /// <response code="401">If not authenticated</response>
-    [HttpPost("reset")]
-    [Authorize(Roles = "Admin")]
+    [HttpPost(MetricsControllerConstants.ResetRoute)]
+    [Authorize(Roles = MetricsControllerConstants.AdminRole)]
     public async Task<IActionResult> ResetMetrics()
     {
         try
         {
             await _metricsService.ResetAsync();
 
-            _logger.LogInformation("Metrics reset by user {UserId}",
-                User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown");
+            _logger.LogInformation(
+                MetricsControllerConstants.LogMetricsReset,
+                User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
+                MetricsControllerConstants.UnknownUser);
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resetting metrics");
-            return StatusCode(500, new { error = "Failed to reset metrics" });
+            _logger.LogError(ex, MetricsControllerConstants.LogErrorResettingMetrics);
+            return StatusCode(
+                MetricsControllerConstants.StatusCodeInternalServerError,
+                new { error = MetricsControllerConstants.ErrorFailedResetMetrics });
         }
     }
 
@@ -125,7 +134,7 @@ public class MetricsController : ControllerBase
     /// </summary>
     /// <response code="200">Returns metrics summary</response>
     /// <response code="401">If not authenticated</response>
-    [HttpGet("summary")]
+    [HttpGet(MetricsControllerConstants.SummaryRoute)]
     public async Task<IActionResult> GetMetricsSummary()
     {
         try
@@ -136,9 +145,9 @@ public class MetricsController : ControllerBase
             {
                 Timestamp = DateTime.UtcNow,
                 TotalMetrics = metrics.Count,
-                Counters = CountMetricsOfType(metrics, "counter"),
-                Gauges = CountMetricsOfType(metrics, "gauge"),
-                Timers = CountMetricsOfType(metrics, "timer"),
+                Counters = CountMetricsOfType(metrics, MetricsControllerConstants.CounterMetricType),
+                Gauges = CountMetricsOfType(metrics, MetricsControllerConstants.GaugeMetricType),
+                Timers = CountMetricsOfType(metrics, MetricsControllerConstants.TimerMetricType),
                 Categories = ExtractCategories(metrics)
             };
 
@@ -146,8 +155,10 @@ public class MetricsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving metrics summary");
-            return StatusCode(500, new { error = "Failed to retrieve metrics summary" });
+            _logger.LogError(ex, MetricsControllerConstants.LogErrorRetrievingMetricsSummary);
+            return StatusCode(
+                MetricsControllerConstants.StatusCodeInternalServerError,
+                new { error = MetricsControllerConstants.ErrorFailedRetrieveMetricsSummary });
         }
     }
 
@@ -159,7 +170,7 @@ public class MetricsController : ControllerBase
         return metrics.Count(kvp =>
         {
             var value = kvp.Value as System.Collections.IDictionary;
-            return value?["type"]?.ToString() == type;
+            return value?[MetricsControllerConstants.DictionaryKeyType]?.ToString() == type;
         });
     }
 
