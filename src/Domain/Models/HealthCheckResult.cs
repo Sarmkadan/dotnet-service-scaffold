@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Records the results of a health check performed on a service.
 /// </summary>
-public sealed class HealthCheckResult
+public sealed class HealthCheckResult : IHealthCheckResult
 {
     [Key]
     public Guid Id { get; set; }
