@@ -30,7 +30,7 @@ public enum ServiceMeshStatus
 /// <summary>
 /// Represents a single upstream cluster tracked by the sidecar proxy.
 /// </summary>
-public class UpstreamCluster
+public class UpstreamCluster : IUpstreamCluster
 {
     /// <summary>Logical name of the cluster as registered in the service mesh.</summary>
     public string Name { get; set; } = string.Empty;
