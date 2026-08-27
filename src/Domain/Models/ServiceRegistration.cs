@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Represents a registered service that is monitored and managed by the scaffold system.
 /// </summary>
-public class ServiceRegistration
+public class ServiceRegistration : IServiceRegistration
 {
     [Key]
     public Guid Id { get; set; }
