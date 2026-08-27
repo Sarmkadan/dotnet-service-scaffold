@@ -91,9 +91,8 @@ public sealed class AuditLog : IEquatable<AuditLog>
     /// </summary>
     public string GetSummary()
     {
-        var actor = User?.FullName ?? "System";
-        return $"{actor} performed {ActionName} on {EntityType} " +
-               $"({EntityId}) at {CreatedAt:O}";
+        var actor = User?.FullName ?? AuditLogConstants.DefaultActor;
+        return string.Format(AuditLogConstants.SummaryFormat, actor, ActionName, EntityType, EntityId, CreatedAt);
     }
 
     /// <summary>
@@ -101,24 +100,24 @@ public sealed class AuditLog : IEquatable<AuditLog>
     /// </summary>
     public bool WasSuccessful()
     {
-        return Status == "Success" || Status is null;
+        return Status == AuditLogConstants.SuccessStatus || Status is null;
     }
 
     /// <summary>
-    /// Gets a human-readable action description.
+    /// Gets a human‑readable action description.
     /// </summary>
     public string GetActionDescription()
     {
         return ActionName switch
         {
-            "Create" => "Created",
-            "Update" => "Updated",
-            "Delete" => "Deleted",
-            "Restore" => "Restored",
-            "Login" => "Logged in",
-            "Logout" => "Logged out",
-            "Export" => "Exported",
-            "Import" => "Imported",
+            AuditLogConstants.ActionCreate => AuditLogConstants.DescriptionCreated,
+            AuditLogConstants.ActionUpdate => AuditLogConstants.DescriptionUpdated,
+            AuditLogConstants.ActionDelete => AuditLogConstants.DescriptionDeleted,
+            AuditLogConstants.ActionRestore => AuditLogConstants.DescriptionRestored,
+            AuditLogConstants.ActionLogin => AuditLogConstants.DescriptionLoggedIn,
+            AuditLogConstants.ActionLogout => AuditLogConstants.DescriptionLoggedOut,
+            AuditLogConstants.ActionExport => AuditLogConstants.DescriptionExported,
+            AuditLogConstants.ActionImport => AuditLogConstants.DescriptionImported,
             _ => ActionName
         };
     }
