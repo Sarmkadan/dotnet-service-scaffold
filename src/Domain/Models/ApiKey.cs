@@ -23,15 +23,15 @@ public sealed class ApiKey
     public User? User { get; set; }
 
     [Required]
-    [StringLength(255)]
+    [StringLength(ApiKeyConstants.NameMaxLength)]
     public required string Name { get; set; }
 
     [Required]
-    [StringLength(500)]
+    [StringLength(ApiKeyConstants.KeyHashMaxLength)]
     public required string KeyHash { get; set; }
 
     [Required]
-    [StringLength(50)]
+    [StringLength(ApiKeyConstants.KeyPrefixMaxLength)]
     public required string KeyPrefix { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -42,15 +42,15 @@ public sealed class ApiKey
 
     public bool IsActive { get; set; } = true;
 
-    [StringLength(1000)]
+    [StringLength(ApiKeyConstants.AllowedIpsMaxLength)]
     public string? AllowedIps { get; set; }
 
-    [StringLength(500)]
+    [StringLength(ApiKeyConstants.AllowedScopesMaxLength)]
     public string? AllowedScopes { get; set; }
 
     public long ApiCallsCount { get; set; }
 
-    [StringLength(1000)]
+    [StringLength(ApiKeyConstants.DescriptionMaxLength)]
     public string? Description { get; set; }
 
     /// <summary>
@@ -84,7 +84,7 @@ public sealed class ApiKey
             return null;
 
         var days = (int)(ExpiresAt.Value - DateTime.UtcNow).TotalDays;
-        return Math.Max(0, days);
+        return Math.Max(ApiKeyConstants.Zero, days);
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public sealed class ApiKey
             return true;
 
         var scopes = AllowedScopes.Split(',', StringSplitOptions.TrimEntries);
-        return scopes.Contains(requestedScope) || scopes.Contains("*");
+        return scopes.Contains(requestedScope) || scopes.Contains(ApiKeyConstants.WildcardScope);
     }
 
     /// <summary>
