@@ -37,31 +37,31 @@ public class DockerComposeController : ControllerBase
     /// <returns>The generated YAML content as plain text.</returns>
     /// <response code="200">Returns the generated YAML.</response>
     /// <response code="400">If options are invalid.</response>
-    [HttpPost("generate")]
-    [ProducesResponseType(typeof(string), 200)]
-    [ProducesResponseType(400)]
+    [HttpPost(DockerComposeControllerConstants.GenerateRoute)]
+    [ProducesResponseType(typeof(string), DockerComposeControllerConstants.SuccessStatusCode)]
+    [ProducesResponseType(DockerComposeControllerConstants.BadRequestStatusCode)]
     public IActionResult Generate([FromBody] DockerComposeOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.ServiceName))
         {
-            return BadRequest(new { error = "ServiceName is required." });
+            return BadRequest(new { error = DockerComposeControllerConstants.ServiceNameRequired });
         }
 
         if (string.IsNullOrWhiteSpace(options.ImageName))
         {
-            return BadRequest(new { error = "ImageName is required." });
+            return BadRequest(new { error = DockerComposeControllerConstants.ImageNameRequired });
         }
 
         try
         {
             var yaml = _generator.Generate(options);
-            _logger.LogInformation("Generated Docker Compose for service '{ServiceName}'", options.ServiceName);
-            return Content(yaml, "text/yaml");
+            _logger.LogInformation(DockerComposeControllerConstants.LogGeneratedMessage, options.ServiceName);
+            return Content(yaml, DockerComposeControllerConstants.YamlContentType);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating Docker Compose for '{ServiceName}'", options.ServiceName);
-            return StatusCode(500, new { error = "Failed to generate Docker Compose file." });
+            _logger.LogError(ex, DockerComposeControllerConstants.LogErrorGeneratingMessage, options.ServiceName);
+            return StatusCode(DockerComposeControllerConstants.InternalServerErrorStatusCode, new { error = DockerComposeControllerConstants.GenerationFailed });
         }
     }
 
@@ -71,26 +71,26 @@ public class DockerComposeController : ControllerBase
     /// <param name="options">Docker Compose generation options.</param>
     /// <response code="200">File download of the generated YAML.</response>
     /// <response code="400">If options are invalid.</response>
-    [HttpPost("download")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
+    [HttpPost(DockerComposeControllerConstants.DownloadRoute)]
+    [ProducesResponseType(DockerComposeControllerConstants.SuccessStatusCode)]
+    [ProducesResponseType(DockerComposeControllerConstants.BadRequestStatusCode)]
     public IActionResult Download([FromBody] DockerComposeOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.ServiceName))
         {
-            return BadRequest(new { error = "ServiceName is required." });
+            return BadRequest(new { error = DockerComposeControllerConstants.ServiceNameRequired });
         }
 
         try
         {
             var yaml = _generator.Generate(options);
             var bytes = System.Text.Encoding.UTF8.GetBytes(yaml);
-            return File(bytes, "text/yaml", "docker-compose.yml");
+            return File(bytes, DockerComposeControllerConstants.YamlContentType, DockerComposeControllerConstants.DefaultFileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating Docker Compose download for '{ServiceName}'", options.ServiceName);
-            return StatusCode(500, new { error = "Failed to generate Docker Compose file." });
+            _logger.LogError(ex, DockerComposeControllerConstants.LogErrorDownloadingMessage, options.ServiceName);
+            return StatusCode(DockerComposeControllerConstants.InternalServerErrorStatusCode, new { error = DockerComposeControllerConstants.GenerationFailed });
         }
     }
 }
