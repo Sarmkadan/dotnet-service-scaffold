@@ -9,7 +9,7 @@ namespace DotnetServiceScaffold.Domain.Exceptions;
 /// <summary>
 /// Base exception for the service scaffold platform.
 /// </summary>
-public class ServiceScaffoldException : Exception
+public class ServiceScaffoldException : Exception, IServiceScaffoldException
 {
     public string? ErrorCode { get; set; }
 
