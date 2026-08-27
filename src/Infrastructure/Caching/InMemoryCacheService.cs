@@ -17,7 +17,7 @@ namespace DotnetServiceScaffold.Infrastructure.Caching;
 /// All synchronous-completing paths return ValueTask.FromResult to avoid async state-machine
 /// heap allocation on cache hits.
 /// </summary>
-public class InMemoryCacheService : ICacheService, IDisposable
+public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheService
 {
     private readonly ConcurrentDictionary<string, CacheEntry> _cache;
     private readonly ILogger<InMemoryCacheService> _logger;
