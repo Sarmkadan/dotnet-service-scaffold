@@ -11,7 +11,7 @@ using Xunit;
 /// <summary>
 /// Tests for the PrometheusFormatter class.
 /// </summary>
-public class PrometheusFormatterTests
+public class PrometheusFormatterTests : IPrometheusFormatterTests
 {
     private readonly PrometheusFormatter _formatter = new();
 
