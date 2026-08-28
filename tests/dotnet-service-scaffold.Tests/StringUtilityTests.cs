@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Tests;
 /// <summary>
 /// Contains tests for the StringUtility class.
 /// </summary>
-public class StringUtilityTests
+public class StringUtilityTests : IStringUtilityTests
 {
     [Fact]
     public void Truncate_StringLongerThanMaxLength_TruncatesAndAppendsSuffix()
