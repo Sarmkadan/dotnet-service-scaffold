@@ -10,12 +10,16 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests;
 
-public class ExternalApiClientTests
+public class ExternalApiClientTests : IExternalApiClientTests
 {
     private readonly Mock<ILogger<ExternalApiClient>> _loggerMock;
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
     private readonly HttpClient _httpClient;
     private readonly ExternalApiClient _sut;
+
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public string? Status { get; set; }
 
     public ExternalApiClientTests()
     {
