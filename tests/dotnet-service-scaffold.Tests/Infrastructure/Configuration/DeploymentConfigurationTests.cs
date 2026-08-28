@@ -14,7 +14,7 @@ namespace DotnetServiceScaffold.Tests.Infrastructure.Configuration;
 /// <summary>
 /// Tests for the DeploymentConfiguration class.
 /// </summary>
-public class DeploymentConfigurationTests
+public class DeploymentConfigurationTests : IDeploymentConfigurationTests
 {
     private DeploymentOptions _defaultOptions;
 
