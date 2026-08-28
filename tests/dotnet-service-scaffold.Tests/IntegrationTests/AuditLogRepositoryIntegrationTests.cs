@@ -35,12 +35,12 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         var auditLog = new AuditLog
         {
             Id = Guid.NewGuid(),
-            Action = "Login",
-            EntityType = "User",
+            Action = AuditLogRepositoryIntegrationTestsConstants.LoginAction,
+            EntityType = AuditLogRepositoryIntegrationTestsConstants.UserEntityType,
             EntityId = Guid.NewGuid().ToString(),
             UserId = Guid.NewGuid(),
             Timestamp = DateTime.UtcNow,
-            Details = "User logged in successfully"
+            Details = AuditLogRepositoryIntegrationTestsConstants.UserLoggedInSuccessfullyDetails
         };
 
         // Act
@@ -50,7 +50,7 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         // Assert
         var retrievedAuditLog = await DbContext.AuditLogs.FindAsync(auditLog.Id);
         retrievedAuditLog.Should().NotBeNull();
-        retrievedAuditLog!.Action.Should().Be("Login");
+        retrievedAuditLog!.Action.Should().Be(AuditLogRepositoryIntegrationTestsConstants.LoginAction);
     }
 
     /// <summary>
@@ -63,12 +63,12 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         var auditLog = new AuditLog
         {
             Id = Guid.NewGuid(),
-            Action = "Logout",
-            EntityType = "User",
+            Action = AuditLogRepositoryIntegrationTestsConstants.LogoutAction,
+            EntityType = AuditLogRepositoryIntegrationTestsConstants.UserEntityType,
             EntityId = Guid.NewGuid().ToString(),
             UserId = Guid.NewGuid(),
             Timestamp = DateTime.UtcNow,
-            Details = "User logged out"
+            Details = AuditLogRepositoryIntegrationTestsConstants.UserLoggedOutDetails
         };
         await _auditLogRepository.AddAsync(auditLog);
         await DbContext.SaveChangesAsync();
@@ -78,7 +78,7 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
 
         // Assert
         retrievedAuditLog.Should().NotBeNull();
-        retrievedAuditLog!.Action.Should().Be("Logout");
+        retrievedAuditLog!.Action.Should().Be(AuditLogRepositoryIntegrationTestsConstants.LogoutAction);
     }
 
     /// <summary>
@@ -91,12 +91,12 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         var auditLog = new AuditLog
         {
             Id = Guid.NewGuid(),
-            Action = "UpdateProfile",
-            EntityType = "User",
+            Action = AuditLogRepositoryIntegrationTestsConstants.UpdateProfileAction,
+            EntityType = AuditLogRepositoryIntegrationTestsConstants.UserEntityType,
             EntityId = Guid.NewGuid().ToString(),
             UserId = Guid.NewGuid(),
             Timestamp = DateTime.UtcNow,
-            Details = "Profile updated"
+            Details = AuditLogRepositoryIntegrationTestsConstants.ProfileUpdatedDetails
         };
         await _auditLogRepository.AddAsync(auditLog);
         await DbContext.SaveChangesAsync();
@@ -104,7 +104,7 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         // Detach the entity
         DbContext.Entry(auditLog).State = EntityState.Detached;
 
-        auditLog.Details = "Profile updated with new email";
+        auditLog.Details = AuditLogRepositoryIntegrationTestsConstants.ProfileUpdatedWithNewEmailDetails;
         auditLog.Timestamp = DateTime.UtcNow.AddMinutes(1);
 
         // Act
@@ -114,7 +114,7 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         // Assert
         var updatedAuditLog = await DbContext.AuditLogs.FindAsync(auditLog.Id);
         updatedAuditLog.Should().NotBeNull();
-        updatedAuditLog!.Details.Should().Be("Profile updated with new email");
+        updatedAuditLog!.Details.Should().Be(AuditLogRepositoryIntegrationTestsConstants.ProfileUpdatedWithNewEmailDetails);
     }
 
     /// <summary>
@@ -127,12 +127,12 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
         var auditLog = new AuditLog
         {
             Id = Guid.NewGuid(),
-            Action = "DeleteData",
-            EntityType = "Data",
+            Action = AuditLogRepositoryIntegrationTestsConstants.DeleteDataAction,
+            EntityType = AuditLogRepositoryIntegrationTestsConstants.DataEntityType,
             EntityId = Guid.NewGuid().ToString(),
             UserId = Guid.NewGuid(),
             Timestamp = DateTime.UtcNow,
-            Details = "Data deleted"
+            Details = AuditLogRepositoryIntegrationTestsConstants.DataDeletedDetails
         };
         await _auditLogRepository.AddAsync(auditLog);
         await DbContext.SaveChangesAsync();
@@ -153,8 +153,8 @@ public class AuditLogRepositoryIntegrationTests : WebApplicationFactoryIntegrati
     public async Task GetAllAuditLogs_ShouldReturnAllAuditLogs()
     {
         // Arrange
-        await _auditLogRepository.AddAsync(new AuditLog { Id = Guid.NewGuid(), Action = "Action1", EntityType = "Type1", EntityId = Guid.NewGuid().ToString(), UserId = Guid.NewGuid(), Timestamp = DateTime.UtcNow, Details = "Details1" });
-        await _auditLogRepository.AddAsync(new AuditLog { Id = Guid.NewGuid(), Action = "Action2", EntityType = "Type2", EntityId = Guid.NewGuid().ToString(), UserId = Guid.NewGuid(), Timestamp = DateTime.UtcNow, Details = "Details2" });
+        await _auditLogRepository.AddAsync(new AuditLog { Id = Guid.NewGuid(), Action = AuditLogRepositoryIntegrationTestsConstants.Action1, EntityType = AuditLogRepositoryIntegrationTestsConstants.Type1EntityType, EntityId = Guid.NewGuid().ToString(), UserId = Guid.NewGuid(), Timestamp = DateTime.UtcNow, Details = AuditLogRepositoryIntegrationTestsConstants.Details1 });
+        await _auditLogRepository.AddAsync(new AuditLog { Id = Guid.NewGuid(), Action = AuditLogRepositoryIntegrationTestsConstants.Action2, EntityType = AuditLogRepositoryIntegrationTestsConstants.Type2EntityType, EntityId = Guid.NewGuid().ToString(), UserId = Guid.NewGuid(), Timestamp = DateTime.UtcNow, Details = AuditLogRepositoryIntegrationTestsConstants.Details2 });
         await DbContext.SaveChangesAsync();
 
         // Act
