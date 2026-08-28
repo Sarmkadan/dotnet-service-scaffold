@@ -96,7 +96,7 @@ public class UserServiceTests : IUserServiceTests
     public async Task CreateUserAsync_ShouldThrowException_WhenUsernameAlreadyExists()
     {
         // Arrange
-        var existingUser = new User { Username = "existinguser", Email = "existing@example.com" };
+        var existingUser = new User { Username = UserServiceTestsConstants.ExistingUserUsername, Email = "existing@example.com" };
         _userRepository.GetUserByUsernameAsync(existingUser.Username).Returns(existingUser);
 
         // Act
@@ -104,7 +104,7 @@ public class UserServiceTests : IUserServiceTests
 
         // Assert
         await action.Should().ThrowAsync<ServiceScaffoldException>()
-                    .WithMessage("Username 'existinguser' is already taken.");
+                    .WithMessage($"Username '{UserServiceTestsConstants.ExistingUserUsername}' is already taken.");
         await _userRepository.DidNotReceive().AddUserAsync(Arg.Any<User>());
     }
 
