@@ -1,7 +1,7 @@
 namespace DotnetServiceScaffold.Tests.IntegrationTests;
 
 /// <summary>
-/// Constants for ApiKeyRepositoryIntegrationTestsJsonExtensions.
+/// Constants for <see cref="ApiKeyRepositoryIntegrationTestsJsonExtensions"/>.
 /// </summary>
 internal static class ApiKeyRepositoryIntegrationTestsJsonExtensionsConstants
 {
