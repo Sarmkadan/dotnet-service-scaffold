@@ -16,7 +16,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class HealthCheckController : ControllerBase
+public class HealthCheckController : ControllerBase, IHealthCheckController
 {
     private readonly IHealthCheckService _healthCheckService;
     private readonly ILogger<HealthCheckController> _logger;
