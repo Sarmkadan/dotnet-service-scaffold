@@ -17,7 +17,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 [ApiController]
 [Route(MetricsControllerConstants.RouteTemplate)]
 [Authorize]
-public class MetricsController : ControllerBase
+public class MetricsController : ControllerBase, IMetricsController
 {
     private readonly IMetricsService _metricsService;
     private readonly ILogger<MetricsController> _logger;
