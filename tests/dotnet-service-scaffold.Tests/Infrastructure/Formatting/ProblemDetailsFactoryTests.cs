@@ -23,7 +23,7 @@ using NSubstitute;
 /// <summary>
 /// Tests for the ProblemDetailsFactory class.
 /// </summary>
-public class ProblemDetailsFactoryTests
+public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
 {
     private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
