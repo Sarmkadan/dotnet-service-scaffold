@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// API authentication key for programmatic access to the scaffold system.
 /// </summary>
-public sealed class ApiKey
+public sealed class ApiKey : IApiKey
 {
     [Key]
     public Guid Id { get; set; }
