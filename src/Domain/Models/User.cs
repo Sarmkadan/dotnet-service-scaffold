@@ -11,7 +11,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Represents a user in the system with authentication and profile information.
 /// </summary>
-public class User
+public class User : IUser
 {
     [Key]
     public Guid Id { get; set; }
