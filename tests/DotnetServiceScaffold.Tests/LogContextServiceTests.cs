@@ -7,7 +7,7 @@ using DotnetServiceScaffold.Infrastructure.Logging;
 
 namespace DotnetServiceScaffold.Tests
 {
-    public class LogContextServiceTests
+    public class LogContextServiceTests : ILogContextServiceTests
     {
         [Fact]
         public void SetAndGetProperties()
