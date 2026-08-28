@@ -29,7 +29,7 @@ public class CsvResponseFormatterTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("Id,Name,Value", result);
+        Assert.Contains(CsvResponseFormatterTestsConstants.CsvHeader, result);
         Assert.Contains("1,Alice,100.5", result);
         Assert.Contains("2,Bob,200", result);
     }
@@ -65,7 +65,7 @@ public class CsvResponseFormatterTests
 
         // Assert
         // The current implementation returns string.Empty for empty collections
-        Assert.Equal(string.Empty, result);
+        Assert.Equal(CsvResponseFormatterTestsConstants.EmptyString, result);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class CsvResponseFormatterTests
         var result = await _formatter.FormatAsync(null);
 
         // Assert
-        Assert.Equal(string.Empty, result);
+        Assert.Equal(CsvResponseFormatterTestsConstants.EmptyString, result);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class CsvResponseFormatterTests
         var result = await _formatter.FormatAsync(data);
 
         // Assert
-        Assert.Contains("Id,Name,Value", result);
+        Assert.Contains(CsvResponseFormatterTestsConstants.CsvHeader, result);
         Assert.Contains("1,Single,50", result);
     }
 
