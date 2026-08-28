@@ -40,7 +40,7 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
             KeyHash = "hashedkey1",
             KeyPrefix = "prefix1",
             UserId = Guid.NewGuid(),
-            ExpiresAt = DateTime.UtcNow.AddYears(1),
+            ExpiresAt = DateTime.UtcNow.AddYears(ApiKeyRepositoryIntegrationTestsConstants.DefaultExpiryYears),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -107,7 +107,7 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
         DbContext.Entry(apiKey).State = EntityState.Detached;
 
         apiKey.KeyPrefix = "updatedPrefix3";
-        apiKey.UpdatedAt = DateTime.UtcNow.AddHours(1);
+        apiKey.UpdatedAt = DateTime.UtcNow.AddHours(ApiKeyRepositoryIntegrationTestsConstants.UpdateOffsetHours);
 
         // Act
         _apiKeyRepository.Update(apiKey);
@@ -190,8 +190,8 @@ public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var apiKey1 = new ApiKey { Id = Guid.NewGuid(), KeyHash = "hash7", KeyPrefix = "commonPrefix", UserId = userId, ExpiresAt = DateTime.UtcNow.AddYears(1), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
-        var apiKey2 = new ApiKey { Id = Guid.NewGuid(), KeyHash = "hash8", KeyPrefix = "commonPrefix", UserId = userId, ExpiresAt = DateTime.UtcNow.AddYears(1), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+        var apiKey1 = new ApiKey { Id = Guid.NewGuid(), KeyHash = "hash7", KeyPrefix = ApiKeyRepositoryIntegrationTestsConstants.CommonPrefix, UserId = userId, ExpiresAt = DateTime.UtcNow.AddYears(1), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+        var apiKey2 = new ApiKey { Id = Guid.NewGuid(), KeyHash = "hash8", KeyPrefix = ApiKeyRepositoryIntegrationTestsConstants.CommonPrefix, UserId = userId, ExpiresAt = DateTime.UtcNow.AddYears(1), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
         await _apiKeyRepository.AddAsync(apiKey1);
         await DbContext.SaveChangesAsync();
