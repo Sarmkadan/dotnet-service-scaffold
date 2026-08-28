@@ -5,7 +5,7 @@ using DotnetServiceScaffold.Infrastructure.Formatting;
 
 namespace DotnetServiceScaffold.Tests;
 
-public class CsvResponseFormatterTests
+public class CsvResponseFormatterTests : ICsvResponseFormatterTests
 {
     private readonly CsvResponseFormatter _formatter;
 
