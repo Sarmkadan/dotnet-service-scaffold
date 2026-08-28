@@ -21,7 +21,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 [ApiController]
 [Route("api/apikeys")]
 [Authorize]
-public class ApiKeyController : ControllerBase
+public class ApiKeyController : ControllerBase, IApiKeyController
 {
     private readonly IAuditService _auditService;
     private readonly ILogger<ApiKeyController> _logger;
