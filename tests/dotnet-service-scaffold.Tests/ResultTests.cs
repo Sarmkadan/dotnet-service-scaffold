@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Tests;
 /// <summary>
 /// Tests for the <see cref="Result"/> class.
 /// </summary>
-public class ResultTests
+public class ResultTests : IResultTests
 {
     [Fact]
     public void Success_NoArguments_ReturnsResultWithIsSuccessTrue()
