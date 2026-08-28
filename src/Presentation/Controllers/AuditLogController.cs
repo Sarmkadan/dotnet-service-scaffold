@@ -20,7 +20,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AuditLogController : ControllerBase
+public class AuditLogController : ControllerBase, IAuditLogController
 {
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly ILogger<AuditLogController> _logger;
