@@ -23,7 +23,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     private Dictionary<string, int> _failureCount = new();
     private Dictionary<string, DateTime> _lastFailure = new();
 
-    public HealthCheckMonitorExample(string apiKey, string baseUrl = "http://localhost:5000")
+    public HealthCheckMonitorExample(string apiKey, string baseUrl = HealthCheckMonitorExampleConstants.DefaultBaseUrl)
     {
         _apiKey = apiKey;
         _baseUrl = baseUrl;
@@ -51,9 +51,9 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
         using (var doc = JsonDocument.Parse(responseJson))
         {
-            var data = doc.RootElement.GetProperty("data");
-            var status = data.GetProperty("status").GetString();
-            var responseTime = data.GetProperty("responseTime").GetInt32();
+            var data = doc.RootElement.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyData);
+            var status = data.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyStatus).GetString();
+            var responseTime = data.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyResponseTime).GetInt32();
             return (status, responseTime);
         }
     }
@@ -61,7 +61,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Get health check history for a service
     /// </summary>
-    public async Task<List<HealthCheckEntry>> GetHealthHistoryAsync(string serviceId, int days = 7, CancellationToken cancellationToken = default)
+    public async Task<List<HealthCheckEntry>> GetHealthHistoryAsync(string serviceId, int days = HealthCheckMonitorExampleConstants.DefaultHistoryDays, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
@@ -82,17 +82,17 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
         using (var doc = JsonDocument.Parse(responseJson))
         {
-            var data = doc.RootElement.GetProperty("data").EnumerateArray();
+            var data = doc.RootElement.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyData).EnumerateArray();
 
             foreach (var item in data)
             {
                 entries.Add(new HealthCheckEntry
                 {
-                    Id = item.GetProperty("id").GetString(),
-                    Status = item.GetProperty("status").GetString(),
-                    ResponseTime = item.GetProperty("responseTime").GetInt32(),
-                    StatusCode = item.GetProperty("statusCode").GetInt32(),
-                    CheckedAt = DateTime.Parse(item.GetProperty("checkedAt").GetString())
+                    Id = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyId).GetString(),
+                    Status = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyStatus).GetString(),
+                    ResponseTime = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyResponseTime).GetInt32(),
+                    StatusCode = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyStatusCode).GetInt32(),
+                    CheckedAt = DateTime.Parse(item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyCheckedAt).GetString())
                 });
             }
         }
@@ -103,7 +103,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Get failed health checks
     /// </summary>
-    public async Task<List<HealthCheckEntry>> GetFailuresAsync(string serviceId, int limit = 50, CancellationToken cancellationToken = default)
+    public async Task<List<HealthCheckEntry>> GetFailuresAsync(string serviceId, int limit = HealthCheckMonitorExampleConstants.DefaultFailuresLimit, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
@@ -124,18 +124,18 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
         using (var doc = JsonDocument.Parse(responseJson))
         {
-            var data = doc.RootElement.GetProperty("data").EnumerateArray();
+            var data = doc.RootElement.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyData).EnumerateArray();
 
             foreach (var item in data)
             {
                 entries.Add(new HealthCheckEntry
                 {
-                    Id = item.GetProperty("id").GetString(),
-                    Status = item.GetProperty("status").GetString(),
-                    ResponseTime = item.GetProperty("responseTime").GetInt32(),
-                    StatusCode = item.GetProperty("statusCode").GetInt32(),
-                    Message = item.GetProperty("message").GetString(),
-                    CheckedAt = DateTime.Parse(item.GetProperty("checkedAt").GetString())
+                    Id = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyId).GetString(),
+                    Status = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyStatus).GetString(),
+                    ResponseTime = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyResponseTime).GetInt32(),
+                    StatusCode = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyStatusCode).GetInt32(),
+                    Message = item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyMessage).GetString(),
+                    CheckedAt = DateTime.Parse(item.GetProperty(HealthCheckMonitorExampleConstants.JsonPropertyCheckedAt).GetString())
                 });
             }
         }
@@ -155,9 +155,9 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         }
 
         var totalChecks = history.Count;
-        var healthyChecks = history.Count(h => h.Status == "Healthy");
-        var degradedChecks = history.Count(h => h.Status == "Degraded");
-        var unhealthyChecks = history.Count(h => h.Status == "Unhealthy");
+        var healthyChecks = history.Count(h => h.Status == HealthCheckMonitorExampleConstants.StatusHealthy);
+        var degradedChecks = history.Count(h => h.Status == HealthCheckMonitorExampleConstants.StatusDegraded);
+        var unhealthyChecks = history.Count(h => h.Status == HealthCheckMonitorExampleConstants.StatusUnhealthy);
 
         var successRate = (double)healthyChecks / totalChecks * 100;
         var avgResponseTime = history.Average(h => h.ResponseTime);
@@ -179,7 +179,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// </summary>
     private void CheckAlertThresholds(string serviceName, string status, int responseTime)
     {
-        if (status == "Unhealthy")
+        if (status == HealthCheckMonitorExampleConstants.StatusUnhealthy)
         {
             OnAlert(string.Format(HealthCheckMonitorExampleConstants.AlertCriticalFormat, serviceName));
 
@@ -189,7 +189,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
             _failureCount[serviceName]++;
             _lastFailure[serviceName] = DateTime.Now;
         }
-        else if (status == "Degraded")
+        else if (status == HealthCheckMonitorExampleConstants.StatusDegraded)
         {
             OnAlert(string.Format(HealthCheckMonitorExampleConstants.AlertWarningFormat, serviceName, responseTime));
         }
@@ -214,7 +214,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Monitor service continuously
     /// </summary>
-    public async Task MonitorServiceAsync(string serviceName, string serviceId, int intervalSeconds = 60)
+    public async Task MonitorServiceAsync(string serviceName, string serviceId, int intervalSeconds = HealthCheckMonitorExampleConstants.DefaultMonitorIntervalSeconds)
     {
         Console.WriteLine($"Starting monitoring of {serviceName} (every {intervalSeconds}s)");
         Console.WriteLine("Press Ctrl+C to stop\n");
@@ -246,22 +246,22 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// <summary>
     /// Generate health report
     /// </summary>
-    public async Task<string> GenerateHealthReportAsync(string serviceName, string serviceId, int days = 7, CancellationToken cancellationToken = default)
+    public async Task<string> GenerateHealthReportAsync(string serviceName, string serviceId, int days = HealthCheckMonitorExampleConstants.DefaultHistoryDays, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var history = await GetHealthHistoryAsync(serviceId, days, cancellationToken);
-        var failures = await GetFailuresAsync(serviceId, 50, cancellationToken);
+        var failures = await GetFailuresAsync(serviceId, HealthCheckMonitorExampleConstants.DefaultFailuresLimit, cancellationToken);
 
         var report = new System.Text.StringBuilder();
         report.AppendLine($"=== Health Report: {serviceName} ===");
-        report.AppendLine($"Report Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        report.AppendLine($"Report Generated: {DateTime.Now:HealthCheckMonitorExampleConstants.DateTimeFormatReport}");
         report.AppendLine($"Period: Last {days} days\n");
 
         // Statistics
         var totalChecks = history.Count;
-        var healthyChecks = history.Count(h => h.Status == "Healthy");
-        var degradedChecks = history.Count(h => h.Status == "Degraded");
-        var unhealthyChecks = history.Count(h => h.Status == "Unhealthy");
+        var healthyChecks = history.Count(h => h.Status == HealthCheckMonitorExampleConstants.StatusHealthy);
+        var degradedChecks = history.Count(h => h.Status == HealthCheckMonitorExampleConstants.StatusDegraded);
+        var unhealthyChecks = history.Count(h => h.Status == HealthCheckMonitorExampleConstants.StatusUnhealthy);
         var successRate = totalChecks > 0 ? (double)healthyChecks / totalChecks * 100 : 0;
 
         report.AppendLine("Statistics:");
@@ -277,7 +277,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
             report.AppendLine("Recent Failures:");
             foreach (var failure in failures.Take(10))
             {
-                report.AppendLine($"  {failure.CheckedAt:yyyy-MM-dd HH:mm:ss} - {failure.Status} ({failure.StatusCode})");
+                report.AppendLine($"  {failure.CheckedAt:HealthCheckMonitorExampleConstants.DateTimeFormatReport} - {failure.Status} ({failure.StatusCode})");
             }
         }
 
@@ -304,7 +304,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
             // Get recent history
             Console.WriteLine("=== Health History (Last 7 days) ===\n");
-            var history = await monitor.GetHealthHistoryAsync(serviceId, 7, CancellationToken.None);
+            var history = await monitor.GetHealthHistoryAsync(serviceId, HealthCheckMonitorExampleConstants.DefaultHistoryDays, CancellationToken.None);
             monitor.AnalyzeTrends(history);
 
             // Get failures
@@ -312,16 +312,16 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
             var failures = await monitor.GetFailuresAsync(serviceId, 10, CancellationToken.None);
             foreach (var failure in failures)
             {
-                Console.WriteLine($"{failure.CheckedAt:yyyy-MM-dd HH:mm:ss} - {failure.Status} ({failure.StatusCode})");
+                Console.WriteLine($"{failure.CheckedAt:HealthCheckMonitorExampleConstants.DateTimeFormatReport} - {failure.Status} ({failure.StatusCode})");
             }
 
             // Generate report
             Console.WriteLine("\n=== Health Report ===\n");
-            var report = await monitor.GenerateHealthReportAsync(serviceName, serviceId, 7, CancellationToken.None);
+            var report = await monitor.GenerateHealthReportAsync(serviceName, serviceId, HealthCheckMonitorExampleConstants.DefaultHistoryDays, CancellationToken.None);
             Console.WriteLine(report);
 
             // Monitor continuously (uncomment to run)
-            // await monitor.MonitorServiceAsync(serviceName, serviceId, intervalSeconds: 30);
+            // await monitor.MonitorServiceAsync(serviceName, serviceId, intervalSeconds: HealthCheckMonitorExampleConstants.ExampleMonitorIntervalSeconds);
         }
         catch (Exception ex)
         {
