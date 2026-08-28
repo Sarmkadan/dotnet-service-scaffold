@@ -15,7 +15,7 @@ using Xunit;
 /// <summary>
 /// Tests for the UserRepository class.
 /// </summary>
-public class UserRepositoryTests : IDisposable
+public class UserRepositoryTests : IDisposable, IUserRepositoryTests
 {
     private readonly SqliteConnection _connection;
     private readonly DbContextOptions<ServiceScaffoldDbContext> _dbContextOptions;
