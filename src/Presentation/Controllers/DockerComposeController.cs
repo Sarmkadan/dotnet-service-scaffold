@@ -17,7 +17,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [AllowAnonymous]
-public class DockerComposeController : ControllerBase
+public class DockerComposeController : ControllerBase, IDockerComposeController
 {
     private readonly IDockerComposeGenerator _generator;
     private readonly ILogger<DockerComposeController> _logger;
