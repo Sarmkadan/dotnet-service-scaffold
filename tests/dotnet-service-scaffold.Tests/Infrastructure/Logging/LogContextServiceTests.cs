@@ -99,9 +99,9 @@ public class LogContextServiceTests
     [Fact]
     public void AddProperty_ShouldOverwrite_WhenKeyExists()
     {
-        _service.AddProperty("Key", "first");
-        _service.AddProperty("Key", "second");
+        _service.AddProperty(LogContextServiceTestsConstants.TestKey, "first");
+        _service.AddProperty(LogContextServiceTestsConstants.TestKey, "second");
 
-        _service.GetProperties()["Key"].Should().Be("second");
+        _service.GetProperties()[LogContextServiceTestsConstants.TestKey].Should().Be("second");
     }
 }
