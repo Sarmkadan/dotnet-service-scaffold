@@ -48,12 +48,12 @@ public class DeploymentConfigurationTests
         var unitFileContent = DeploymentConfiguration.GenerateSystemdServiceUnit(_defaultOptions);
 
         // Assert
-        unitFileContent.Should().Contain($"Description={_defaultOptions.ServiceDescription}");
-        unitFileContent.Should().Contain($"User={_defaultOptions.ServiceUser}");
-        unitFileContent.Should().Contain($"WorkingDirectory={_defaultOptions.ApplicationPath}");
-        unitFileContent.Should().Contain($"ExecStart={_defaultOptions.DotnetPath} DotnetServiceScaffold.dll");
-        unitFileContent.Should().Contain($"SyslogIdentifier={_defaultOptions.ServiceName}");
-        unitFileContent.Should().Contain($"ReadWritePaths={_defaultOptions.DataPath}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_Description}{_defaultOptions.ServiceDescription}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_User}{_defaultOptions.ServiceUser}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_WorkingDirectory}{_defaultOptions.ApplicationPath}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_ExecStart}{_defaultOptions.DotnetPath}{DeploymentConfigurationTestsConstants.ExecStart_Dll}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_SyslogIdentifier}{_defaultOptions.ServiceName}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_ReadWritePaths}{_defaultOptions.DataPath}");
     }
 
     /// <summary>
@@ -66,10 +66,10 @@ public class DeploymentConfigurationTests
         var caddyConfigContent = DeploymentConfiguration.GenerateCaddyConfiguration(_defaultOptions);
 
         // Assert
-        caddyConfigContent.Should().Contain($"# Caddy reverse proxy configuration for {_defaultOptions.ServiceName}");
-        caddyConfigContent.Should().Contain($"{_defaultOptions.ServerDomain} {{");
-        caddyConfigContent.Should().Contain($"reverse_proxy localhost:{_defaultOptions.ApplicationPort} {{");
-        caddyConfigContent.Should().Contain($"output file {_defaultOptions.LogPath}/caddy.log {{");
+        caddyConfigContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Caddy_Comment}{_defaultOptions.ServiceName}");
+        caddyConfigContent.Should().Contain($"{_defaultOptions.ServerDomain}{DeploymentConfigurationTestsConstants.Caddy_OpenBrace}");
+        caddyConfigContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Caddy_ReverseProxy}{_defaultOptions.ApplicationPort}{DeploymentConfigurationTestsConstants.Caddy_OpenBrace}");
+        caddyConfigContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Caddy_OutputFile}{_defaultOptions.LogPath}{DeploymentConfigurationTestsConstants.Caddy_LogOpenBrace}");
     }
 
     /// <summary>
@@ -82,11 +82,11 @@ public class DeploymentConfigurationTests
         var envFileContent = DeploymentConfiguration.GenerateEnvironmentFile(_defaultOptions);
 
         // Assert
-        envFileContent.Should().Contain($"# Environment variables for {_defaultOptions.ServiceName}");
-        envFileContent.Should().Contain($"ASPNETCORE_URLS=http://localhost:{_defaultOptions.ApplicationPort}");
-        envFileContent.Should().Contain($"ConnectionStrings__DefaultConnection=Data Source={_defaultOptions.DataPath}/scaffold.db");
-        envFileContent.Should().Contain($"SERVICE_NAME={_defaultOptions.ServiceName}");
-        envFileContent.Should().Contain($"SERVICE_VERSION={_defaultOptions.ServiceVersion}");
+        envFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.EnvFile_Comment}{_defaultOptions.ServiceName}");
+        envFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.EnvFile_Urls}{_defaultOptions.ApplicationPort}");
+        envFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.EnvFile_ConnectionString}{_defaultOptions.DataPath}{DeploymentConfigurationTestsConstants.EnvFile_DbPath}");
+        envFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.EnvFile_ServiceName}{_defaultOptions.ServiceName}");
+        envFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.EnvFile_ServiceVersion}{_defaultOptions.ServiceVersion}");
     }
 
     /// <summary>
@@ -99,11 +99,11 @@ public class DeploymentConfigurationTests
         var guideContent = DeploymentConfiguration.GenerateDeploymentGuide(_defaultOptions);
 
         // Assert
-        guideContent.Should().Contain($"# Deployment Guide for {_defaultOptions.ServiceName}");
-        guideContent.Should().Contain($"sudo useradd -r -s /bin/false {_defaultOptions.ServiceUser}");
-        guideContent.Should().Contain($"sudo mkdir -p {_defaultOptions.ApplicationPath} {_defaultOptions.DataPath} {_defaultOptions.LogPath}");
-        guideContent.Should().Contain($"curl https://{_defaultOptions.ServerDomain}/health");
-        guideContent.Should().Contain($"- Database files are stored in {_defaultOptions.DataPath}");
+        guideContent.Should().Contain($"{DeploymentConfigurationTestsConstants.DeploymentGuide_Comment}{_defaultOptions.ServiceName}");
+        guideContent.Should().Contain($"{DeploymentConfigurationTestsConstants.DeploymentGuide_AddUser}{_defaultOptions.ServiceUser}");
+        guideContent.Should().Contain($"{DeploymentConfigurationTestsConstants.DeploymentGuide_Mkdir}{_defaultOptions.ApplicationPath} {_defaultOptions.DataPath} {_defaultOptions.LogPath}");
+        guideContent.Should().Contain($"{DeploymentConfigurationTestsConstants.DeploymentGuide_Curl}{_defaultOptions.ServerDomain}{DeploymentConfigurationTestsConstants.DeploymentGuide_HealthCheck}");
+        guideContent.Should().Contain($"{DeploymentConfigurationTestsConstants.DeploymentGuide_DbPathInfo}{_defaultOptions.DataPath}");
     }
 
     /// <summary>
@@ -116,10 +116,10 @@ public class DeploymentConfigurationTests
         var unitFileContent = DeploymentConfiguration.GenerateSystemdServiceUnit(_defaultOptions);
 
         // Assert
-        unitFileContent.Should().Contain("NoNewPrivileges=true");
-        unitFileContent.Should().Contain("PrivateTmp=true");
-        unitFileContent.Should().Contain("ProtectSystem=strict");
-        unitFileContent.Should().Contain("ProtectHome=true");
+        unitFileContent.Should().Contain(DeploymentConfigurationTestsConstants.SystemdSecurity_NoNewPrivileges);
+        unitFileContent.Should().Contain(DeploymentConfigurationTestsConstants.SystemdSecurity_PrivateTmp);
+        unitFileContent.Should().Contain(DeploymentConfigurationTestsConstants.SystemdSecurity_ProtectSystem);
+        unitFileContent.Should().Contain(DeploymentConfigurationTestsConstants.SystemdSecurity_ProtectHome);
     }
 
     /// <summary>
@@ -132,10 +132,10 @@ public class DeploymentConfigurationTests
         var caddyConfigContent = DeploymentConfiguration.GenerateCaddyConfiguration(_defaultOptions);
 
         // Assert
-        caddyConfigContent.Should().Contain("uri /health");
-        caddyConfigContent.Should().Contain("interval 30s");
-        caddyConfigContent.Should().Contain("timeout 5s");
-        caddyConfigContent.Should().Contain("unhealthy_status 500 502 503");
+        caddyConfigContent.Should().Contain(DeploymentConfigurationTestsConstants.CaddyHealthCheck_Uri);
+        caddyConfigContent.Should().Contain($"interval {DeploymentConfigurationTestsConstants.HealthCheckIntervalSeconds}s");
+        caddyConfigContent.Should().Contain($"timeout {DeploymentConfigurationTestsConstants.HealthCheckTimeoutSeconds}s");
+        caddyConfigContent.Should().Contain($"unhealthy_status {string.Join(" ", DeploymentConfigurationTestsConstants.HealthCheckUnhealthyStatusCodes)}");
     }
     
     /// <summary>
