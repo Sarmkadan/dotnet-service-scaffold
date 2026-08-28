@@ -19,7 +19,7 @@ namespace DotnetServiceScaffold.Tests.IntegrationTests;
 /// <summary>
 /// Tests for the ConfigurationRepository class.
 /// </summary>
-public class ConfigurationRepositoryTests : IntegrationTestBase
+public class ConfigurationRepositoryTests : IntegrationTestBase, IConfigurationRepositoryTests
 {
     private readonly ConfigurationRepository _configurationRepository;
 
