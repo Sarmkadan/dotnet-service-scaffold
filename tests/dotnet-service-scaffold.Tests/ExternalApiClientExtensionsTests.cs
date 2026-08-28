@@ -11,7 +11,7 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests;
 
-public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExtensionsTests>
+public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExtensionsTests>, IExternalApiClientExtensionsTests
 {
     private readonly Mock<ILogger<ExternalApiClient>> _loggerMock;
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
