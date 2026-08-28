@@ -37,8 +37,8 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     {
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
-            $"{_baseUrl}/api/healthcheck/{serviceId}/check");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{string.Format(HealthCheckMonitorExampleConstants.HealthCheckEndpoint, serviceId)}");
+        httpRequest.Headers.Add(HealthCheckMonitorExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest);
         var responseJson = await response.Content.ReadAsStringAsync();
@@ -46,7 +46,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Health check failed: {response.StatusCode}");
+                string.Format(HealthCheckMonitorExampleConstants.ErrorHealthCheckFailed, response.StatusCode));
         }
 
         using (var doc = JsonDocument.Parse(responseJson))
@@ -66,8 +66,8 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
-            $"{_baseUrl}/api/healthcheck/{serviceId}/history?days={days}&limit=1000");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{string.Format(HealthCheckMonitorExampleConstants.HealthHistoryEndpoint, serviceId, days, HealthCheckMonitorExampleConstants.DefaultHistoryLimit)}");
+        httpRequest.Headers.Add(HealthCheckMonitorExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -75,7 +75,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Failed to get history: {response.StatusCode}");
+                string.Format(HealthCheckMonitorExampleConstants.ErrorFailedToGetHistory, response.StatusCode));
         }
 
         var entries = new List<HealthCheckEntry>();
@@ -108,8 +108,8 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
-            $"{_baseUrl}/api/healthcheck/{serviceId}/failures?limit={limit}");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{string.Format(HealthCheckMonitorExampleConstants.HealthFailuresEndpoint, serviceId, limit)}");
+        httpRequest.Headers.Add(HealthCheckMonitorExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -117,7 +117,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Failed to get failures: {response.StatusCode}");
+                string.Format(HealthCheckMonitorExampleConstants.ErrorFailedToGetFailures, response.StatusCode));
         }
 
         var entries = new List<HealthCheckEntry>();
@@ -181,7 +181,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     {
         if (status == "Unhealthy")
         {
-            OnAlert($"CRITICAL: {serviceName} is UNHEALTHY!");
+            OnAlert(string.Format(HealthCheckMonitorExampleConstants.AlertCriticalFormat, serviceName));
 
             if (!_failureCount.ContainsKey(serviceName))
                 _failureCount[serviceName] = 0;
@@ -191,11 +191,11 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         }
         else if (status == "Degraded")
         {
-            OnAlert($"WARNING: {serviceName} is degraded (response: {responseTime}ms)");
+            OnAlert(string.Format(HealthCheckMonitorExampleConstants.AlertWarningFormat, serviceName, responseTime));
         }
         else if (_failureCount.ContainsKey(serviceName) && _failureCount[serviceName] > 0)
         {
-            OnAlert($"RECOVERY: {serviceName} is healthy again!");
+            OnAlert(string.Format(HealthCheckMonitorExampleConstants.AlertRecoveryFormat, serviceName));
             _failureCount[serviceName] = 0;
         }
     }
@@ -206,7 +206,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     protected virtual void OnAlert(string message)
     {
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"[ALERT] {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}");
+        Console.WriteLine($"[ALERT] {DateTime.Now:{HealthCheckMonitorExampleConstants.DateTimeFormatFull}} - {message}");
         Console.ResetColor();
         // Could send email, Slack, PagerDuty, etc.
     }
@@ -225,7 +225,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
             {
                 var (status, responseTime) = await CheckServiceHealthAsync(serviceId);
 
-                var timestamp = DateTime.Now.ToString("HH:mm:ss");
+                var timestamp = DateTime.Now.ToString(HealthCheckMonitorExampleConstants.DateTimeFormatTimeOnly);
                 Console.WriteLine($"[{timestamp}] {serviceName}: {status} ({responseTime}ms)");
 
                 CheckAlertThresholds(serviceName, status, responseTime);
@@ -235,7 +235,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"[ERROR] {DateTime.Now:HH:mm:ss} - {serviceName}: {ex.Message}");
+                Console.WriteLine($"[ERROR] {DateTime.Now:{HealthCheckMonitorExampleConstants.DateTimeFormatTimeOnly}} - {serviceName}: {ex.Message}");
                 Console.ResetColor();
 
                 await Task.Delay(TimeSpan.FromSeconds(intervalSeconds));
@@ -289,9 +289,9 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
     /// </summary>
     public static async Task Main(string[] args)
     {
-        const string apiKey = "sk_live_your_api_key_here";
-        const string serviceName = "UserService";
-        const string serviceId = "svc-12345678";
+        const string apiKey = HealthCheckMonitorExampleConstants.ExampleApiKey;
+        const string serviceName = HealthCheckMonitorExampleConstants.ExampleServiceName;
+        const string serviceId = HealthCheckMonitorExampleConstants.ExampleServiceId;
 
         var monitor = new HealthCheckMonitorExample(apiKey);
 
