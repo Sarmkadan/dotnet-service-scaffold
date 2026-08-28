@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Stores performance and resource metrics for a service.
 /// </summary>
-public class ServiceMetric
+public class ServiceMetric : IServiceMetric
 {
     [Key]
     public Guid Id { get; set; }
