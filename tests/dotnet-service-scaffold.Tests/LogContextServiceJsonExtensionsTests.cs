@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests.Logging
 {
-    public class LogContextServiceJsonExtensionsTests
+    public class LogContextServiceJsonExtensionsTests : ILogContextServiceJsonExtensionsTests
     {
         [Fact]
         public void ToJson_WithValidService_ReturnsCorrectJson()
