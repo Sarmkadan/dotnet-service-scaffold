@@ -38,8 +38,8 @@ public class ExternalApiClientTests : IExternalApiClientTests
     public async Task GetAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
-        var url = "api/test";
-        var expectedResponse = new { Id = 1, Name = "Test" };
+        var url = ExternalApiClientTestsConstants.ApiTestEndpoint;
+        var expectedResponse = new { Id = ExternalApiClientTestsConstants.TestObjectId, Name = ExternalApiClientTestsConstants.TestObjectName };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
 
         _httpMessageHandlerMock.Protected()
@@ -58,17 +58,17 @@ public class ExternalApiClientTests : IExternalApiClientTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(1);
-        result.Name.Should().Be("Test");
+        result!.Id.Should().Be(ExternalApiClientTestsConstants.TestObjectId);
+        result.Name.Should().Be(ExternalApiClientTestsConstants.TestObjectName);
     }
 
     [Fact]
     public async Task PostAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
-        var url = "api/test";
-        var payload = new { Id = 1, Name = "Test" };
-        var expectedResponse = new { Status = "Created" };
+        var url = ExternalApiClientTestsConstants.ApiTestEndpoint;
+        var payload = new { Id = ExternalApiClientTestsConstants.TestObjectId, Name = ExternalApiClientTestsConstants.TestObjectName };
+        var expectedResponse = new { Status = ExternalApiClientTestsConstants.ResponseStatusCreated };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
 
         _httpMessageHandlerMock.Protected()
@@ -87,14 +87,14 @@ public class ExternalApiClientTests : IExternalApiClientTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Status.Should().Be("Created");
+        result!.Status.Should().Be(ExternalApiClientTestsConstants.ResponseStatusCreated);
     }
 
     [Fact]
     public async Task DeleteAsync_ValidRequest_ReturnsTrue()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientTestsConstants.ApiTestEndpointWithId;
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -117,7 +117,7 @@ public class ExternalApiClientTests : IExternalApiClientTests
     public async Task GetAsync_UnsuccessfulResponse_ThrowsHttpRequestException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientTestsConstants.ApiTestEndpoint;
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -127,7 +127,7 @@ public class ExternalApiClientTests : IExternalApiClientTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                Content = new StringContent(ExternalApiClientTestsConstants.ErrorContent)
             });
 
         // Act
