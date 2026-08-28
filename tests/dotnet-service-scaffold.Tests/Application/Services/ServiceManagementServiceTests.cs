@@ -55,7 +55,7 @@ public class ServiceManagementServiceTests
 		var endpoint = "http://newservice.com";
 		var healthCheckUrl = "http://newservice.com/health";
 		var ownerId = Guid.NewGuid();
-		var owner = new User { Id = ownerId, Username = "testuser" };
+		var owner = new User { Id = ownerId, Username = ServiceManagementServiceTestsConstants.TestUserName };
 
 		_serviceRepository.GetByNameAsync(serviceName).Returns((ServiceRegistration)null);
 		_serviceRepository.AddAsync(Arg.Any<ServiceRegistration>()).Returns(ci => ci.Arg<ServiceRegistration>());
@@ -70,7 +70,7 @@ public class ServiceManagementServiceTests
 		result.HealthCheckUrl.Should().Be(healthCheckUrl);
 		result.OwnerId.Should().Be(ownerId);
 		await _serviceRepository.Received(1).AddAsync(Arg.Any<ServiceRegistration>());
-		await _auditService.Received(1).LogActionAsync(ownerId, "Create", "ServiceRegistration", result.Id, $"Registered service {serviceName}");
+		await _auditService.Received(1).LogActionAsync(ownerId, "Create", "ServiceRegistration", result.Id, string.Format(ServiceManagementServiceTestsConstants.RegisteredServiceLogFormat, serviceName));
 	}
 
 	[Theory]
@@ -84,7 +84,7 @@ public class ServiceManagementServiceTests
 	{
 		// Arrange
 		var ownerId = Guid.NewGuid();
-		var owner = new User { Id = ownerId, Username = "testuser" };
+		var owner = new User { Id = ownerId, Username = ServiceManagementServiceTestsConstants.TestUserName };
 		_userRepository.GetByIdAsync(ownerId).Returns(owner);
 
 		// Act
@@ -123,7 +123,7 @@ public class ServiceManagementServiceTests
 		var endpoint = "http://existing.com";
 		var healthCheckUrl = "http://existing.com/health";
 		var ownerId = Guid.NewGuid();
-		var owner = new User { Id = ownerId, Username = "testuser" };
+		var owner = new User { Id = ownerId, Username = ServiceManagementServiceTestsConstants.TestUserName };
 		var existingService = new ServiceRegistration { ServiceName = serviceName };
 
 		_userRepository.GetByIdAsync(ownerId).Returns(owner);
@@ -166,7 +166,7 @@ public class ServiceManagementServiceTests
 
 		// Assert
 		await _serviceRepository.Received(1).DeleteAsync(serviceId);
-		await _auditService.Received(1).LogActionAsync(service.OwnerId, "Delete", "ServiceRegistration", serviceId, $"Unregistered service {service.ServiceName}");
+		await _auditService.Received(1).LogActionAsync(service.OwnerId, "Delete", "ServiceRegistration", serviceId, string.Format(ServiceManagementServiceTestsConstants.UnregisteredServiceLogFormat, service.ServiceName));
 	}
 
 	[Fact]
@@ -200,7 +200,7 @@ public class ServiceManagementServiceTests
 		result.IsActive.Should().BeFalse();
 		result.DeactivationReason.Should().Be(reason);
 		await _serviceRepository.Received(1).UpdateAsync(Arg.Is<ServiceRegistration>(s => s.Id == serviceId && !s.IsActive));
-		await _auditService.Received(1).LogActionAsync(null, "Update", "ServiceRegistration", serviceId, $"Disabled service: {reason}");
+		await _auditService.Received(1).LogActionAsync(null, "Update", "ServiceRegistration", serviceId, string.Format(ServiceManagementServiceTestsConstants.DisabledServiceLogFormat, reason));
 	}
 
 	[Fact]
@@ -219,7 +219,7 @@ public class ServiceManagementServiceTests
 		result.IsActive.Should().BeTrue();
 		result.DeactivationReason.Should().BeNull();
 		await _serviceRepository.Received(1).UpdateAsync(Arg.Is<ServiceRegistration>(s => s.Id == serviceId && s.IsActive));
-		await _auditService.Received(1).LogActionAsync(null, "Update", "ServiceRegistration", serviceId, "Re-enabled service");
+		await _auditService.Received(1).LogActionAsync(null, "Update", "ServiceRegistration", serviceId, ServiceManagementServiceTestsConstants.ReenabledServiceLogMessage);
 	}
 
 	[Fact]
@@ -227,7 +227,7 @@ public class ServiceManagementServiceTests
 	{
 		// Arrange
 		var serviceId = Guid.NewGuid();
-		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceWithMetrics", TotalRequests = 100, SuccessfulRequests = 90 };
+		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceWithMetrics", TotalRequests = ServiceManagementServiceTestsConstants.SuccessRateTest_TotalRequests, SuccessfulRequests = ServiceManagementServiceTestsConstants.SuccessRateTest_SuccessfulRequests };
 		_serviceRepository.GetByIdAsync(serviceId).Returns(service);
 
 		// Act
@@ -242,7 +242,7 @@ public class ServiceManagementServiceTests
 	{
 		// Arrange
 		var serviceId = Guid.NewGuid();
-		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceWithNoMetrics", TotalRequests = 0, SuccessfulRequests = 0 };
+		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceWithNoMetrics", TotalRequests = ServiceManagementServiceTestsConstants.NoMetricsTest_TotalRequests, SuccessfulRequests = ServiceManagementServiceTestsConstants.NoMetricsTest_SuccessfulRequests };
 		_serviceRepository.GetByIdAsync(serviceId).Returns(service);
 
 		// Act
