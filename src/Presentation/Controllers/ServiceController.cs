@@ -16,7 +16,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class ServiceController : ControllerBase
+public class ServiceController : ControllerBase, IServiceController
 {
     private readonly IServiceManagementService _serviceManagementService;
     private readonly ILogger<ServiceController> _logger;
