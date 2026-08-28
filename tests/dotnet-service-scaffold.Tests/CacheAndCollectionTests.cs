@@ -15,7 +15,7 @@ namespace DotnetServiceScaffold.Tests;
 /// <summary>
 /// Contains unit tests for cache and collection utilities.
 /// </summary>
-public class CacheAndCollectionTests
+public class CacheAndCollectionTests : ICacheAndCollectionTests
 {
     /// <summary>
     /// Tests the <see cref="ValidationUtility.IsPasswordStrong(string)"/> method with various passwords.
