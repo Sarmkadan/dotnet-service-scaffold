@@ -309,7 +309,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
 
             // Get failures
             Console.WriteLine("\n=== Recent Failures ===\n");
-            var failures = await monitor.GetFailuresAsync(serviceId, 10, CancellationToken.None);
+            var failures = await monitor.GetFailuresAsync(serviceId, HealthCheckMonitorExampleConstants.ExampleFailuresLimit, CancellationToken.None);
             foreach (var failure in failures)
             {
                 Console.WriteLine($"{failure.CheckedAt:HealthCheckMonitorExampleConstants.DateTimeFormatReport} - {failure.Status} ({failure.StatusCode})");

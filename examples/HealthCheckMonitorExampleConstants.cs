@@ -50,4 +50,5 @@ internal static class HealthCheckMonitorExampleConstants
     public const string ExampleApiKey = "your-api-key-here";
     public const string ExampleServiceName = "MyService";
     public const string ExampleServiceId = "00000000-0000-0000-0000-000000000000";
+    public const int ExampleFailuresLimit = 10;
 }
