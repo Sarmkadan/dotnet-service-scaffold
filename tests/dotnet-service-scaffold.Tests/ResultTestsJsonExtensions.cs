@@ -21,7 +21,7 @@ public static class ResultTestsJsonExtensions
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
+        WriteIndented = ResultTestsJsonExtensionsConstants.DefaultWriteIndented,
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
@@ -37,7 +37,7 @@ public static class ResultTestsJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = ResultTestsJsonExtensionsConstants.IndentedWriteIndented }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
@@ -56,7 +56,7 @@ public static class ResultTestsJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = ResultTestsJsonExtensionsConstants.IndentedWriteIndented }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
