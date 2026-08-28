@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Tests;
 /// Unit tests for HttpClientFactory class.
 /// Tests the actual behavior of HttpClient creation methods including headers, timeouts, and configurations.
 /// </summary>
-public class HttpClientFactoryTests : IDisposable
+public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
