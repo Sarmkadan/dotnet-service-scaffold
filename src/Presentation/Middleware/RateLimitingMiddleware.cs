@@ -14,7 +14,7 @@ namespace DotnetServiceScaffold.Presentation.Middleware;
 /// Prevents abuse by limiting the number of requests per time window. Configuration allows
 /// different limits for authenticated vs anonymous requests.
 /// </summary>
-public class RateLimitingMiddleware
+public class RateLimitingMiddleware : IRateLimitingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly RateLimitOptions _options;
