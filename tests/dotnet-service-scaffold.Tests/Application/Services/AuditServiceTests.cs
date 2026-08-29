@@ -18,7 +18,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Tests for the AuditService class.
 /// </summary>
-public class AuditServiceTests
+public class AuditServiceTests : IAuditServiceTests
 {
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly AuditService _auditService;
