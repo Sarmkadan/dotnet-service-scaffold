@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// Combines addressing information (host, port, scheme) with health telemetry
 /// and registry metadata so that consumers can select and route to live endpoints.
 /// </summary>
-public sealed class ServiceDiscoveryRecord
+public sealed class ServiceDiscoveryRecord : IEquatable<ServiceDiscoveryRecord>
 {
     /// <summary>Gets or sets the unique identifier for this service instance.</summary>
     [Key]
@@ -155,6 +155,27 @@ public sealed class ServiceDiscoveryRecord
             ? DiscoveryHealthStatus.Critical
             : DiscoveryHealthStatus.Warning;
     }
+
+    public bool Equals(ServiceDiscoveryRecord? other)
+    {
+        if (other is null) return false;
+        return InstanceId == other.InstanceId &&
+               ServiceName == other.ServiceName &&
+               Version == other.Version &&
+               Host == other.Host &&
+               Port == other.Port &&
+               Scheme == other.Scheme &&
+               Weight == other.Weight &&
+               Priority == other.Priority;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as ServiceDiscoveryRecord);
+
+    public override int GetHashCode() => System.HashCode.Combine(InstanceId, ServiceName, Version, Host, Port, Scheme, Weight, Priority);
+
+    public static bool operator ==(ServiceDiscoveryRecord? left, ServiceDiscoveryRecord? right) => EqualityComparer<ServiceDiscoveryRecord>.Default.Equals(left, right);
+
+    public static bool operator !=(ServiceDiscoveryRecord? left, ServiceDiscoveryRecord? right) => !(left == right);
 }
 
 /// <summary>Health status levels for a discovered service instance.</summary>
