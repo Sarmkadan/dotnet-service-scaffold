@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Example usage of the service scaffold with advanced features.
 /// </summary>
-public class AdvancedUsage
+public class AdvancedUsage : IAdvancedUsage
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AdvancedUsage"/> class.
