@@ -24,14 +24,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configure DotnetServiceScaffoldOptions with validation
 builder.Services.AddOptions<DotnetServiceScaffoldOptions>()
-.Bind(builder.Configuration.GetSection("ApplicationSettings"))
+.Bind(builder.Configuration.GetSection(ProgramConstants.ApplicationSettingsSection))
 .ValidateOnStart();
 
 // Startup validation for service discovery options (endpoints, ports, timeouts).
 builder.Services.AddSingleton<IValidateOptions<ServiceDiscoveryOptions>, ServiceDiscoveryOptionsValidator>();
 
 var structuredLoggingOptions = builder.Configuration
-.GetSection("StructuredLogging")
+.GetSection(ProgramConstants.StructuredLoggingSection)
 .Get<StructuredLoggingOptions>() ?? new StructuredLoggingOptions();
 
 var minimumLevel = Enum.TryParse<LogEventLevel>(
@@ -45,24 +45,24 @@ Log.Logger = new LoggerConfiguration()
 .MinimumLevel.Is(minimumLevel)
 .EnrichFromOptions(structuredLoggingOptions)
 .WriteTo.Console(
-    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    outputTemplate: ProgramConstants.LogOutputTemplate)
 .WriteTo.File(
-    "logs/scaffold-.txt",
+    ProgramConstants.LogFilePath,
     rollingInterval: RollingInterval.Day,
-    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    outputTemplate: ProgramConstants.LogOutputTemplate)
 .CreateLogger();
 
 builder.Host.UseSerilog();
 
 // Register Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-    "Data Source=scaffold.db";
+var connectionString = builder.Configuration.GetConnectionString(ProgramConstants.DefaultConnectionName) ??
+    ProgramConstants.DefaultConnectionString;
 
 builder.Services.AddDbContext<ServiceScaffoldDbContext>((provider, options) =>
 {
     // Add busy_timeout to handle concurrent SQLite writes and prevent SQLITE_BUSY errors
     // busy_timeout=5000 means SQLite will wait up to 5 seconds for a lock to be released
-    var sqliteConnectionString = $"{connectionString};busy_timeout=5000";
+    var sqliteConnectionString = $"{connectionString};busy_timeout={ProgramConstants.SqliteBusyTimeoutMilliseconds}";
     options.UseSqlite(sqliteConnectionString);
 });
 
@@ -90,8 +90,8 @@ builder.Services.AddSingleton<IPrometheusFormatter, PrometheusFormatter>();
 builder.Services.AddHttpClient<IHealthCheckService, HealthCheckService>()
 .ConfigureHttpClient(client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+    client.Timeout = TimeSpan.FromSeconds(ProgramConstants.HealthCheckTimeoutSeconds);
+    client.DefaultRequestHeaders.Add(ProgramConstants.UserAgentHeaderName, ProgramConstants.UserAgentHeaderValue);
 });
 
 // Add controllers and API support
@@ -109,17 +109,17 @@ builder.Services.AddSwaggerGen();
 var sqliteDbPath = connectionString
 .Split(';', StringSplitOptions.RemoveEmptyEntries)
 .Select(p => p.Trim())
-.FirstOrDefault(p => p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-?.Substring("Data Source=".Length) ?? "scaffold.db";
+.FirstOrDefault(p => p.StartsWith(ProgramConstants.DataSourcePrefix, StringComparison.OrdinalIgnoreCase))
+?.Substring(ProgramConstants.DataSourcePrefix.Length) ?? ProgramConstants.DefaultDatabaseFileName;
 
 builder.Services.AddHealthChecks()
-.AddDbContextCheck<ServiceScaffoldDbContext>("database")
+.AddDbContextCheck<ServiceScaffoldDbContext>(ProgramConstants.DatabaseHealthCheckName)
 .Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
-    "sqlite-file",
+    ProgramConstants.SqliteFileHealthCheckName,
     _ => new SqliteHealthCheck(sqliteDbPath),
     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
-    tags: ["db", "sqlite", "live"]))
-.AddCheck<MemoryHealthCheck>("memory", tags: ["system", "live"]);
+    tags: [ProgramConstants.DatabaseTag, ProgramConstants.SqliteTag, ProgramConstants.LiveTag]))
+.AddCheck<MemoryHealthCheck>(ProgramConstants.MemoryHealthCheckName, tags: [ProgramConstants.SystemTag, ProgramConstants.LiveTag]);
 
 var app = builder.Build();
 
@@ -129,7 +129,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Service Scaffold API V1");
+        options.SwaggerEndpoint(ProgramConstants.SwaggerDocumentUrl, ProgramConstants.SwaggerDocumentName);
     });
 }
 
@@ -145,11 +145,11 @@ app.UseExceptionHandler();
 app.MapControllers();
 
 // Health check endpoint with detailed JSON response
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks(ProgramConstants.HealthRoute, new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
     {
-        context.Response.ContentType = "application/json";
+        context.Response.ContentType = ProgramConstants.JsonContentType;
         var result = System.Text.Json.JsonSerializer.Serialize(new
         {
             status = report.Status.ToString(),
@@ -167,31 +167,31 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 });
 
 // Status endpoint
-app.MapGet("/status", async (ServiceScaffoldDbContext context) =>
+app.MapGet(ProgramConstants.StatusRoute, async (ServiceScaffoldDbContext context) =>
 {
     try
     {
-        await context.Database.ExecuteSqlRawAsync("SELECT 1");
+        await context.Database.ExecuteSqlRawAsync(ProgramConstants.DatabaseProbeSql);
         return Results.Ok(new
         {
             status = "healthy",
             timestamp = DateTime.UtcNow,
-            version = "1.0.0"
+            version = ProgramConstants.ServiceVersion
         });
     }
     catch (Exception ex)
     {
         Log.Error(ex, "Error while checking database status in /status endpoint.");
-        return Results.StatusCode(503);
+        return Results.StatusCode(ProgramConstants.ServiceUnavailableStatusCode);
     }
 })
-.Produces(200)
-.Produces(503)
-.WithName("Status")
+.Produces(ProgramConstants.OkStatusCode)
+.Produces(ProgramConstants.ServiceUnavailableStatusCode)
+.WithName(ProgramConstants.StatusEndpointName)
 .WithDescription("Returns the current service status");
 
 // Metrics endpoint with configurable protection
-app.MapGet("/metrics", async (
+app.MapGet(ProgramConstants.MetricsRoute, async (
     HttpContext context,
     IMetricsService metricsService,
     IPrometheusFormatter prometheusFormatter,
@@ -202,38 +202,38 @@ app.MapGet("/metrics", async (
     try
     {
         // Check if metrics endpoint should be protected
-        if (config.MetricsProtectionMode.Equals("Disabled", StringComparison.OrdinalIgnoreCase))
+        if (config.MetricsProtectionMode.Equals(ProgramConstants.DisabledProtectionMode, StringComparison.OrdinalIgnoreCase))
         {
             // Metrics endpoint is publicly accessible (INSECURE - not recommended for production)
             var metrics = await metricsService.GetMetricsAsync();
-            var text = prometheusFormatter.Format(metrics, "scaffold");
-            return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+            var text = prometheusFormatter.Format(metrics, ProgramConstants.MetricsPrefix);
+            return Results.Content(text, ProgramConstants.PrometheusContentType);
         }
-        else if (config.MetricsProtectionMode.Equals("LocalhostOnly", StringComparison.OrdinalIgnoreCase))
+        else if (config.MetricsProtectionMode.Equals(ProgramConstants.LocalhostOnlyProtectionMode, StringComparison.OrdinalIgnoreCase))
         {
             // Metrics endpoint only accessible from localhost
             var remoteIpAddress = context.Connection.RemoteIpAddress;
             if (remoteIpAddress == null || !IPAddress.IsLoopback(remoteIpAddress))
             {
-                context.Response.StatusCode = 403;
-                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = ProgramConstants.ForbiddenStatusCode;
+                context.Response.ContentType = ProgramConstants.JsonContentType;
                 await context.Response.WriteAsJsonAsync(new { error = "Forbidden", message = "Metrics endpoint is restricted to localhost access only." });
                 return Results.Empty;
             }
 
             var metrics = await metricsService.GetMetricsAsync();
-            var text = prometheusFormatter.Format(metrics, "scaffold");
-            return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+            var text = prometheusFormatter.Format(metrics, ProgramConstants.MetricsPrefix);
+            return Results.Content(text, ProgramConstants.PrometheusContentType);
         }
         else
         {
             // Default: ApiKey authentication required (recommended)
             // Check for API key in header
-            if (!context.Request.Headers.TryGetValue("X-Api-Key", out var apiKeyHeaderValues) ||
+            if (!context.Request.Headers.TryGetValue(ProgramConstants.ApiKeyHeaderName, out var apiKeyHeaderValues) ||
                 string.IsNullOrWhiteSpace(apiKeyHeaderValues.FirstOrDefault()))
             {
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = ProgramConstants.UnauthorizedStatusCode;
+                context.Response.ContentType = ProgramConstants.JsonContentType;
                 await context.Response.WriteAsJsonAsync(new { error = "Unauthorized", message = "API key is required for metrics endpoint. Provide it in the X-Api-Key header." });
                 return Results.Empty;
             }
@@ -243,22 +243,22 @@ app.MapGet("/metrics", async (
 
             if (string.IsNullOrWhiteSpace(validMetricsKey) || !providedApiKey.Equals(validMetricsKey, StringComparison.Ordinal))
             {
-                context.Response.StatusCode = 403;
-                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = ProgramConstants.ForbiddenStatusCode;
+                context.Response.ContentType = ProgramConstants.JsonContentType;
                 await context.Response.WriteAsJsonAsync(new { error = "Forbidden", message = "Invalid metrics API key." });
                 return Results.Empty;
             }
 
             var metrics = await metricsService.GetMetricsAsync();
-            var text = prometheusFormatter.Format(metrics, "scaffold");
-            return Results.Content(text, "text/plain; version=0.0.4; charset=utf-8");
+            var text = prometheusFormatter.Format(metrics, ProgramConstants.MetricsPrefix);
+            return Results.Content(text, ProgramConstants.PrometheusContentType);
         }
     }
     catch (Exception ex)
     {
         Log.Error(ex, "Error generating metrics");
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = ProgramConstants.InternalServerErrorStatusCode;
+        context.Response.ContentType = ProgramConstants.JsonContentType;
         await context.Response.WriteAsJsonAsync(new { error = "Internal Server Error", message = "Failed to generate metrics." });
         return Results.Empty;
     }
@@ -284,3 +284,45 @@ using (var scope = app.Services.CreateScope())
 
 Log.Information("Starting DotnetServiceScaffold application");
 await app.RunAsync();
+
+file static class ProgramConstants
+{
+    public const string ApplicationSettingsSection = "ApplicationSettings";
+    public const string StructuredLoggingSection = "StructuredLogging";
+    public const string LogOutputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}";
+    public const string LogFilePath = "logs/scaffold-.txt";
+    public const string DefaultConnectionName = "DefaultConnection";
+    public const string DefaultConnectionString = "Data Source=scaffold.db";
+    public const string DefaultDatabaseFileName = "scaffold.db";
+    public const string DataSourcePrefix = "Data Source=";
+    public const int SqliteBusyTimeoutMilliseconds = 5000;
+    public const int HealthCheckTimeoutSeconds = 30;
+    public const string UserAgentHeaderName = "User-Agent";
+    public const string UserAgentHeaderValue = "DotnetServiceScaffold/1.0";
+    public const string DatabaseHealthCheckName = "database";
+    public const string SqliteFileHealthCheckName = "sqlite-file";
+    public const string MemoryHealthCheckName = "memory";
+    public const string DatabaseTag = "db";
+    public const string SqliteTag = "sqlite";
+    public const string LiveTag = "live";
+    public const string SystemTag = "system";
+    public const string SwaggerDocumentUrl = "/swagger/v1/swagger.json";
+    public const string SwaggerDocumentName = "Service Scaffold API V1";
+    public const string HealthRoute = "/health";
+    public const string StatusRoute = "/status";
+    public const string MetricsRoute = "/metrics";
+    public const string JsonContentType = "application/json";
+    public const string PrometheusContentType = "text/plain; version=0.0.4; charset=utf-8";
+    public const string DatabaseProbeSql = "SELECT 1";
+    public const string ServiceVersion = "1.0.0";
+    public const string StatusEndpointName = "Status";
+    public const string DisabledProtectionMode = "Disabled";
+    public const string LocalhostOnlyProtectionMode = "LocalhostOnly";
+    public const string MetricsPrefix = "scaffold";
+    public const string ApiKeyHeaderName = "X-Api-Key";
+    public const int OkStatusCode = 200;
+    public const int UnauthorizedStatusCode = 401;
+    public const int ForbiddenStatusCode = 403;
+    public const int InternalServerErrorStatusCode = 500;
+    public const int ServiceUnavailableStatusCode = 503;
+}
