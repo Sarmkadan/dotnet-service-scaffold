@@ -19,29 +19,32 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
     {
     }
 
-    public async Task<ServiceConfiguration?> GetByKeyAsync(string key, Guid? serviceId = null)
+    public async Task<ServiceConfiguration?> GetByKeyAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
-            .FirstOrDefaultAsync(c => c.Key == key && c.ServiceId == serviceId);
+            .FirstOrDefaultAsync(c => c.Key == key && c.ServiceId == serviceId, cancellationToken);
     }
 
-    public async Task<IEnumerable<ServiceConfiguration>> GetByServiceIdAsync(Guid serviceId)
+    public async Task<IEnumerable<ServiceConfiguration>> GetByServiceIdAsync(Guid serviceId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .Where(c => c.ServiceId == serviceId)
             .OrderBy(c => c.Key)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> KeyExistsAsync(string key, Guid? serviceId = null)
+    public async Task<bool> KeyExistsAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
-            .AnyAsync(c => c.Key == key && c.ServiceId == serviceId);
+            .AnyAsync(c => c.Key == key && c.ServiceId == serviceId, cancellationToken);
     }
 
     public async Task DeleteByKeyAsync(string key, Guid? serviceId = null)
     {
-        var config = await GetByKeyAsync(key, serviceId);
+        var config = await GetByKeyAsync(key, serviceId, CancellationToken.None);
         if (config is not null)
         {
             _dbSet.Remove(config);
