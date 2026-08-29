@@ -15,8 +15,8 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 /// </summary>
 public interface IHealthCheckController
 {
-    Task<IActionResult> CheckServiceHealth(Guid serviceId);
-    Task<IActionResult> GetHealthHistory(Guid serviceId, int count = 20);
-    Task<IActionResult> GetHealthStatus(Guid serviceId);
-    Task<IActionResult> GetFailedChecks(Guid serviceId, int hoursBack = 24);
+    Task<IActionResult> CheckServiceHealth(Guid serviceId, CancellationToken cancellationToken = default);
+    Task<IActionResult> GetHealthHistory(Guid serviceId, int count = 20, CancellationToken cancellationToken = default);
+    Task<IActionResult> GetHealthStatus(Guid serviceId, CancellationToken cancellationToken = default);
+    Task<IActionResult> GetFailedChecks(Guid serviceId, int hoursBack = 24, CancellationToken cancellationToken = default);
 }
