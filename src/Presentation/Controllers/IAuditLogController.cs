@@ -19,9 +19,10 @@ public interface IAuditLogController
         string? entityType,
         Guid? userId,
         int page,
-        int pageSize);
+        int pageSize,
+        CancellationToken cancellationToken);
 
-    Task<IActionResult> GetAuditLog(Guid id);
+    Task<IActionResult> GetAuditLog(Guid id, CancellationToken cancellationToken);
 
-    Task<IActionResult> GetUserAuditLogs(Guid userId, int days);
+    Task<IActionResult> GetUserAuditLogs(Guid userId, int days, CancellationToken cancellationToken);
 }

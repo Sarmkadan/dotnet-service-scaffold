@@ -45,6 +45,7 @@ public class AuditLogController : ControllerBase, IAuditLogController
     /// <param name="userId">Filter by user ID (optional)</param>
     /// <param name="page">Page number (1-based, default: 1)</param>
     /// <param name="pageSize">Number of records per page (default: 50, max: 1000)</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <response code="200">Returns paginated audit logs</response>
     /// <response code="400">If parameters are invalid</response>
     /// <response code="401">If not authenticated</response>
@@ -55,8 +56,10 @@ public class AuditLogController : ControllerBase, IAuditLogController
         [FromQuery] string? entityType,
         [FromQuery] Guid? userId,
         int page = 1,
-        int pageSize = 50)
+        int pageSize = 50,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrEmpty(entityType);
         try
         {
@@ -104,7 +107,7 @@ public class AuditLogController : ControllerBase, IAuditLogController
             }
 
             // Get filtered results with pagination
-            var result = await _auditLogRepository.GetFilteredAsync(predicate, page, pageSize);
+            var result = await _auditLogRepository.GetFilteredAsync(predicate, page, pageSize, cancellationToken);
 
             var response = new PagedAuditLogResponse
             {
@@ -144,15 +147,17 @@ public class AuditLogController : ControllerBase, IAuditLogController
     /// Gets a specific audit log entry by ID.
     /// </summary>
     /// <param name="id">The audit log ID</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <response code="200">Returns the audit log entry</response>
     /// <response code="404">If audit log not found</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetAuditLog(Guid id)
+    public async Task<IActionResult> GetAuditLog(Guid id, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var allLogs = await _auditLogRepository.GetAllAsync();
+            var allLogs = await _auditLogRepository.GetAllAsync(cancellationToken);
             var log = allLogs.FirstOrDefault(l => l.Id == id);
 
             if (log is null)
@@ -182,18 +187,20 @@ public class AuditLogController : ControllerBase, IAuditLogController
     /// </summary>
     /// <param name="userId">The user ID to filter by</param>
     /// <param name="days">Number of days to look back (default: 30, max: 365)</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <response code="200">Returns audit logs for the user</response>
     /// <response code="400">If parameters are invalid</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserAuditLogs(Guid userId, [FromQuery] int days = 30)
+    public async Task<IActionResult> GetUserAuditLogs(Guid userId, [FromQuery] int days = 30, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             if (days < 1 || days > 365)
                 days = 30;
 
-            var result = await _auditLogRepository.GetByUserIdPagedAsync(userId, 1, 1000);
+            var result = await _auditLogRepository.GetByUserIdPagedAsync(userId, 1, 1000, cancellationToken);
 
             var response = result.Items.Select(log => new AuditLogDto
             {
