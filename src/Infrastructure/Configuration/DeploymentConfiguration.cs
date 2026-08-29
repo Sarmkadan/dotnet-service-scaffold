@@ -67,6 +67,7 @@ public class DeploymentConfiguration : IDeploymentConfiguration
     /// </summary>
     public static string GenerateSystemdServiceUnit(DeploymentOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
         return $@"[Unit]
 Description={options.ServiceDescription}
 After=network.target
@@ -99,6 +100,7 @@ WantedBy=multi-user.target
     /// </summary>
     public static string GenerateCaddyConfiguration(DeploymentOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
         return $@"# Caddy reverse proxy configuration for {options.ServiceName}
 {options.ServerDomain} {{
     # Encode gzip response
@@ -147,6 +149,7 @@ WantedBy=multi-user.target
     /// </summary>
     public static string GenerateEnvironmentFile(DeploymentOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
         return $@"# Environment variables for {options.ServiceName}
 ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=http://localhost:{options.ApplicationPort}
@@ -169,6 +172,7 @@ SERVICE_VERSION={options.ServiceVersion}
     /// </summary>
     public static string GenerateDeploymentGuide(DeploymentOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
         return $@"# Deployment Guide for {options.ServiceName}
 
 ## Prerequisites
@@ -216,10 +220,10 @@ sudo systemctl reload caddy
 # Check service status
 sudo systemctl status {options.ServiceName}
 
-# Test health check
+// Test health check
 curl https://{options.ServerDomain}/health
 
-# Check logs
+// Check logs
 sudo journalctl -u {options.ServiceName} -f
 ```
 
