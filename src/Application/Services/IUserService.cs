@@ -48,11 +48,11 @@ public interface IUserService
 
     Task<bool> ValidatePasswordAsync(string email, string password);
 
-    Task<bool> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
+    Task<bool> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword, CancellationToken cancellationToken = default);
 
-    Task UnlockUserAsync(Guid userId);
+    Task UnlockUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
-    Task<User?> GetUserWithApiKeysAsync(Guid userId);
+    Task<User?> GetUserWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<User?> ValidateApiKeyAsync(string apiKey);
 
     Task<IEnumerable<User>> SearchUsersAsync(string query, int page = 1, int pageSize = 10);
