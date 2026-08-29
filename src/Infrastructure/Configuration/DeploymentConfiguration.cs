@@ -10,7 +10,7 @@ namespace DotnetServiceScaffold.Infrastructure.Configuration;
 /// Deployment configuration options for systemd service and Caddy reverse proxy.
 /// Provides templates and helpers for deploying the application in production environments.
 /// </summary>
-public class DeploymentConfiguration : IDeploymentConfiguration
+public class DeploymentConfiguration : IDeploymentConfiguration, IEquatable<DeploymentConfiguration>
 {
     /// <summary>
     /// Gets or sets the service name.
@@ -61,6 +61,57 @@ public class DeploymentConfiguration : IDeploymentConfiguration
     /// Gets or sets the service version.
     /// </summary>
     public string ServiceVersion { get; set; } = "1.0.0";
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other"> parameter; otherwise, false.</returns>
+    public bool Equals(DeploymentConfiguration? other)
+    {
+        if (other is null) return false;
+        return ServiceName == other.ServiceName &&
+               ServiceDescription == other.ServiceDescription &&
+               ServiceUser == other.ServiceUser &&
+               ApplicationPath == other.ApplicationPath &&
+               DataPath == other.DataPath &&
+               LogPath == other.LogPath &&
+               ServerDomain == other.ServerDomain &&
+               ApplicationPort == other.ApplicationPort;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj) =>
+        Equals(obj as DeploymentConfiguration);
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode() =>
+        HashCode.Combine(ServiceName, ServiceDescription, ServiceUser, ApplicationPath, DataPath, LogPath, ServerDomain, ApplicationPort);
+
+    /// <summary>
+    /// Equality operator.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters are equal; otherwise, false.</returns>
+    public static bool operator ==(DeploymentConfiguration? left, DeploymentConfiguration? right) =>
+        EqualityComparer<DeploymentConfiguration>.Default.Equals(left, right);
+
+    /// <summary>
+    /// Inequality operator.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>true if the <paramref name="left"/> and <paramref name="right"/> parameters are not equal; otherwise, false.</returns>
+    public static bool operator !=(DeploymentConfiguration? left, DeploymentConfiguration? right) =>
+        !(left == right);
 
     /// <summary>
     /// Generates a systemd service unit file for the application.
