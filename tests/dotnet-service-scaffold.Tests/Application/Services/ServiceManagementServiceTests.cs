@@ -22,7 +22,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// Contains unit tests for <see cref="ServiceManagementService"/> functionality.
 /// Tests service registration, retrieval, activation state changes, and success rate calculations.
 /// </summary>
-public class ServiceManagementServiceTests
+public class ServiceManagementServiceTests : IServiceManagementServiceTests
 {
 	private readonly IServiceRepository _serviceRepository;
 	private readonly IUserRepository _userRepository;
