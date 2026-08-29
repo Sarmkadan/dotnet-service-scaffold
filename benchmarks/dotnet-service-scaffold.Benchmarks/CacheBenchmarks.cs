@@ -8,6 +8,8 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using DotnetServiceScaffold.Infrastructure.Caching;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DotnetServiceScaffold.Benchmarks;
 
@@ -18,7 +20,7 @@ namespace DotnetServiceScaffold.Benchmarks;
 /// </summary>
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-public class CacheBenchmarks : ICacheBenchmarks
+public class CacheBenchmarks : ICacheBenchmarks, IEquatable<CacheBenchmarks>
 {
     private InMemoryCacheService _cache = default!;
 
@@ -28,6 +30,42 @@ public class CacheBenchmarks : ICacheBenchmarks
             .Select(i => new CachedService { Id = $"svc-{i:D3}", Name = $"Service {i}", IsHealthy = i % 5 != 0 })
             .ToList()
     };
+
+    private static readonly int _cachedHashCode = ComputeHashCode();
+
+    private static int ComputeHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var service in _serviceList.Services)
+        {
+            hash.Add(service.Id);
+            hash.Add(service.Name);
+            hash.Add(service.IsHealthy);
+        }
+        hash.Add(_serviceList.Services.Count);
+        return hash.ToHashCode();
+    }
+
+    public bool Equals(CacheBenchmarks? other)
+    {
+        if (other is null)
+            return false;
+
+        // Since _serviceList is static and readonly, all instances share the same data.
+        // We compare the Services, Id, Name, IsHealthy as instructed.
+        var list = CacheBenchmarks._serviceList.Services;
+        return list.Count == list.Count
+               && list.Zip(list, (s1, s2) => s1.Id == s2.Id && s1.Name == s2.Name && s1.IsHealthy == s2.IsHealthy)
+                      .All(b => b);
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as CacheBenchmarks);
+
+    public override int GetHashCode() => _cachedHashCode;
+
+    public static bool operator ==(CacheBenchmarks? left, CacheBenchmarks? right) => Equals(left, right);
+
+    public static bool operator !=(CacheBenchmarks? left, CacheBenchmarks? right) => !(left == right);
 
     [GlobalSetup]
     public async Task Setup()
