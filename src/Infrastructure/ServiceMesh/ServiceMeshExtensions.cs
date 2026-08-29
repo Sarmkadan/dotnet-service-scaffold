@@ -10,7 +10,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceMesh;
 /// Configuration options for the service mesh sidecar proxy integration.
 /// Bind this section from appsettings.json under the "ServiceMesh" key.
 /// </summary>
-public class ServiceMeshOptions : IServiceMeshOptions
+public class ServiceMeshOptions : IServiceMeshOptions, IEquatable<ServiceMeshOptions>
 {
     /// <summary>Configuration section key used in appsettings.json.</summary>
     public const string SectionName = "ServiceMesh";
@@ -39,6 +39,65 @@ public class ServiceMeshOptions : IServiceMeshOptions
     /// Allows the same binary to run with or without a sidecar present.
     /// </summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.</returns>
+    public bool Equals(ServiceMeshOptions? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return AdminEndpoint == other.AdminEndpoint
+               && ReadinessTimeoutSeconds == other.ReadinessTimeoutSeconds
+               && MeshName == other.MeshName
+               && Enabled == other.Enabled;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((ServiceMeshOptions)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(AdminEndpoint, ReadinessTimeoutSeconds, MeshName, Enabled);
+    }
+
+    /// <summary>
+    /// Equality operator.
+    /// </summary>
+    /// <param name="left">Left operand.</param>
+    /// <param name="right">Right operand.</param>
+    /// <returns>true if values are equal; otherwise, false.</returns>
+    public static bool operator ==(ServiceMeshOptions? left, ServiceMeshOptions? right)
+    {
+        return Equals(left, right);
+    }
+
+    /// <summary>
+    /// Inequality operator.
+    /// </summary>
+    /// <param name="left">Left operand.</param>
+    /// <param name="right">Right operand.</param>
+    /// <returns>true if values are not equal; otherwise, false.</returns>
+    public static bool operator !=(ServiceMeshOptions? left, ServiceMeshOptions? right)
+    {
+        return !Equals(left, right);
+    }
 }
 
 /// <summary>
