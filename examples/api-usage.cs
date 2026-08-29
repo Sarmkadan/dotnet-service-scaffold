@@ -32,6 +32,10 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> RegisterUserAsync(string username, string email, string password)
     {
+        ArgumentException.ThrowIfNullOrEmpty(username);
+        ArgumentException.ThrowIfNullOrEmpty(email);
+        ArgumentException.ThrowIfNullOrEmpty(password);
+
         var request = new
         {
             username = username,
@@ -51,6 +55,9 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task LoginAsync(string username, string password)
     {
+        ArgumentException.ThrowIfNullOrEmpty(username);
+        ArgumentException.ThrowIfNullOrEmpty(password);
+
         var request = new { username = username, password = password };
         var response = await PostAsync(CompleteApiUsageExampleConstants.LoginEndpoint, request);
 
@@ -65,6 +72,9 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> CreateApiKeyAsync(string name, List<string> scopes, List<string> ipWhitelist = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(scopes);
+
         var request = new
         {
             name = name,
@@ -87,6 +97,10 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> RegisterServiceAsync(string name, string healthCheckUrl, string ownerId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(healthCheckUrl);
+        ArgumentException.ThrowIfNullOrEmpty(ownerId);
+
         var request = new
         {
             name = name,
@@ -116,6 +130,8 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> PerformHealthCheckAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
+
         return await PostAsync(string.Format(CompleteApiUsageExampleConstants.HealthCheckEndpointFormat, serviceId), null, useApiKey: true);
     }
 
@@ -124,6 +140,8 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> GetHealthHistoryAsync(string serviceId, int days = CompleteApiUsageExampleConstants.DefaultHistoryDays)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
+
         return await GetAsync(string.Format(CompleteApiUsageExampleConstants.GetHealthHistoryEndpointFormat, serviceId, days, CompleteApiUsageExampleConstants.DefaultItemsLimit), useApiKey: true);
     }
 
@@ -155,6 +173,8 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task EnableServiceAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
+
         await PostAsync(string.Format(CompleteApiUsageExampleConstants.EnableServiceEndpointFormat, serviceId), null, useApiKey: true);
     }
 
@@ -163,6 +183,8 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task DisableServiceAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
+
         await PostAsync(string.Format(CompleteApiUsageExampleConstants.DisableServiceEndpointFormat, serviceId), null, useApiKey: true);
     }
 
@@ -171,6 +193,10 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task ChangePasswordAsync(string userId, string oldPassword, string newPassword)
     {
+        ArgumentException.ThrowIfNullOrEmpty(userId);
+        ArgumentException.ThrowIfNullOrEmpty(oldPassword);
+        ArgumentException.ThrowIfNullOrEmpty(newPassword);
+
         var request = new
         {
             oldPassword = oldPassword,
@@ -240,6 +266,8 @@ public class CompleteApiUsageExample
     /// </summary>
     public static async Task Main(string[] args)
     {
+        ArgumentNullException.ThrowIfNull(args);
+
         var api = new CompleteApiUsageExample();
 
         try
