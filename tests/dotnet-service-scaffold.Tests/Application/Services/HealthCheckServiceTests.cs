@@ -20,7 +20,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Tests for the HealthCheckService class.
 /// </summary>
-public class HealthCheckServiceTests
+public class HealthCheckServiceTests : IHealthCheckServiceTests
 {
     private readonly IHealthCheckRepository _healthCheckRepository;
     private readonly HealthCheckService _healthCheckService;
