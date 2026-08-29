@@ -14,7 +14,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-public class CompleteApiUsageExample
+public class CompleteApiUsageExample : ICompleteApiUsageExample
 {
     private readonly string _baseUrl;
     private HttpClient _httpClient;
