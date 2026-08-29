@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Represents a registered service that is monitored and managed by the scaffold system.
 /// </summary>
-public class ServiceRegistration : IServiceRegistration
+public class ServiceRegistration : IServiceRegistration, IEquatable<ServiceRegistration>
 {
     [Key]
     public Guid Id { get; set; }
@@ -160,5 +160,41 @@ public class ServiceRegistration : IServiceRegistration
             Message = ServiceRegistrationConstants.ServiceReEnabledMessage,
             CreatedAt = DateTime.UtcNow
         });
+    }
+
+    public bool Equals(ServiceRegistration? other)
+    {
+        if (other is null) return false;
+        return Id == other.Id &&
+               ServiceName == other.ServiceName &&
+               Description == other.Description &&
+               HealthCheckUrl == other.HealthCheckUrl &&
+               Version == other.Version &&
+               Endpoint == other.Endpoint &&
+               Status == other.Status &&
+               CreatedAt == other.CreatedAt;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as ServiceRegistration);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, ServiceName, Description, HealthCheckUrl, Version, Endpoint, Status, CreatedAt);
+    }
+
+    public static bool operator ==(ServiceRegistration? left, ServiceRegistration? right)
+    {
+        if (left is null)
+            return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(ServiceRegistration? left, ServiceRegistration? right)
+    {
+        return !(left == right);
     }
 }
