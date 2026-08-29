@@ -82,6 +82,11 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 	public async Task RegisterServiceAsync_ShouldThrowValidationException_WhenInputsAreInvalid(
 		string serviceName, string endpoint, string healthCheckUrl, string expectedError)
 	{
+		ArgumentException.ThrowIfNullOrEmpty(serviceName);
+		ArgumentException.ThrowIfNullOrEmpty(endpoint);
+		ArgumentException.ThrowIfNullOrEmpty(healthCheckUrl);
+		ArgumentException.ThrowIfNullOrEmpty(expectedError);
+
 		// Arrange
 		var ownerId = Guid.NewGuid();
 		var owner = new User { Id = ownerId, Username = ServiceManagementServiceTestsConstants.TestUserName };
