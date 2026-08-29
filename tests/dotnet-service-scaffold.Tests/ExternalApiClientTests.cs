@@ -34,6 +34,11 @@ public class ExternalApiClientTests : IExternalApiClientTests
         _sut = new ExternalApiClient(_httpClient, _loggerMock.Object);
     }
 
+    public override string ToString()
+    {
+        return $"ExternalApiClientTests {{ Id = {Id}, Name = {Name}, Status = {Status} }}";
+    }
+
     [Fact]
     public async Task GetAsync_ValidRequest_ReturnsDeserializedObject()
     {
