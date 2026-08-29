@@ -7,6 +7,7 @@
 using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace DotnetServiceScaffold.Presentation.Controllers;
 
@@ -23,6 +24,8 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
 
     public HealthCheckController(IHealthCheckService healthCheckService, ILogger<HealthCheckController> logger)
     {
+        ArgumentNullException.ThrowIfNull(healthCheckService);
+        ArgumentNullException.ThrowIfNull(logger);
         _healthCheckService = healthCheckService;
         _logger = logger;
     }
