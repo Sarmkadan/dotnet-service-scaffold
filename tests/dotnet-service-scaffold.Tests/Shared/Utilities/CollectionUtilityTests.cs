@@ -11,7 +11,7 @@ using Xunit;
 /// <summary>
 /// Tests for the CollectionUtility class.
 /// </summary>
-public class CollectionUtilityTests
+public class CollectionUtilityTests : ICollectionUtilityTests
 {
     /// <summary>
     /// Tests the IsNullOrEmpty method when the collection is null.
