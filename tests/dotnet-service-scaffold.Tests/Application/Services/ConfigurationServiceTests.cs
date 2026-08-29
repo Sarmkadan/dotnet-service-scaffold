@@ -17,7 +17,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Tests for the ConfigurationService class.
 /// </summary>
-public class ConfigurationServiceTests
+public class ConfigurationServiceTests : IConfigurationServiceTests
 {
     private readonly IConfigurationRepository _configurationRepository;
     private readonly ConfigurationService _configurationService;
