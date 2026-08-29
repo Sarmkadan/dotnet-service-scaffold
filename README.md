@@ -7239,3 +7239,18 @@ public async Task ShouldPerformUserTestOperations()
     exists.Should().BeTrue();
 }
 ```
+
+
+## ProblemDetailsFactory
+The `ProblemDetailsFactory` class provides static methods to create RFC 7807 compliant Problem Details objects for HTTP responses.
+It includes two overloads: one that takes explicit parameters and another that derives details from an exception.
+
+Example usage:
+   var problem = ProblemDetailsFactory.CreateProblemDetails(
+       httpContext,
+       400,
+       title: "Invalid input",
+       detail: "The provided email address is malformed.",
+       type: "https://example.com/probs/input-validation",
+       instance: "/api/users/123",
+       extensions: new Dictionary<string, object?> { { "attempt", 3 } });
