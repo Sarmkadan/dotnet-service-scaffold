@@ -40,6 +40,8 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         IOptions<ServiceDiscoveryOptions> options,
         ILogger<DnsServiceDiscoveryProvider> logger)
     {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
         _options = options.Value;
         _logger = logger;
     }
@@ -49,6 +51,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         string serviceName,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
         try
         {
             var dns = _options.Dns;
@@ -108,8 +111,11 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
 
     /// <inheritdoc/>
     /// <remarks>DNS is a read-only backend; programmatic registration is not supported.</remarks>
-    public Task<Result> RegisterAsync(ServiceDiscoveryRecord record, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Result.Failure("DNS provider does not support programmatic registration.", "DNS_READ_ONLY"));
+    public Task<Result> RegisterAsync(ServiceDiscoveryRecord record, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+        return Task.FromResult(Result.Failure("DNS provider does not support programmatic registration.", "DNS_READ_ONLY"));
+    }
 
     /// <inheritdoc/>
     public Task<Result> DeregisterAsync(Guid instanceId, CancellationToken cancellationToken = default) =>
@@ -125,6 +131,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         string serviceName,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
         var previousUris = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         DateTime lastSuccessfulResolveTime = DateTime.MinValue; // Tracks the last time a resolution attempt was successful
         TimeSpan minObservedTtl = _options.RefreshInterval; // Stores the minimum TTL observed from the last successful resolution
