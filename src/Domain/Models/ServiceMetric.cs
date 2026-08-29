@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Stores performance and resource metrics for a service.
 /// </summary>
-public class ServiceMetric : IServiceMetric
+public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
 {
     [Key]
     public Guid Id { get; set; }
@@ -101,4 +101,22 @@ public class ServiceMetric : IServiceMetric
                $"Errors: {ErrorCount}/{TotalRequests} | " +
                $"Uptime: {Uptime:F2}%";
     }
+
+    public bool Equals(ServiceMetric? other)
+    {
+        if (other is null) return false;
+        return Id == other.Id &&
+               ServiceId == other.ServiceId &&
+               EqualityComparer<ServiceRegistration?>.Default.Equals(Service, other.Service) &&
+               CpuUsagePercent == other.CpuUsagePercent &&
+               MemoryUsagePercent == other.MemoryUsagePercent &&
+               MemoryUsageBytes == other.MemoryUsageBytes &&
+               DiskUsagePercent == other.DiskUsagePercent &&
+               DiskUsageBytes == other.DiskUsageBytes;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as ServiceMetric);
+    public override int GetHashCode() => HashCode.Combine(Id, ServiceId, Service, CpuUsagePercent, MemoryUsagePercent, MemoryUsageBytes, DiskUsagePercent, DiskUsageBytes);
+    public static bool operator ==(ServiceMetric? left, ServiceMetric? right) => EqualityComparer<ServiceMetric>.Default.Equals(left, right);
+    public static bool operator !=(ServiceMetric? left, ServiceMetric? right) => !(left == right);
 }
