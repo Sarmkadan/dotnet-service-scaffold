@@ -8,7 +8,7 @@ using System.Net.Http;
 /// <summary>
 /// Provides configuration entry point for integrating the scaffold client with ASP.NET Core dependency injection.
 /// </summary>
-public class Startup
+public class Startup : IStartup
 {
     	/// <summary>
 	/// Configures application services for dependency injection.
