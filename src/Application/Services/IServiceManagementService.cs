@@ -17,7 +17,7 @@ public interface IServiceManagementService
 
     Task<ServiceRegistration?> GetServiceAsync(Guid serviceId, CancellationToken cancellationToken = default);
 
-    Task<ServiceRegistration?> GetServiceByNameAsync(string serviceName);
+    Task<ServiceRegistration?> GetServiceByNameAsync(string serviceName, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ServiceRegistration>> GetServicesByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default);
 

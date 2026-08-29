@@ -41,6 +41,7 @@ public class ServiceManagementService : IServiceManagementService
         Guid ownerId,
         CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(serviceName))
@@ -65,7 +66,7 @@ public class ServiceManagementService : IServiceManagementService
         if (owner is null)
             throw new ServiceScaffoldException("Service owner not found", "OWNER_NOT_FOUND");
 
-        var existingService = await _serviceRepository.GetByNameAsync(serviceName);
+        var existingService = await _serviceRepository.GetByNameAsync(serviceName, cancellationToken);
         if (existingService is not null)
             throw new ServiceValidationException("Service name already registered");
 
@@ -98,14 +99,19 @@ public class ServiceManagementService : IServiceManagementService
         return await _serviceRepository.GetByIdAsync(serviceId, cancellationToken);
     }
 
-    public async Task<ServiceRegistration?> GetServiceByNameAsync(string serviceName)
+    public async Task<ServiceRegistration?> GetServiceByNameAsync(
+        string serviceName,
+        CancellationToken cancellationToken = default)
     {
-        return await _serviceRepository.GetByNameAsync(serviceName);
+        return await _serviceRepository.GetByNameAsync(serviceName, cancellationToken);
     }
+
+    Task<ServiceRegistration?> IServiceManagementService.GetServiceByNameAsync(string serviceName, CancellationToken cancellationToken) =>
+        GetServiceByNameAsync(serviceName, cancellationToken);
 
     public async Task<IEnumerable<ServiceRegistration>> GetServicesByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
-        return await _serviceRepository.GetByOwnerAsync(ownerId);
+        return await _serviceRepository.GetByOwnerAsync(ownerId, cancellationToken);
     }
 
     public async Task<IEnumerable<ServiceRegistration>> GetAllServicesAsync(CancellationToken cancellationToken = default)
