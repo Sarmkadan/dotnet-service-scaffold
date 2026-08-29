@@ -5,6 +5,25 @@
 
 # Service Scaffold
 
+## InMemoryCacheServiceTests
+
+The `InMemoryCacheServiceTests` class verifies the in-memory cache service's storage, retrieval, expiration, existence checks, removal, clearing, and get-or-set behavior. It also covers null and empty inputs, pattern-based removal, cache factory invocation, and resource cleanup through `Dispose`.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests.Infrastructure.Caching;
+
+using var tests = new InMemoryCacheServiceTests();
+
+await tests.SetAsync_GetAsync_ReturnsStoredValue();
+await tests.GetAsync_NonExistentKey_ReturnsNull();
+await tests.ExistsAsync_KeyBehavior_ReturnsCorrectResult();
+await tests.RemoveAsync_RemovesEntryFromCache();
+await tests.ClearAsync_RemovesAllEntries();
+await tests.GetOrSetAsync_CacheMiss_CallsFactoryAndCachesResult();
+```
+
 ## Architecture
 
 A service-registry / health-monitoring API: ASP.NET Core + EF Core (SQLite, WAL), Serilog, API-key authentication, in-process Prometheus-format metrics. Single project with layered folders (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Presentation`, `src/Shared`), plus xUnit tests and BenchmarkDotNet benchmarks. Entry point is `Program.cs`; several components (rate limiting, caching, service discovery, service mesh) are opt-in via extension methods rather than wired by default.
