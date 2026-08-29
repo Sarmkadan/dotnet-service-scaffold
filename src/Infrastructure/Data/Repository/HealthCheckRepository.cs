@@ -19,33 +19,34 @@ public class HealthCheckRepository : Repository<HealthCheckResult>, IHealthCheck
     {
     }
 
-    public async Task<IEnumerable<HealthCheckResult>> GetByServiceIdAsync(Guid serviceId)
+    public async Task<IEnumerable<HealthCheckResult>> GetByServiceIdAsync(Guid serviceId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(h => h.ServiceId == serviceId)
             .OrderByDescending(h => h.CheckedAt)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<HealthCheckResult>> GetRecentResultsAsync(Guid serviceId, int count = 20)
+    public async Task<IEnumerable<HealthCheckResult>> GetRecentResultsAsync(Guid serviceId, int count = 20, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(h => h.ServiceId == serviceId)
             .OrderByDescending(h => h.CheckedAt)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<HealthCheckResult?> GetLatestResultAsync(Guid serviceId)
+    public async Task<HealthCheckResult?> GetLatestResultAsync(Guid serviceId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(h => h.ServiceId == serviceId)
             .OrderByDescending(h => h.CheckedAt)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<HealthCheckResult>> GetFailedResultsAsync(Guid serviceId, int hoursBack = 24)
+    public async Task<IEnumerable<HealthCheckResult>> GetFailedResultsAsync(Guid serviceId, int hoursBack = 24, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var threshold = DateTime.UtcNow.AddHours(-hoursBack);
 
         return await _dbSet
@@ -53,16 +54,17 @@ public class HealthCheckRepository : Repository<HealthCheckResult>, IHealthCheck
                         h.CheckedAt >= threshold &&
                         !h.IsHealthy())
             .OrderByDescending(h => h.CheckedAt)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<decimal> GetAverageResponseTimeAsync(Guid serviceId, int minutesBack = 60)
+    public async Task<decimal> GetAverageResponseTimeAsync(Guid serviceId, int minutesBack = 60, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var threshold = DateTime.UtcNow.AddMinutes(-minutesBack);
 
         var result = await _dbSet
             .Where(h => h.ServiceId == serviceId && h.CheckedAt >= threshold)
-            .AverageAsync(h => (decimal)h.ResponseTimeMs);
+            .AverageAsync(h => (decimal)h.ResponseTimeMs, cancellationToken);
 
         return result;
     }

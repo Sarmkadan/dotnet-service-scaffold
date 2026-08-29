@@ -13,15 +13,15 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public interface IHealthCheckRepository : IRepository<HealthCheckResult>
 {
-    Task<IEnumerable<HealthCheckResult>> GetByServiceIdAsync(Guid serviceId);
+    Task<IEnumerable<HealthCheckResult>> GetByServiceIdAsync(Guid serviceId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<HealthCheckResult>> GetRecentResultsAsync(Guid serviceId, int count = 20);
+    Task<IEnumerable<HealthCheckResult>> GetRecentResultsAsync(Guid serviceId, int count = 20, CancellationToken cancellationToken = default);
 
-    Task<HealthCheckResult?> GetLatestResultAsync(Guid serviceId);
+    Task<HealthCheckResult?> GetLatestResultAsync(Guid serviceId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<HealthCheckResult>> GetFailedResultsAsync(Guid serviceId, int hoursBack = 24);
+    Task<IEnumerable<HealthCheckResult>> GetFailedResultsAsync(Guid serviceId, int hoursBack = 24, CancellationToken cancellationToken = default);
 
-    Task<decimal> GetAverageResponseTimeAsync(Guid serviceId, int minutesBack = 60);
+    Task<decimal> GetAverageResponseTimeAsync(Guid serviceId, int minutesBack = 60, CancellationToken cancellationToken = default);
 
     Task<int> GetFailureCountAsync(Guid serviceId, int minutesBack = 60);
 
