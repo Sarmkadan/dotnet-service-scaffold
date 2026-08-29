@@ -39,9 +39,12 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CheckServiceHealth(Guid serviceId)
     {
+        _logger.LogInformation("CheckServiceHealth called with {ServiceId}", serviceId);
+
         try
         {
             var result = await _healthCheckService.PerformHealthCheckAsync(serviceId);
+            _logger.LogInformation("CheckServiceHealth completed for {ServiceId}", serviceId);
             return Ok(new
             {
                 success = true,
@@ -59,6 +62,7 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         catch (ServiceNotFoundException ex)
         {
             _logger.LogWarning("Service not found: {ServiceId}", serviceId);
+            _logger.LogError(ex, "Failed to check health for service {ServiceId}", serviceId);
             return NotFound(new { error = ex.Message });
         }
         catch (ServiceScaffoldException ex)
@@ -76,9 +80,12 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHealthHistory(Guid serviceId, [FromQuery] int count = 20)
     {
+        _logger.LogInformation("GetHealthHistory called with {ServiceId} and {Count}", serviceId, count);
+
         try
         {
             var history = await _healthCheckService.GetServiceHealthHistoryAsync(serviceId, count);
+            _logger.LogInformation("GetHealthHistory completed for {ServiceId} with requested count {Count}", serviceId, count);
             return Ok(new
             {
                 success = true,
@@ -96,6 +103,8 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (ServiceNotFoundException ex)
         {
+            _logger.LogWarning("Health history unavailable because service {ServiceId} was not found", serviceId);
+            _logger.LogError(ex, "Failed to get health history for service {ServiceId} with requested count {Count}", serviceId, count);
             return NotFound(new { error = ex.Message });
         }
     }
@@ -108,11 +117,14 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHealthStatus(Guid serviceId)
     {
+        _logger.LogInformation("GetHealthStatus called with {ServiceId}", serviceId);
+
         try
         {
             var status = await _healthCheckService.GetServiceHealthStatusAsync(serviceId);
             var successRate = await _healthCheckService.GetServiceSuccessRateAsync(serviceId);
 
+            _logger.LogInformation("GetHealthStatus completed for {ServiceId}", serviceId);
             return Ok(new
             {
                 success = true,
@@ -126,6 +138,8 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (ServiceNotFoundException ex)
         {
+            _logger.LogWarning("Health status unavailable because service {ServiceId} was not found", serviceId);
+            _logger.LogError(ex, "Failed to get health status for service {ServiceId}", serviceId);
             return NotFound(new { error = ex.Message });
         }
     }
@@ -138,9 +152,12 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetFailedChecks(Guid serviceId, [FromQuery] int hoursBack = 24)
     {
+        _logger.LogInformation("GetFailedChecks called with {ServiceId} and {HoursBack}", serviceId, hoursBack);
+
         try
         {
             var failures = await _healthCheckService.GetFailedChecksAsync(serviceId, hoursBack);
+            _logger.LogInformation("GetFailedChecks completed for {ServiceId} with {HoursBack} hours back", serviceId, hoursBack);
             return Ok(new
             {
                 success = true,
@@ -157,6 +174,8 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (ServiceNotFoundException ex)
         {
+            _logger.LogWarning("Failed checks unavailable because service {ServiceId} was not found", serviceId);
+            _logger.LogError(ex, "Failed to get failed checks for service {ServiceId} with {HoursBack} hours back", serviceId, hoursBack);
             return NotFound(new { error = ex.Message });
         }
     }
