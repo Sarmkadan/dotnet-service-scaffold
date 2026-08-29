@@ -13,11 +13,11 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public interface IConfigurationRepository : IRepository<ServiceConfiguration>
 {
-    Task<ServiceConfiguration?> GetByKeyAsync(string key, Guid? serviceId = null);
+    Task<ServiceConfiguration?> GetByKeyAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ServiceConfiguration>> GetByServiceIdAsync(Guid serviceId);
+    Task<IEnumerable<ServiceConfiguration>> GetByServiceIdAsync(Guid serviceId, CancellationToken cancellationToken = default);
 
-    Task<bool> KeyExistsAsync(string key, Guid? serviceId = null);
+    Task<bool> KeyExistsAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default);
 
     Task DeleteByKeyAsync(string key, Guid? serviceId = null);
 }
