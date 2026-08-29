@@ -30,7 +30,7 @@ public interface IMetricsService
     /// <summary>
     /// Records timing of an operation using a stopwatch pattern.
     /// </summary>
-    Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null);
+    Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Records a histogram metric with explicit bucket boundaries.
@@ -40,10 +40,10 @@ public interface IMetricsService
     /// <summary>
     /// Gets all recorded metrics as a dictionary.
     /// </summary>
-    Task<Dictionary<string, object>> GetMetricsAsync();
+    Task<Dictionary<string, object>> GetMetricsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Resets all metrics.
     /// </summary>
-    Task ResetAsync();
+    Task ResetAsync(CancellationToken cancellationToken = default);
 }

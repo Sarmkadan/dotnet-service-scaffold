@@ -93,7 +93,7 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Records timing of an operation using a stopwatch pattern.
     /// </summary>
-    public async Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null)
+    public async Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null, CancellationToken cancellationToken = default)
     {
         var sw = Stopwatch.StartNew();
 
@@ -130,8 +130,9 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Gets all recorded metrics as a dictionary suitable for serialization.
     /// </summary>
-    public Task<Dictionary<string, object>> GetMetricsAsync()
+    public Task<Dictionary<string, object>> GetMetricsAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var result = new Dictionary<string, object>(_metrics.Count);
 
         foreach (var kvp in _metrics)
@@ -170,8 +171,9 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Resets all metrics.
     /// </summary>
-    public Task ResetAsync()
+    public Task ResetAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _metrics.Clear();
         _logger.LogInformation("All metrics reset");
         return Task.CompletedTask;
