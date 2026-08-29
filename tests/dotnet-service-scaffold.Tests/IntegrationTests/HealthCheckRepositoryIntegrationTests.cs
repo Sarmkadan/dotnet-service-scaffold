@@ -19,7 +19,7 @@ namespace DotnetServiceScaffold.Tests.IntegrationTests;
 /// <summary>
 /// Integration tests for the <see cref="HealthCheckRepository"/>.
 /// </summary>
-public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase
+public class HealthCheckRepositoryIntegrationTests : IntegrationTestBase, IHealthCheckRepositoryIntegrationTests
 {
     private readonly HealthCheckRepository _healthCheckRepository;
 
