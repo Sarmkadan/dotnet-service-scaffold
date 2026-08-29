@@ -36,11 +36,11 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <response code="200">Returns all metrics</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet]
-    public async Task<IActionResult> GetMetrics()
+    public async Task<IActionResult> GetMetrics(CancellationToken cancellationToken = default)
     {
         try
         {
-            var metrics = await _metricsService.GetMetricsAsync();
+            var metrics = await _metricsService.GetMetricsAsync(cancellationToken);
 
             _logger.LogDebug(MetricsControllerConstants.LogRetrievedMetrics, metrics.Count);
 
@@ -67,11 +67,11 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <response code="200">Returns filtered metrics</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet(MetricsControllerConstants.CategoryRoute)]
-    public async Task<IActionResult> GetMetricsByCategory(string category)
+    public async Task<IActionResult> GetMetricsByCategory(string category, CancellationToken cancellationToken = default)
     {
         try
         {
-            var allMetrics = await _metricsService.GetMetricsAsync();
+            var allMetrics = await _metricsService.GetMetricsAsync(cancellationToken);
 
             // Filter metrics by category
             var filtered = allMetrics
@@ -107,11 +107,11 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <response code="401">If not authenticated</response>
     [HttpPost(MetricsControllerConstants.ResetRoute)]
     [Authorize(Roles = MetricsControllerConstants.AdminRole)]
-    public async Task<IActionResult> ResetMetrics()
+    public async Task<IActionResult> ResetMetrics(CancellationToken cancellationToken = default)
     {
         try
         {
-            await _metricsService.ResetAsync();
+            await _metricsService.ResetAsync(cancellationToken);
 
             _logger.LogInformation(
                 MetricsControllerConstants.LogMetricsReset,
@@ -135,11 +135,11 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <response code="200">Returns metrics summary</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet(MetricsControllerConstants.SummaryRoute)]
-    public async Task<IActionResult> GetMetricsSummary()
+    public async Task<IActionResult> GetMetricsSummary(CancellationToken cancellationToken = default)
     {
         try
         {
-            var metrics = await _metricsService.GetMetricsAsync();
+            var metrics = await _metricsService.GetMetricsAsync(cancellationToken);
 
             var summary = new MetricsSummary
             {
