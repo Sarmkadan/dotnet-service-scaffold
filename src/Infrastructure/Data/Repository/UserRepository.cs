@@ -23,6 +23,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrEmpty(email);
         _logger.LogDebug("Querying user by email: {Email}", email);
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
@@ -30,6 +31,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<IEnumerable<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogDebug("Querying active users");
         return await _dbSet
             .Where(u => u.IsActive && !u.IsLocked)
@@ -39,6 +41,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<IEnumerable<User>> GetLockedUsersAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogDebug("Querying locked users");
         return await _dbSet
             .Where(u => u.IsLocked && u.LockedUntil > DateTime.UtcNow)
@@ -48,6 +51,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrEmpty(email);
         _logger.LogDebug("Checking if email exists: {Email}", email);
         return await _dbSet.AnyAsync(u => u.Email == email, cancellationToken);
@@ -55,6 +59,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<User?> GetWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogDebug("Querying user with API keys: {UserId}", userId);
         return await _dbSet
             .Include(u => u.ApiKeys)
