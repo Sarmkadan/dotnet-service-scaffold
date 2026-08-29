@@ -19,8 +19,8 @@ public static class HttpUtility
     /// </summary>
     public static string CreateBasicAuthHeader(string username, string password)
     {
-        ValidationUtility.ValidateNotNullOrEmpty(username, nameof(username));
-        ValidationUtility.ValidateNotNullOrEmpty(password, nameof(password));
+        ArgumentException.ThrowIfNullOrEmpty(username);
+        ArgumentException.ThrowIfNullOrEmpty(password);
 
         var credentials = $"{username}:{password}";
         var encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
@@ -32,7 +32,7 @@ public static class HttpUtility
     /// </summary>
     public static string CreateBearerAuthHeader(string token)
     {
-        ValidationUtility.ValidateNotNullOrEmpty(token, nameof(token));
+        ArgumentException.ThrowIfNullOrEmpty(token);
         return $"Bearer {token}";
     }
 
@@ -80,7 +80,9 @@ public static class HttpUtility
     /// </summary>
     public static string BuildQueryString(Dictionary<string, string> parameters)
     {
-        if (parameters is null || parameters.Count == 0)
+        ArgumentNullException.ThrowIfNull(parameters);
+
+        if (parameters.Count == 0)
             return string.Empty;
 
         var query = string.Join("&", parameters
@@ -211,6 +213,9 @@ public static class HttpUtility
     /// </summary>
     public static string BuildUrl(string baseUrl, string path, Dictionary<string, string>? queryParams = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
+        ArgumentException.ThrowIfNullOrEmpty(path);
+
         var url = baseUrl.TrimEnd('/') + "/" + path.TrimStart('/');
 
         if (queryParams is not null && queryParams.Count > 0)
@@ -226,6 +231,8 @@ public static class HttpUtility
     /// </summary>
     public static string MaskSensitiveUrl(string url)
     {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+
         var sensitiveParams = new[] { "password", "token", "api_key", "secret", "key" };
 
         try
