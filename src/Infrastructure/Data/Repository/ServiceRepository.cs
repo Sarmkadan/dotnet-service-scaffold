@@ -20,40 +20,45 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
     {
     }
 
-    public async Task<ServiceRegistration?> GetByNameAsync(string serviceName)
+    public async Task<ServiceRegistration?> GetByNameAsync(string serviceName, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FirstOrDefaultAsync(s => s.ServiceName == serviceName);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _dbSet.FirstOrDefaultAsync(s => s.ServiceName == serviceName, cancellationToken);
     }
 
-    public async Task<IEnumerable<ServiceRegistration>> GetByStatusAsync(ServiceStatus status)
+    public async Task<IEnumerable<ServiceRegistration>> GetByStatusAsync(ServiceStatus status, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .Where(s => s.Status == status)
             .OrderBy(s => s.ServiceName)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<ServiceRegistration>> GetEnabledServicesAsync()
+    public async Task<IEnumerable<ServiceRegistration>> GetEnabledServicesAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .Where(s => s.IsEnabled)
             .OrderBy(s => s.ServiceName)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<ServiceRegistration>> GetByOwnerAsync(Guid ownerId)
+    public async Task<IEnumerable<ServiceRegistration>> GetByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .Where(s => s.OwnerId == ownerId)
             .OrderBy(s => s.ServiceName)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<ServiceRegistration?> GetWithMetricsAsync(Guid serviceId, int metricsCount = 10)
+    public async Task<ServiceRegistration?> GetWithMetricsAsync(Guid serviceId, int metricsCount = 10, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .Include(s => s.Metrics.OrderByDescending(m => m.RecordedAt).Take(metricsCount))
-            .FirstOrDefaultAsync(s => s.Id == serviceId);
+            .FirstOrDefaultAsync(s => s.Id == serviceId, cancellationToken);
     }
 
     public async Task<IEnumerable<ServiceRegistration>> GetUnhealthyServicesAsync()

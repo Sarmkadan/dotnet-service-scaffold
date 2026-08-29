@@ -14,15 +14,15 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public interface IServiceRepository : IRepository<ServiceRegistration>
 {
-    Task<ServiceRegistration?> GetByNameAsync(string serviceName);
+    Task<ServiceRegistration?> GetByNameAsync(string serviceName, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ServiceRegistration>> GetByStatusAsync(ServiceStatus status);
+    Task<IEnumerable<ServiceRegistration>> GetByStatusAsync(ServiceStatus status, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ServiceRegistration>> GetEnabledServicesAsync();
+    Task<IEnumerable<ServiceRegistration>> GetEnabledServicesAsync(CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<ServiceRegistration>> GetByOwnerAsync(Guid ownerId);
+    Task<IEnumerable<ServiceRegistration>> GetByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default);
 
-    Task<ServiceRegistration?> GetWithMetricsAsync(Guid serviceId, int metricsCount = 10);
+    Task<ServiceRegistration?> GetWithMetricsAsync(Guid serviceId, int metricsCount = 10, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ServiceRegistration>> GetUnhealthyServicesAsync();
 
