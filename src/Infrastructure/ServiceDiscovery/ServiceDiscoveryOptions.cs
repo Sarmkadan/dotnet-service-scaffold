@@ -10,7 +10,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 /// Root configuration for the service discovery subsystem.
 /// Bind from the <c>"ServiceDiscovery"</c> section in <c>appsettings.json</c>.
 /// </summary>
-public sealed class ServiceDiscoveryOptions : IServiceDiscoveryOptions
+public sealed class ServiceDiscoveryOptions : IServiceDiscoveryOptions, IEquatable<ServiceDiscoveryOptions>
 {
     /// <summary>The <c>appsettings.json</c> section key used for configuration binding.</summary>
     public const string SectionName = "ServiceDiscovery";
@@ -70,6 +70,44 @@ public sealed class ServiceDiscoveryOptions : IServiceDiscoveryOptions
     public string AgentEndpoint { get => Registry.AgentEndpoint; set => Registry.AgentEndpoint = value; }
     public string? AclToken { get => Registry.AclToken; set => Registry.AclToken = value; }
     public bool OnlyHealthyInstances { get => Registry.OnlyHealthyInstances; set => Registry.OnlyHealthyInstances = value; }
+
+    public bool Equals(ServiceDiscoveryOptions? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Enabled == other.Enabled
+            && Mode == other.Mode
+            && LoadBalancing == other.LoadBalancing
+            && CacheTtl == other.CacheTtl
+            && RefreshInterval == other.RefreshInterval
+            && ResolutionTimeout == other.ResolutionTimeout
+            && Dns.Equals(other.Dns)
+            && Registry.Equals(other.Registry);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((ServiceDiscoveryOptions)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Enabled, Mode, LoadBalancing, CacheTtl, RefreshInterval, ResolutionTimeout, Dns, Registry);
+    }
+
+    public static bool operator ==(ServiceDiscoveryOptions? left, ServiceDiscoveryOptions? right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(ServiceDiscoveryOptions? left, ServiceDiscoveryOptions? right)
+    {
+        return !(left == right);
+    }
 }
 
 /// <summary>DNS-specific settings for service-instance resolution.</summary>
