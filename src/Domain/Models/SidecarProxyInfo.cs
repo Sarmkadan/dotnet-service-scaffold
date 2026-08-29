@@ -30,7 +30,7 @@ public enum ServiceMeshStatus
 /// <summary>
 /// Represents a single upstream cluster tracked by the sidecar proxy.
 /// </summary>
-public class UpstreamCluster : IUpstreamCluster
+public class UpstreamCluster : IUpstreamCluster, IEquatable<UpstreamCluster>
 {
     /// <summary>Logical name of the cluster as registered in the service mesh.</summary>
     public string Name { get; set; } = string.Empty;
@@ -56,6 +56,39 @@ public class UpstreamCluster : IUpstreamCluster
     /// </summary>
     public decimal GetHealthPercent() =>
         TotalHosts == 0 ? 100m : (decimal)HealthyHosts / TotalHosts * 100;
+
+    public bool Equals(UpstreamCluster? other)
+    {
+        if (other is null) return false;
+        return Name == other.Name &&
+               Endpoint == other.Endpoint &&
+               HealthyHosts == other.HealthyHosts &&
+               TotalHosts == other.TotalHosts &&
+               CircuitBreakerOpen == other.CircuitBreakerOpen;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as UpstreamCluster);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Name, Endpoint, HealthyHosts, TotalHosts, CircuitBreakerOpen);
+    }
+
+    public static bool operator ==(UpstreamCluster? left, UpstreamCluster? right)
+    {
+        if (left is null)
+            return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(UpstreamCluster? left, UpstreamCluster? right)
+    {
+        return !(left == right);
+    }
 }
 
 /// <summary>
