@@ -38,8 +38,9 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     /// Gets information about current API authentication state.
     /// </summary>
     [HttpGet("info")]
-    public async Task<IActionResult> GetAuthInfo()
+    public async Task<IActionResult> GetAuthInfo(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var userId = GetCurrentUserId();
 
         try
@@ -67,8 +68,9 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     /// <param name="id">The identifier of the API key to rotate.</param>
     /// <returns>The new secret for the API key.</returns>
     [HttpPost("{id}/rotate")]
-    public async Task<IActionResult> RotateApiKey(Guid id)
+    public async Task<IActionResult> RotateApiKey(Guid id, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var userId = GetCurrentUserId();
 
         try
@@ -81,7 +83,7 @@ public class ApiKeyController : ControllerBase, IApiKeyController
             // secret as revoked and persisting the new secret.
 
             // Write an audit log entry using the extension method
-            await _auditService.LogAsync($"User {userId} rotated API key {id}");
+            await _auditService.LogAsync($"User {userId} rotated API key {id}", cancellationToken);
 
             _logger.LogInformation("User {UserId} rotated API key {ApiKeyId}", userId, id);
 
