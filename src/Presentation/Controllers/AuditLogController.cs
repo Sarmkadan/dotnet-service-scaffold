@@ -10,6 +10,7 @@ using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Data.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace DotnetServiceScaffold.Presentation.Controllers;
 
@@ -29,6 +30,8 @@ public class AuditLogController : ControllerBase, IAuditLogController
         IAuditLogRepository auditLogRepository,
         ILogger<AuditLogController> logger)
     {
+        ArgumentNullException.ThrowIfNull(auditLogRepository);
+        ArgumentNullException.ThrowIfNull(logger);
         _auditLogRepository = auditLogRepository;
         _logger = logger;
     }
@@ -54,6 +57,7 @@ public class AuditLogController : ControllerBase, IAuditLogController
         int page = 1,
         int pageSize = 50)
     {
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
         try
         {
             // Validate pagination
