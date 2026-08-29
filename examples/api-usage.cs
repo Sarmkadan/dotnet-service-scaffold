@@ -30,11 +30,13 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
     /// <summary>
     /// Register a new user account
     /// </summary>
-    public async Task<string> RegisterUserAsync(string username, string email, string password)
+    public async Task<string> RegisterUserAsync(string username, string email, string password, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(username);
         ArgumentException.ThrowIfNullOrEmpty(email);
         ArgumentException.ThrowIfNullOrEmpty(password);
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var request = new
         {
@@ -43,7 +45,7 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
             password = password
         };
 
-        var response = await PostAsync(CompleteApiUsageExampleConstants.RegisterUserEndpoint, request);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.RegisterUserEndpoint, request, cancellationToken: cancellationToken);
         using (var doc = JsonDocument.Parse(response))
         {
             return doc.RootElement.GetProperty("data").GetProperty("userId").GetString();
@@ -53,13 +55,15 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
     /// <summary>
     /// Login and get JWT token
     /// </summary>
-    public async Task LoginAsync(string username, string password)
+    public async Task LoginAsync(string username, string password, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(username);
         ArgumentException.ThrowIfNullOrEmpty(password);
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var request = new { username = username, password = password };
-        var response = await PostAsync(CompleteApiUsageExampleConstants.LoginEndpoint, request);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.LoginEndpoint, request, cancellationToken: cancellationToken);
 
         using (var doc = JsonDocument.Parse(response))
         {
@@ -70,10 +74,12 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
     /// <summary>
     /// Create API key for service authentication
     /// </summary>
-    public async Task<string> CreateApiKeyAsync(string name, List<string> scopes, List<string> ipWhitelist = null)
+    public async Task<string> CreateApiKeyAsync(string name, List<string> scopes, List<string> ipWhitelist = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentNullException.ThrowIfNull(scopes);
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var request = new
         {
@@ -83,7 +89,7 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
             ipWhitelist = ipWhitelist ?? new List<string> { CompleteApiUsageExampleConstants.DefaultIpWhitelist }
         };
 
-        var response = await PostAsync(CompleteApiUsageExampleConstants.CreateApiKeyEndpoint, request, useApiKey: true);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.CreateApiKeyEndpoint, request, useApiKey: true, cancellationToken: cancellationToken);
         using (var doc = JsonDocument.Parse(response))
         {
             var apiKey = doc.RootElement.GetProperty("data").GetProperty("apiKey").GetString();
@@ -95,11 +101,13 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
     /// <summary>
     /// Register service for monitoring
     /// </summary>
-    public async Task<string> RegisterServiceAsync(string name, string healthCheckUrl, string ownerId)
+    public async Task<string> RegisterServiceAsync(string name, string healthCheckUrl, string ownerId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentException.ThrowIfNullOrEmpty(healthCheckUrl);
         ArgumentException.ThrowIfNullOrEmpty(ownerId);
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var request = new
         {
@@ -110,7 +118,7 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
             isEnabled = true
         };
 
-        var response = await PostAsync(CompleteApiUsageExampleConstants.RegisterServiceEndpoint, request, useApiKey: true);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.RegisterServiceEndpoint, request, useApiKey: true, cancellationToken: cancellationToken);
         using (var doc = JsonDocument.Parse(response))
         {
             return doc.RootElement.GetProperty("data").GetProperty("id").GetString();
@@ -120,62 +128,68 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
     /// <summary>
     /// Get all services
     /// </summary>
-    public async Task<string> GetServicesAsync()
+    public async Task<string> GetServicesAsync(CancellationToken cancellationToken = default)
     {
-        return await GetAsync($"{CompleteApiUsageExampleConstants.GetServicesEndpoint}?limit={CompleteApiUsageExampleConstants.DefaultServiceListLimit}", useApiKey: true);
+        return await GetAsync($"{CompleteApiUsageExampleConstants.GetServicesEndpoint}?limit={CompleteApiUsageExampleConstants.DefaultServiceListLimit}", useApiKey: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Run health check
     /// </summary>
-    public async Task<string> PerformHealthCheckAsync(string serviceId)
+    public async Task<string> PerformHealthCheckAsync(string serviceId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(serviceId);
 
-        return await PostAsync(string.Format(CompleteApiUsageExampleConstants.HealthCheckEndpointFormat, serviceId), null, useApiKey: true);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return await PostAsync(string.Format(CompleteApiUsageExampleConstants.HealthCheckEndpointFormat, serviceId), null, useApiKey: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Get health history
     /// </summary>
-    public async Task<string> GetHealthHistoryAsync(string serviceId, int days = CompleteApiUsageExampleConstants.DefaultHistoryDays)
+    public async Task<string> GetHealthHistoryAsync(string serviceId, int days = CompleteApiUsageExampleConstants.DefaultHistoryDays, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(serviceId);
 
-        return await GetAsync(string.Format(CompleteApiUsageExampleConstants.GetHealthHistoryEndpointFormat, serviceId, days, CompleteApiUsageExampleConstants.DefaultItemsLimit), useApiKey: true);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return await GetAsync(string.Format(CompleteApiUsageExampleConstants.GetHealthHistoryEndpointFormat, serviceId, days, CompleteApiUsageExampleConstants.DefaultItemsLimit), useApiKey: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Get service metrics
     /// </summary>
-    public async Task<string> GetMetricsAsync(string serviceId = null)
+    public async Task<string> GetMetricsAsync(string serviceId = null, CancellationToken cancellationToken = default)
     {
         var endpoint = serviceId is not null
             ? string.Format(CompleteApiUsageExampleConstants.GetMetricsServiceEndpointFormat, serviceId)
             : CompleteApiUsageExampleConstants.GetMetricsEndpoint;
-        return await GetAsync(endpoint, useApiKey: true);
+        return await GetAsync(endpoint, useApiKey: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Get audit logs
     /// </summary>
-    public async Task<string> GetAuditLogsAsync(string userId = null, int days = CompleteApiUsageExampleConstants.DefaultAuditLogDays)
+    public async Task<string> GetAuditLogsAsync(string userId = null, int days = CompleteApiUsageExampleConstants.DefaultAuditLogDays, CancellationToken cancellationToken = default)
     {
         var endpoint = string.Format(CompleteApiUsageExampleConstants.GetAuditLogsEndpointFormat, days, CompleteApiUsageExampleConstants.DefaultItemsLimit);
         if (!string.IsNullOrEmpty(userId))
             endpoint += $"&userId={userId}";
 
-        return await GetAsync(endpoint, useApiKey: true);
+        return await GetAsync(endpoint, useApiKey: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Enable service monitoring
     /// </summary>
-    public async Task EnableServiceAsync(string serviceId)
+    public async Task EnableServiceAsync(string serviceId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(serviceId);
 
-        await PostAsync(string.Format(CompleteApiUsageExampleConstants.EnableServiceEndpointFormat, serviceId), null, useApiKey: true);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await PostAsync(string.Format(CompleteApiUsageExampleConstants.EnableServiceEndpointFormat, serviceId), null, useApiKey: true, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -208,7 +222,7 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
 
     // Helper methods
 
-    private async Task<string> GetAsync(string endpoint, bool useApiKey = false, bool useToken = false)
+    private async Task<string> GetAsync(string endpoint, bool useApiKey = false, bool useToken = false, CancellationToken cancellationToken = default)
     {
         var httpRequest = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}{endpoint}");
 
@@ -218,8 +232,8 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
         if (useToken && !string.IsNullOrEmpty(_currentUserToken))
             httpRequest.Headers.Add(CompleteApiUsageExampleConstants.AuthorizationHeader, $"Bearer {_currentUserToken}");
 
-        var response = await _httpClient.SendAsync(httpRequest);
-        var content = await response.Content.ReadAsStringAsync();
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"Request failed: {response.StatusCode} - {content}");
@@ -227,7 +241,7 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
         return content;
     }
 
-    private async Task<string> PostAsync(string endpoint, object data = null, bool useApiKey = false, bool useToken = false)
+    private async Task<string> PostAsync(string endpoint, object data = null, bool useApiKey = false, bool useToken = false, CancellationToken cancellationToken = default)
     {
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}{endpoint}");
 
@@ -243,8 +257,8 @@ public class CompleteApiUsageExample : ICompleteApiUsageExample
             httpRequest.Content = new StringContent(json, Encoding.UTF8, CompleteApiUsageExampleConstants.JsonContentType);
         }
 
-        var response = await _httpClient.SendAsync(httpRequest);
-        var content = await response.Content.ReadAsStringAsync();
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"Request failed: {response.StatusCode} - {content}");
