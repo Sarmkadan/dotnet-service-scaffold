@@ -34,14 +34,15 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var user = await _userService.CreateUserAsync(request.Email, request.FullName, request.Password);
+            var user = await _userService.CreateUserAsync(request.Email, request.FullName, request.Password, cancellationToken);
 
             return CreatedAtAction(nameof(GetUser), new { userId = user.Id }, new
             {
@@ -74,14 +75,15 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var user = await _userService.AuthenticateUserAsync(request.Email, request.Password);
+            var user = await _userService.AuthenticateUserAsync(request.Email, request.Password, cancellationToken);
 
             if (user is null)
             {
@@ -114,11 +116,12 @@ public class UserController : ControllerBase
     [HttpGet("{userId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUser(Guid userId)
+    public async Task<IActionResult> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var user = await _userService.GetUserWithApiKeysAsync(userId);
+            var user = await _userService.GetUserWithApiKeysAsync(userId, cancellationToken);
 
             if (user is null)
             {
@@ -155,14 +158,15 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ChangePassword(Guid userId, [FromBody] ChangePasswordRequest request)
+    public async Task<IActionResult> ChangePassword(Guid userId, [FromBody] ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var success = await _userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
+            var success = await _userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword, cancellationToken);
 
             if (!success)
             {
@@ -189,11 +193,12 @@ public class UserController : ControllerBase
     [HttpPost("{userId}/unlock")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UnlockUser(Guid userId)
+    public async Task<IActionResult> UnlockUser(Guid userId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            await _userService.UnlockUserAsync(userId);
+            await _userService.UnlockUserAsync(userId, cancellationToken);
             return Ok(new { success = true, message = "User account unlocked" });
         }
         catch (ServiceScaffoldException ex)

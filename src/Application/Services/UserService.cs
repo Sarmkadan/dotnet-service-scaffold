@@ -215,8 +215,9 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<bool> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
+    public async Task<bool> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(oldPassword))
             throw new ArgumentNullException(nameof(oldPassword), "Old password is required");
         if (string.IsNullOrWhiteSpace(newPassword))
@@ -224,7 +225,7 @@ public class UserService : IUserService
 
         try
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user is null)
                 throw new ServiceScaffoldException($"User {userId} not found", "USER_NOT_FOUND");
 
@@ -239,7 +240,7 @@ public class UserService : IUserService
 
             user.PasswordHash = HashPassword(newPassword);
             user.UpdatedAt = DateTime.UtcNow;
-            await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateAsync(user, cancellationToken);
 
             _logger.LogInformation("Password changed for user: {UserId}", userId);
             return true;
@@ -255,11 +256,12 @@ public class UserService : IUserService
         }
     }
 
-    public async Task UnlockUserAsync(Guid userId)
+    public async Task UnlockUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user is null)
                 throw new ServiceScaffoldException($"User {userId} not found", "USER_NOT_FOUND");
 
@@ -268,7 +270,7 @@ public class UserService : IUserService
             user.LoginAttempts = 0;
             user.UpdatedAt = DateTime.UtcNow;
 
-            await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateAsync(user, cancellationToken);
             _logger.LogInformation("User unlocked: {UserId}", userId);
         }
         catch (ServiceScaffoldException)
@@ -282,11 +284,12 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<User?> GetUserWithApiKeysAsync(Guid userId)
+    public async Task<User?> GetUserWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            return await _userRepository.GetWithApiKeysAsync(userId);
+            return await _userRepository.GetWithApiKeysAsync(userId, cancellationToken);
         }
         catch (Exception ex)
         {
