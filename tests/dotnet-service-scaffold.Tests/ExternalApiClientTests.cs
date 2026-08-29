@@ -10,7 +10,7 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests;
 
-public class ExternalApiClientTests : IExternalApiClientTests
+public class ExternalApiClientTests : IExternalApiClientTests, IEquatable<ExternalApiClientTests>
 {
     private readonly Mock<ILogger<ExternalApiClient>> _loggerMock;
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
@@ -37,6 +37,36 @@ public class ExternalApiClientTests : IExternalApiClientTests
     public override string ToString()
     {
         return $"ExternalApiClientTests {{ Id = {Id}, Name = {Name}, Status = {Status} }}";
+    }
+
+    public bool Equals(ExternalApiClientTests? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id &&
+               Name == other.Name &&
+               Status == other.Status;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as ExternalApiClientTests);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, Status);
+    }
+
+    public static bool operator ==(ExternalApiClientTests? left, ExternalApiClientTests? right)
+    {
+        return EqualityComparer<ExternalApiClientTests>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(ExternalApiClientTests? left, ExternalApiClientTests? right)
+    {
+        return !(left == right);
     }
 
     [Fact]
