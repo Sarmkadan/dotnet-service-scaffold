@@ -55,6 +55,8 @@ public class User : IUser
 
     public ICollection<ServiceRegistration> ManagedServices { get; set; } = new List<ServiceRegistration>();
 
+    public override string ToString() => $"User {{ Id = {Id}, Email = {Email}, FullName = {FullName}, PasswordHash = {PasswordHash}, Role = {Role}, IsActive = {IsActive} }}";
+
     /// <summary>
     /// Validates that the user has the minimum required fields.
     /// </summary>
