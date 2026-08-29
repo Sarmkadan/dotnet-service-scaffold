@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// API authentication key for programmatic access to the scaffold system.
 /// </summary>
-public sealed class ApiKey : IApiKey
+public sealed class ApiKey : IApiKey, IEquatable<ApiKey>
 {
     [Key]
     public Guid Id { get; set; }
@@ -126,5 +126,46 @@ public sealed class ApiKey : IApiKey
     public void Revoke()
     {
         IsActive = false;
+    }
+
+    public bool Equals(ApiKey? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id.Equals(other.Id)
+            && UserId.Equals(other.UserId)
+            && Equals(User, other.User)
+            && Name == other.Name
+            && KeyHash == other.KeyHash
+            && KeyPrefix == other.KeyPrefix
+            && CreatedAt.Equals(other.CreatedAt)
+            && ExpiresAt.Equals(other.ExpiresAt);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is ApiKey other)
+            return Equals(other);
+
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, UserId, User, Name, KeyHash, KeyPrefix, CreatedAt, ExpiresAt);
+    }
+
+    public static bool operator ==(ApiKey? left, ApiKey? right)
+    {
+        if (left is null)
+            return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(ApiKey? left, ApiKey? right)
+    {
+        return !(left == right);
     }
 }
