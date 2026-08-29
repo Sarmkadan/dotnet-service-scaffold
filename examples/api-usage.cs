@@ -21,7 +21,7 @@ public class CompleteApiUsageExample
     private string _adminApiKey;
     private string _currentUserToken;
 
-    public CompleteApiUsageExample(string baseUrl = "http://localhost:5000")
+    public CompleteApiUsageExample(string baseUrl = CompleteApiUsageExampleConstants.DefaultBaseUrl)
     {
         _baseUrl = baseUrl;
         _httpClient = new HttpClient();
@@ -39,7 +39,7 @@ public class CompleteApiUsageExample
             password = password
         };
 
-        var response = await PostAsync("/api/user/register", request);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.RegisterUserEndpoint, request);
         using (var doc = JsonDocument.Parse(response))
         {
             return doc.RootElement.GetProperty("data").GetProperty("userId").GetString();
@@ -52,7 +52,7 @@ public class CompleteApiUsageExample
     public async Task LoginAsync(string username, string password)
     {
         var request = new { username = username, password = password };
-        var response = await PostAsync("/api/user/login", request);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.LoginEndpoint, request);
 
         using (var doc = JsonDocument.Parse(response))
         {
@@ -70,10 +70,10 @@ public class CompleteApiUsageExample
             name = name,
             description = $"API key for {name}",
             scopes = scopes,
-            ipWhitelist = ipWhitelist ?? new List<string> { "0.0.0.0/0" }
+            ipWhitelist = ipWhitelist ?? new List<string> { CompleteApiUsageExampleConstants.DefaultIpWhitelist }
         };
 
-        var response = await PostAsync("/api/apikey/create", request, useApiKey: true);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.CreateApiKeyEndpoint, request, useApiKey: true);
         using (var doc = JsonDocument.Parse(response))
         {
             var apiKey = doc.RootElement.GetProperty("data").GetProperty("apiKey").GetString();
@@ -96,7 +96,7 @@ public class CompleteApiUsageExample
             isEnabled = true
         };
 
-        var response = await PostAsync("/api/service/register", request, useApiKey: true);
+        var response = await PostAsync(CompleteApiUsageExampleConstants.RegisterServiceEndpoint, request, useApiKey: true);
         using (var doc = JsonDocument.Parse(response))
         {
             return doc.RootElement.GetProperty("data").GetProperty("id").GetString();
@@ -108,7 +108,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> GetServicesAsync()
     {
-        return await GetAsync("/api/service?limit=50", useApiKey: true);
+        return await GetAsync($"{CompleteApiUsageExampleConstants.GetServicesEndpoint}?limit={CompleteApiUsageExampleConstants.DefaultServiceListLimit}", useApiKey: true);
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> PerformHealthCheckAsync(string serviceId)
     {
-        return await PostAsync($"/api/healthcheck/{serviceId}/check", null, useApiKey: true);
+        return await PostAsync(string.Format(CompleteApiUsageExampleConstants.HealthCheckEndpointFormat, serviceId), null, useApiKey: true);
     }
 
     /// <summary>
@@ -124,7 +124,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> GetHealthHistoryAsync(string serviceId, int days = 7)
     {
-        return await GetAsync($"/api/healthcheck/{serviceId}/history?days={days}&limit=100", useApiKey: true);
+        return await GetAsync(string.Format(CompleteApiUsageExampleConstants.GetHealthHistoryEndpointFormat, serviceId, days, CompleteApiUsageExampleConstants.DefaultItemsLimit), useApiKey: true);
     }
 
     /// <summary>
@@ -133,8 +133,8 @@ public class CompleteApiUsageExample
     public async Task<string> GetMetricsAsync(string serviceId = null)
     {
         var endpoint = serviceId is not null
-            ? $"/api/metrics/service/{serviceId}"
-            : "/api/metrics";
+            ? string.Format(CompleteApiUsageExampleConstants.GetMetricsServiceEndpointFormat, serviceId)
+            : CompleteApiUsageExampleConstants.GetMetricsEndpoint;
         return await GetAsync(endpoint, useApiKey: true);
     }
 
@@ -143,7 +143,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task<string> GetAuditLogsAsync(string userId = null, int days = 30)
     {
-        var endpoint = $"/api/auditlog?days={days}&limit=100";
+        var endpoint = string.Format(CompleteApiUsageExampleConstants.GetAuditLogsEndpointFormat, days, CompleteApiUsageExampleConstants.DefaultItemsLimit);
         if (!string.IsNullOrEmpty(userId))
             endpoint += $"&userId={userId}";
 
@@ -155,7 +155,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task EnableServiceAsync(string serviceId)
     {
-        await PostAsync($"/api/service/{serviceId}/enable", null, useApiKey: true);
+        await PostAsync(string.Format(CompleteApiUsageExampleConstants.EnableServiceEndpointFormat, serviceId), null, useApiKey: true);
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public class CompleteApiUsageExample
     /// </summary>
     public async Task DisableServiceAsync(string serviceId)
     {
-        await PostAsync($"/api/service/{serviceId}/disable", null, useApiKey: true);
+        await PostAsync(string.Format(CompleteApiUsageExampleConstants.DisableServiceEndpointFormat, serviceId), null, useApiKey: true);
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public class CompleteApiUsageExample
             newPassword = newPassword
         };
 
-        await PostAsync($"/api/user/{userId}/change-password", request, useToken: true);
+        await PostAsync(string.Format(CompleteApiUsageExampleConstants.ChangePasswordEndpointFormat, userId), request, useToken: true);
     }
 
     // Helper methods
@@ -187,10 +187,10 @@ public class CompleteApiUsageExample
         var httpRequest = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}{endpoint}");
 
         if (useApiKey && !string.IsNullOrEmpty(_adminApiKey))
-            httpRequest.Headers.Add("X-API-Key", _adminApiKey);
+            httpRequest.Headers.Add(CompleteApiUsageExampleConstants.ApiKeyHeader, _adminApiKey);
 
         if (useToken && !string.IsNullOrEmpty(_currentUserToken))
-            httpRequest.Headers.Add("Authorization", $"Bearer {_currentUserToken}");
+            httpRequest.Headers.Add(CompleteApiUsageExampleConstants.AuthorizationHeader, $"Bearer {_currentUserToken}");
 
         var response = await _httpClient.SendAsync(httpRequest);
         var content = await response.Content.ReadAsStringAsync();
@@ -206,10 +206,10 @@ public class CompleteApiUsageExample
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}{endpoint}");
 
         if (useApiKey && !string.IsNullOrEmpty(_adminApiKey))
-            httpRequest.Headers.Add("X-API-Key", _adminApiKey);
+            httpRequest.Headers.Add(CompleteApiUsageExampleConstants.ApiKeyHeader, _adminApiKey);
 
         if (useToken && !string.IsNullOrEmpty(_currentUserToken))
-            httpRequest.Headers.Add("Authorization", $"Bearer {_currentUserToken}");
+            httpRequest.Headers.Add(CompleteApiUsageExampleConstants.AuthorizationHeader, $"Bearer {_currentUserToken}");
 
         if (data is not null)
         {
