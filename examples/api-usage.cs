@@ -122,7 +122,7 @@ public class CompleteApiUsageExample
     /// <summary>
     /// Get health history
     /// </summary>
-    public async Task<string> GetHealthHistoryAsync(string serviceId, int days = 7)
+    public async Task<string> GetHealthHistoryAsync(string serviceId, int days = CompleteApiUsageExampleConstants.DefaultHistoryDays)
     {
         return await GetAsync(string.Format(CompleteApiUsageExampleConstants.GetHealthHistoryEndpointFormat, serviceId, days, CompleteApiUsageExampleConstants.DefaultItemsLimit), useApiKey: true);
     }
@@ -141,7 +141,7 @@ public class CompleteApiUsageExample
     /// <summary>
     /// Get audit logs
     /// </summary>
-    public async Task<string> GetAuditLogsAsync(string userId = null, int days = 30)
+    public async Task<string> GetAuditLogsAsync(string userId = null, int days = CompleteApiUsageExampleConstants.DefaultAuditLogDays)
     {
         var endpoint = string.Format(CompleteApiUsageExampleConstants.GetAuditLogsEndpointFormat, days, CompleteApiUsageExampleConstants.DefaultItemsLimit);
         if (!string.IsNullOrEmpty(userId))
@@ -214,7 +214,7 @@ public class CompleteApiUsageExample
         if (data is not null)
         {
             var json = JsonSerializer.Serialize(data);
-            httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            httpRequest.Content = new StringContent(json, Encoding.UTF8, CompleteApiUsageExampleConstants.JsonContentType);
         }
 
         var response = await _httpClient.SendAsync(httpRequest);
