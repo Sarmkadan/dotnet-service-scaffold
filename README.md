@@ -7272,3 +7272,20 @@ int currentPage = result.Page;
 int pageSize = result.PageSize;
 int totalCount = result.TotalCount;
 int totalPages = result.TotalPages;
+
+## HttpClientFactoryTests
+
+`HttpClientFactoryTests` is an xUnit test fixture that verifies client defaults, custom client names, authentication headers, base URLs, input validation, and independence between created `HttpClient` instances. Its public test methods can also be invoked directly when diagnosing the HTTP client factory behavior, and disposing the fixture releases its service provider.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests;
+
+using var tests = new HttpClientFactoryTests();
+
+tests.CreateClient_WithDefaultName_ReturnsConfiguredHttpClient();
+tests.CreateAuthenticatedClient_WithValidApiKey_AddsApiKeyHeader();
+tests.CreateBearerClient_WithValidToken_AddsAuthorizationHeader();
+tests.CreateClientWithBaseUrl_WithTrailingSlash_HandlesCorrectly();
+```
