@@ -8,7 +8,7 @@ namespace DotnetServiceScaffold.Tests.Shared.Utilities;
 /// <summary>
 /// Tests for the EncryptionUtility class.
 /// </summary>
-public class EncryptionUtilityTests
+public class EncryptionUtilityTests : IEncryptionUtilityTests
 {
     /// <summary>
     /// Tests that HashPassword and VerifyPassword work correctly for round-trip operations.
