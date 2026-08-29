@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Records the results of a health check performed on a service.
 /// </summary>
-public sealed class HealthCheckResult : IHealthCheckResult
+public sealed class HealthCheckResult : IHealthCheckResult, IEquatable<HealthCheckResult>
 {
     [Key]
     public Guid Id { get; set; }
@@ -102,5 +102,66 @@ public sealed class HealthCheckResult : IHealthCheckResult
             parts.Add($"Error: {ErrorMessage}");
 
         return string.Join(" | ", parts);
+    }
+
+    /// <summary>
+    /// Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <param name="other">An object to compare with this object.</param>
+    /// <returns>true if the current object is equal to the <paramref name="other">parameter</paramref>; otherwise, false.</returns>
+    public bool Equals(HealthCheckResult? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id &&
+               ServiceId == other.ServiceId &&
+               EqualityComparer<ServiceRegistration?>.Default.Equals(Service, other.Service) &&
+               Status == other.Status &&
+               HttpStatusCode == other.HttpStatusCode &&
+               ResponseTimeMs == other.ResponseTimeMs &&
+               ErrorMessage == other.ErrorMessage &&
+               ResponseBody == other.ResponseBody;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as HealthCheckResult);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, ServiceId, Service, Status, HttpStatusCode, ResponseTimeMs, ErrorMessage, ResponseBody);
+    }
+
+    /// <summary>
+    /// Equality operator.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>true if the objects are equal; otherwise, false.</returns>
+    public static bool operator ==(HealthCheckResult? left, HealthCheckResult? right)
+    {
+        return EqualityComparer<HealthCheckResult>.Default.Equals(left, right);
+    }
+
+    /// <summary>
+    /// Inequality operator.
+    /// </summary>
+    /// <param name="left">The first object to compare.</param>
+    /// <param name="right">The second object to compare.</param>
+    /// <returns>true if the objects are not equal; otherwise, false.</returns>
+    public static bool operator !=(HealthCheckResult? left, HealthCheckResult? right)
+    {
+        return !(left == right);
     }
 }
