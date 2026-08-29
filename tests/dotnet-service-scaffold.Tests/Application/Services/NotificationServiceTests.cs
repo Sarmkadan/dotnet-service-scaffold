@@ -19,7 +19,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Tests for the <see cref="NotificationService"/> class.
 /// </summary>
-public class NotificationServiceTests
+public class NotificationServiceTests : INotificationServiceTests
 {
     private readonly ILogger<NotificationService> _logger;
     private readonly NotificationService _notificationService;
