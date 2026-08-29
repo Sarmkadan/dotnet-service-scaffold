@@ -103,6 +103,8 @@ public sealed class ServiceDiscoveryRecord
     /// </summary>
     public string ToEndpointUri() => $"{Scheme}://{Host}:{Port}";
 
+    public override string ToString() => $"ServiceDiscoveryRecord {{ InstanceId = {InstanceId}, ServiceName = {ServiceName}, Version = {Version}, Host = {Host}, Port = {Port}, Scheme = {Scheme} }}";
+
     /// <summary>
     /// Returns <see langword="true"/> when this instance is healthy and its record is not stale.
     /// </summary>
