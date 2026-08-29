@@ -8,6 +8,7 @@ using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Threading;
 
 namespace DotnetServiceScaffold.Presentation.Controllers;
 
@@ -37,13 +38,14 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CheckServiceHealth(Guid serviceId)
+    public async Task<IActionResult> CheckServiceHealth(Guid serviceId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogInformation("CheckServiceHealth called with {ServiceId}", serviceId);
 
         try
         {
-            var result = await _healthCheckService.PerformHealthCheckAsync(serviceId);
+            var result = await _healthCheckService.PerformHealthCheckAsync(serviceId).WaitAsync(cancellationToken);
             _logger.LogInformation("CheckServiceHealth completed for {ServiceId}", serviceId);
             return Ok(new
             {
@@ -78,13 +80,14 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [HttpGet("{serviceId}/history")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetHealthHistory(Guid serviceId, [FromQuery] int count = 20)
+    public async Task<IActionResult> GetHealthHistory(Guid serviceId, [FromQuery] int count = 20, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogInformation("GetHealthHistory called with {ServiceId} and {Count}", serviceId, count);
 
         try
         {
-            var history = await _healthCheckService.GetServiceHealthHistoryAsync(serviceId, count);
+            var history = await _healthCheckService.GetServiceHealthHistoryAsync(serviceId, count).WaitAsync(cancellationToken);
             _logger.LogInformation("GetHealthHistory completed for {ServiceId} with requested count {Count}", serviceId, count);
             return Ok(new
             {
@@ -115,14 +118,15 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [HttpGet("{serviceId}/status")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetHealthStatus(Guid serviceId)
+    public async Task<IActionResult> GetHealthStatus(Guid serviceId, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogInformation("GetHealthStatus called with {ServiceId}", serviceId);
 
         try
         {
-            var status = await _healthCheckService.GetServiceHealthStatusAsync(serviceId);
-            var successRate = await _healthCheckService.GetServiceSuccessRateAsync(serviceId);
+            var status = await _healthCheckService.GetServiceHealthStatusAsync(serviceId).WaitAsync(cancellationToken);
+            var successRate = await _healthCheckService.GetServiceSuccessRateAsync(serviceId).WaitAsync(cancellationToken);
 
             _logger.LogInformation("GetHealthStatus completed for {ServiceId}", serviceId);
             return Ok(new
@@ -150,13 +154,14 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     [HttpGet("{serviceId}/failures")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetFailedChecks(Guid serviceId, [FromQuery] int hoursBack = 24)
+    public async Task<IActionResult> GetFailedChecks(Guid serviceId, [FromQuery] int hoursBack = 24, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogInformation("GetFailedChecks called with {ServiceId} and {HoursBack}", serviceId, hoursBack);
 
         try
         {
-            var failures = await _healthCheckService.GetFailedChecksAsync(serviceId, hoursBack);
+            var failures = await _healthCheckService.GetFailedChecksAsync(serviceId, hoursBack).WaitAsync(cancellationToken);
             _logger.LogInformation("GetFailedChecks completed for {ServiceId} with {HoursBack} hours back", serviceId, hoursBack);
             return Ok(new
             {
