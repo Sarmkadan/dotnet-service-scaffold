@@ -15,7 +15,7 @@ using Xunit;
 /// <summary>
 /// Integration tests for the ApiKeyRepository.
 /// </summary>
-public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase
+public class ApiKeyRepositoryIntegrationTests : IntegrationTestBase, IApiKeyRepositoryIntegrationTests
 {
     private readonly ApiKeyRepository _apiKeyRepository;
 
