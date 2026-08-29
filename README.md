@@ -7254,3 +7254,21 @@ Example usage:
        type: "https://example.com/probs/input-validation",
        instance: "/api/users/123",
        extensions: new Dictionary<string, object?> { { "attempt", 3 } });
+
+## IAuditLogRepository
+The `IAuditLogRepository` interface provides methods for querying and managing audit log entries, including filtering, pagination, and deletion of old logs.
+It extends the base `IRepository<AuditLog>` and includes specialized methods for retrieving logs by user, entity, date range, and more.
+
+Example usage:
+var auditLogRepository = serviceProvider.GetRequiredService<IAuditLogRepository>();
+var result = await auditLogRepository.GetFilteredAsync(
+    predicate: log => log.UserId == userId,
+    page: 1,
+    pageSize: 20);
+
+// Access paginated results
+var auditLogs = result.Items;
+int currentPage = result.Page;
+int pageSize = result.PageSize;
+int totalCount = result.TotalCount;
+int totalPages = result.TotalPages;
