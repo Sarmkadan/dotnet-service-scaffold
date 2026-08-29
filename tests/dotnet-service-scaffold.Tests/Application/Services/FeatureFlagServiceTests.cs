@@ -17,7 +17,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 /// <summary>
 /// Tests for the FeatureFlagService class.
 /// </summary>
-public class FeatureFlagServiceTests
+public class FeatureFlagServiceTests : IFeatureFlagServiceTests
 {
     private readonly ILogger<FeatureFlagService> _logger;
     private readonly FeatureFlagService _featureFlagService;
