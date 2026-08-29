@@ -26,6 +26,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
 
     public InMemoryCacheService(ILogger<InMemoryCacheService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _cache = new ConcurrentDictionary<string, CacheEntry>();
         _logger = logger;
 
@@ -43,8 +44,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// </summary>
     public ValueTask<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
-        if (string.IsNullOrEmpty(key))
-            return ValueTask.FromResult<T?>(null);
+        ArgumentException.ThrowIfNullOrEmpty(key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
@@ -67,8 +67,8 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// </summary>
     public ValueTask SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
-        if (string.IsNullOrEmpty(key))
-            throw new ArgumentException("Key cannot be null or empty", nameof(key));
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(value);
 
         var entry = new CacheEntry
         {
@@ -91,8 +91,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// </summary>
     public ValueTask RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(key))
-            return ValueTask.CompletedTask;
+        ArgumentException.ThrowIfNullOrEmpty(key);
 
         _cache.TryRemove(key, out _);
         _logger.LogDebug("Removed cache entry for key {Key}", key);
@@ -105,8 +104,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// </summary>
     public ValueTask<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(key))
-            return ValueTask.FromResult(false);
+        ArgumentException.ThrowIfNullOrEmpty(key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
@@ -127,6 +125,9 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// </summary>
     public async ValueTask<T?> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(factory);
+
         var cached = await GetAsync<T>(key, cancellationToken);
         if (cached is not null)
             return cached;
@@ -143,8 +144,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// </summary>
     public ValueTask RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(pattern))
-            return ValueTask.CompletedTask;
+        ArgumentException.ThrowIfNullOrEmpty(pattern);
 
         try
         {
