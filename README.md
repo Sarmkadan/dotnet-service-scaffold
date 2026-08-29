@@ -7289,3 +7289,22 @@ tests.CreateAuthenticatedClient_WithValidApiKey_AddsApiKeyHeader();
 tests.CreateBearerClient_WithValidToken_AddsAuthorizationHeader();
 tests.CreateClientWithBaseUrl_WithTrailingSlash_HandlesCorrectly();
 ```
+
+## HttpClientFactoryValidationTests
+
+`HttpClientFactoryValidationTests` is an xUnit test fixture that verifies null handling and the validation rules for client names, API keys, bearer tokens, and base URLs. Its public test methods cover both problem-list results and the exceptions raised by the corresponding ensure-valid operations, and they can be invoked directly when diagnosing validation behavior.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests;
+
+var tests = new HttpClientFactoryValidationTests();
+
+tests.IsValid_NullFactory_ReturnsFalse();
+tests.ValidateCreateClient_ValidName_ReturnsEmpty();
+tests.ValidateCreateAuthenticatedClient_NullApiKey_ReturnsProblem();
+tests.ValidateCreateBearerClient_TokenTooLong_ReturnsProblem();
+tests.ValidateCreateClientWithBaseUrl_WrongScheme_ReturnsProblem();
+tests.EnsureValidCreateClientWithBaseUrl_InvalidParameters_ThrowsArgumentException();
+```
