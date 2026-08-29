@@ -11,6 +11,6 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 /// </summary>
 public interface IApiKeyController
 {
-    Task<IActionResult> GetAuthInfo();
-    Task<IActionResult> RotateApiKey(Guid id);
+    Task<IActionResult> GetAuthInfo(CancellationToken cancellationToken = default);
+    Task<IActionResult> RotateApiKey(Guid id, CancellationToken cancellationToken = default);
 }
