@@ -11,7 +11,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Represents a user in the system with authentication and profile information.
 /// </summary>
-public class User : IUser
+public class User : IUser, IEquatable<User>
 {
     [Key]
     public Guid Id { get; set; }
@@ -122,5 +122,39 @@ public class User : IUser
     public void UpdateLastActivity()
     {
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool Equals(User? other)
+    {
+        if (other is null) return false;
+        return Id == other.Id &&
+               Email == other.Email &&
+               FullName == other.FullName &&
+               PasswordHash == other.PasswordHash &&
+               Role == other.Role &&
+               IsActive == other.IsActive &&
+               CreatedAt == other.CreatedAt &&
+               UpdatedAt == other.UpdatedAt;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as User);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Email, FullName, PasswordHash, Role, IsActive, CreatedAt, UpdatedAt);
+    }
+
+    public static bool operator ==(User? left, User? right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(User? left, User? right)
+    {
+        return !(left == right);
     }
 }
