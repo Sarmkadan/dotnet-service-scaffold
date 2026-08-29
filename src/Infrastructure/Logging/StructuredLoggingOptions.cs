@@ -12,7 +12,7 @@ namespace DotnetServiceScaffold.Infrastructure.Logging;
 /// Configuration options for the structured logging pipeline.
 /// Bound from the "StructuredLogging" section in appsettings.json.
 /// </summary>
-public sealed class StructuredLoggingOptions : IStructuredLoggingOptions
+public sealed class StructuredLoggingOptions : IStructuredLoggingOptions, IEquatable<StructuredLoggingOptions>
 {
     /// <summary>Name of the application included in every log entry.</summary>
     public string ApplicationName { get; set; } = "DotnetServiceScaffold";
@@ -51,5 +51,35 @@ public sealed class StructuredLoggingOptions : IStructuredLoggingOptions
         {
             throw new ArgumentException($"'{MinimumLevel}' is not a valid log level.", nameof(MinimumLevel));
         }
+    }
+
+    public bool Equals(StructuredLoggingOptions? other)
+    {
+        if (other is null) return false;
+        return ApplicationName == other.ApplicationName
+            && EnrichWithMachineName == other.EnrichWithMachineName
+            && EnrichWithEnvironment == other.EnrichWithEnvironment
+            && EnableCorrelationId == other.EnableCorrelationId
+            && CorrelationIdHeader == other.CorrelationIdHeader
+            && EnrichWithRequestContext == other.EnrichWithRequestContext
+            && MinimumLevel == other.MinimumLevel;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as StructuredLoggingOptions);
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(ApplicationName, EnrichWithMachineName, EnrichWithEnvironment, EnableCorrelationId, CorrelationIdHeader, EnrichWithRequestContext, MinimumLevel);
+    }
+
+    public static bool operator ==(StructuredLoggingOptions? left, StructuredLoggingOptions? right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(StructuredLoggingOptions? left, StructuredLoggingOptions? right)
+    {
+        return !(left == right);
     }
 }
