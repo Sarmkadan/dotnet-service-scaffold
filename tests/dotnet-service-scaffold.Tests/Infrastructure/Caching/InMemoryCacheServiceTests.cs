@@ -15,7 +15,7 @@ namespace DotnetServiceScaffold.Tests.Infrastructure.Caching;
 /// Unit tests for <see cref="InMemoryCacheService"/>.
 /// Tests set/get operations, expiry, remove, and concurrent access.
 /// </summary>
-public class InMemoryCacheServiceTests : IDisposable
+public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
 {
     private readonly Mock<ILogger<InMemoryCacheService>> _loggerMock;
     private readonly InMemoryCacheService _cache;
