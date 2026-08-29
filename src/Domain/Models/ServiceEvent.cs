@@ -13,7 +13,7 @@ namespace DotnetServiceScaffold.Domain.Models;
 /// <summary>
 /// Records significant events that occur on a service (restarts, status changes, errors, etc).
 /// </summary>
-public class ServiceEvent
+public class ServiceEvent : IEquatable<ServiceEvent>
 {
     [Key]
     public Guid Id { get; set; }
@@ -82,5 +82,43 @@ public class ServiceEvent
             ServiceEventType.DeploymentCompleted => "Deployment Completed",
             _ => "Unknown Event"
         };
+    }
+
+    public bool Equals(ServiceEvent? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Id.Equals(other.Id) &&
+               ServiceId.Equals(other.ServiceId) &&
+               Equals(Service, other.Service) &&
+               EventType == other.EventType &&
+               Message == other.Message &&
+               CreatedAt.Equals(other.CreatedAt) &&
+               Severity == other.Severity &&
+               SourceHost == other.SourceHost;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((ServiceEvent)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, ServiceId, Service, EventType, Message, CreatedAt, Severity, SourceHost);
+    }
+
+    public static bool operator ==(ServiceEvent? left, ServiceEvent? right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(ServiceEvent? left, ServiceEvent? right)
+    {
+        return !(left == right);
     }
 }
