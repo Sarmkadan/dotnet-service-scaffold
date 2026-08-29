@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 /// <summary>
 /// Tests for the ErrorHandlingMiddleware class.
 /// </summary>
-public class ErrorHandlingMiddlewareTests
+public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlingMiddleware> _logger;
