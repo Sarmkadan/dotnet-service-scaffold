@@ -17,10 +17,13 @@ public class UserRepository : Repository<User>, IUserRepository
 {
     public UserRepository(ServiceScaffoldDbContext context, ILogger<UserRepository> logger) : base(context, logger)
     {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(logger);
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(email);
         _logger.LogDebug("Querying user by email: {Email}", email);
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
@@ -45,6 +48,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(email);
         _logger.LogDebug("Checking if email exists: {Email}", email);
         return await _dbSet.AnyAsync(u => u.Email == email, cancellationToken);
     }
@@ -59,6 +63,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<IEnumerable<User>> SearchUsersAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(query);
         if (string.IsNullOrWhiteSpace(query))
         {
             _logger.LogDebug("Search query is empty, returning empty result");
