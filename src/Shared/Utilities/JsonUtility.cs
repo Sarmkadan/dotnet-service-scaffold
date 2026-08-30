@@ -96,7 +96,7 @@ public static class JsonUtility
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException($"Failed to deserialize JSON: {ex.Message}", ex);
+            throw new InvalidOperationException($"{JsonUtilityConstants.DeserializeErrorMessage}{ex.Message}", ex);
         }
     }
 
@@ -114,7 +114,7 @@ public static class JsonUtility
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException($"Failed to deserialize JSON: {ex.Message}", ex);
+            throw new InvalidOperationException($"{JsonUtilityConstants.DeserializeErrorMessage}{ex.Message}", ex);
         }
     }
 
@@ -175,7 +175,7 @@ public static class JsonUtility
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException($"Failed to merge JSON: {ex.Message}", ex);
+            throw new InvalidOperationException($"{JsonUtilityConstants.MergeErrorMessage}{ex.Message}", ex);
         }
     }
 
