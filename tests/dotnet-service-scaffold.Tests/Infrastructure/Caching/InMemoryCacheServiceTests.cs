@@ -15,16 +15,50 @@ namespace DotnetServiceScaffold.Tests.Infrastructure.Caching;
 /// Unit tests for <see cref="InMemoryCacheService"/>.
 /// Tests set/get operations, expiry, remove, and concurrent access.
 /// </summary>
-public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
+public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests, IEquatable<InMemoryCacheServiceTests>
 {
     private readonly Mock<ILogger<InMemoryCacheService>> _loggerMock;
     private readonly InMemoryCacheService _cache;
     private bool _disposed;
 
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public decimal Value { get; set; }
+
     public InMemoryCacheServiceTests()
     {
         _loggerMock = new Mock<ILogger<InMemoryCacheService>>();
         _cache = new InMemoryCacheService(_loggerMock.Object);
+    }
+
+    public bool Equals(InMemoryCacheServiceTests? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id &&
+               Name == other.Name &&
+               Value == other.Value;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as InMemoryCacheServiceTests);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, Value);
+    }
+
+    public static bool operator ==(InMemoryCacheServiceTests? left, InMemoryCacheServiceTests? right)
+    {
+        return EqualityComparer<InMemoryCacheServiceTests>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(InMemoryCacheServiceTests? left, InMemoryCacheServiceTests? right)
+    {
+        return !(left == right);
     }
 
     public void Dispose()
