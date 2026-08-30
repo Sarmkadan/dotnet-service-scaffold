@@ -35,8 +35,8 @@ public static class ExternalApiClientExtensions
     public static async Task<T?> GetWithRetryAsync<T>(
         this ExternalApiClient client,
         string url,
-        int maxRetries = 3,
-        int timeoutSeconds = 30,
+        int maxRetries = ExternalApiClientExtensionsConstants.DefaultMaxRetries,
+        int timeoutSeconds = ExternalApiClientExtensionsConstants.DefaultTimeoutSeconds,
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
@@ -96,8 +96,8 @@ public static class ExternalApiClientExtensions
         this ExternalApiClient client,
         string url,
         object payload,
-        int maxRetries = 3,
-        int timeoutSeconds = 30,
+        int maxRetries = ExternalApiClientExtensionsConstants.DefaultMaxRetries,
+        int timeoutSeconds = ExternalApiClientExtensionsConstants.DefaultTimeoutSeconds,
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
@@ -158,8 +158,8 @@ public static class ExternalApiClientExtensions
         this ExternalApiClient client,
         string url,
         object payload,
-        int maxRetries = 3,
-        int timeoutSeconds = 30,
+        int maxRetries = ExternalApiClientExtensionsConstants.DefaultMaxRetries,
+        int timeoutSeconds = ExternalApiClientExtensionsConstants.DefaultTimeoutSeconds,
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
@@ -217,8 +217,8 @@ public static class ExternalApiClientExtensions
     public static async Task<bool> DeleteWithRetryAsync(
         this ExternalApiClient client,
         string url,
-        int maxRetries = 3,
-        int timeoutSeconds = 30,
+        int maxRetries = ExternalApiClientExtensionsConstants.DefaultMaxRetries,
+        int timeoutSeconds = ExternalApiClientExtensionsConstants.DefaultTimeoutSeconds,
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
