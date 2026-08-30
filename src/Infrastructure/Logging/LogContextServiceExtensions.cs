@@ -50,18 +50,18 @@ public static class LogContextServiceExtensions
         var correlationId = service.InitializeCorrelationId();
 
         // Add request-specific properties
-        service.AddProperty("CorrelationId", correlationId);
-        service.AddProperty("RequestId", Guid.NewGuid().ToString("N"));
+        service.AddProperty(LogContextServiceExtensionsConstants.CorrelationIdPropertyName, correlationId);
+        service.AddProperty(LogContextServiceExtensionsConstants.RequestIdPropertyName, Guid.NewGuid().ToString(LogContextServiceExtensionsConstants.GuidFormatN));
 
         if (userId is not null)
         {
-            service.AddProperty("UserId", userId);
+            service.AddProperty(LogContextServiceExtensionsConstants.UserIdPropertyName, userId);
             service.UserId = userId;
         }
 
         if (operationName is not null)
         {
-            service.AddProperty("Operation", operationName);
+            service.AddProperty(LogContextServiceExtensionsConstants.OperationPropertyName, operationName);
         }
 
         return correlationId;
@@ -83,17 +83,17 @@ public static class LogContextServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentException.ThrowIfNullOrWhiteSpace(correlationId);
 
-        service.AddProperty("CorrelationId", correlationId);
-        service.AddProperty("RequestId", Guid.NewGuid().ToString("N"));
+        service.AddProperty(LogContextServiceExtensionsConstants.CorrelationIdPropertyName, correlationId);
+        service.AddProperty(LogContextServiceExtensionsConstants.RequestIdPropertyName, Guid.NewGuid().ToString(LogContextServiceExtensionsConstants.GuidFormatN));
 
         if (userId is not null)
         {
-            service.AddProperty("UserId", userId);
+            service.AddProperty(LogContextServiceExtensionsConstants.UserIdPropertyName, userId);
         }
 
         if (operationName is not null)
         {
-            service.AddProperty("Operation", operationName);
+            service.AddProperty(LogContextServiceExtensionsConstants.OperationPropertyName, operationName);
         }
     }
 
@@ -176,7 +176,7 @@ public static class LogContextServiceExtensions
         ArgumentNullException.ThrowIfNull(action);
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        service.AddProperty("MeasuredAction", actionName);
+        service.AddProperty(LogContextServiceExtensionsConstants.MeasuredActionPropertyName, actionName);
 
         try
         {
@@ -185,7 +185,7 @@ public static class LogContextServiceExtensions
         finally
         {
             stopwatch.Stop();
-            service.AddProperty("ActionDurationMs", stopwatch.ElapsedMilliseconds);
+            service.AddProperty(LogContextServiceExtensionsConstants.ActionDurationMsPropertyName, stopwatch.ElapsedMilliseconds);
         }
 
         return stopwatch;
@@ -208,7 +208,7 @@ public static class LogContextServiceExtensions
         ArgumentNullException.ThrowIfNull(func);
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        service.AddProperty("MeasuredAction", actionName);
+        service.AddProperty(LogContextServiceExtensionsConstants.MeasuredActionPropertyName, actionName);
 
         T result;
         try
@@ -218,7 +218,7 @@ public static class LogContextServiceExtensions
         finally
         {
             stopwatch.Stop();
-            service.AddProperty("ActionDurationMs", stopwatch.ElapsedMilliseconds);
+            service.AddProperty(LogContextServiceExtensionsConstants.ActionDurationMsPropertyName, stopwatch.ElapsedMilliseconds);
         }
 
         return (result, stopwatch);
