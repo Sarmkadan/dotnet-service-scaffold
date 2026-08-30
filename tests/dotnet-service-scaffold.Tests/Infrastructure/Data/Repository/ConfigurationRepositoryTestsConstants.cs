@@ -4,24 +4,31 @@
 // CTO & Software Architect
 // =============================================================================
 
-namespace DotnetServiceScaffold.Tests.IntegrationTests
+namespace DotnetServiceScaffold.Tests.IntegrationTests;
+
+/// <summary>
+/// Centralised constants used by <see cref="ConfigurationRepositoryTests"/> to avoid
+/// magic strings scattered throughout the test suite.
+/// </summary>
+internal static class ConfigurationRepositoryTestsConstants
 {
-    /// <summary>
-    /// Constants for ConfigurationRepositoryTests.
-    /// </summary>
-    internal static class ConfigurationRepositoryTestsConstants
-    {
-        public const string TestConfig = "TestConfig";
-        public const string TestValue = "TestValue";
-        public const string TestConfig1 = "TestConfig1";
-        public const string TestValue1 = "TestValue1";
-        public const string TestKey2 = "TestKey2";
-        public const string TestValue2 = "TestValue2";
-        public const string NonExistentKey = "NonExistentKey";
-        public const string OldKey = "OldKey";
-        public const string OldValue = "OldValue";
-        public const string NewValue = "NewValue";
-        public const string KeyToDelete = "KeyToDelete";
-        public const string ValueToDelete = "ValueToDelete";
-    }
+    // Configuration keys and values used in various test scenarios
+    public const string TestConfig = "TestConfig";
+    public const string TestValue = "TestValue";
+
+    public const string TestConfig1 = "TestConfig1";
+    public const string TestValue1 = "TestValue1";
+
+    public const string TestKey2 = "TestKey2";
+    public const string TestValue2 = "TestValue2";
+
+    public const string NonExistentKey = "NonExistentKey";
+
+    // Values for update/delete tests
+    public const string OldKey = "OldKey";
+    public const string OldValue = "OldValue";
+    public const string NewValue = "NewValue";
+
+    public const string KeyToDelete = "KeyToDelete";
+    public const string ValueToDelete = "ValueToDelete";
 }
