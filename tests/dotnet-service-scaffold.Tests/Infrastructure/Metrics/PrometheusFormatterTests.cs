@@ -5,6 +5,7 @@
 // =============================================================================
 
 using DotnetServiceScaffold.Infrastructure.Metrics;
+using DotnetServiceScaffold.Tests.Infrastructure.Metrics;
 using FluentAssertions;
 using Xunit;
 
@@ -23,13 +24,13 @@ public class PrometheusFormatterTests : IPrometheusFormatterTests
     {
         var metrics = new Dictionary<string, object>
         {
-            ["http.requests"] = new { type = "counter", value = 42.0 }
+            [DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.HttpRequestsKey] = new { type = DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.CounterType, value = 42.0 }
         };
 
-        var result = _formatter.Format(metrics, "app");
+        var result = _formatter.Format(metrics, DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix);
 
-        result.Should().Contain("# TYPE app_http_requests counter");
-        result.Should().Contain("app_http_requests_total 42");
+        result.Should().Contain($"# TYPE {DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_http_requests {DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.CounterType}");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_http_requests_total 42");
     }
 
     /// <summary>
@@ -40,13 +41,13 @@ public class PrometheusFormatterTests : IPrometheusFormatterTests
     {
         var metrics = new Dictionary<string, object>
         {
-            ["memory.used"] = new { type = "gauge", value = 128.5 }
+            [DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.MemoryUsedKey] = new { type = DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.GaugeType, value = 128.5 }
         };
 
-        var result = _formatter.Format(metrics, "app");
+        var result = _formatter.Format(metrics, DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix);
 
-        result.Should().Contain("# TYPE app_memory_used gauge");
-        result.Should().Contain("app_memory_used");
+        result.Should().Contain($"# TYPE {DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_memory_used {DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.GaugeType}");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_memory_used");
     }
 
     /// <summary>
@@ -57,15 +58,15 @@ public class PrometheusFormatterTests : IPrometheusFormatterTests
     {
         var metrics = new Dictionary<string, object>
         {
-            ["db.query"] = new { type = "timer", totalMs = 500.0, count = 10L, avgMs = 50.0, minMs = 5L, maxMs = 150L }
+            [DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.DbQueryKey] = new { type = DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.TimerType, totalMs = 500.0, count = 10L, avgMs = 50.0, minMs = 5L, maxMs = 150L }
         };
 
-        var result = _formatter.Format(metrics, "app");
+        var result = _formatter.Format(metrics, DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix);
 
-        result.Should().Contain("app_db_query_sum");
-        result.Should().Contain("app_db_query_count");
-        result.Should().Contain("app_db_query_min_ms");
-        result.Should().Contain("app_db_query_max_ms");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_db_query_sum");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_db_query_count");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_db_query_min_ms");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_db_query_max_ms");
     }
 
     /// <summary>
@@ -74,7 +75,7 @@ public class PrometheusFormatterTests : IPrometheusFormatterTests
     [Fact]
     public void Format_ShouldReturnEmpty_WhenNoMetrics()
     {
-        var result = _formatter.Format(new Dictionary<string, object>(), "app");
+        var result = _formatter.Format(new Dictionary<string, object>(), DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix);
 
         result.Should().BeEmpty();
     }
@@ -98,13 +99,13 @@ public class PrometheusFormatterTests : IPrometheusFormatterTests
     {
         var metrics = new Dictionary<string, object>
         {
-            ["some-metric.path"] = new { type = "gauge", value = 1.0 }
+            [DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.SomeMetricPathKey] = new { type = DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.GaugeType, value = 1.0 }
         };
 
-        var result = _formatter.Format(metrics, "app");
+        var result = _formatter.Format(metrics, DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix);
 
-        result.Should().Contain("app_some_metric_path");
-        result.Should().NotContain("some-metric.path");
+        result.Should().Contain($"{DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.AppPrefix}_some_metric_path");
+        result.Should().NotContain(DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.SomeMetricPathKey);
     }
 
     /// <summary>
@@ -115,12 +116,12 @@ public class PrometheusFormatterTests : IPrometheusFormatterTests
     {
         var metrics = new Dictionary<string, object>
         {
-            ["http.requests[method=GET,status=200]"] = new { type = "counter", value = 10.0 }
+            [DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.TaggedHttpRequestsKey] = new { type = DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.CounterType, value = 10.0 }
         };
 
-        var result = _formatter.Format(metrics, "svc");
+        var result = _formatter.Format(metrics, DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.SvcPrefix);
 
-        result.Should().Contain("method=\"GET\"");
-        result.Should().Contain("status=\"200\"");
+        result.Should().Contain(DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.MethodGetTag);
+        result.Should().Contain(DotnetServiceScaffold.Tests.Infrastructure.Metrics.PrometheusFormatterTestsConstants.Status200Tag);
     }
 }
