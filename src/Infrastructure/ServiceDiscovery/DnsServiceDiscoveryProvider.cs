@@ -99,12 +99,12 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         }
         catch (SocketException ex) when (ex.SocketErrorCode == SocketError.HostNotFound)
         {
-            _logger.LogDebug("Service {ServiceName} has no DNS records", serviceName);
+            _logger.LogDebug(DnsServiceDiscoveryProviderConstants.ServiceHasNoDnsRecords, serviceName);
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(Array.Empty<ServiceDiscoveryRecord>());
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "DNS resolution failed for service {ServiceName}", serviceName);
+            _logger.LogWarning(ex, DnsServiceDiscoveryProviderConstants.DnsResolutionFailed, serviceName);
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Failure(ex);
         }
     }
@@ -114,12 +114,12 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
     public Task<Result> RegisterAsync(ServiceDiscoveryRecord record, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
-        return Task.FromResult(Result.Failure("DNS provider does not support programmatic registration.", "DNS_READ_ONLY"));
+        return Task.FromResult(Result.Failure(DnsServiceDiscoveryProviderConstants.DnsProviderDoesNotSupportProgrammaticRegistration, DnsServiceDiscoveryProviderConstants.DnsReadOnly));
     }
 
     /// <inheritdoc/>
     public Task<Result> DeregisterAsync(Guid instanceId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Result.Failure("DNS provider does not support programmatic deregistration.", "DNS_READ_ONLY"));
+        Task.FromResult(Result.Failure(DnsServiceDiscoveryProviderConstants.DnsProviderDoesNotSupportProgrammaticDeregistration, DnsServiceDiscoveryProviderConstants.DnsReadOnly));
 
     /// <inheritdoc/>
     /// <remarks>
@@ -178,7 +178,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
                 else
                 {
                     _logger.LogWarning(
-                        "Failed to resolve service {ServiceName} during watch: {ErrorMessage}. Retrying in {RefreshInterval}...",
+                        DnsServiceDiscoveryProviderConstants.FailedToResolveServiceDuringWatch,
                         serviceName,
                         result.ErrorMessage ?? "Unknown error",
                         _options.RefreshInterval);
@@ -266,7 +266,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
             }
             catch (SocketException) when (attempt < dns.MaxRetries)
             {
-                _logger.LogDebug("SRV query for {Fqdn} timed out on attempt {Attempt}/{Max}", fqdn, attempt + 1, dns.MaxRetries + 1);
+                _logger.LogDebug(DnsServiceDiscoveryProviderConstants.SrvQueryTimedOut, fqdn, attempt + 1, dns.MaxRetries + 1);
             }
         }
 
@@ -309,13 +309,13 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
 
     private static List<SrvRecord> ParseSrvResponse(byte[] data, ushort expectedTxId)
     {
-        if (data.Length < 12) return [];
+        if (data.Length < DnsServiceDiscoveryProviderConstants.DnsHeaderLength) return [];
 
-        var txId = BinaryPrimitives.ReadUInt16BigEndian(data.AsSpan(0, 2));
+        var txId = BinaryPrimitives.ReadUInt16BigEndian(data.AsSpan(DnsServiceDiscoveryProviderConstants.DnsTransactionIdOffset, DnsServiceDiscoveryProviderConstants.DnsTransactionIdLength));
         if (txId != expectedTxId) return [];
 
-        bool isResponse = (data[2] & 0x80) != 0;
-        int rcode = data[3] & 0x0F;
+        bool isResponse = (data[DnsServiceDiscoveryProviderConstants.DnsFlagsHighOffset] & 0x80) != 0;
+        int rcode = data[DnsServiceDiscoveryProviderConstants.DnsFlagsLowOffset] & DnsServiceDiscoveryProviderConstants.DnsRcodeMask;
         if (!isResponse || rcode != 0) return [];
 
         int anCount = BinaryPrimitives.ReadUInt16BigEndian(data.AsSpan(6, 2));
