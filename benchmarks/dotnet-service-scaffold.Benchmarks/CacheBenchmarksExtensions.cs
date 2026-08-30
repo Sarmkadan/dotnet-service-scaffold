@@ -130,7 +130,7 @@ public static class CacheBenchmarksExtensions
         var result = await benchmarks.CacheHit();
         var services = result?.Services;
         return services?.Count > 0
-            ? Math.Round(100.0 * services.Count(s => s.IsHealthy) / services.Count, 2)
+            ? Math.Round(CacheBenchmarksExtensionsConstants.PercentageFactor * services.Count(s => s.IsHealthy) / services.Count, CacheBenchmarksExtensionsConstants.PercentageDecimalPlaces)
             : 0.0;
     }
 
@@ -147,7 +147,7 @@ public static class CacheBenchmarksExtensions
         var result = await benchmarks.CacheHit();
         var services = result?.Services;
         return services?.Count > 0
-            ? Math.Round(100.0 * services.Count(s => !s.IsHealthy) / services.Count, 2)
+            ? Math.Round(CacheBenchmarksExtensionsConstants.PercentageFactor * services.Count(s => !s.IsHealthy) / services.Count, CacheBenchmarksExtensionsConstants.PercentageDecimalPlaces)
             : 0.0;
     }
 }
