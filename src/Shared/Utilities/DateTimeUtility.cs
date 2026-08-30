@@ -45,12 +45,12 @@ public static class DateTimeUtility
         // Format based on time difference
         return absDifference switch
         {
-            < 60 => $"{(int)absDifference} seconds {(difference.TotalSeconds > 0 ? "from now" : "ago")}",
-            < 3600 => $"{(int)(absDifference / 60)} minutes {(difference.TotalSeconds > 0 ? "from now" : "ago")}",
-            < 86400 => $"{(int)(absDifference / 3600)} hours {(difference.TotalSeconds > 0 ? "from now" : "ago")}",
-            < 604800 => $"{(int)(absDifference / 86400)} days {(difference.TotalSeconds > 0 ? "from now" : "ago")}",
-            < 2592000 => $"{(int)(absDifference / 604800)} weeks {(difference.TotalSeconds > 0 ? "from now" : "ago")}",
-            < 31536000 => $"{(int)(absDifference / 2592000)} months {(difference.TotalSeconds > 0 ? "from now" : "ago")}",
+            < DateTimeUtilityConstants.SecondsInMinute => $"{(int)absDifference}{DateTimeUtilityConstants.SecondsSuffix}{(difference.TotalSeconds > 0 ? DateTimeUtilityConstants.FromNowSuffix : DateTimeUtilityConstants.AgoSuffix)}",
+            < DateTimeUtilityConstants.SecondsInHour => $"{(int)(absDifference / DateTimeUtilityConstants.SecondsInMinute)}{DateTimeUtilityConstants.MinutesSuffix}{(difference.TotalSeconds > 0 ? DateTimeUtilityConstants.FromNowSuffix : DateTimeUtilityConstants.AgoSuffix)}",
+            < DateTimeUtilityConstants.SecondsInDay => $"{(int)(absDifference / DateTimeUtilityConstants.SecondsInHour)}{DateTimeUtilityConstants.HoursSuffix}{(difference.TotalSeconds > 0 ? DateTimeUtilityConstants.FromNowSuffix : DateTimeUtilityConstants.AgoSuffix)}",
+            < DateTimeUtilityConstants.SecondsInWeek => $"{(int)(absDifference / DateTimeUtilityConstants.SecondsInDay)}{DateTimeUtilityConstants.DaysSuffix}{(difference.TotalSeconds > 0 ? DateTimeUtilityConstants.FromNowSuffix : DateTimeUtilityConstants.AgoSuffix)}",
+            < DateTimeUtilityConstants.SecondsInMonth => $"{(int)(absDifference / DateTimeUtilityConstants.SecondsInWeek)}{DateTimeUtilityConstants.WeeksSuffix}{(difference.TotalSeconds > 0 ? DateTimeUtilityConstants.FromNowSuffix : DateTimeUtilityConstants.AgoSuffix)}",
+            < DateTimeUtilityConstants.SecondsInYear => $"{(int)(absDifference / DateTimeUtilityConstants.SecondsInMonth)}{DateTimeUtilityConstants.MonthsSuffix}{(difference.TotalSeconds > 0 ? DateTimeUtilityConstants.FromNowSuffix : DateTimeUtilityConstants.AgoSuffix)}",
             _ => null
         };
     }
@@ -65,8 +65,8 @@ public static class DateTimeUtility
 
         return dayOfWeek >= DayOfWeek.Monday &&
                dayOfWeek <= DayOfWeek.Friday &&
-               hour >= 9 &&
-               hour < 17;
+               hour >= DateTimeUtilityConstants.BusinessHourStart &&
+               hour < DateTimeUtilityConstants.BusinessHourEnd;
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public static class DateTimeUtility
     /// </summary>
     public static DateTime GetEndOfDay(DateTime dateTime)
     {
-        return dateTime.Date.AddDays(1).AddTicks(-1);
+        return dateTime.Date.AddDays(1).AddTicks(-DateTimeUtilityConstants.EndOfDayTicksSubtract);
     }
 
     /// <summary>
