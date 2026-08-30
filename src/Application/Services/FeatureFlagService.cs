@@ -51,7 +51,7 @@ public class FeatureFlagService : IFeatureFlagService
 
         // Convert hash to a number between 0-99
         // Take first 4 bytes and convert to uint, then modulo 100
-        var hashValue = BitConverter.ToUInt32(hashBytes, 0) % 100;
+        var hashValue = BitConverter.ToUInt32(hashBytes, FeatureFlagServiceConstants.HashStartIndex) % FeatureFlagServiceConstants.PercentageMax;
 
         return (int)hashValue;
     }
@@ -131,7 +131,7 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public void SetRolloutPercentage(string featureName, int percentage)
     {
-        if (percentage < 0 || percentage > 100)
+        if (percentage < FeatureFlagServiceConstants.PercentageMin || percentage > FeatureFlagServiceConstants.PercentageMax)
             throw new ArgumentException("Rollout percentage must be between 0 and 100", nameof(percentage));
 
         if (_flags.TryGetValue(featureName, out var flag))
