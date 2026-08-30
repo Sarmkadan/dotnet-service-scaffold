@@ -43,7 +43,7 @@ public static class ServiceEventExtensions
     {
         ArgumentNullException.ThrowIfNull(serviceEvent);
 
-        return $"[{serviceEvent.CreatedAt:yyyy-MM-dd HH:mm:ss}] [{serviceEvent.Severity ?? "Info"}] {serviceEvent.GetEventTypeDescription()}: {serviceEvent.Message ?? "No message"}";
+        return $"[{serviceEvent.CreatedAt:yyyy-MM-dd HH:mm:ss}] [{serviceEvent.Severity ?? ServiceEventExtensionsConstants.DefaultSeverityWhenNull}] {serviceEvent.GetEventTypeDescription()}: {serviceEvent.Message ?? ServiceEventExtensionsConstants.DefaultMessageWhenNull}";
     }
 
     /// <summary>
@@ -72,37 +72,37 @@ public static class ServiceEventExtensions
         ArgumentNullException.ThrowIfNull(serviceEvent);
 
         // Map severity to base priority
-        int severityPriority = 2; // default
+        int severityPriority = ServiceEventExtensionsConstants.DefaultSeverityPriority;
         if (serviceEvent.Severity != null)
         {
             var severityLower = serviceEvent.Severity.ToLowerInvariant();
             severityPriority = severityLower switch
             {
-                "critical" => 5,
-                "error" => 4,
-                "warning" => 3,
-                "info" => 1,
-                _ => 2
+                ServiceEventExtensionsConstants.CriticalSeverity => ServiceEventExtensionsConstants.CriticalSeverityPriority,
+                ServiceEventExtensionsConstants.ErrorSeverity => ServiceEventExtensionsConstants.ErrorSeverityPriority,
+                ServiceEventExtensionsConstants.WarningSeverity => ServiceEventExtensionsConstants.WarningSeverityPriority,
+                ServiceEventExtensionsConstants.InfoSeverity => ServiceEventExtensionsConstants.InfoSeverityPriority,
+                _ => ServiceEventExtensionsConstants.DefaultSeverityPriority
             };
         }
 
         // Add additional priority based on event type
         var typePriority = serviceEvent.EventType switch
         {
-            ServiceEventType.ServiceDown => 3,
-            ServiceEventType.HealthCheckFailed => 4,
-            ServiceEventType.ErrorOccurred => 3,
-            ServiceEventType.ServiceRestarted => 2,
-            ServiceEventType.DeploymentStarted => 2,
-            ServiceEventType.DeploymentCompleted => 1,
-            ServiceEventType.ConfigurationChanged => 1,
-            ServiceEventType.ServiceUp => 1,
-            ServiceEventType.HealthCheckPassed => 0,
-            ServiceEventType.ServiceDisabled => 2,
-            ServiceEventType.ServiceEnabled => 1,
-            _ => 1
+            ServiceEventType.ServiceDown => ServiceEventExtensionsConstants.ServiceDownPriority,
+            ServiceEventType.HealthCheckFailed => ServiceEventExtensionsConstants.HealthCheckFailedPriority,
+            ServiceEventType.ErrorOccurred => ServiceEventExtensionsConstants.ErrorOccurredPriority,
+            ServiceEventType.ServiceRestarted => ServiceEventExtensionsConstants.ServiceRestartedPriority,
+            ServiceEventType.DeploymentStarted => ServiceEventExtensionsConstants.DeploymentStartedPriority,
+            ServiceEventType.DeploymentCompleted => ServiceEventExtensionsConstants.DeploymentCompletedPriority,
+            ServiceEventType.ConfigurationChanged => ServiceEventExtensionsConstants.ConfigurationChangedPriority,
+            ServiceEventType.ServiceUp => ServiceEventExtensionsConstants.ServiceUpPriority,
+            ServiceEventType.HealthCheckPassed => ServiceEventExtensionsConstants.HealthCheckPassedPriority,
+            ServiceEventType.ServiceDisabled => ServiceEventExtensionsConstants.ServiceDisabledPriority,
+            ServiceEventType.ServiceEnabled => ServiceEventExtensionsConstants.ServiceEnabledPriority,
+            _ => ServiceEventExtensionsConstants.UnknownEventTypePriority
         };
 
-        return Math.Min(5, Math.Max(0, severityPriority + typePriority));
+        return Math.Min(ServiceEventExtensionsConstants.MaxPriorityLevel, Math.Max(ServiceEventExtensionsConstants.MinPriorityLevel, severityPriority + typePriority));
     }
 }
