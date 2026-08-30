@@ -29,58 +29,58 @@ public static class ConfigurationRepositoryValidation
         // Validate Key
         if (string.IsNullOrWhiteSpace(value.Key))
         {
-            errors.Add("Configuration Key cannot be null or whitespace.");
+            errors.Add(ConfigurationRepositoryValidationConstants.KeyNullOrWhitespace);
         }
-        else if (value.Key.Length > 255)
+        else if (value.Key.Length > ConfigurationRepositoryValidationConstants.KeyMaxLength)
         {
-            errors.Add("Configuration Key cannot exceed 255 characters.");
+            errors.Add(ConfigurationRepositoryValidationConstants.KeyExceedsMaxLength);
         }
 
         // Validate Value
         if (string.IsNullOrWhiteSpace(value.Value))
         {
-            errors.Add("Configuration Value cannot be null or whitespace.");
+            errors.Add(ConfigurationRepositoryValidationConstants.ValueNullOrWhitespace);
         }
-        else if (value.Value.Length > 4000)
+        else if (value.Value.Length > ConfigurationRepositoryValidationConstants.ValueMaxLength)
         {
-            errors.Add("Configuration Value cannot exceed 4000 characters.");
+            errors.Add(ConfigurationRepositoryValidationConstants.ValueExceedsMaxLength);
         }
 
         // Validate ConfigType if present
-        if (!string.IsNullOrWhiteSpace(value.ConfigType) && value.ConfigType.Length > 50)
+        if (!string.IsNullOrWhiteSpace(value.ConfigType) && value.ConfigType.Length > ConfigurationRepositoryValidationConstants.ConfigTypeMaxLength)
         {
-            errors.Add("Configuration Type cannot exceed 50 characters.");
+            errors.Add(ConfigurationRepositoryValidationConstants.ConfigTypeExceedsMaxLength);
         }
 
         // Validate Description if present
-        if (!string.IsNullOrWhiteSpace(value.Description) && value.Description.Length > 1000)
+        if (!string.IsNullOrWhiteSpace(value.Description) && value.Description.Length > ConfigurationRepositoryValidationConstants.DescriptionMaxLength)
         {
-            errors.Add("Configuration Description cannot exceed 1000 characters.");
+            errors.Add(ConfigurationRepositoryValidationConstants.DescriptionExceedsMaxLength);
         }
 
         // Validate timestamps
         if (value.CreatedAt == default)
         {
-            errors.Add("Configuration CreatedAt must be set to a valid date.");
+            errors.Add(ConfigurationRepositoryValidationConstants.CreatedAtMustBeSet);
         }
-        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(ConfigurationRepositoryValidationConstants.TimestampFutureMinutes))
         {
-            errors.Add("Configuration CreatedAt cannot be in the future.");
+            errors.Add(ConfigurationRepositoryValidationConstants.CreatedAtCannotBeFuture);
         }
 
         if (value.UpdatedAt == default)
         {
-            errors.Add("Configuration UpdatedAt must be set to a valid date.");
+            errors.Add(ConfigurationRepositoryValidationConstants.UpdatedAtMustBeSet);
         }
-        else if (value.UpdatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.UpdatedAt > DateTime.UtcNow.AddMinutes(ConfigurationRepositoryValidationConstants.TimestampFutureMinutes))
         {
-            errors.Add("Configuration UpdatedAt cannot be in the future.");
+            errors.Add(ConfigurationRepositoryValidationConstants.UpdatedAtCannotBeFuture);
         }
 
         // Validate ServiceId if present
         if (value.ServiceId.HasValue && value.ServiceId.Value == Guid.Empty)
         {
-            errors.Add("Configuration ServiceId cannot be an empty GUID.");
+            errors.Add(ConfigurationRepositoryValidationConstants.ServiceIdEmptyGuid);
         }
 
         return errors.AsReadOnly();
@@ -112,7 +112,7 @@ public static class ConfigurationRepositoryValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"Configuration validation failed:{Environment.NewLine}- {
+                $"{ConfigurationRepositoryValidationConstants.ValidationFailedPrefix}{Environment.NewLine}- {
                     string.Join(Environment.NewLine + "- ", errors)
                 }",
                 nameof(value));
