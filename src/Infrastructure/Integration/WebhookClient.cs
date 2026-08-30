@@ -13,6 +13,7 @@ using System.Text.Json;
 using DotnetServiceScaffold.Domain.Models;
 using DotnetServiceScaffold.Infrastructure.Data;
 using DotnetServiceScaffold.Infrastructure.Metrics;
+using DotnetServiceScaffold.Infrastructure.Integration;
 using DotnetServiceScaffold.Shared.Utilities;
 using Serilog;
 
@@ -71,10 +72,7 @@ public class WebhookClient : IWebhookClient
     private readonly ILogger<WebhookClient> _logger;
     private readonly ServiceScaffoldDbContext _dbContext;
     private readonly IMetricsService _metricsService;
-    private const int MaxRetries = 3;
-    private const int InitialRetryDelayMs = 1000;
-    private const string SignatureHeaderName = "X-Signature";
-    private const string SignatureAlgorithm = "HMAC-SHA256";
+    // Constants are now in WebhookClientConstants
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WebhookClient"/> class.
@@ -136,10 +134,10 @@ public class WebhookClient : IWebhookClient
         var webhookId = Guid.NewGuid().ToString();
         _logger.LogInformation(
             "Sending webhook {WebhookId} to {Url} for event type {EventType}",
-            webhookId, HttpUtility.MaskSensitiveUrl(webhookUrl), eventType ?? "unknown");
+            webhookId, HttpUtility.MaskSensitiveUrl(webhookUrl), eventType ?? WebhookClientConstants.UnknownEventType);
 
         var json = JsonSerializer.Serialize(payload);
-        var attempts = new List<WebhookAttemptRecord>(MaxRetries);
+        var attempts = new List<WebhookAttemptRecord>(WebhookClientConstants.MaxRetries);
         var metricTags = new Dictionary<string, string> { ["event_type"] = eventType ?? "unknown" };
 
         for (int attempt = 0; attempt < MaxRetries; attempt++)
@@ -152,18 +150,18 @@ public class WebhookClient : IWebhookClient
 
             try
             {
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var content = new StringContent(json, Encoding.UTF8, WebhookClientConstants.JsonContentType);
 
                 // Add webhook-specific headers
-                content.Headers.Add("X-Webhook-Id", webhookId);
+                content.Headers.Add(WebhookClientConstants.WebhookIdHeader, webhookId);
                 if (!string.IsNullOrEmpty(eventType))
-                    content.Headers.Add("X-Event-Type", eventType);
+                    content.Headers.Add(WebhookClientConstants.EventTypeHeader, eventType);
 
                 // Add HMAC-SHA256 signature if secret provided
                 if (!string.IsNullOrEmpty(webhookSecret))
                 {
                     var signature = ComputeHmacSignature(json, webhookSecret);
-                    content.Headers.Add(SignatureHeaderName, $"{SignatureAlgorithm}={signature}");
+                    content.Headers.Add(WebhookClientConstants.SignatureHeaderName, $"{WebhookClientConstants.SignatureAlgorithm}={signature}");
                 }
 
                 // _httpClient already has timeout configured
@@ -209,7 +207,7 @@ public class WebhookClient : IWebhookClient
             {
                 // Caller requested cancellation - do not retry or dead-letter.
                 stopwatch.Stop();
-                attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, "cancelled", DateTime.UtcNow));
+                attempts.Add(new WebhookAttemptRecord(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, WebhookClientConstants.CancelledErrorMessage, DateTime.UtcNow));
                 RecordAttemptMetrics(attempt + 1, statusCode, stopwatch.ElapsedMilliseconds, success: false, metricTags);
                 _logger.LogWarning("Webhook {WebhookId} was cancelled", webhookId);
                 return WebhookDeliveryResult.Failure(statusCode, "cancelled", attempts, cancelled: true);
@@ -256,7 +254,7 @@ public class WebhookClient : IWebhookClient
             // Wait before retry with exponential backoff
             if (attempt < MaxRetries - 1)
             {
-                var delayMs = InitialRetryDelayMs * (int)Math.Pow(2, attempt);
+                var delayMs = WebhookClientConstants.InitialRetryDelayMs * (int)Math.Pow(2, attempt);
                 await Task.Delay(delayMs, cancellationToken);
             }
         }
@@ -307,13 +305,13 @@ public class WebhookClient : IWebhookClient
     {
         var attemptTags = new Dictionary<string, string>(tags)
         {
-            ["attempt"] = attemptNumber.ToString(),
-            ["outcome"] = success ? "success" : "failure",
-            ["status_code"] = statusCode?.ToString() ?? "none",
+            [WebhookClientConstants.MetricTagAttempt] = attemptNumber.ToString(),
+            [WebhookClientConstants.MetricTagOutcome] = success ? "success" : "failure",
+            [WebhookClientConstants.MetricTagStatusCode] = statusCode?.ToString() ?? "none",
         };
 
-        _metricsService.RecordTiming("webhook.delivery.latency_ms", latencyMs, attemptTags);
-        _metricsService.IncrementCounter("webhook.delivery.attempts", tags: attemptTags);
+        _metricsService.RecordTiming(WebhookClientConstants.WebhookDeliveryLatencyMetric, latencyMs, attemptTags);
+        _metricsService.IncrementCounter(WebhookClientConstants.WebhookDeliveryAttemptsMetric, tags: attemptTags);
     }
 
     /// <summary>
@@ -341,7 +339,7 @@ public class WebhookClient : IWebhookClient
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-            _metricsService.IncrementCounter("webhook.delivery.dead_lettered");
+            _metricsService.IncrementCounter(WebhookClientConstants.WebhookDeliveryDeadLetteredMetric);
         }
         catch (Exception ex)
         {
