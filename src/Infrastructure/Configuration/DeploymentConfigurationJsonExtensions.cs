@@ -22,11 +22,11 @@ public static class DeploymentConfigurationJsonExtensions
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
-        PropertyNameCaseInsensitive = true,
-        ReferenceHandler = ReferenceHandler.IgnoreCycles
+        PropertyNamingPolicy = DeploymentConfigurationJsonExtensionsConstants.PropertyNamingPolicy,
+        WriteIndented = DeploymentConfigurationJsonExtensionsConstants.WriteIndented,
+        TypeInfoResolver = DeploymentConfigurationJsonExtensionsConstants.TypeInfoResolver,
+        PropertyNameCaseInsensitive = DeploymentConfigurationJsonExtensionsConstants.PropertyNameCaseInsensitive,
+        ReferenceHandler = DeploymentConfigurationJsonExtensionsConstants.ReferenceHandler
     };
 
     /// <summary>
