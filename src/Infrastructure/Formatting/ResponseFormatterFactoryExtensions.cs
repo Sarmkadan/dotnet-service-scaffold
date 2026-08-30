@@ -76,8 +76,11 @@ public static class ResponseFormatterFactoryExtensions
         if (formatter is null)
         {
             throw new InvalidOperationException(
-                $"No formatter registered for media type '{mediaType}'. " +
-                $"Available media types: {string.Join(", ", factory.GetSupportedMediaTypes())}");
+                string.Format(
+                    ResponseFormatterFactoryExtensionsConstants.NoFormatterRegisteredMessage +
+                    ResponseFormatterFactoryExtensionsConstants.AvailableMediaTypesMessage,
+                    mediaType,
+                    string.Join(", ", factory.GetSupportedMediaTypes())));
         }
 
         return formatter;
