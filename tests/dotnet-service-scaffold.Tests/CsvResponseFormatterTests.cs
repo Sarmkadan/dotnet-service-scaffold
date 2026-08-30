@@ -5,13 +5,47 @@ using DotnetServiceScaffold.Infrastructure.Formatting;
 
 namespace DotnetServiceScaffold.Tests;
 
-public class CsvResponseFormatterTests : ICsvResponseFormatterTests
+public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<CsvResponseFormatterTests>
 {
     private readonly CsvResponseFormatter _formatter;
+
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public double Value { get; set; }
 
     public CsvResponseFormatterTests()
     {
         _formatter = new CsvResponseFormatter();
+    }
+
+    public bool Equals(CsvResponseFormatterTests? other)
+    {
+        if (other is null)
+            return false;
+
+        return Id == other.Id &&
+               Name == other.Name &&
+               Value == other.Value;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as CsvResponseFormatterTests);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, Value);
+    }
+
+    public static bool operator ==(CsvResponseFormatterTests? left, CsvResponseFormatterTests? right)
+    {
+        return EqualityComparer<CsvResponseFormatterTests>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(CsvResponseFormatterTests? left, CsvResponseFormatterTests? right)
+    {
+        return !(left == right);
     }
 
     [Fact]
