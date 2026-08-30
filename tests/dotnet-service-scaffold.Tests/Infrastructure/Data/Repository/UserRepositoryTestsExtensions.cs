@@ -31,8 +31,8 @@ public static class UserRepositoryTestsExtensions
         this UserRepositoryTests test,
         string username,
         string email,
-        string fullName = "Test User",
-        string passwordHash = "test-hash")
+        string fullName = UserRepositoryTestsExtensionsConstants.DefaultFullName,
+        string passwordHash = UserRepositoryTestsExtensionsConstants.DefaultPasswordHash)
     {
         ArgumentException.ThrowIfNullOrEmpty(username);
         ArgumentException.ThrowIfNullOrEmpty(email);
@@ -86,9 +86,9 @@ public static class UserRepositoryTestsExtensions
 
         // Assert
         result.Should().NotBeNull("User should exist in database");
-        result?.Username.Should().Be(expectedUsername, "Username should match");
-        result?.Email.Should().Be(expectedEmail, "Email should match");
-        result?.FullName.Should().Be(expectedFullName, "Full name should match");
+        result?.Username.Should().Be(expectedUsername, UserRepositoryTestsExtensionsConstants.UsernameShouldMatch);
+        result?.Email.Should().Be(expectedEmail, UserRepositoryTestsExtensionsConstants.EmailShouldMatch);
+        result?.FullName.Should().Be(expectedFullName, UserRepositoryTestsExtensionsConstants.FullNameShouldMatch);
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public static class UserRepositoryTestsExtensions
         var result = await userRepository.GetByEmailAsync(email);
 
         // Assert
-        result.Should().NotBeNull("User with email {0} should exist", email);
+        result.Should().NotBeNull(UserRepositoryTestsExtensionsConstants.UserWithEmailShouldExistFormat, email);
         return result != null;
     }
 
