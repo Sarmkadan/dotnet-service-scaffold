@@ -21,38 +21,38 @@ public sealed class ServiceDiscoveryRecord : IEquatable<ServiceDiscoveryRecord>
 
     /// <summary>Gets or sets the logical service name used for discovery lookups.</summary>
     [Required]
-    [StringLength(200)]
+    [StringLength(ServiceDiscoveryRecordConstants.ServiceNameMaxLength)]
     public required string ServiceName { get; set; }
 
     /// <summary>Gets or sets the semantic version advertised by this instance.</summary>
-    [StringLength(50)]
+    [StringLength(ServiceDiscoveryRecordConstants.VersionMaxLength)]
     public string? Version { get; set; }
 
     /// <summary>Gets or sets the host name or IP address of this instance.</summary>
     [Required]
-    [StringLength(253)]
+    [StringLength(ServiceDiscoveryRecordConstants.HostMaxLength)]
     public required string Host { get; set; }
 
     /// <summary>Gets or sets the TCP port this instance is listening on.</summary>
-    [Range(1, 65535)]
+    [Range(ServiceDiscoveryRecordConstants.PortMinValue, ServiceDiscoveryRecordConstants.PortMaxValue)]
     public int Port { get; set; }
 
     /// <summary>Gets or sets the URI scheme (http, https, grpc, tcp).</summary>
-    [StringLength(10)]
-    public string Scheme { get; set; } = "https";
+    [StringLength(ServiceDiscoveryRecordConstants.SchemeMaxLength)]
+    public string Scheme { get; set; } = ServiceDiscoveryRecordConstants.DefaultScheme;
 
     /// <summary>
     /// Gets or sets the relative weight used for weighted load balancing.
     /// Higher values attract proportionally more traffic. Valid range: 1–100.
     /// </summary>
-    [Range(1, 100)]
-    public int Weight { get; set; } = 10;
+    [Range(ServiceDiscoveryRecordConstants.WeightMinValue, ServiceDiscoveryRecordConstants.WeightMaxValue)]
+    public int Weight { get; set; } = ServiceDiscoveryRecordConstants.DefaultWeight;
 
     /// <summary>
     /// Gets or sets the failover priority. Lower values are preferred when the
     /// load-balancing strategy is priority-based.
     /// </summary>
-    [Range(0, 65535)]
+    [Range(ServiceDiscoveryRecordConstants.PriorityMinValue, ServiceDiscoveryRecordConstants.PriorityMaxValue)]
     public int Priority { get; set; }
 
     /// <summary>Gets or sets the current health evaluation for this instance.</summary>
@@ -114,7 +114,7 @@ public sealed class ServiceDiscoveryRecord : IEquatable<ServiceDiscoveryRecord>
     /// </param>
     public bool IsAlive(TimeSpan? staleThreshold = null)
     {
-        var threshold = staleThreshold ?? TimeSpan.FromMinutes(5);
+        var threshold = staleThreshold ?? TimeSpan.FromMinutes(ServiceDiscoveryRecordConstants.DefaultStaleThresholdMinutes);
 
         // Check if instance is evicted or explicitly marked as stale
         if (IsEvicted || IsStale)
@@ -148,7 +148,7 @@ public sealed class ServiceDiscoveryRecord : IEquatable<ServiceDiscoveryRecord>
     /// consecutive failures are reached.
     /// </summary>
     /// <param name="criticalThreshold">Failure count that triggers the critical escalation.</param>
-    public void RecordUnhealthy(int criticalThreshold = 3)
+    public void RecordUnhealthy(int criticalThreshold = ServiceDiscoveryRecordConstants.DefaultCriticalFailureThreshold)
     {
         ConsecutiveFailures++;
         HealthStatus = ConsecutiveFailures >= criticalThreshold
