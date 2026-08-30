@@ -14,7 +14,7 @@ namespace DotnetServiceScaffold.Application.Services;
 /// </summary>
 public static class NotificationServiceJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonOptions = new(NotificationServiceJsonExtensionsConstants.JsonDefaultsWeb)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
@@ -22,7 +22,7 @@ public static class NotificationServiceJsonExtensions
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    private static readonly JsonSerializerOptions _jsonOptionsIndented = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonOptionsIndented = new(NotificationServiceJsonExtensionsConstants.JsonDefaultsWeb)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = true,
