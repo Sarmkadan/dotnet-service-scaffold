@@ -66,7 +66,7 @@ public static class PerformanceUtility
     {
         using (var process = Process.GetCurrentProcess())
         {
-            return process.WorkingSet64 / (1024.0 * 1024.0);
+            return process.WorkingSet64 / PerformanceUtilityConstants.BytesPerMegabyte;
         }
     }
 
@@ -79,9 +79,9 @@ public static class PerformanceUtility
         {
             return new MemoryStats
             {
-                WorkingSetMb = process.WorkingSet64 / (1024.0 * 1024.0),
-                PrivateMemoryMb = process.PrivateMemorySize64 / (1024.0 * 1024.0),
-                PeakWorkingSetMb = process.PeakWorkingSet64 / (1024.0 * 1024.0)
+                WorkingSetMb = process.WorkingSet64 / PerformanceUtilityConstants.BytesPerMegabyte,
+                PrivateMemoryMb = process.PrivateMemorySize64 / PerformanceUtilityConstants.BytesPerMegabyte,
+                PeakWorkingSetMb = process.PeakWorkingSet64 / PerformanceUtilityConstants.BytesPerMegabyte
             };
         }
     }
@@ -95,7 +95,7 @@ public static class PerformanceUtility
         using (var process = Process.GetCurrentProcess())
         {
             var cpuUsage = process.TotalProcessorTime.TotalMilliseconds / Environment.ProcessorCount;
-            return (cpuUsage / Environment.TickCount) * 100;
+            return (cpuUsage / Environment.TickCount) * PerformanceUtilityConstants.PercentageMultiplier;
         }
     }
 
@@ -119,16 +119,16 @@ public static class PerformanceUtility
     /// </summary>
     public static string FormatElapsedTime(long milliseconds)
     {
-        if (milliseconds < 1000)
+        if (milliseconds < PerformanceUtilityConstants.MillisecondsPerSecond)
             return $"{milliseconds}ms";
 
-        if (milliseconds < 60000)
-            return $"{milliseconds / 1000.0:F1}s";
+        if (milliseconds < PerformanceUtilityConstants.MillisecondsPerMinute)
+            return $"{milliseconds / PerformanceUtilityConstants.MillisecondsPerSecond:F1}s";
 
-        if (milliseconds < 3600000)
-            return $"{milliseconds / 60000.0:F1}m";
+        if (milliseconds < PerformanceUtilityConstants.MillisecondsPerHour)
+            return $"{milliseconds / PerformanceUtilityConstants.MillisecondsPerMinute:F1}m";
 
-        return $"{milliseconds / 3600000.0:F1}h";
+        return $"{milliseconds / PerformanceUtilityConstants.MillisecondsPerHour:F1}h";
     }
 
     /// <summary>
@@ -155,8 +155,8 @@ public static class PerformanceUtility
     /// </summary>
     public static async Task<T> RetryWithBackoffAsync<T>(
         Func<Task<T>> operation,
-        int maxAttempts = 3,
-        int initialDelayMs = 100)
+        int maxAttempts = PerformanceUtilityConstants.DefaultMaxRetryAttempts,
+        int initialDelayMs = PerformanceUtilityConstants.DefaultInitialDelayMs)
     {
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -166,7 +166,7 @@ public static class PerformanceUtility
             }
             catch (Exception) when (attempt < maxAttempts)
             {
-                var delayMs = initialDelayMs * (int)Math.Pow(2, attempt - 1);
+                var delayMs = initialDelayMs * (int)Math.Pow(PerformanceUtilityConstants.BackoffBaseMultiplier, attempt - 1);
                 await Task.Delay(delayMs);
             }
         }
