@@ -22,17 +22,17 @@ public static class ServiceDiscoveryOptionsValidation
         // Validate ServiceDiscoveryOptions properties
         if (value.CacheTtl <= TimeSpan.Zero)
         {
-            problems.Add($"ServiceDiscovery.CacheTtl must be positive, but was {value.CacheTtl.TotalSeconds}s.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.CacheTtlMustBePositive, value.CacheTtl.TotalSeconds));
         }
 
         if (value.RefreshInterval <= TimeSpan.Zero)
         {
-            problems.Add($"ServiceDiscovery.RefreshInterval must be positive, but was {value.RefreshInterval.TotalSeconds}s.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.RefreshIntervalMustBePositive, value.RefreshInterval.TotalSeconds));
         }
 
         if (value.ResolutionTimeout <= TimeSpan.Zero)
         {
-            problems.Add($"ServiceDiscovery.ResolutionTimeout must be positive, but was {value.ResolutionTimeout.TotalSeconds}s.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.ResolutionTimeoutMustBePositive, value.ResolutionTimeout.TotalSeconds));
         }
 
         // Validate nested DnsDiscoveryOptions
@@ -61,46 +61,46 @@ public static class ServiceDiscoveryOptionsValidation
 
         if (string.IsNullOrWhiteSpace(value.SearchDomain))
         {
-            problems.Add("ServiceDiscovery.Dns.SearchDomain must not be null or whitespace.");
+            problems.Add(ServiceDiscoveryOptionsValidationConstants.DnsSearchDomainMustNotBeNullOrWhiteSpace);
         }
 
         if (string.IsNullOrWhiteSpace(value.DnsServerAddress))
         {
-            problems.Add("ServiceDiscovery.Dns.DnsServerAddress must not be null or whitespace.");
+            problems.Add(ServiceDiscoveryOptionsValidationConstants.DnsServerAddressMustNotBeNullOrWhiteSpace);
         }
         else if (!IsValidIpAddress(value.DnsServerAddress))
         {
-            problems.Add($"ServiceDiscovery.Dns.DnsServerAddress must be a valid IP address, but was '{value.DnsServerAddress}'.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.DnsServerAddressMustBeValidIpAddress, value.DnsServerAddress));
         }
 
-        if (value.DnsServerPort is < 1 or > 65535)
+        if (value.DnsServerPort is < ServiceDiscoveryOptionsValidationConstants.MinPortValue or > ServiceDiscoveryOptionsValidationConstants.MaxPortValue)
         {
-            problems.Add($"ServiceDiscovery.Dns.DnsServerPort must be between 1 and 65535, but was {value.DnsServerPort}.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.DnsServerPortMustBeInRange, value.DnsServerPort));
         }
 
-        if (value.DefaultPort is < 1 or > 65535)
+        if (value.DefaultPort is < ServiceDiscoveryOptionsValidationConstants.MinPortValue or > ServiceDiscoveryOptionsValidationConstants.MaxPortValue)
         {
-            problems.Add($"ServiceDiscovery.Dns.DefaultPort must be between 1 and 65535, but was {value.DefaultPort}.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.DefaultPortMustBeInRange, value.DefaultPort));
         }
 
         if (string.IsNullOrWhiteSpace(value.DefaultScheme))
         {
-            problems.Add("ServiceDiscovery.Dns.DefaultScheme must not be null or whitespace.");
+            problems.Add(ServiceDiscoveryOptionsValidationConstants.DefaultSchemeMustNotBeNullOrWhiteSpace);
         }
-        else if (!value.DefaultScheme.Equals("http", StringComparison.OrdinalIgnoreCase) &&
-                 !value.DefaultScheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+        else if (!value.DefaultScheme.Equals(ServiceDiscoveryOptionsValidationConstants.HttpScheme, StringComparison.OrdinalIgnoreCase) &&
+                 !value.DefaultScheme.Equals(ServiceDiscoveryOptionsValidationConstants.HttpsScheme, StringComparison.OrdinalIgnoreCase))
         {
-            problems.Add($"ServiceDiscovery.Dns.DefaultScheme must be 'http' or 'https', but was '{value.DefaultScheme}'.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.DefaultSchemeMustBeHttpOrHttps, value.DefaultScheme));
         }
 
-        if (value.MaxRetries < 0)
+        if (value.MaxRetries < ServiceDiscoveryOptionsValidationConstants.MinRetriesValue)
         {
-            problems.Add($"ServiceDiscovery.Dns.MaxRetries must be non-negative, but was {value.MaxRetries}.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.MaxRetriesMustBeNonNegative, value.MaxRetries));
         }
 
         if (value.SocketTimeout <= TimeSpan.Zero)
         {
-            problems.Add($"ServiceDiscovery.Dns.SocketTimeout must be positive, but was {value.SocketTimeout.TotalSeconds}s.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.SocketTimeoutMustBePositive, value.SocketTimeout.TotalSeconds));
         }
 
         return problems.AsReadOnly();
@@ -120,21 +120,21 @@ public static class ServiceDiscoveryOptionsValidation
 
         if (string.IsNullOrWhiteSpace(value.AgentEndpoint))
         {
-            problems.Add("ServiceDiscovery.Registry.AgentEndpoint must not be null or whitespace.");
+            problems.Add(ServiceDiscoveryOptionsValidationConstants.RegistryAgentEndpointMustNotBeNullOrWhiteSpace);
         }
         else if (!Uri.TryCreate(value.AgentEndpoint, UriKind.Absolute, out _))
         {
-            problems.Add($"ServiceDiscovery.Registry.AgentEndpoint must be a valid absolute URI, but was '{value.AgentEndpoint}'.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.RegistryAgentEndpointMustBeValidAbsoluteUri, value.AgentEndpoint));
         }
         else if (!value.AgentEndpoint.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                  !value.AgentEndpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            problems.Add("ServiceDiscovery.Registry.AgentEndpoint must use 'http://' or 'https://' scheme.");
+            problems.Add(ServiceDiscoveryOptionsValidationConstants.RegistryAgentEndpointMustUseHttpOrHttpsScheme);
         }
 
         if (value.HeartbeatInterval <= TimeSpan.Zero)
         {
-            problems.Add($"ServiceDiscovery.Registry.HeartbeatInterval must be positive, but was {value.HeartbeatInterval.TotalSeconds}s.");
+            problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.RegistryHeartbeatIntervalMustBePositive, value.HeartbeatInterval.TotalSeconds));
         }
 
         return problems.AsReadOnly();
@@ -156,31 +156,31 @@ public static class ServiceDiscoveryOptionsValidation
         {
             if (string.IsNullOrWhiteSpace(value.ServiceName))
             {
-                problems.Add("ServiceDiscovery.SelfRegistration.ServiceName must not be null or whitespace when self-registration is enabled.");
+                problems.Add(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationServiceNameMustNotBeNullOrWhiteSpace);
             }
 
-            if (value.AdvertisePort is < 1 or > 65535)
+            if (value.AdvertisePort is < ServiceDiscoveryOptionsValidationConstants.MinPortValue or > ServiceDiscoveryOptionsValidationConstants.MaxPortValue)
             {
-                problems.Add($"ServiceDiscovery.SelfRegistration.AdvertisePort must be between 1 and 65535, but was {value.AdvertisePort}.");
+                problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationAdvertisePortMustBeInRange, value.AdvertisePort));
             }
 
             if (string.IsNullOrWhiteSpace(value.AdvertiseScheme))
             {
-                problems.Add("ServiceDiscovery.SelfRegistration.AdvertiseScheme must not be null or whitespace when self-registration is enabled.");
+                problems.Add(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationAdvertiseSchemeMustNotBeNullOrWhiteSpace);
             }
-            else if (!value.AdvertiseScheme.Equals("http", StringComparison.OrdinalIgnoreCase) &&
-                     !value.AdvertiseScheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+            else if (!value.AdvertiseScheme.Equals(ServiceDiscoveryOptionsValidationConstants.HttpScheme, StringComparison.OrdinalIgnoreCase) &&
+                     !value.AdvertiseScheme.Equals(ServiceDiscoveryOptionsValidationConstants.HttpsScheme, StringComparison.OrdinalIgnoreCase))
             {
-                problems.Add($"ServiceDiscovery.SelfRegistration.AdvertiseScheme must be 'http' or 'https', but was '{value.AdvertiseScheme}'.");
+                problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationAdvertiseSchemeMustBeHttpOrHttps, value.AdvertiseScheme));
             }
 
             if (string.IsNullOrWhiteSpace(value.HealthCheckPath))
             {
-                problems.Add("ServiceDiscovery.SelfRegistration.HealthCheckPath must not be null or whitespace when self-registration is enabled.");
+                problems.Add(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationHealthCheckPathMustNotBeNullOrWhiteSpace);
             }
             else if (!value.HealthCheckPath.StartsWith('/'))
             {
-                problems.Add($"ServiceDiscovery.SelfRegistration.HealthCheckPath must start with '/', but was '{value.HealthCheckPath}'.");
+                problems.Add(string.Format(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationHealthCheckPathMustStartWithSlash, value.HealthCheckPath));
             }
         }
 
@@ -209,7 +209,7 @@ public static class ServiceDiscoveryOptionsValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"ServiceDiscoveryOptions is invalid. Problems: {string.Join(" ", problems)}");
+                string.Format(ServiceDiscoveryOptionsValidationConstants.ServiceDiscoveryOptionsInvalid, string.Join(" ", problems)));
         }
     }
 
@@ -235,7 +235,7 @@ public static class ServiceDiscoveryOptionsValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"DnsDiscoveryOptions is invalid. Problems: {string.Join(" ", problems)}");
+                string.Format(ServiceDiscoveryOptionsValidationConstants.DnsDiscoveryOptionsInvalid, string.Join(" ", problems)));
         }
     }
 
@@ -261,7 +261,7 @@ public static class ServiceDiscoveryOptionsValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"RegistryDiscoveryOptions is invalid. Problems: {string.Join(" ", problems)}");
+                string.Format(ServiceDiscoveryOptionsValidationConstants.RegistryDiscoveryOptionsInvalid, string.Join(" ", problems)));
         }
     }
 
@@ -287,7 +287,7 @@ public static class ServiceDiscoveryOptionsValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"SelfRegistrationOptions is invalid. Problems: {string.Join(" ", problems)}");
+                string.Format(ServiceDiscoveryOptionsValidationConstants.SelfRegistrationOptionsInvalid, string.Join(" ", problems)));
         }
     }
 
