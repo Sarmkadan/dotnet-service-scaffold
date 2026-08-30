@@ -23,6 +23,13 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     private Dictionary<string, int> _failureCount = new();
     private Dictionary<string, DateTime> _lastFailure = new();
 
+    public string Id { get; set; }
+    public string Status { get; set; }
+    public int ResponseTime { get; set; }
+    public int StatusCode { get; set; }
+    public string Message { get; set; }
+    public DateTime CheckedAt { get; set; }
+
     public HealthCheckMonitorExample(string apiKey, string baseUrl = HealthCheckMonitorExampleConstants.DefaultBaseUrl)
     {
         _apiKey = apiKey;
@@ -33,7 +40,12 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     public bool Equals(HealthCheckMonitorExample? other)
     {
         if (other is null) return false;
-        return _apiKey == other._apiKey && _baseUrl == other._baseUrl;
+        return Id == other.Id &&
+               Status == other.Status &&
+               ResponseTime == other.ResponseTime &&
+               StatusCode == other.StatusCode &&
+               Message == other.Message &&
+               CheckedAt == other.CheckedAt;
     }
 
     public override bool Equals(object? obj)
@@ -43,7 +55,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(_apiKey, _baseUrl);
+        return HashCode.Combine(Id, Status, ResponseTime, StatusCode, Message, CheckedAt);
     }
 
     public static bool operator ==(HealthCheckMonitorExample? left, HealthCheckMonitorExample? right)
