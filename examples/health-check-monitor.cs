@@ -15,7 +15,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class HealthCheckMonitorExample : IHealthCheckMonitorExample
+public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<HealthCheckMonitorExample>
 {
     private readonly string _apiKey;
     private readonly string _baseUrl;
@@ -28,6 +28,32 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample
         _apiKey = apiKey;
         _baseUrl = baseUrl;
         _httpClient = new HttpClient();
+    }
+
+    public bool Equals(HealthCheckMonitorExample? other)
+    {
+        if (other is null) return false;
+        return _apiKey == other._apiKey && _baseUrl == other._baseUrl;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as HealthCheckMonitorExample);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(_apiKey, _baseUrl);
+    }
+
+    public static bool operator ==(HealthCheckMonitorExample? left, HealthCheckMonitorExample? right)
+    {
+        return EqualityComparer<HealthCheckMonitorExample>.Default.Equals(left, right);
+    }
+
+    public static bool operator !=(HealthCheckMonitorExample? left, HealthCheckMonitorExample? right)
+    {
+        return !(left == right);
     }
 
     /// <summary>
