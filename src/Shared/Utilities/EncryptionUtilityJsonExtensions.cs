@@ -28,7 +28,7 @@ public static class EncryptionUtilityJsonExtensions
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
+        WriteIndented = EncryptionUtilityJsonExtensionsConstants.DefaultWriteIndented,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
@@ -44,7 +44,7 @@ public static class EncryptionUtilityJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = EncryptionUtilityJsonExtensionsConstants.IndentedWriteIndented }
             : _jsonOptions;
         return JsonSerializer.Serialize(value, options);
     }
@@ -61,7 +61,7 @@ public static class EncryptionUtilityJsonExtensions
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = EncryptionUtilityJsonExtensionsConstants.IndentedWriteIndented }
             : _jsonOptions;
         return JsonSerializer.Serialize(value, options);
     }
