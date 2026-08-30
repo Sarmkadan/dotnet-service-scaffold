@@ -31,7 +31,7 @@ public static class StructuredLoggingExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.Configure<StructuredLoggingOptions>(
-            configuration.GetSection("StructuredLogging"));
+            configuration.GetSection(StructuredLoggingExtensionsConstants.StructuredLoggingSectionName));
 
         services.AddScoped<ILogContextService, LogContextService>();
 
