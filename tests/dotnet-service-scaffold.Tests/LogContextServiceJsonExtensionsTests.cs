@@ -13,8 +13,8 @@ namespace DotnetServiceScaffold.Tests.Logging
         {
             // Arrange
             var service = new LogContextService();
-            service.AddProperty("stringKey", "value");
-            service.AddProperty("intKey", 42);
+            service.AddProperty(LogContextServiceJsonExtensionsTestsConstants.StringKey, LogContextServiceJsonExtensionsTestsConstants.TestValue);
+            service.AddProperty(LogContextServiceJsonExtensionsTestsConstants.IntKey, LogContextServiceJsonExtensionsTestsConstants.TestNumberFortyTwo);
 
             // Act
             var json = service.ToJson();
@@ -22,16 +22,16 @@ namespace DotnetServiceScaffold.Tests.Logging
             // Assert
             var dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
             Assert.NotNull(dict);
-            Assert.Equal(2, dict!.Count);
-            Assert.Equal("value", dict["stringKey"]?.ToString());
+            Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestCountTwo, dict!.Count);
+            Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestValue, dict[LogContextServiceJsonExtensionsTestsConstants.StringKey]?.ToString());
             // JsonSerializer deserializes numbers as JsonElement by default, so we need to handle that
-            if (dict["intKey"] is JsonElement element && element.ValueKind == JsonValueKind.Number)
+            if (dict[LogContextServiceJsonExtensionsTestsConstants.IntKey] is JsonElement element && element.ValueKind == JsonValueKind.Number)
             {
-                Assert.Equal(42, element.GetInt32());
+                Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestNumberFortyTwo, element.GetInt32());
             }
             else
             {
-                Assert.Equal(42, Convert.ToInt32(dict["intKey"]));
+                Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestNumberFortyTwo, Convert.ToInt32(dict[LogContextServiceJsonExtensionsTestsConstants.IntKey]));
             }
         }
 
@@ -40,7 +40,7 @@ namespace DotnetServiceScaffold.Tests.Logging
         {
             // Arrange
             var service = new LogContextService();
-            service.AddProperty("key", "value");
+            service.AddProperty(LogContextServiceJsonExtensionsTestsConstants.TestKeyForIndentation, LogContextServiceJsonExtensionsTestsConstants.TestValueForIndentation);
 
             // Act
             var json = service.ToJson(indented: true);
@@ -64,8 +64,8 @@ namespace DotnetServiceScaffold.Tests.Logging
         {
             // Arrange
             var original = new LogContextService();
-            original.AddProperty("a", "alpha");
-            original.AddProperty("b", 123);
+            original.AddProperty(LogContextServiceJsonExtensionsTestsConstants.TestKeyA, LogContextServiceJsonExtensionsTestsConstants.TestValueAlpha);
+            original.AddProperty(LogContextServiceJsonExtensionsTestsConstants.TestKeyB, LogContextServiceJsonExtensionsTestsConstants.TestNumberOneHundredTwentyThree);
             var json = original.ToJson();
 
             // Act
@@ -74,16 +74,16 @@ namespace DotnetServiceScaffold.Tests.Logging
             // Assert
             Assert.NotNull(result);
             var props = result!.GetProperties();
-            Assert.Equal(2, props.Count);
-            Assert.Equal("alpha", props["a"]?.ToString());
+            Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestCountTwo, props.Count);
+            Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestValueAlpha, props[LogContextServiceJsonExtensionsTestsConstants.TestKeyA]?.ToString());
 
-            if (props["b"] is JsonElement element && element.ValueKind == JsonValueKind.Number)
+            if (props[LogContextServiceJsonExtensionsTestsConstants.TestKeyB] is JsonElement element && element.ValueKind == JsonValueKind.Number)
             {
-                Assert.Equal(123, element.GetInt32());
+                Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestNumberOneHundredTwentyThree, element.GetInt32());
             }
             else
             {
-                Assert.Equal(123, Convert.ToInt32(props["b"]));
+                Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestNumberOneHundredTwentyThree, Convert.ToInt32(props[LogContextServiceJsonExtensionsTestsConstants.TestKeyB]));
             }
         }
 
@@ -101,7 +101,7 @@ namespace DotnetServiceScaffold.Tests.Logging
         public void FromJson_EmptyJson_ReturnsNull()
         {
             // Arrange
-            var json = "   ";
+            var json = LogContextServiceJsonExtensionsTestsConstants.WhitespaceJson;
 
             // Act
             var result = LogContextServiceJsonExtensions.FromJson(json);
@@ -114,7 +114,7 @@ namespace DotnetServiceScaffold.Tests.Logging
         public void FromJson_InvalidJson_ThrowsJsonException()
         {
             // Arrange
-            var json = "{ invalid json }";
+            var json = LogContextServiceJsonExtensionsTestsConstants.InvalidJson1;
 
             // Act & Assert
             Assert.Throws<JsonException>(() => LogContextServiceJsonExtensions.FromJson(json));
@@ -125,7 +125,7 @@ namespace DotnetServiceScaffold.Tests.Logging
         {
             // Arrange
             var service = new LogContextService();
-            service.AddProperty("x", "y");
+            service.AddProperty(LogContextServiceJsonExtensionsTestsConstants.TestKeyX, LogContextServiceJsonExtensionsTestsConstants.TestKeyY);
             var json = service.ToJson();
 
             // Act
@@ -136,14 +136,14 @@ namespace DotnetServiceScaffold.Tests.Logging
             Assert.NotNull(result);
             var props = result!.GetProperties();
             Assert.Single(props);
-            Assert.Equal("y", props["x"]?.ToString());
+            Assert.Equal(LogContextServiceJsonExtensionsTestsConstants.TestKeyY, props[LogContextServiceJsonExtensionsTestsConstants.TestKeyX]?.ToString());
         }
 
         [Fact]
         public void TryFromJson_InvalidJson_ReturnsFalse()
         {
             // Arrange
-            var json = "{ not: valid }";
+            var json = LogContextServiceJsonExtensionsTestsConstants.InvalidJson2;
 
             // Act
             var success = LogContextServiceJsonExtensions.TryFromJson(json, out var result);
@@ -167,7 +167,7 @@ namespace DotnetServiceScaffold.Tests.Logging
         public void TryFromJson_EmptyJson_ReturnsFalse()
         {
             // Arrange
-            var json = "";
+            var json = LogContextServiceJsonExtensionsTestsConstants.EmptyJson;
 
             // Act
             var success = LogContextServiceJsonExtensions.TryFromJson(json, out var result);
