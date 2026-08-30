@@ -138,9 +138,9 @@ public class WebhookClient : IWebhookClient
 
         var json = JsonSerializer.Serialize(payload);
         var attempts = new List<WebhookAttemptRecord>(WebhookClientConstants.MaxRetries);
-        var metricTags = new Dictionary<string, string> { ["event_type"] = eventType ?? "unknown" };
+        var metricTags = new Dictionary<string, string> { ["event_type"] = eventType ?? WebhookClientConstants.UnknownEventType };
 
-        for (int attempt = 0; attempt < MaxRetries; attempt++)
+        for (int attempt = 0; attempt < WebhookClientConstants.MaxRetries; attempt++)
         {
             var stopwatch = Stopwatch.StartNew();
             int? statusCode = null;
@@ -191,8 +191,8 @@ public class WebhookClient : IWebhookClient
                 else
                 {
                     _logger.LogWarning(
-                        "Webhook {WebhookId} failed with status {StatusCode}, will retry (attempt {Attempt}/{MaxRetries})",
-                        webhookId, response.StatusCode, attempt + 1, MaxRetries);
+                        "Webhook {WebhookId} failed with status {StatusCode}, will retry (attempt {Attempt}/{WebhookClientConstants.MaxRetries})",
+                        webhookId, response.StatusCode, attempt + 1, WebhookClientConstants.MaxRetries);
                 }
             }
             catch (HttpRequestException ex)
@@ -200,8 +200,8 @@ public class WebhookClient : IWebhookClient
                 stopwatch.Stop();
                 errorMessage = ex.Message;
                 _logger.LogWarning(ex,
-                    "Webhook {WebhookId} HTTP error on attempt {Attempt}/{MaxRetries}",
-                    webhookId, attempt + 1, MaxRetries);
+                    "Webhook {WebhookId} HTTP error on attempt {Attempt}/{WebhookClientConstants.MaxRetries}",
+                    webhookId, attempt + 1, WebhookClientConstants.MaxRetries);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -218,16 +218,16 @@ public class WebhookClient : IWebhookClient
                 stopwatch.Stop();
                 errorMessage = "request timed out";
                 _logger.LogWarning(ex,
-                    "Webhook {WebhookId} timed out on attempt {Attempt}/{MaxRetries}",
-                    webhookId, attempt + 1, MaxRetries);
+                    "Webhook {WebhookId} timed out on attempt {Attempt}/{WebhookClientConstants.MaxRetries}",
+                    webhookId, attempt + 1, WebhookClientConstants.MaxRetries);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 errorMessage = ex.Message;
                 _logger.LogError(ex,
-                    "Webhook {WebhookId} unexpected error on attempt {Attempt}/{MaxRetries}",
-                    webhookId, attempt + 1, MaxRetries);
+                    "Webhook {WebhookId} unexpected error on attempt {Attempt}/{WebhookClientConstants.MaxRetries}",
+                    webhookId, attempt + 1, WebhookClientConstants.MaxRetries);
 
                 // Unexpected exceptions are not retried: log and return a failure result
                 // instead of silently swallowing the error and masking the underlying fault.
@@ -252,14 +252,14 @@ public class WebhookClient : IWebhookClient
             }
 
             // Wait before retry with exponential backoff
-            if (attempt < MaxRetries - 1)
+            if (attempt < WebhookClientConstants.MaxRetries - 1)
             {
                 var delayMs = WebhookClientConstants.InitialRetryDelayMs * (int)Math.Pow(2, attempt);
                 await Task.Delay(delayMs, cancellationToken);
             }
         }
 
-        _logger.LogError("Webhook {WebhookId} failed after {MaxRetries} attempts", webhookId, MaxRetries);
+        _logger.LogError("Webhook {WebhookId} failed after {WebhookClientConstants.MaxRetries} attempts", webhookId, WebhookClientConstants.MaxRetries);
         await PersistDeadLetterAsync(webhookId, webhookUrl, json, eventType, attempts, cancellationToken);
         var lastAttempt = attempts[^1];
         return WebhookDeliveryResult.Failure(lastAttempt.StatusCode, lastAttempt.ErrorMessage, attempts);
