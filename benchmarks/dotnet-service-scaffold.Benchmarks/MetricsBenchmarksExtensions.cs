@@ -33,7 +33,7 @@ namespace DotnetServiceScaffold.Benchmarks
             var metrics = await benchmarks.GetMetrics();
             if (metrics.Count == 0)
             {
-                throw new InvalidOperationException("No metrics recorded.");
+                throw new InvalidOperationException(MetricsBenchmarksExtensionsConstants.MetricsNotEmptyExceptionMessage);
             }
         }
 
@@ -54,7 +54,7 @@ namespace DotnetServiceScaffold.Benchmarks
             var metrics = await benchmarks.GetMetrics();
             if (!metrics.ContainsKey(metricName))
             {
-                throw new KeyNotFoundException($"Metric '{metricName}' not found.");
+                throw new KeyNotFoundException(string.Format(MetricsBenchmarksExtensionsConstants.MetricNotFoundExceptionFormat, metricName));
             }
         }
     }
