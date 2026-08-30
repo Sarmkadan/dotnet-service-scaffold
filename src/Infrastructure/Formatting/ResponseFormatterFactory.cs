@@ -20,14 +20,14 @@ public class ResponseFormatterFactory : IResponseFormatterFactory
     {
         _formatters = new Dictionary<string, IResponseFormatter>(StringComparer.OrdinalIgnoreCase)
         {
-            { "application/json", new JsonResponseFormatter() },
+            { ResponseFormatterFactoryConstants.ApplicationJsonMediaType, new JsonResponseFormatter() },
             { "text/csv", new CsvResponseFormatter() },
             { "application/csv", new CsvResponseFormatter() },
             { "application/xml", new XmlResponseFormatter() },
             { "text/xml", new XmlResponseFormatter() }
         };
 
-        _defaultFormatter = _formatters["application/json"];
+        _defaultFormatter = _formatters[ResponseFormatterFactoryConstants.ApplicationJsonMediaType];
     }
 
     /// <summary>
