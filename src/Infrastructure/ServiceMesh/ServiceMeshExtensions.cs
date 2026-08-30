@@ -124,13 +124,13 @@ public static class ServiceMeshExtensions
         services.Configure<ServiceMeshOptions>(configuration.GetSection(ServiceMeshOptions.SectionName));
 
         var adminEndpoint = configuration[$"{ServiceMeshOptions.SectionName}:{nameof(ServiceMeshOptions.AdminEndpoint)}"]
-            ?? "http://localhost:15000";
+            ?? ServiceMeshOptionsConstants.DefaultAdminEndpoint;
 
         services.AddHttpClient<ISidecarProxyService, SidecarProxyService>(client =>
         {
             client.BaseAddress = new Uri(adminEndpoint);
-            client.Timeout = TimeSpan.FromSeconds(10);
-            client.DefaultRequestHeaders.Add("User-Agent", "dotnet-service-scaffold/mesh-client");
+            client.Timeout = TimeSpan.FromSeconds(ServiceMeshOptionsConstants.HttpClientTimeoutSeconds);
+            client.DefaultRequestHeaders.Add(ServiceMeshOptionsConstants.UserAgentHeaderName, ServiceMeshOptionsConstants.UserAgentHeaderValue);
         });
 
         return services;
