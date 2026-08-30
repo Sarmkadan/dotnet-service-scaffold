@@ -45,30 +45,30 @@ public class ServiceManagementService : IServiceManagementService
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(serviceName))
-            errors.Add("Service name is required");
+            errors.Add(ServiceManagementServiceConstants.ServiceNameRequired);
 
         if (string.IsNullOrWhiteSpace(endpoint))
-            errors.Add("Service endpoint is required");
+            errors.Add(ServiceManagementServiceConstants.ServiceEndpointRequired);
 
         if (string.IsNullOrWhiteSpace(healthCheckUrl))
-            errors.Add("Health check URL is required");
+            errors.Add(ServiceManagementServiceConstants.HealthCheckUrlRequired);
 
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out _))
-            errors.Add("Invalid service endpoint URL");
+            errors.Add(ServiceManagementServiceConstants.InvalidServiceEndpointUrl);
 
         if (!Uri.TryCreate(healthCheckUrl, UriKind.Absolute, out _))
-            errors.Add("Invalid health check URL");
+            errors.Add(ServiceManagementServiceConstants.InvalidHealthCheckUrl);
 
         if (errors.Count > 0)
             throw new ServiceValidationException(errors);
 
         var owner = await _userRepository.GetByIdAsync(ownerId, cancellationToken);
         if (owner is null)
-            throw new ServiceScaffoldException("Service owner not found", "OWNER_NOT_FOUND");
+            throw new ServiceScaffoldException(ServiceManagementServiceConstants.ServiceOwnerNotFound, ServiceManagementServiceConstants.OwnerNotFoundErrorCode);
 
         var existingService = await _serviceRepository.GetByNameAsync(serviceName, cancellationToken);
         if (existingService is not null)
-            throw new ServiceValidationException("Service name already registered");
+            throw new ServiceValidationException(ServiceManagementServiceConstants.ServiceNameAlreadyRegistered);
 
         var service = new ServiceRegistration
         {
@@ -77,17 +77,17 @@ public class ServiceManagementService : IServiceManagementService
             Endpoint = endpoint,
             HealthCheckUrl = healthCheckUrl,
             OwnerId = ownerId,
-            Version = "1.0.0",
+            Version = ServiceManagementServiceConstants.DefaultVersion,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         if (!service.IsValid())
-            throw new ServiceValidationException("Service configuration is invalid");
+            throw new ServiceValidationException(ServiceManagementServiceConstants.ServiceConfigurationInvalid);
 
         var registered = await _serviceRepository.AddAsync(service, cancellationToken);
 
-        await _auditService.LogActionAsync(ownerId, "Create", "ServiceRegistration", service.Id,
+        await _auditService.LogActionAsync(ownerId, ServiceManagementServiceConstants.AuditActionCreate, ServiceManagementServiceConstants.AuditEntityTypeServiceRegistration, service.Id,
             $"Registered service {serviceName}");
 
         _logger.LogInformation("Service registered: {ServiceName} by user {UserId}", serviceName, ownerId);
@@ -122,7 +122,7 @@ public class ServiceManagementService : IServiceManagementService
     public async Task<ServiceRegistration> UpdateServiceAsync(ServiceRegistration service)
     {
         if (!service.IsValid())
-            throw new ServiceValidationException("Service configuration is invalid");
+            throw new ServiceValidationException(ServiceManagementServiceConstants.ServiceConfigurationInvalid);
 
         service.UpdatedAt = DateTime.UtcNow;
         var updated = await _serviceRepository.UpdateAsync(service);
@@ -150,7 +150,7 @@ public class ServiceManagementService : IServiceManagementService
         await _serviceRepository.UpdateAsync(service);
         await _serviceRepository.DeleteAsync(serviceId);
 
-        await _auditService.LogActionAsync(null, "Delete", "ServiceRegistration", serviceId,
+        await _auditService.LogActionAsync(null, ServiceManagementServiceConstants.AuditActionDelete, ServiceManagementServiceConstants.AuditEntityTypeServiceRegistration, serviceId,
             $"Unregistered service {service.ServiceName}");
 
         _logger.LogInformation("Service unregistered: {ServiceId}", serviceId);
@@ -170,7 +170,7 @@ public class ServiceManagementService : IServiceManagementService
         service.Disable(reason);
         await _serviceRepository.UpdateAsync(service, cancellationToken);
 
-        await _auditService.LogActionAsync(null, "Update", "ServiceRegistration", serviceId,
+        await _auditService.LogActionAsync(null, ServiceManagementServiceConstants.AuditActionUpdate, ServiceManagementServiceConstants.AuditEntityTypeServiceRegistration, serviceId,
             $"Disabled service: {reason}");
 
         _logger.LogInformation("Service disabled: {ServiceId} - {Reason}", serviceId, reason);
@@ -185,14 +185,14 @@ public class ServiceManagementService : IServiceManagementService
         service.Enable();
         await _serviceRepository.UpdateAsync(service);
 
-        await _auditService.LogActionAsync(null, "Update", "ServiceRegistration", serviceId,
-            "Re-enabled service");
+        await _auditService.LogActionAsync(null, ServiceManagementServiceConstants.AuditActionUpdate, ServiceManagementServiceConstants.AuditEntityTypeServiceRegistration, serviceId,
+            ServiceManagementServiceConstants.ReEnabledServiceAuditMessage);
 
         _logger.LogInformation("Service enabled: {ServiceId}", serviceId);
         return service;
     }
 
-    public async Task<decimal> GetServiceSuccessRateAsync(Guid serviceId, int minutesBack = 60)
+    public async Task<decimal> GetServiceSuccessRateAsync(Guid serviceId, int minutesBack = ServiceManagementServiceConstants.DefaultMinutesBack)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
         if (service is null)
