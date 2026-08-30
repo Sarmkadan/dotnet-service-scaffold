@@ -24,7 +24,7 @@ public static class HttpUtility
 
         var credentials = $"{username}:{password}";
         var encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials));
-        return $"Basic {encodedCredentials}";
+        return $"{HttpUtilityConstants.BasicPrefix}{encodedCredentials}";
     }
 
     /// <summary>
@@ -33,7 +33,7 @@ public static class HttpUtility
     public static string CreateBearerAuthHeader(string token)
     {
         ArgumentException.ThrowIfNullOrEmpty(token);
-        return $"Bearer {token}";
+        return $"{HttpUtilityConstants.BearerPrefix}{token}";
     }
 
     /// <summary>
@@ -42,12 +42,12 @@ public static class HttpUtility
     /// </summary>
     public static (string Username, string Password)? ParseBasicAuthHeader(string? header)
     {
-        if (string.IsNullOrWhiteSpace(header) || !header.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(header) || !header.StartsWith(HttpUtilityConstants.BasicPrefix, StringComparison.OrdinalIgnoreCase))
             return null;
 
         try
         {
-            var base64 = header["Basic ".Length..];
+            var base64 = header[HttpUtilityConstants.BasicPrefix.Length..];
             var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
             var parts = credentials.Split(':', 2);
 
@@ -68,10 +68,10 @@ public static class HttpUtility
     /// </summary>
     public static string? ParseBearerToken(string? header)
     {
-        if (string.IsNullOrWhiteSpace(header) || !header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(header) || !header.StartsWith(HttpUtilityConstants.BearerPrefix, StringComparison.OrdinalIgnoreCase))
             return null;
 
-        return header["Bearer ".Length..].Trim();
+        return header[HttpUtilityConstants.BearerPrefix.Length..].Trim();
     }
 
     /// <summary>
@@ -85,8 +85,8 @@ public static class HttpUtility
         if (parameters.Count == 0)
             return string.Empty;
 
-        var query = string.Join("&", parameters
-            .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}")
+        var query = string.Join(HttpUtilityConstants.Ampersand, parameters
+            .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}{HttpUtilityConstants.Equals}{Uri.EscapeDataString(kvp.Value)}")
         );
 
         return query;
@@ -102,11 +102,11 @@ public static class HttpUtility
         if (string.IsNullOrWhiteSpace(queryString))
             return result;
 
-        var query = queryString.StartsWith("?") ? queryString[1..] : queryString;
+        var query = queryString.StartsWith(HttpUtilityConstants.QuestionMark) ? queryString[HttpUtilityConstants.QuestionMark.Length..] : queryString;
 
-        foreach (var param in query.Split('&'))
+        foreach (var param in query.Split(HttpUtilityConstants.Ampersand))
         {
-            var parts = param.Split('=', 2);
+            var parts = param.Split(HttpUtilityConstants.Equals, 2);
             if (parts.Length == 2)
             {
                 var key = Uri.UnescapeDataString(parts[0]);
@@ -123,7 +123,7 @@ public static class HttpUtility
     /// </summary>
     public static bool IsSuccessStatusCode(int statusCode)
     {
-        return statusCode >= 200 && statusCode < 300;
+        return statusCode >= HttpUtilityConstants.MinSuccessStatusCode && statusCode < HttpUtilityConstants.MaxSuccessStatusCode;
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ public static class HttpUtility
     /// </summary>
     public static bool IsClientErrorStatusCode(int statusCode)
     {
-        return statusCode >= 400 && statusCode < 500;
+        return statusCode >= HttpUtilityConstants.MinClientErrorStatusCode && statusCode < HttpUtilityConstants.MaxClientErrorStatusCode;
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public static class HttpUtility
     /// </summary>
     public static bool IsServerErrorStatusCode(int statusCode)
     {
-        return statusCode >= 500 && statusCode < 600;
+        return statusCode >= HttpUtilityConstants.MinServerErrorStatusCode && statusCode < HttpUtilityConstants.MaxServerErrorStatusCode;
     }
 
     /// <summary>
@@ -150,12 +150,12 @@ public static class HttpUtility
     {
         return statusCode switch
         {
-            408 => true, // Request Timeout
-            429 => true, // Too Many Requests
-            500 => true, // Internal Server Error
-            502 => true, // Bad Gateway
-            503 => true, // Service Unavailable
-            504 => true, // Gateway Timeout
+            HttpUtilityConstants.StatusCodeRequestTimeout => true, // Request Timeout
+            HttpUtilityConstants.StatusCodeTooManyRequests => true, // Too Many Requests
+            HttpUtilityConstants.StatusCodeInternalServerError => true, // Internal Server Error
+            HttpUtilityConstants.StatusCodeBadGateway => true, // Bad Gateway
+            HttpUtilityConstants.StatusCodeServiceUnavailable => true, // Service Unavailable
+            HttpUtilityConstants.StatusCodeGatewayTimeout => true, // Gateway Timeout
             _ => false
         };
     }
@@ -169,9 +169,9 @@ public static class HttpUtility
         if (!IsRetryableStatusCode(statusCode))
             return null;
 
-        // Exponential backoff with jitter: 100ms * 2^attempt + random 0-100ms
-        var baseDelay = 100 * Math.Pow(2, Math.Min(attempt, 5));
-        var jitter = Random.Shared.Next(0, 100); // Fix: use thread-safe shared Random instance
+        // Exponential backoff with jitter: BaseDelayMultiplier * 2^attempt + random 0-JitterMax
+        var baseDelay = HttpUtilityConstants.BaseDelayMultiplier * Math.Pow(2, Math.Min(attempt, HttpUtilityConstants.MaxAttemptExponent));
+        var jitter = Random.Shared.Next(0, HttpUtilityConstants.JitterMax); // Fix: use thread-safe shared Random instance
         return (int)(baseDelay + jitter);
     }
 
@@ -216,11 +216,11 @@ public static class HttpUtility
         ArgumentException.ThrowIfNullOrEmpty(baseUrl);
         ArgumentException.ThrowIfNullOrEmpty(path);
 
-        var url = baseUrl.TrimEnd('/') + "/" + path.TrimStart('/');
+        var url = baseUrl.TrimEnd(HttpUtilityConstants.ForwardSlash[0]) + HttpUtilityConstants.ForwardSlash + path.TrimStart(HttpUtilityConstants.ForwardSlash[0]);
 
         if (queryParams is not null && queryParams.Count > 0)
         {
-            url += "?" + BuildQueryString(queryParams);
+            url += HttpUtilityConstants.QuestionMark + BuildQueryString(queryParams);
         }
 
         return url;
@@ -244,13 +244,13 @@ public static class HttpUtility
             {
                 if (query.ContainsKey(sensitiveParam))
                 {
-                    query[sensitiveParam] = "***MASKED***";
+                    query[sensitiveParam] = HttpUtilityConstants.MaskedValue;
                 }
             }
 
             var maskedQuery = BuildQueryString(query);
-            return uri.Scheme + "://" + uri.Host + uri.AbsolutePath +
-                   (string.IsNullOrEmpty(maskedQuery) ? string.Empty : "?" + maskedQuery);
+            return uri.Scheme + HttpUtilityConstants.ColonSlashSlash + uri.Host + uri.AbsolutePath +
+                   (string.IsNullOrEmpty(maskedQuery) ? string.Empty : HttpUtilityConstants.QuestionMark + maskedQuery);
         }
         catch
         {
