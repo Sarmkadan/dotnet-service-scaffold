@@ -42,8 +42,7 @@ namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 /// </remarks>
 public sealed class ServiceDiscoveryService : IServiceDiscoveryService
 {
-    private const string CacheKeyPrefix = "discovery:";
-
+    
     private readonly IServiceDiscoveryProvider _provider;
     private readonly IServiceDiscoveryProviderSelector _providerSelector;
     private readonly ICacheService _cache;
@@ -92,11 +91,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         if (!_options.Enabled)
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(Array.Empty<ServiceDiscoveryRecord>());
 
-        var cacheKey = CacheKeyPrefix + serviceName.ToLowerInvariant();
+        var cacheKey = ServiceDiscoveryServiceConstants.CacheKeyPrefix + serviceName.ToLowerInvariant();
         var cached = await _cache.GetAsync<IReadOnlyList<ServiceDiscoveryRecord>>(cacheKey);
         if (cached is not null)
         {
-            _logger.LogDebug("Cache hit for {ServiceName} ({Count} instance(s))", serviceName, cached.Count);
+            _logger.LogDebug(ServiceDiscoveryServiceConstants.CacheHitLogMessage, serviceName, cached.Count);
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(cached);
         }
 
@@ -130,7 +129,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
 
         var alive = discovery.Value!.Where(r => r.IsAlive()).ToList();
         if (alive.Count == 0)
-            return Result<ServiceDiscoveryRecord>.Failure($"No healthy instances found for service '{serviceName}'.", "NO_HEALTHY_INSTANCES");
+            return Result<ServiceDiscoveryRecord>.Failure(string.Format(ServiceDiscoveryServiceConstants.NoHealthyInstancesMessage, serviceName), ServiceDiscoveryServiceConstants.NoHealthyInstancesErrorCode);
 
         // Apply load balancing strategy to select a single endpoint
         return Result<ServiceDiscoveryRecord>.Success(SelectByStrategy(alive, serviceName));
@@ -146,7 +145,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
 
         var name = self.ServiceName
         ?? Assembly.GetEntryAssembly()?.GetName().Name
-        ?? "dotnet-service";
+        ?? ServiceDiscoveryServiceConstants.DefaultServiceName;
 
         var host = self.AdvertiseHost ?? System.Net.Dns.GetHostName();
 
@@ -173,9 +172,9 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         });
 
         if (result.IsSuccess)
-            _logger.LogInformation("Self-registered as {ServiceName} ({InstanceId}) via {Provider}", name, _selfInstanceId, _provider.ProviderName);
+            _logger.LogInformation(ServiceDiscoveryServiceConstants.SelfRegisteredLogMessage, name, _selfInstanceId, _provider.ProviderName);
         else
-            _logger.LogWarning("Self-registration failed via {Provider}: {Error}", _provider.ProviderName, result.ErrorMessage);
+            _logger.LogWarning(ServiceDiscoveryServiceConstants.SelfRegistrationFailedLogMessage, _provider.ProviderName, result.ErrorMessage);
 
         return result;
     }
@@ -191,7 +190,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         var result = await _provider.DeregisterAsync(_selfInstanceId, cancellationToken);
 
         if (result.IsSuccess)
-            _logger.LogInformation("Self-deregistered instance {InstanceId} via {Provider}", _selfInstanceId, _provider.ProviderName);
+            _logger.LogInformation(ServiceDiscoveryServiceConstants.SelfDeregisteredLogMessage, _selfInstanceId, _provider.ProviderName);
 
         return result;
     }
@@ -207,7 +206,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
             return await registryProvider.GetAllServiceNamesAsync(cancellationToken);
         }
 
-        return Result<IReadOnlyList<string>>.Failure("Service catalog enumeration requires a registry-based provider.", "PROVIDER_UNSUPPORTED");
+        return Result<IReadOnlyList<string>>.Failure(ServiceDiscoveryServiceConstants.ServiceCatalogEnumRequiresRegistryMessage, ServiceDiscoveryServiceConstants.ProviderUnsupportedErrorCode);
     }
 
     /// <inheritdoc/>
@@ -216,15 +215,15 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     {
         if (serviceName is not null)
         {
-            await _cache.RemoveAsync(CacheKeyPrefix + serviceName.ToLowerInvariant());
+            await _cache.RemoveAsync(ServiceDiscoveryServiceConstants.CacheKeyPrefix + serviceName.ToLowerInvariant());
             _metaCache.TryRemove(serviceName, out _);
-            _logger.LogDebug("Cache invalidated for service {ServiceName}", serviceName);
+            _logger.LogDebug(ServiceDiscoveryServiceConstants.CacheInvalidatedForServiceLogMessage, serviceName);
             return;
         }
 
-        await _cache.RemoveByPatternAsync(CacheKeyPrefix + "*");
+        await _cache.RemoveByPatternAsync(ServiceDiscoveryServiceConstants.CacheKeyPrefix + "*");
         _metaCache.Clear();
-        _logger.LogDebug("Discovery cache fully invalidated");
+        _logger.LogDebug(ServiceDiscoveryServiceConstants.DiscoveryCacheFullyInvalidatedLogMessage);
     }
 
     /// <inheritdoc/>
@@ -233,7 +232,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     {
         if (!_options.SelfRegistration.Enabled)
         {
-            _logger.LogDebug("Self-registration is disabled, skipping heartbeat update");
+            _logger.LogDebug(ServiceDiscoveryServiceConstants.SelfRegistrationDisabledLogMessage);
             return;
         }
 
@@ -263,12 +262,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
 
         if (result.IsSuccess)
         {
-            _logger.LogDebug("Heartbeat updated for instance {InstanceId} via {Provider}", _selfInstanceId, _provider.ProviderName);
+            _logger.LogDebug(ServiceDiscoveryServiceConstants.HeartbeatUpdatedLogMessage, _selfInstanceId, _provider.ProviderName);
         }
         else
         {
-            _logger.LogWarning("Failed to update heartbeat for instance {InstanceId} via {Provider}: {Error}",
-                _selfInstanceId, _provider.ProviderName, result.ErrorMessage);
+            _logger.LogWarning(ServiceDiscoveryServiceConstants.FailedToUpdateHeartbeatLogMessage, _selfInstanceId, _provider.ProviderName, result.ErrorMessage);
         }
     }
 
