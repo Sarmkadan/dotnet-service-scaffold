@@ -43,7 +43,7 @@ public static class ProblemDetailsFactory
 
         var problemDetails = new ProblemDetails
         {
-            Type = type ?? "about:blank",
+            Type = type ?? ProblemDetailsFactoryConstants.AboutBlank,
             Title = title ?? GetDefaultTitle(statusCode),
             Status = statusCode,
             Detail = detail,
@@ -54,7 +54,7 @@ public static class ProblemDetailsFactory
         var activity = Activity.Current ?? context.Features.Get<Activity>();
         if (activity?.Id != null)
         {
-            problemDetails.Extensions["traceId"] = activity.Id;
+            problemDetails.Extensions[ProblemDetailsFactoryConstants.TraceIdKey] = activity.Id;
         }
         else if (context.TraceIdentifier != null)
         {
@@ -65,13 +65,13 @@ public static class ProblemDetailsFactory
         var logContextService = context.RequestServices.GetService<ILogContextService>();
         if (logContextService?.CorrelationId != null)
         {
-            problemDetails.Extensions["correlationId"] = logContextService.CorrelationId;
+            problemDetails.Extensions[ProblemDetailsFactoryConstants.CorrelationIdKey] = logContextService.CorrelationId;
         }
 
         // Add error code if provided
         if (!string.IsNullOrEmpty(errorCode))
         {
-            problemDetails.Extensions["errorCode"] = errorCode;
+            problemDetails.Extensions[ProblemDetailsFactoryConstants.ErrorCodeKey] = errorCode;
         }
 
         // Add additional extensions
@@ -84,7 +84,7 @@ public static class ProblemDetailsFactory
         }
 
         // Add timestamp
-        problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+        problemDetails.Extensions[ProblemDetailsFactoryConstants.TimestampKey] = DateTime.UtcNow;
 
         return problemDetails;
     }
