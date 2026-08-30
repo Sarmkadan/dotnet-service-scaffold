@@ -20,10 +20,10 @@ public class StringUtilityTests : IStringUtilityTests
         /// <summary>
         /// Verifies that the Truncate method truncates a string longer than the specified maxLength and appends an ellipsis.
         /// </summary>
-        var result = StringUtility.Truncate("Hello, World!", 8);
+        var result = StringUtility.Truncate("Hello, World!", StringUtilityTestsConstants.HelloWorldTruncateLength);
 
         result.Should().Be("Hello...");
-        result.Length.Should().Be(8);
+        result.Length.Should().Be(StringUtilityTestsConstants.HelloWorldTruncateLength);
     }
 
     [Theory]
@@ -35,7 +35,7 @@ public class StringUtilityTests : IStringUtilityTests
         /// Verifies that the Truncate method returns an empty string when the input is null or empty.
         /// </summary>
         /// <param name="input">The input string to truncate.</param>
-        StringUtility.Truncate(input, 10).Should().BeEmpty();
+        StringUtility.Truncate(input, StringUtilityTestsConstants.NullOrEmptyTruncateLength).Should().BeEmpty();
     }
 
     [Theory]
@@ -61,7 +61,7 @@ public class StringUtilityTests : IStringUtilityTests
         /// </summary>
         const string key = "ABCDE12345FGHIJ"; // 15 chars
 
-        var masked = StringUtility.MaskSensitive(key, visibleChars: 2);
+        var masked = StringUtility.MaskSensitive(key, visibleChars: StringUtilityTestsConstants.MaskSensitiveVisibleChars);
 
         masked.Should().StartWith("AB");
         masked.Should().EndWith("IJ");
