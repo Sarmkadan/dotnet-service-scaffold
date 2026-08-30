@@ -44,7 +44,7 @@ public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
 
     public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
 
-    [StringLength(500)]
+    [StringLength(ServiceMetricConstants.MaximumNotesLength)]
     public string? Notes { get; set; }
 
     public double Uptime { get; set; }
@@ -54,10 +54,10 @@ public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
     /// </summary>
     public bool HasAnomalies()
     {
-        return CpuUsagePercent > 85 ||
-               MemoryUsagePercent > 80 ||
-               DiskUsagePercent > 90 ||
-               AverageResponseTimeMs > 5000;
+        return CpuUsagePercent > ServiceMetricConstants.AnomalousCpuUsagePercent ||
+               MemoryUsagePercent > ServiceMetricConstants.AnomalousMemoryUsagePercent ||
+               DiskUsagePercent > ServiceMetricConstants.AnomalousDiskUsagePercent ||
+               AverageResponseTimeMs > ServiceMetricConstants.AnomalousAverageResponseTimeMs;
     }
 
     /// <summary>
@@ -65,10 +65,10 @@ public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
     /// </summary>
     public decimal GetErrorRate()
     {
-        if (TotalRequests == 0)
-            return 0;
+        if (TotalRequests == ServiceMetricConstants.NoRequests)
+            return ServiceMetricConstants.ZeroErrorRate;
 
-        return (decimal)ErrorCount / TotalRequests * 100;
+        return (decimal)ErrorCount / TotalRequests * ServiceMetricConstants.PercentageMultiplier;
     }
 
     /// <summary>
@@ -76,16 +76,18 @@ public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
     /// </summary>
     public string GetSeverityRating()
     {
-        if (CpuUsagePercent > 90 || MemoryUsagePercent > 85)
-            return "Critical";
+        if (CpuUsagePercent > ServiceMetricConstants.CriticalCpuUsagePercent ||
+            MemoryUsagePercent > ServiceMetricConstants.CriticalMemoryUsagePercent)
+            return ServiceMetricConstants.CriticalSeverity;
 
-        if (CpuUsagePercent > 75 || MemoryUsagePercent > 70)
-            return "Warning";
+        if (CpuUsagePercent > ServiceMetricConstants.WarningCpuUsagePercent ||
+            MemoryUsagePercent > ServiceMetricConstants.WarningMemoryUsagePercent)
+            return ServiceMetricConstants.WarningSeverity;
 
-        if (DiskUsagePercent > 85)
-            return "Warning";
+        if (DiskUsagePercent > ServiceMetricConstants.WarningDiskUsagePercent)
+            return ServiceMetricConstants.WarningSeverity;
 
-        return "Normal";
+        return ServiceMetricConstants.NormalSeverity;
     }
 
     /// <summary>
@@ -93,13 +95,17 @@ public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
     /// </summary>
     public string FormatMetrics()
     {
-        return $"CPU: {CpuUsagePercent:F1}% | " +
-               $"Memory: {MemoryUsagePercent:F1}% ({MemoryUsageBytes / (1024 * 1024)}MB) | " +
-               $"Disk: {DiskUsagePercent:F1}% | " +
-               $"RPS: {RequestsPerSecond} | " +
-               $"Avg Response: {AverageResponseTimeMs:F0}ms | " +
-               $"Errors: {ErrorCount}/{TotalRequests} | " +
-               $"Uptime: {Uptime:F2}%";
+        return string.Format(
+            ServiceMetricConstants.MetricsDisplayFormat,
+            CpuUsagePercent,
+            MemoryUsagePercent,
+            MemoryUsageBytes / ServiceMetricConstants.BytesPerMegabyte,
+            DiskUsagePercent,
+            RequestsPerSecond,
+            AverageResponseTimeMs,
+            ErrorCount,
+            TotalRequests,
+            Uptime);
     }
 
     public bool Equals(ServiceMetric? other)
