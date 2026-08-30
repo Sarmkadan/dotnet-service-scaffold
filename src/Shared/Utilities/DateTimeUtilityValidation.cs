@@ -29,12 +29,12 @@ public static class DateTimeUtilityValidation
 
         if (value == default)
         {
-            errors.Add("DateTime value cannot be default (DateTime.MinValue).");
+            errors.Add(DateTimeUtilityValidationConstants.DateTimeCannotBeDefault);
         }
 
         if (value.Kind == DateTimeKind.Unspecified)
         {
-            errors.Add("DateTime value must have a specified kind (UTC or Local).");
+            errors.Add(DateTimeUtilityValidationConstants.DateTimeMustHaveSpecifiedKind);
         }
 
         return errors.AsReadOnly();
@@ -68,7 +68,7 @@ public static class DateTimeUtilityValidation
 
         if (string.IsNullOrWhiteSpace(value))
         {
-            return new[] { "Duration string cannot be null or whitespace." };
+            return new[] { DateTimeUtilityValidationConstants.DurationStringCannotBeNullOrWhitespace };
         }
 
         try
@@ -79,11 +79,11 @@ public static class DateTimeUtilityValidation
         }
         catch (FormatException)
         {
-            return new[] { $"Duration string '{value}' is not a valid ISO 8601 duration format. Expected format: PnYnMnDTnHnMnS (e.g., P3DT4H5M6S)." };
+            return new[] { string.Format(DateTimeUtilityValidationConstants.InvalidIsoDurationFormat, value) };
         }
         catch (OverflowException)
         {
-            return new[] { $"Duration string '{value}' contains values that are too large." };
+            return new[] { string.Format(DateTimeUtilityValidationConstants.DurationValuesTooLarge, value) };
         }
     }
 
@@ -102,12 +102,12 @@ public static class DateTimeUtilityValidation
 
         if (birthDate > DateTime.UtcNow)
         {
-            errors.Add("Birth date cannot be in the future.");
+            errors.Add(DateTimeUtilityValidationConstants.BirthDateCannotBeInFuture);
         }
 
         if (DateTimeUtility.CalculateAge(birthDate) < 0)
         {
-            errors.Add("Birth date results in a negative age, which is not valid.");
+            errors.Add(DateTimeUtilityValidationConstants.BirthDateResultsInNegativeAge);
         }
 
         return errors.AsReadOnly();
