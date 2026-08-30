@@ -28,9 +28,9 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (username.Length > 256)
+        if (username.Length > HttpUtilityValidationConstants.MaxBasicAuthLength)
         {
-            problems.Add("Username exceeds maximum length of 256 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.UsernameExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
         if (username.Contains(':'))
@@ -73,24 +73,24 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (username.Length > 256)
+        if (username.Length > HttpUtilityValidationConstants.MaxBasicAuthLength)
         {
-            problems.Add("Username exceeds maximum length of 256 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.UsernameExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
         if (username.Contains(':'))
         {
-            problems.Add("Username contains colon character which is not allowed in Basic authentication.");
+            problems.Add(HttpUtilityValidationConstants.UsernameContainsColon);
         }
 
         if (username.Contains('\0'))
         {
-            problems.Add("Username contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.UsernameContainsNull);
         }
 
         if (username.Any(c => c > 127))
         {
-            problems.Add("Username contains non-ASCII characters which may cause interoperability issues.");
+            problems.Add(HttpUtilityValidationConstants.UsernameContainsNonAscii);
         }
 
         return problems;
@@ -108,14 +108,14 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (password.Length > 256)
+        if (password.Length > HttpUtilityValidationConstants.MaxBasicAuthLength)
         {
-            problems.Add("Password exceeds maximum length of 256 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.PasswordExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
         if (password.Contains('\0'))
         {
-            problems.Add("Password contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.PasswordContainsNull);
         }
 
         return problems;
@@ -133,19 +133,19 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (token.Length > 4096)
+        if (token.Length > HttpUtilityValidationConstants.MaxBearerTokenLength)
         {
-            problems.Add("Bearer token exceeds maximum length of 4096 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.BearerTokenExceedsMaxLength, HttpUtilityValidationConstants.MaxBearerTokenLength));
         }
 
         if (token.Contains('\0'))
         {
-            problems.Add("Bearer token contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.BearerTokenContainsNull);
         }
 
         if (token.Any(c => c > 127))
         {
-            problems.Add("Bearer token contains non-ASCII characters which may cause interoperability issues.");
+            problems.Add(HttpUtilityValidationConstants.BearerTokenContainsNonAscii);
         }
 
         return problems;
@@ -160,9 +160,9 @@ public static class HttpUtilityValidation
     {
         var problems = new List<string>();
 
-        if (statusCode < 100 || statusCode > 599)
+        if (statusCode < HttpUtilityValidationConstants.MinStatusCode || statusCode > HttpUtilityValidationConstants.MaxStatusCode)
         {
-            problems.Add("Status code must be between 100 and 599 inclusive.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.StatusCodeOutOfRange, HttpUtilityValidationConstants.MinStatusCode, HttpUtilityValidationConstants.MaxStatusCode));
         }
 
         return problems;
@@ -185,22 +185,22 @@ public static class HttpUtilityValidation
 
             if (uri.Scheme != "http" && uri.Scheme != "https")
             {
-                problems.Add("Base URL must use http or https scheme.");
+                problems.Add(HttpUtilityValidationConstants.BaseUrlInvalidScheme);
             }
 
             if (string.IsNullOrWhiteSpace(uri.Host))
             {
-                problems.Add("Base URL must contain a valid host.");
+                problems.Add(HttpUtilityValidationConstants.BaseUrlMissingHost);
             }
 
-            if (uri.Port < 0 || uri.Port > 65535)
+            if (uri.Port < HttpUtilityValidationConstants.MinPortNumber || uri.Port > HttpUtilityValidationConstants.MaxPortNumber)
             {
-                problems.Add("Base URL contains invalid port number.");
+                problems.Add(HttpUtilityValidationConstants.BaseUrlInvalidPort);
             }
         }
         catch (UriFormatException)
         {
-            problems.Add("Base URL is not a valid URI format.");
+            problems.Add(HttpUtilityValidationConstants.BaseUrlInvalidFormat);
         }
 
         return problems;
@@ -217,19 +217,19 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (path.Length > 2048)
+        if (path.Length > HttpUtilityValidationConstants.MaxPathLength)
         {
-            problems.Add("Path exceeds maximum length of 2048 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.PathExceedsMaxLength, HttpUtilityValidationConstants.MaxPathLength));
         }
 
         if (path.Contains(".."))
         {
-            problems.Add("Path contains relative traversal which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.PathContainsRelativeTraversal);
         }
 
         if (path.Contains('\0'))
         {
-            problems.Add("Path contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.PathContainsNull);
         }
 
         return problems;
@@ -251,26 +251,26 @@ public static class HttpUtilityValidation
             ArgumentNullException.ThrowIfNull(kvp.Key);
             ArgumentNullException.ThrowIfNull(kvp.Value);
 
-            if (kvp.Key.Length > 1024)
+            if (kvp.Key.Length > HttpUtilityValidationConstants.MaxQueryParameterKeyLength)
             {
-                problems.Add("Query parameter key exceeds maximum length of 1024 characters.");
+                problems.Add(string.Format(HttpUtilityValidationConstants.QueryParameterKeyExceedsMaxLength, HttpUtilityValidationConstants.MaxQueryParameterKeyLength));
             }
 
-            if (kvp.Value.Length > 4096)
+            if (kvp.Value.Length > HttpUtilityValidationConstants.MaxQueryParameterValueLength)
             {
-                problems.Add("Query parameter value exceeds maximum length of 4096 characters.");
+                problems.Add(string.Format(HttpUtilityValidationConstants.QueryParameterValueExceedsMaxLength, HttpUtilityValidationConstants.MaxQueryParameterValueLength));
             }
 
             if (kvp.Key.Contains('\0') || kvp.Value.Contains('\0'))
             {
-                problems.Add("Query parameters contain null character which is not allowed.");
+                problems.Add(HttpUtilityValidationConstants.QueryParametersContainNull);
                 break;
             }
         }
 
-        if (parameters.Count > 100)
+        if (parameters.Count > HttpUtilityValidationConstants.MaxQueryParameterCount)
         {
-            problems.Add("Query parameters exceed maximum count of 100.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.QueryParametersExceedMaxCount, HttpUtilityValidationConstants.MaxQueryParameterCount));
         }
 
         return problems;
@@ -287,14 +287,14 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (contentType.Length > 256)
+        if (contentType.Length > HttpUtilityValidationConstants.MaxContentTypeLength)
         {
-            problems.Add("Content-Type header exceeds maximum length of 256 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.ContentTypeExceedsMaxLength, HttpUtilityValidationConstants.MaxContentTypeLength));
         }
 
         if (contentType.Contains('\0'))
         {
-            problems.Add("Content-Type header contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.ContentTypeContainsNull);
         }
 
         return problems;
@@ -311,14 +311,14 @@ public static class HttpUtilityValidation
 
         var problems = new List<string>();
 
-        if (header.Length > 8192)
+        if (header.Length > HttpUtilityValidationConstants.MaxHeaderLength)
         {
-            problems.Add("Header exceeds maximum length of 8192 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.HeaderExceedsMaxLength, HttpUtilityValidationConstants.MaxHeaderLength));
         }
 
         if (header.Contains('\0'))
         {
-            problems.Add("Header contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.HeaderContainsNull);
         }
 
         return problems;
@@ -333,14 +333,14 @@ public static class HttpUtilityValidation
     {
         var problems = new List<string>();
 
-        if (attempt < 1)
+        if (attempt < HttpUtilityValidationConstants.MinRetryAttempt)
         {
-            problems.Add("Retry attempt must be 1 or greater.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.RetryAttemptTooLow, HttpUtilityValidationConstants.MinRetryAttempt));
         }
 
-        if (attempt > 20)
+        if (attempt > HttpUtilityValidationConstants.MaxRetryAttempt)
         {
-            problems.Add("Retry attempt exceeds maximum of 20.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.RetryAttemptTooHigh, HttpUtilityValidationConstants.MaxRetryAttempt));
         }
 
         return problems;
