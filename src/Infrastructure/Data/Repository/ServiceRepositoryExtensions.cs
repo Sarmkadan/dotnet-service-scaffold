@@ -69,7 +69,7 @@ public static class ServiceRepositoryExtensions
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of enabled service registrations with metrics</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
-    public static async Task<IEnumerable<ServiceRegistration>> GetEnabledServicesWithMetricsAsync(this ServiceRepository repository, int metricsCount = 10, bool tracking = true)
+    public static async Task<IEnumerable<ServiceRegistration>> GetEnabledServicesWithMetricsAsync(this ServiceRepository repository, int metricsCount = ServiceRepositoryExtensionsConstants.DefaultMetricsCount, bool tracking = true)
     {
         ArgumentNullException.ThrowIfNull(repository);
 
@@ -148,7 +148,7 @@ public static class ServiceRepositoryExtensions
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of services without recent health checks</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
-    public static async Task<IEnumerable<ServiceRegistration>> GetServicesWithoutRecentHealthCheckAsync(this ServiceRepository repository, int minutesThreshold = 5, Guid? ownerId = null, bool tracking = true)
+    public static async Task<IEnumerable<ServiceRegistration>> GetServicesWithoutRecentHealthCheckAsync(this ServiceRepository repository, int minutesThreshold = ServiceRepositoryExtensionsConstants.DefaultMinutesThresholdForRecentHealthCheck, Guid? ownerId = null, bool tracking = true)
     {
         ArgumentNullException.ThrowIfNull(repository);
 
@@ -178,7 +178,7 @@ public static class ServiceRepositoryExtensions
     /// <param name="tracking">Whether to enable change tracking</param>
     /// <returns>Collection of services due for health check</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="repository"/> is null</exception>
-    public static async Task<IEnumerable<ServiceRegistration>> GetServicesDueForHealthCheckAsync(this ServiceRepository repository, int defaultIntervalMinutes = 5, Guid? ownerId = null, bool tracking = true)
+    public static async Task<IEnumerable<ServiceRegistration>> GetServicesDueForHealthCheckAsync(this ServiceRepository repository, int defaultIntervalMinutes = ServiceRepositoryExtensionsConstants.DefaultHealthCheckIntervalMinutes, Guid? ownerId = null, bool tracking = true)
     {
         ArgumentNullException.ThrowIfNull(repository);
 
