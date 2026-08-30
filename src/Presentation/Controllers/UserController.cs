@@ -58,13 +58,13 @@ public class UserController : ControllerBase
         }
         catch (ServiceValidationException ex)
         {
-            _logger.LogWarning("Registration validation error: {Errors}", string.Join(", ", ex.Errors));
-            return BadRequest(new { error = "Validation failed", details = ex.Errors });
+            _logger.LogWarning(UserControllerConstants.RegistrationValidationError, string.Join(", ", ex.Errors));
+            return BadRequest(new { error = UserControllerConstants.ValidationFailed, details = ex.Errors });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Registration error");
-            return StatusCode(500, new { error = "Registration failed" });
+            _logger.LogError(ex, UserControllerConstants.RegistrationError);
+            return StatusCode(500, new { error = UserControllerConstants.RegistrationFailed });
         }
     }
 
@@ -87,8 +87,8 @@ public class UserController : ControllerBase
 
             if (user is null)
             {
-                _logger.LogWarning("Failed authentication attempt for {Email}", request.Email);
-                return Unauthorized(new { error = "Invalid email or password" });
+                _logger.LogWarning(UserControllerConstants.FailedAuthenticationAttempt, request.Email);
+                return Unauthorized(new { error = UserControllerConstants.InvalidEmailOrPassword });
             }
 
             return Ok(new
@@ -105,7 +105,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Login error for {Email}", request.Email);
+            _logger.LogError(ex, UserControllerConstants.LoginError, request.Email);
             return StatusCode(500, new { error = "Login failed" });
         }
     }
@@ -125,8 +125,8 @@ public class UserController : ControllerBase
 
             if (user is null)
             {
-                _logger.LogWarning("User not found: {UserId}", userId);
-                return NotFound(new { error = "User not found" });
+                _logger.LogWarning(UserControllerConstants.UserNotFoundLog, userId);
+                return NotFound(new { error = UserControllerConstants.UserNotFoundResponse });
             }
 
             return Ok(new
@@ -146,7 +146,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving user {UserId}", userId);
+            _logger.LogError(ex, UserControllerConstants.ErrorRetrievingUserLog, userId);
             return StatusCode(500, new { error = "Error retrieving user" });
         }
     }
@@ -170,11 +170,11 @@ public class UserController : ControllerBase
 
             if (!success)
             {
-                _logger.LogWarning("Password change failed for user {UserId}", userId);
+                _logger.LogWarning(UserControllerConstants.PasswordChangeFailedForUserLog, userId);
                 return BadRequest(new { error = "Current password is incorrect" });
             }
 
-            return Ok(new { success = true, message = "Password changed successfully" });
+            return Ok(new { success = true, message = UserControllerConstants.PasswordChangedSuccessfully });
         }
         catch (ServiceScaffoldException ex)
         {
@@ -182,7 +182,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Password change error for user {UserId}", userId);
+            _logger.LogError(ex, UserControllerConstants.PasswordChangeErrorLog, userId);
             return StatusCode(500, new { error = "Password change failed" });
         }
     }
@@ -199,7 +199,7 @@ public class UserController : ControllerBase
         try
         {
             await _userService.UnlockUserAsync(userId, cancellationToken);
-            return Ok(new { success = true, message = "User account unlocked" });
+            return Ok(new { success = true, message = UserControllerConstants.UserAccountUnlocked });
         }
         catch (ServiceScaffoldException ex)
         {
@@ -207,7 +207,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error unlocking user {UserId}", userId);
+            _logger.LogError(ex, UserControllerConstants.ErrorUnlockingUserLog, userId);
             return StatusCode(500, new { error = "Error unlocking user" });
         }
     }
@@ -225,13 +225,13 @@ public class UserController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(q))
         {
-            _logger.LogWarning("Search query parameter 'q' is required");
-            return BadRequest(new { error = "Search query parameter 'q' is required" });
+            _logger.LogWarning(UserControllerConstants.SearchQueryParameterQRequired);
+            return BadRequest(new { error = UserControllerConstants.SearchQueryParameterQRequiredResponse });
         }
 
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 10;
-        if (pageSize > 100) pageSize = 100;
+        if (page < UserControllerConstants.MinimumPageNumber) page = UserControllerConstants.MinimumPageNumber;
+        if (pageSize < UserControllerConstants.MinimumPageSize) pageSize = UserControllerConstants.DefaultPageSize;
+        if (pageSize > UserControllerConstants.MaximumPageSize) pageSize = UserControllerConstants.MaximumPageSize;
 
         try
         {
@@ -259,7 +259,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching users with query: {Query}", q);
+            _logger.LogError(ex, UserControllerConstants.ErrorSearchingUsersWithQueryLog, q);
             return StatusCode(500, new { error = "Error searching users" });
         }
     }
