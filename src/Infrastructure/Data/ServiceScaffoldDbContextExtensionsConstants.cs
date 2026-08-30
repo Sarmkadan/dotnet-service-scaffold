@@ -1,3 +1,5 @@
+using System;
+
 namespace DotnetServiceScaffold.Infrastructure.Data;
 
 /// <summary>
@@ -5,4 +7,8 @@ namespace DotnetServiceScaffold.Infrastructure.Data;
 /// </summary>
 internal static class ServiceScaffoldDbContextExtensionsConstants
 {
+    /// <summary>
+    /// The comparison used when matching user email addresses.
+    /// </summary>
+    public const StringComparison UserEmailComparison = StringComparison.OrdinalIgnoreCase;
 }

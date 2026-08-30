@@ -28,7 +28,7 @@ public static class ServiceScaffoldDbContextExtensions
 
         return await context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefaultAsync(u => string.Equals(u.Email, email, ServiceScaffoldDbContextExtensionsConstants.UserEmailComparison));
     }
 
     /// <summary>
