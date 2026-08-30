@@ -12,22 +12,22 @@ namespace DotnetServiceScaffold.Infrastructure.DockerCompose;
 public sealed class DockerComposeOptions : IEquatable<DockerComposeOptions>
 {
     /// <summary>Name of the primary application service.</summary>
-    public string ServiceName { get; set; } = "app";
+    public string ServiceName { get; set; } = DockerComposeOptionsConstants.DefaultServiceName;
 
     /// <summary>Docker image name (e.g. "myapp:latest").</summary>
-    public string ImageName { get; set; } = "dotnet-service-scaffold:latest";
+    public string ImageName { get; set; } = DockerComposeOptionsConstants.DefaultImageName;
 
     /// <summary>Host port mapped to the application container.</summary>
-    public int HostPort { get; set; } = 5000;
+    public int HostPort { get; set; } = DockerComposeOptionsConstants.DefaultHostPort;
 
     /// <summary>Container port the application listens on.</summary>
-    public int ContainerPort { get; set; } = 5000;
+    public int ContainerPort { get; set; } = DockerComposeOptionsConstants.DefaultContainerPort;
 
     /// <summary>ASP.NET Core environment (Development / Production).</summary>
-    public string Environment { get; set; } = "Production";
+    public string Environment { get; set; } = DockerComposeOptionsConstants.DefaultEnvironment;
 
     /// <summary>SQLite connection string or full database connection string.</summary>
-    public string ConnectionString { get; set; } = "Data Source=/app/data/scaffold.db";
+    public string ConnectionString { get; set; } = DockerComposeOptionsConstants.DefaultConnectionString;
 
     /// <summary>Additional environment variables to inject.</summary>
     public Dictionary<string, string> EnvironmentVariables { get; set; } = new();
@@ -35,8 +35,8 @@ public sealed class DockerComposeOptions : IEquatable<DockerComposeOptions>
     /// <summary>Named volumes to create (volume name → container path).</summary>
     public Dictionary<string, string> Volumes { get; set; } = new()
     {
-        ["app-data"] = "/app/data",
-        ["app-logs"] = "/app/logs"
+        [DockerComposeOptionsConstants.VolumeAppData] = DockerComposeOptionsConstants.VolumeAppDataPath,
+        [DockerComposeOptionsConstants.VolumeAppLogs] = DockerComposeOptionsConstants.VolumeAppLogsPath
     };
 
     /// <summary>Whether to include a Caddy reverse-proxy service.</summary>
@@ -52,10 +52,10 @@ public sealed class DockerComposeOptions : IEquatable<DockerComposeOptions>
     public bool IncludeRedis { get; set; }
 
     /// <summary>CPU limit for the application container (e.g. "1").</summary>
-    public string CpuLimit { get; set; } = "1";
+    public string CpuLimit { get; set; } = DockerComposeOptionsConstants.DefaultCpuLimit;
 
     /// <summary>Memory limit for the application container (e.g. "512M").</summary>
-    public string MemoryLimit { get; set; } = "512M";
+    public string MemoryLimit { get; set; } = DockerComposeOptionsConstants.DefaultMemoryLimit;
 
     public bool Equals(DockerComposeOptions? other)
     {
