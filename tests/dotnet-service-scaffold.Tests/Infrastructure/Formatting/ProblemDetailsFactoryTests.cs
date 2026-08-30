@@ -80,17 +80,17 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 400,
-            title: "Bad Request",
-            detail: "Invalid input data",
-            type: "https://example.com/errors/bad-request"
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest,
+            title: ProblemDetailsFactoryTestsConstants.BadRequestTitle,
+            detail: ProblemDetailsFactoryTestsConstants.InvalidInputDataDetail,
+            type: ProblemDetailsFactoryTestsConstants.BadRequestUrl
         );
 
         // Assert
         problemDetails.Should().NotBeNull();
-        problemDetails.Type.Should().Be("https://example.com/errors/bad-request");
-        problemDetails.Title.Should().Be("Bad Request");
-        problemDetails.Status.Should().Be(400);
+        problemDetails.Type.Should().Be(ProblemDetailsFactoryTestsConstants.BadRequestUrl);
+        problemDetails.Title.Should().Be(ProblemDetailsFactoryTestsConstants.BadRequestTitle);
+        problemDetails.Status.Should().Be(ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest);
         problemDetails.Detail.Should().Be("Invalid input data");
         problemDetails.Instance.Should().Be(context.Request.Path.ToString());
         problemDetails.Extensions.Should().ContainKey("timestamp");
@@ -108,11 +108,11 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 500
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeInternalServerError
         );
 
         // Assert
-        problemDetails.Type.Should().Be("about:blank");
+        problemDetails.Type.Should().Be(ProblemDetailsFactoryTestsConstants.DefaultProblemType);
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 404
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeNotFound
         );
 
         // Assert
@@ -153,7 +153,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 404
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeNotFound
         );
 
         // Assert
@@ -175,7 +175,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
             exception,
-            statusCode: 400
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest
         );
 
         // Assert
@@ -201,7 +201,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 400,
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest,
             extensions: extensions
         );
 
@@ -224,11 +224,11 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         var context = CreateHttpContext();
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 400,
-            title: "Bad Request",
-            detail: "Invalid input data",
-            type: "https://example.com/errors/bad-request",
-            errorCode: "VALIDATION_ERROR"
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest,
+            title: ProblemDetailsFactoryTestsConstants.BadRequestTitle,
+            detail: ProblemDetailsFactoryTestsConstants.InvalidInputDataDetail,
+            type: ProblemDetailsFactoryTestsConstants.BadRequestUrl,
+            errorCode: ProblemDetailsFactoryTestsConstants.ValidationErrorCode
         );
 
         // Act
@@ -239,7 +239,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         responseBody.Should().NotBeNullOrEmpty();
         responseBody.Should().Contain("badRequest");
         responseBody.Should().Contain("invalidInputData");
-        responseBody.Should().Contain("https://example.com/errors/bad-request");
+        responseBody.Should().Contain("ProblemDetailsFactoryTestsConstants.BadRequestUrl");
         responseBody.Should().Contain("VALIDATION_ERROR");
     }
 
@@ -255,7 +255,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 422,
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeUnprocessableEntity,
             title: "Unprocessable Entity",
             detail: "Validation failed",
             type: "https://example.com/errors/validation-failed"
@@ -281,7 +281,7 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
         // Act
         var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
             context,
-            statusCode: 400
+            statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest
         );
 
         // Assert
