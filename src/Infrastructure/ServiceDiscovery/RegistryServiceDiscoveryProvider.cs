@@ -62,9 +62,9 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
         try
         {
             var reg = _options.Registry;
-            var passing = reg.OnlyHealthyInstances ? "&passing=true" : string.Empty;
-            var dc = string.IsNullOrEmpty(reg.Datacenter) ? string.Empty : $"&dc={reg.Datacenter}";
-            var url = $"/v1/health/service/{Uri.EscapeDataString(serviceName)}?{passing}{dc}";
+            var passing = reg.OnlyHealthyInstances ? RegistryServiceDiscoveryProviderConstants.PassingQueryParam : string.Empty;
+            var dc = string.IsNullOrEmpty(reg.Datacenter) ? string.Empty : $"{RegistryServiceDiscoveryProviderConstants.DatacenterQueryParamHealthPrefix}{reg.Datacenter}";
+            var url = $"{RegistryServiceDiscoveryProviderConstants.HealthServiceBasePath}{Uri.EscapeDataString(serviceName)}?{passing}{dc}";
 
             using var http = CreateClient();
             var entries = await http.GetFromJsonAsync<List<ConsulServiceEntry>>(url, JsonOptions, cancellationToken)
@@ -107,9 +107,9 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
                 Check = new ConsulCheckPayload
                 {
                     Http = healthUrl,
-                    Interval = $"{_options.Registry.HeartbeatInterval.TotalSeconds:0}s",
-                    Timeout = "5s",
-                    DeregisterCriticalServiceAfter = "1m"
+                    Interval = $"{_options.Registry.HeartbeatInterval.TotalSeconds:0}{RegistryServiceDiscoveryProviderConstants.SecondsUnit}",
+                    Timeout = RegistryServiceDiscoveryProviderConstants.CheckTimeout,
+                    DeregisterCriticalServiceAfter = RegistryServiceDiscoveryProviderConstants.DeregisterCriticalServiceAfter
                 }
             };
 
@@ -210,11 +210,11 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
         {
             var dc = string.IsNullOrEmpty(_options.Registry.Datacenter)
                 ? string.Empty
-                : $"?dc={_options.Registry.Datacenter}";
+                : $"{RegistryServiceDiscoveryProviderConstants.DatacenterQueryParamCatalogPrefix}{_options.Registry.Datacenter}";
 
             using var http = CreateClient();
             var catalog = await http.GetFromJsonAsync<Dictionary<string, List<string>>>(
-                $"/v1/catalog/services{dc}", JsonOptions, cancellationToken) ?? [];
+                $"{RegistryServiceDiscoveryProviderConstants.CatalogServicesBasePath}{dc}", JsonOptions, cancellationToken) ?? [];
 
             return Result<IReadOnlyList<string>>.Success([.. catalog.Keys]);
         }
