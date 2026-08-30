@@ -55,8 +55,8 @@ public class AuditLogController : ControllerBase, IAuditLogController
         [FromQuery] DateTimeOffset? to,
         [FromQuery] string? entityType,
         [FromQuery] Guid? userId,
-        int page = 1,
-        int pageSize = 50,
+        int page = AuditLogControllerConstants.DefaultPage,
+        int pageSize = AuditLogControllerConstants.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -65,10 +65,10 @@ public class AuditLogController : ControllerBase, IAuditLogController
         {
             // Validate pagination
             if (page < 1)
-                page = 1;
+                page = AuditLogControllerConstants.DefaultPage;
 
-            if (pageSize < 1 || pageSize > 1000)
-                pageSize = 50;
+            if (pageSize < 1 || pageSize > AuditLogControllerConstants.MaxPageSize)
+                pageSize = AuditLogControllerConstants.DefaultPageSize;
 
             // Build composable predicate
             Expression<Func<AuditLog, bool>>? predicate = null;
@@ -178,7 +178,7 @@ public class AuditLogController : ControllerBase, IAuditLogController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving audit log {LogId}", id);
-            return StatusCode(500, new { error = "Failed to retrieve audit log" });
+            return StatusCode(500, new { error = AuditLogControllerConstants.FailedToRetrieveAuditLog });
         }
     }
 
@@ -192,13 +192,13 @@ public class AuditLogController : ControllerBase, IAuditLogController
     /// <response code="400">If parameters are invalid</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserAuditLogs(Guid userId, [FromQuery] int days = 30, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetUserAuditLogs(Guid userId, [FromQuery] int days = AuditLogControllerConstants.DefaultDays, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            if (days < 1 || days > 365)
-                days = 30;
+            if (days < 1 || days > AuditLogControllerConstants.MaxDays)
+                days = AuditLogControllerConstants.DefaultDays;
 
             var result = await _auditLogRepository.GetByUserIdPagedAsync(userId, 1, 1000, cancellationToken);
 
