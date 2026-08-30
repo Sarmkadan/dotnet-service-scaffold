@@ -15,15 +15,6 @@ namespace DotnetServiceScaffold.Infrastructure.Metrics;
 /// </summary>
 public static class MetricsServiceValidation
 {
-	private const string MetricNamePattern = "^[a-zA-Z_][a-zA-Z0-9_]*$";
-	private const int MaxMetricNameLength = 100;
-	private const double MinGaugeValue = -1_000_000_000;
-	private const double MaxGaugeValue = 1_000_000_000;
-	private const long MinCounterValue = 0;
-	private const long MaxCounterValue = 1_000_000_000;
-	private const long MinTimingValue = 0;
-	private const long MaxTimingValue = 3_600_000_000; // 1 hour in ms
-
 	/// <summary>
 	/// Validates a metrics service instance and returns a list of human-readable problems.
 	/// </summary>
@@ -93,12 +84,12 @@ public static class MetricsServiceValidation
 
 		var errors = new List<string>();
 
-		if (metricName.Length > MaxMetricNameLength)
+		if (metricName.Length > MetricsServiceValidationConstants.MaxMetricNameLength)
 		{
-			errors.Add($"Metric name '{metricName}' exceeds maximum length of {MaxMetricNameLength} characters.");
+			errors.Add($"Metric name '{metricName}' exceeds maximum length of {MetricsServiceValidationConstants.MaxMetricNameLength} characters.");
 		}
 
-		if (!Regex.IsMatch(metricName, MetricNamePattern))
+		if (!Regex.IsMatch(metricName, MetricsServiceValidationConstants.MetricNamePattern))
 		{
 			errors.Add(
 				$"Metric name '{metricName}' must start with a letter or underscore and contain only letters, digits, and underscores.");
@@ -116,14 +107,14 @@ public static class MetricsServiceValidation
 	{
 		var errors = new List<string>();
 
-		if (value < MinCounterValue)
+		if (value < MetricsServiceValidationConstants.MinCounterValue)
 		{
-			errors.Add($"Counter value {value} is below minimum of {MinCounterValue}.");
+			errors.Add($"Counter value {value} is below minimum of {MetricsServiceValidationConstants.MinCounterValue}.");
 		}
 
-		if (value > MaxCounterValue)
+		if (value > MetricsServiceValidationConstants.MaxCounterValue)
 		{
-			errors.Add($"Counter value {value} exceeds maximum of {MaxCounterValue}.");
+			errors.Add($"Counter value {value} exceeds maximum of {MetricsServiceValidationConstants.MaxCounterValue}.");
 		}
 
 		return errors.AsReadOnly();
@@ -146,13 +137,13 @@ public static class MetricsServiceValidation
 		{
 			errors.Add("Gauge value cannot be infinite.");
 		}
-		else if (value < MinGaugeValue)
+		else if (value < MetricsServiceValidationConstants.MinGaugeValue)
 		{
-			errors.Add($"Gauge value {value.ToString(CultureInfo.InvariantCulture)} is below minimum of {MinGaugeValue}.");
+			errors.Add($"Gauge value {value.ToString(CultureInfo.InvariantCulture)} is below minimum of {MetricsServiceValidationConstants.MinGaugeValue}.");
 		}
-		else if (value > MaxGaugeValue)
+		else if (value > MetricsServiceValidationConstants.MaxGaugeValue)
 		{
-			errors.Add($"Gauge value {value.ToString(CultureInfo.InvariantCulture)} exceeds maximum of {MaxGaugeValue}.");
+			errors.Add($"Gauge value {value.ToString(CultureInfo.InvariantCulture)} exceeds maximum of {MetricsServiceValidationConstants.MaxGaugeValue}.");
 		}
 
 		return errors.AsReadOnly();
@@ -167,14 +158,14 @@ public static class MetricsServiceValidation
 	{
 		var errors = new List<string>();
 
-		if (elapsedMs < MinTimingValue)
+		if (elapsedMs < MetricsServiceValidationConstants.MinTimingValue)
 		{
-			errors.Add($"Timing value {elapsedMs}ms is below minimum of {MinTimingValue}ms.");
+			errors.Add($"Timing value {elapsedMs}ms is below minimum of {MetricsServiceValidationConstants.MinTimingValue}ms.");
 		}
 
-		if (elapsedMs > MaxTimingValue)
+		if (elapsedMs > MetricsServiceValidationConstants.MaxTimingValue)
 		{
-			errors.Add($"Timing value {elapsedMs}ms exceeds maximum of {MaxTimingValue}ms (1 hour).");
+			errors.Add($"Timing value {elapsedMs}ms exceeds maximum of {MetricsServiceValidationConstants.MaxTimingValue}ms (1 hour).");
 		}
 
 		return errors.AsReadOnly();
@@ -222,9 +213,9 @@ public static class MetricsServiceValidation
 	internal static IReadOnlyList<string> ValidateMetricValue(
 		MetricType metricType,
 		double value,
-		long count = 0,
-		long min = long.MaxValue,
-		long max = long.MinValue)
+		long count = MetricsServiceValidationConstants.MinTimerCount,
+		long min = MetricsServiceValidationConstants.DefaultMinTimerValue,
+		long max = MetricsServiceValidationConstants.DefaultMaxTimerValue)
 	{
 		var errors = new List<string>();
 
@@ -242,22 +233,24 @@ public static class MetricsServiceValidation
 			case MetricType.Timer:
 				errors.AddRange(ValidateTimingValue((long)value));
 
-				if (count < 0)
+				if (count < MetricsServiceValidationConstants.MinTimerCount)
 				{
 					errors.Add("Timer count cannot be negative.");
 				}
 
-				if (min != long.MaxValue && min < MinTimingValue)
+				if (min != MetricsServiceValidationConstants.DefaultMinTimerValue && min < MetricsServiceValidationConstants.MinTimingValue)
 				{
-					errors.Add($"Timer minimum {min}ms is below minimum of {MinTimingValue}ms.");
+					errors.Add($"Timer minimum {min}ms is below minimum of {MetricsServiceValidationConstants.MinTimingValue}ms.");
 				}
 
-				if (max != long.MinValue && max < MinTimingValue)
+				if (max != MetricsServiceValidationConstants.DefaultMaxTimerValue && max < MetricsServiceValidationConstants.MinTimingValue)
 				{
-					errors.Add($"Timer maximum {max}ms is below minimum of {MinTimingValue}ms.");
+					errors.Add($"Timer maximum {max}ms is below minimum of {MetricsServiceValidationConstants.MinTimingValue}ms.");
 				}
 
-				if (min != long.MaxValue && max != long.MinValue && min > max)
+				if (min != MetricsServiceValidationConstants.DefaultMinTimerValue &&
+					max != MetricsServiceValidationConstants.DefaultMaxTimerValue &&
+					min > max)
 				{
 					errors.Add("Timer minimum cannot be greater than maximum.");
 				}
