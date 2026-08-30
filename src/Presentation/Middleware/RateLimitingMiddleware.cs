@@ -38,7 +38,7 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         // Skip rate limiting for specific paths
-        if (context.Request.Path.StartsWithSegments("/health"))
+        if (context.Request.Path.StartsWithSegments(RateLimitingMiddlewareConstants.HealthCheckPath))
         {
             await _next(context);
             return;
@@ -54,23 +54,23 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
         if (!bucket.TryTakeToken())
         {
             _logger.LogWarning("Rate limit exceeded for client {ClientId}", clientId);
-            context.Response.StatusCode = 429;
-            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = RateLimitingMiddlewareConstants.StatusCodeTooManyRequests;
+            context.Response.ContentType = RateLimitingMiddlewareConstants.JsonContentType;
             var retryAfter = bucket.GetRetryAfterSeconds();
-            context.Response.Headers["Retry-After"] = retryAfter.ToString();
+            context.Response.Headers[RateLimitingMiddlewareConstants.RetryAfterHeaderName] = retryAfter.ToString();
 
             await context.Response.WriteAsJsonAsync(new
             {
-                error = "Too Many Requests",
-                message = "Rate limit exceeded. Please try again later.",
+                error = RateLimitingMiddlewareConstants.TooManyRequestsError,
+                message = RateLimitingMiddlewareConstants.RateLimitExceededMessage,
                 retryAfter = retryAfter
             });
             return;
         }
 
         // Add rate limit headers to response
-        context.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
-        context.Response.Headers["X-RateLimit-Remaining"] = bucket.GetRemainingTokens().ToString();
+        context.Response.Headers[RateLimitingMiddlewareConstants.RateLimitLimitHeaderName] = limit.ToString();
+        context.Response.Headers[RateLimitingMiddlewareConstants.RateLimitRemainingHeaderName] = bucket.GetRemainingTokens().ToString();
 
         await _next(context);
     }
@@ -84,11 +84,11 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
         if (context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
             is string userId && !string.IsNullOrEmpty(userId))
         {
-            return $"user:{userId}";
+            return $"{RateLimitingMiddlewareConstants.UserPrefix}{userId}";
         }
 
-        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        return $"ip:{remoteIp}";
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? RateLimitingMiddlewareConstants.UnknownIp;
+        return $"{RateLimitingMiddlewareConstants.IpPrefix}{remoteIp}";
     }
 
     /// <summary>
@@ -147,7 +147,7 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
                     return 0;
 
                 var tokensNeeded = 1 - Tokens;
-                var secondsNeeded = tokensNeeded / TokensPerSecond;
+                var secondsNeeded = tokensNeeded / RateLimitingMiddlewareConstants.TokensPerSecond;
                 return (int)Math.Ceiling(secondsNeeded);
             }
         }
@@ -159,14 +159,13 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
         {
             var now = DateTime.UtcNow;
             var elapsed = (now - LastRefillTime).TotalSeconds;
-            var tokensToAdd = elapsed * TokensPerSecond;
+            var tokensToAdd = elapsed * RateLimitingMiddlewareConstants.TokensPerSecond;
 
             Tokens = Math.Min(Capacity, Tokens + tokensToAdd);
             LastRefillTime = now;
         }
 
-        private const double TokensPerSecond = 1.0 / 60.0; // One request per second max
-    }
+            }
 }
 
 /// <summary>
