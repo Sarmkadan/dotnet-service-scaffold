@@ -31,35 +31,35 @@ public static class UpstreamClusterValidation
         // Validate Name
     if (string.IsNullOrWhiteSpace(value.Name))
         {
-            errors.Add("Name cannot be null or whitespace.");
+            errors.Add(UpstreamClusterValidationConstants.NameCannotBeNullOrWhitespace);
         }
 
         // Validate Endpoint
     if (string.IsNullOrWhiteSpace(value.Endpoint))
         {
-            errors.Add("Endpoint cannot be null or whitespace.");
+            errors.Add(UpstreamClusterValidationConstants.EndpointCannotBeNullOrWhitespace);
         }
 
         // Validate HealthyHosts and TotalHosts
         if (value.HealthyHosts < 0)
         {
-            errors.Add("HealthyHosts cannot be negative.");
+            errors.Add(UpstreamClusterValidationConstants.HealthyHostsCannotBeNegative);
         }
 
         if (value.TotalHosts < 0)
         {
-            errors.Add("TotalHosts cannot be negative.");
+            errors.Add(UpstreamClusterValidationConstants.TotalHostsCannotBeNegative);
         }
 
         else if (value.TotalHosts < value.HealthyHosts)
         {
-            errors.Add("TotalHosts cannot be less than HealthyHosts.");
+            errors.Add(UpstreamClusterValidationConstants.TotalHostsCannotBeLessThanHealthyHosts);
         }
 
         // Validate CircuitBreakerOpen consistency
         if (value.TotalHosts > 0 && value.HealthyHosts == 0 && !value.CircuitBreakerOpen)
         {
-            errors.Add("CircuitBreakerOpen should be true when there are hosts but none are healthy.");
+            errors.Add(UpstreamClusterValidationConstants.CircuitBreakerOpenShouldBeTrueWhenHostsPresentButNoneHealthy);
         }
 
         return errors.AsReadOnly();
@@ -88,7 +88,7 @@ public static class UpstreamClusterValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"UpstreamCluster validation failed:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
+                $"{UpstreamClusterValidationConstants.UpstreamClusterValidationFailedHeader}{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
         }
     }
 }
