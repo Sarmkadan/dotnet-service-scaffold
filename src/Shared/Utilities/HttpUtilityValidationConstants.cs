@@ -24,6 +24,15 @@ internal static class HttpUtilityValidationConstants
     public const int MinPortNumber = 0;
     public const int MaxPortNumber = 65535;
     public const int MinRetryAttempt = 1;
+    public const int MaxAsciiCodePoint = 127;
+
+    // Character and token constants
+    public const char BasicAuthUsernameSeparator = ':';
+    public const char NullCharacter = '\0';
+    public const string HttpScheme = "http";
+    public const string HttpsScheme = "https";
+    public const string RelativePathTraversal = "..";
+    public const string ProblemSeparator = " ";
 
     // String constants for validation messages
     public const string UsernameExceedsMaxLength = "Username exceeds maximum length of {0} characters.";
@@ -53,4 +62,13 @@ internal static class HttpUtilityValidationConstants
     public const string HeaderContainsNull = "Header contains null character which is not allowed.";
     public const string RetryAttemptTooLow = "Retry attempt must be {0} or greater.";
     public const string RetryAttemptTooHigh = "Retry attempt exceeds maximum of {0}.";
+    public const string BasicAuthInvalid = "Basic authentication credentials are invalid. ";
+    public const string BearerTokenInvalid = "Bearer token is invalid. ";
+    public const string StatusCodeInvalid = "Status code is invalid. ";
+    public const string BaseUrlInvalid = "Base URL is invalid. ";
+    public const string PathInvalid = "Path is invalid. ";
+    public const string QueryParametersInvalid = "Query parameters are invalid. ";
+    public const string ContentTypeInvalid = "Content-Type header is invalid. ";
+    public const string HeaderInvalid = "Header is invalid. ";
+    public const string RetryAttemptInvalid = "Retry attempt is invalid. ";
 }

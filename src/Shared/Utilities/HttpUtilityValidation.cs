@@ -33,29 +33,29 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.UsernameExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
-        if (username.Contains(':'))
+        if (username.Contains(HttpUtilityValidationConstants.BasicAuthUsernameSeparator))
         {
-            problems.Add("Username contains colon character which is not allowed in Basic authentication.");
+            problems.Add(HttpUtilityValidationConstants.UsernameContainsColon);
         }
 
-        if (username.Contains('\0'))
+        if (username.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
-            problems.Add("Username contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.UsernameContainsNull);
         }
 
-        if (username.Any(c => c > 127))
+        if (username.Any(c => c > HttpUtilityValidationConstants.MaxAsciiCodePoint))
         {
-            problems.Add("Username contains non-ASCII characters which may cause interoperability issues.");
+            problems.Add(HttpUtilityValidationConstants.UsernameContainsNonAscii);
         }
 
-        if (password.Length > 256)
+        if (password.Length > HttpUtilityValidationConstants.MaxBasicAuthLength)
         {
-            problems.Add("Password exceeds maximum length of 256 characters.");
+            problems.Add(string.Format(HttpUtilityValidationConstants.PasswordExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
-        if (password.Contains('\0'))
+        if (password.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
-            problems.Add("Password contains null character which is not allowed.");
+            problems.Add(HttpUtilityValidationConstants.PasswordContainsNull);
         }
 
         return problems;
@@ -78,17 +78,17 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.UsernameExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
-        if (username.Contains(':'))
+        if (username.Contains(HttpUtilityValidationConstants.BasicAuthUsernameSeparator))
         {
             problems.Add(HttpUtilityValidationConstants.UsernameContainsColon);
         }
 
-        if (username.Contains('\0'))
+        if (username.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
             problems.Add(HttpUtilityValidationConstants.UsernameContainsNull);
         }
 
-        if (username.Any(c => c > 127))
+        if (username.Any(c => c > HttpUtilityValidationConstants.MaxAsciiCodePoint))
         {
             problems.Add(HttpUtilityValidationConstants.UsernameContainsNonAscii);
         }
@@ -113,7 +113,7 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.PasswordExceedsMaxLength, HttpUtilityValidationConstants.MaxBasicAuthLength));
         }
 
-        if (password.Contains('\0'))
+        if (password.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
             problems.Add(HttpUtilityValidationConstants.PasswordContainsNull);
         }
@@ -138,12 +138,12 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.BearerTokenExceedsMaxLength, HttpUtilityValidationConstants.MaxBearerTokenLength));
         }
 
-        if (token.Contains('\0'))
+        if (token.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
             problems.Add(HttpUtilityValidationConstants.BearerTokenContainsNull);
         }
 
-        if (token.Any(c => c > 127))
+        if (token.Any(c => c > HttpUtilityValidationConstants.MaxAsciiCodePoint))
         {
             problems.Add(HttpUtilityValidationConstants.BearerTokenContainsNonAscii);
         }
@@ -183,7 +183,7 @@ public static class HttpUtilityValidation
         {
             var uri = new Uri(baseUrl);
 
-            if (uri.Scheme != "http" && uri.Scheme != "https")
+            if (uri.Scheme != HttpUtilityValidationConstants.HttpScheme && uri.Scheme != HttpUtilityValidationConstants.HttpsScheme)
             {
                 problems.Add(HttpUtilityValidationConstants.BaseUrlInvalidScheme);
             }
@@ -222,12 +222,12 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.PathExceedsMaxLength, HttpUtilityValidationConstants.MaxPathLength));
         }
 
-        if (path.Contains(".."))
+        if (path.Contains(HttpUtilityValidationConstants.RelativePathTraversal))
         {
             problems.Add(HttpUtilityValidationConstants.PathContainsRelativeTraversal);
         }
 
-        if (path.Contains('\0'))
+        if (path.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
             problems.Add(HttpUtilityValidationConstants.PathContainsNull);
         }
@@ -261,7 +261,7 @@ public static class HttpUtilityValidation
                 problems.Add(string.Format(HttpUtilityValidationConstants.QueryParameterValueExceedsMaxLength, HttpUtilityValidationConstants.MaxQueryParameterValueLength));
             }
 
-            if (kvp.Key.Contains('\0') || kvp.Value.Contains('\0'))
+            if (kvp.Key.Contains(HttpUtilityValidationConstants.NullCharacter) || kvp.Value.Contains(HttpUtilityValidationConstants.NullCharacter))
             {
                 problems.Add(HttpUtilityValidationConstants.QueryParametersContainNull);
                 break;
@@ -292,7 +292,7 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.ContentTypeExceedsMaxLength, HttpUtilityValidationConstants.MaxContentTypeLength));
         }
 
-        if (contentType.Contains('\0'))
+        if (contentType.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
             problems.Add(HttpUtilityValidationConstants.ContentTypeContainsNull);
         }
@@ -316,7 +316,7 @@ public static class HttpUtilityValidation
             problems.Add(string.Format(HttpUtilityValidationConstants.HeaderExceedsMaxLength, HttpUtilityValidationConstants.MaxHeaderLength));
         }
 
-        if (header.Contains('\0'))
+        if (header.Contains(HttpUtilityValidationConstants.NullCharacter))
         {
             problems.Add(HttpUtilityValidationConstants.HeaderContainsNull);
         }
@@ -422,8 +422,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Basic authentication credentials are invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.BasicAuthInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(username));
         }
     }
@@ -439,8 +439,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Bearer token is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.BearerTokenInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(token));
         }
     }
@@ -456,8 +456,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Status code is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.StatusCodeInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(statusCode));
         }
     }
@@ -473,8 +473,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Base URL is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.BaseUrlInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(baseUrl));
         }
     }
@@ -490,8 +490,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Path is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.PathInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(path));
         }
     }
@@ -507,8 +507,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Query parameters are invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.QueryParametersInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(parameters));
         }
     }
@@ -524,8 +524,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Content-Type header is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.ContentTypeInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(contentType));
         }
     }
@@ -541,8 +541,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Header is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.HeaderInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(header));
         }
     }
@@ -558,8 +558,8 @@ public static class HttpUtilityValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                "Retry attempt is invalid. " +
-                string.Join(" ", problems),
+                HttpUtilityValidationConstants.RetryAttemptInvalid +
+                string.Join(HttpUtilityValidationConstants.ProblemSeparator, problems),
                 nameof(attempt));
         }
     }
