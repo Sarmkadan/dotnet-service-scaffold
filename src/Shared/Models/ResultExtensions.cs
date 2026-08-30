@@ -30,7 +30,7 @@ public static class ResultExtensions
         ArgumentNullException.ThrowIfNull(func);
 
         if (!result.IsSuccess)
-            return Result<TNext>.Failure(result.ErrorMessage ?? "Unknown error", result.ErrorCode);
+            return Result<TNext>.Failure(result.ErrorMessage ?? ResultExtensionsConstants.UnknownError, result.ErrorCode);
 
         try
         {
@@ -56,7 +56,7 @@ public static class ResultExtensions
         ArgumentNullException.ThrowIfNull(func);
 
         if (!result.IsSuccess)
-            return Result<TNext>.Failure(result.ErrorMessage ?? "Unknown error", result.ErrorCode);
+            return Result<TNext>.Failure(result.ErrorMessage ?? ResultExtensionsConstants.UnknownError, result.ErrorCode);
 
         try
         {
@@ -79,7 +79,7 @@ public static class ResultExtensions
     {
         return result.IsSuccess
             ? Result<T>.Success(defaultValue)
-            : Result<T>.Failure(result.ErrorMessage ?? "Unknown error", result.ErrorCode);
+            : Result<T>.Failure(result.ErrorMessage ?? ResultExtensionsConstants.UnknownError, result.ErrorCode);
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public static class ResultExtensions
         ArgumentNullException.ThrowIfNull(others);
 
         if (!first.IsSuccess)
-            return Result<T[]>.Failure(first.ErrorMessage ?? "Unknown error", first.ErrorCode);
+            return Result<T[]>.Failure(first.ErrorMessage ?? ResultExtensionsConstants.UnknownError, first.ErrorCode);
 
         var results = new T[others.Length + 1];
         results[0] = first.Value!;
@@ -128,7 +128,7 @@ public static class ResultExtensions
             ArgumentNullException.ThrowIfNull(others[i]);
 
             if (!others[i].IsSuccess)
-                return Result<T[]>.Failure(others[i].ErrorMessage ?? "Unknown error", others[i].ErrorCode);
+                return Result<T[]>.Failure(others[i].ErrorMessage ?? ResultExtensionsConstants.UnknownError, others[i].ErrorCode);
 
             results[i + 1] = others[i].Value!;
         }
@@ -194,7 +194,7 @@ public static class ResultExtensions
     {
         return result.IsSuccess
             ? result.Value!
-            : throw new InvalidOperationException(result.ErrorMessage ?? "Operation failed with unknown error");
+            : throw new InvalidOperationException(result.ErrorMessage ?? ResultExtensionsConstants.OperationFailedUnknownError);
     }
 
     /// <summary>
