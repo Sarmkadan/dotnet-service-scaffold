@@ -43,7 +43,7 @@ public static class DatabaseBenchmarksJsonExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         return JsonSerializer.Deserialize<DatabaseBenchmarks>(json, _jsonSerializerOptions)
-            ?? throw new JsonException("Deserialized result is null");
+            ?? throw new JsonException(DatabaseBenchmarksJsonExtensionsConstants.DeserializedResultIsNull);
     }
 
     /// <summary>
