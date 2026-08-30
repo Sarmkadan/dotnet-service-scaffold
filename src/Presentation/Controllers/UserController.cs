@@ -5,7 +5,7 @@
 // =====================================================================
 
 using DotnetServiceScaffold.Application.Services;
-using DotnetServiceScaffold.Domain.Exceptions;
+using DotnetServiceScaffold.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetServiceScaffold.Presentation.Controllers;
@@ -40,32 +40,19 @@ public class UserController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var user = await _userService.CreateUserAsync(request.Email, request.FullName, request.Password, cancellationToken);
+        var user = await _userService.CreateUserAsync(request.Email, request.FullName, request.Password, cancellationToken);
 
-            return CreatedAtAction(nameof(GetUser), new { userId = user.Id }, new
+        return CreatedAtAction(nameof(GetUser), new { userId = user.Id }, new
+        {
+            success = true,
+            data = new
             {
-                success = true,
-                data = new
-                {
-                    user.Id,
-                    user.Email,
-                    user.FullName,
-                    user.CreatedAt
-                }
-            });
-        }
-        catch (ServiceValidationException ex)
-        {
-            _logger.LogWarning(UserControllerConstants.RegistrationValidationError, string.Join(", ", ex.Errors));
-            return BadRequest(new { error = UserControllerConstants.ValidationFailed, details = ex.Errors });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, UserControllerConstants.RegistrationError);
-            return StatusCode(500, new { error = UserControllerConstants.RegistrationFailed });
-        }
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.CreatedAt
+            }
+        });
     }
 
     /// <summary>
@@ -81,33 +68,25 @@ public class UserController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var user = await _userService.AuthenticateUserAsync(request.Email, request.Password, cancellationToken);
+        var user = await _userService.AuthenticateUserAsync(request.Email, request.Password, cancellationToken);
 
-            if (user is null)
+        if (user is null)
+        {
+            _logger.LogWarning(UserControllerConstants.FailedAuthenticationAttempt, request.Email);
+            return Unauthorized(new { error = UserControllerConstants.InvalidEmailOrPassword });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            data = new
             {
-                _logger.LogWarning(UserControllerConstants.FailedAuthenticationAttempt, request.Email);
-                return Unauthorized(new { error = UserControllerConstants.InvalidEmailOrPassword });
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.LastLoginAt
             }
-
-            return Ok(new
-            {
-                success = true,
-                data = new
-                {
-                    user.Id,
-                    user.Email,
-                    user.FullName,
-                    user.LastLoginAt
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, UserControllerConstants.LoginError, request.Email);
-            return StatusCode(500, new { error = "Login failed" });
-        }
+        });
     }
 
     /// <summary>
@@ -119,36 +98,19 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            var user = await _userService.GetUserWithApiKeysAsync(userId, cancellationToken);
+        var user = await _userService.GetUserWithApiKeysAsync(userId, cancellationToken);
 
-            if (user is null)
-            {
-                _logger.LogWarning(UserControllerConstants.UserNotFoundLog, userId);
-                return NotFound(new { error = UserControllerConstants.UserNotFoundResponse });
-            }
-
-            return Ok(new
-            {
-                success = true,
-                data = new
-                {
-                    user.Id,
-                    user.Email,
-                    user.FullName,
-                    user.IsActive,
-                    user.CreatedAt,
-                    user.LastLoginAt,
-                    apiKeyCount = user.ApiKeys.Count
-                }
-            });
-        }
-        catch (Exception ex)
+        if (user is null)
         {
-            _logger.LogError(ex, UserControllerConstants.ErrorRetrievingUserLog, userId);
-            return StatusCode(500, new { error = "Error retrieving user" });
+            _logger.LogWarning(UserControllerConstants.UserNotFoundLog, userId);
+            return NotFound(new { error = UserControllerConstants.UserNotFoundResponse });
         }
+
+        return Ok(new
+        {
+            success = true,
+            data = ProjectUser(user, includeApiKeyCount: true)
+        });
     }
 
     /// <summary>
@@ -164,27 +126,15 @@ public class UserController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var success = await _userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword, cancellationToken);
+        var success = await _userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword, cancellationToken);
 
-            if (!success)
-            {
-                _logger.LogWarning(UserControllerConstants.PasswordChangeFailedForUserLog, userId);
-                return BadRequest(new { error = "Current password is incorrect" });
-            }
+        if (!success)
+        {
+            _logger.LogWarning(UserControllerConstants.PasswordChangeFailedForUserLog, userId);
+            return BadRequest(new { error = "Current password is incorrect" });
+        }
 
-            return Ok(new { success = true, message = UserControllerConstants.PasswordChangedSuccessfully });
-        }
-        catch (ServiceScaffoldException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, UserControllerConstants.PasswordChangeErrorLog, userId);
-            return StatusCode(500, new { error = "Password change failed" });
-        }
+        return Ok(new { success = true, message = UserControllerConstants.PasswordChangedSuccessfully });
     }
 
     /// <summary>
@@ -196,20 +146,8 @@ public class UserController : ControllerBase
     public async Task<IActionResult> UnlockUser(Guid userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            await _userService.UnlockUserAsync(userId, cancellationToken);
-            return Ok(new { success = true, message = UserControllerConstants.UserAccountUnlocked });
-        }
-        catch (ServiceScaffoldException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, UserControllerConstants.ErrorUnlockingUserLog, userId);
-            return StatusCode(500, new { error = "Error unlocking user" });
-        }
+        await _userService.UnlockUserAsync(userId, cancellationToken);
+        return Ok(new { success = true, message = UserControllerConstants.UserAccountUnlocked });
     }
 
     /// <summary>
@@ -233,35 +171,46 @@ public class UserController : ControllerBase
         if (pageSize < UserControllerConstants.MinimumPageSize) pageSize = UserControllerConstants.DefaultPageSize;
         if (pageSize > UserControllerConstants.MaximumPageSize) pageSize = UserControllerConstants.MaximumPageSize;
 
-        try
-        {
-            var users = await _userService.SearchUsersAsync(q, page, pageSize);
+        var users = await _userService.SearchUsersAsync(q, page, pageSize);
 
-            return Ok(new
-            {
-                success = true,
-                data = new
-                {
-                    results = users.Select(u => new
-                    {
-                        u.Id,
-                        u.Email,
-                        u.FullName,
-                        u.IsActive,
-                        u.CreatedAt,
-                        u.LastLoginAt
-                    }),
-                    page,
-                    pageSize,
-                    total = users.Count()
-                }
-            });
-        }
-        catch (Exception ex)
+        return Ok(new
         {
-            _logger.LogError(ex, UserControllerConstants.ErrorSearchingUsersWithQueryLog, q);
-            return StatusCode(500, new { error = "Error searching users" });
+            success = true,
+            data = new
+            {
+                results = users.Select(user => ProjectUser(user, includeApiKeyCount: false)),
+                page,
+                pageSize,
+                total = users.Count()
+            }
+        });
+    }
+
+    private static object ProjectUser(User user, bool includeApiKeyCount)
+    {
+        if (includeApiKeyCount)
+        {
+            return new
+            {
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.IsActive,
+                user.CreatedAt,
+                user.LastLoginAt,
+                apiKeyCount = user.ApiKeys.Count
+            };
         }
+
+        return new
+        {
+            user.Id,
+            user.Email,
+            user.FullName,
+            user.IsActive,
+            user.CreatedAt,
+            user.LastLoginAt
+        };
     }
 
     public record RegisterRequest(string Email, string FullName, string Password);
