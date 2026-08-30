@@ -38,7 +38,12 @@ public class ConfigurationRepositoryTests : IntegrationTestBase, IConfigurationR
     public async Task AddConfigurationAsync_ShouldAddConfigurationToDatabase()
     {
         // Arrange
-        var config = new ServiceConfiguration { Id = Guid.NewGuid(), Key = ConfigurationRepositoryTestsConstants.TestConfig, Value = ConfigurationRepositoryTestsConstants.TestValue };
+        var config = new ServiceConfiguration
+        {
+            Id = Guid.NewGuid(),
+            Key = ConfigurationRepositoryTestsConstants.TestConfig,
+            Value = ConfigurationRepositoryTestsConstants.TestValue
+        };
 
         // Act
         await _configurationRepository.AddAsync(config);
@@ -56,7 +61,12 @@ public class ConfigurationRepositoryTests : IntegrationTestBase, IConfigurationR
     public async Task GetConfigurationByIdAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
         // Arrange
-        var config = new ServiceConfiguration { Id = Guid.NewGuid(), Key = ConfigurationRepositoryTestsConstants.TestConfig1, Value = ConfigurationRepositoryTestsConstants.TestValue1 };
+        var config = new ServiceConfiguration
+        {
+            Id = Guid.NewGuid(),
+            Key = ConfigurationRepositoryTestsConstants.TestConfig1,
+            Value = ConfigurationRepositoryTestsConstants.TestValue1
+        };
         await _configurationRepository.AddAsync(config);
 
         // Act
@@ -89,7 +99,12 @@ public class ConfigurationRepositoryTests : IntegrationTestBase, IConfigurationR
     public async Task GetConfigurationByKeyAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
         // Arrange
-        var config = new ServiceConfiguration { Id = Guid.NewGuid(), Key = ConfigurationRepositoryTestsConstants.TestKey2, Value = ConfigurationRepositoryTestsConstants.TestValue2 };
+        var config = new ServiceConfiguration
+        {
+            Id = Guid.NewGuid(),
+            Key = ConfigurationRepositoryTestsConstants.TestKey2,
+            Value = ConfigurationRepositoryTestsConstants.TestValue2
+        };
         await _configurationRepository.AddAsync(config);
 
         // Act
@@ -122,7 +137,12 @@ public class ConfigurationRepositoryTests : IntegrationTestBase, IConfigurationR
     public async Task UpdateConfigurationAsync_ShouldUpdateConfigurationInDatabase()
     {
         // Arrange
-        var config = new ServiceConfiguration { Id = Guid.NewGuid(), Key = ConfigurationRepositoryTestsConstants.OldKey, Value = ConfigurationRepositoryTestsConstants.OldValue };
+        var config = new ServiceConfiguration
+        {
+            Id = Guid.NewGuid(),
+            Key = ConfigurationRepositoryTestsConstants.OldKey,
+            Value = ConfigurationRepositoryTestsConstants.OldValue
+        };
         await _configurationRepository.AddAsync(config);
         
         // Ensure entity is detached to simulate real update scenario where entity might be fetched
@@ -147,7 +167,12 @@ public class ConfigurationRepositoryTests : IntegrationTestBase, IConfigurationR
     public async Task DeleteConfigurationAsync_ShouldRemoveConfigurationFromDatabase()
     {
         // Arrange
-        var config = new ServiceConfiguration { Id = Guid.NewGuid(), Key = ConfigurationRepositoryTestsConstants.KeyToDelete, Value = ConfigurationRepositoryTestsConstants.ValueToDelete };
+        var config = new ServiceConfiguration
+        {
+            Id = Guid.NewGuid(),
+            Key = ConfigurationRepositoryTestsConstants.KeyToDelete,
+            Value = ConfigurationRepositoryTestsConstants.ValueToDelete
+        };
         await _configurationRepository.AddAsync(config);
 
         // Act
