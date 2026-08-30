@@ -129,7 +129,7 @@ User={options.ServiceUser}
 WorkingDirectory={options.ApplicationPath}
 ExecStart={options.DotnetPath} DotnetServiceScaffold.dll
 Restart=on-failure
-RestartSec=10
+RestartSec={DeploymentConfigurationConstants.SystemdServiceRestartSec}
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier={options.ServiceName}
@@ -165,22 +165,22 @@ WantedBy=multi-user.target
         header_upstream X-Real-IP {{{{http.client.ip}}}}
 
         # Timeouts
-        timeout 30s
+        timeout {DeploymentConfigurationConstants.CaddyReverseProxyTimeoutSeconds}s
 
         # Health check
         uri /health
-        interval 30s
-        timeout 5s
+        interval {DeploymentConfigurationConstants.CaddyReverseProxyIntervalSeconds}s
+        timeout {DeploymentConfigurationConstants.CaddyHealthCheckTimeoutSeconds}s
         unhealthy_status 500 502 503
-        unhealthy_latency 5s
+        unhealthy_latency {DeploymentConfigurationConstants.CaddyHealthCheckUnhealthyLatencySeconds}s
     }}
 
     # Logs
     log {{
         output file {options.LogPath}/caddy.log {{
-            roll_size 100mb
-            roll_keep 10
-            roll_keep_for 168h
+            roll_size {DeploymentConfigurationConstants.CaddyLogRollSizeMb}mb
+            roll_keep {DeploymentConfigurationConstants.CaddyLogRollKeep}
+            roll_keep_for {DeploymentConfigurationConstants.CaddyLogRollKeepForHours}h
         }}
     }}
 
