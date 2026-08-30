@@ -22,7 +22,7 @@ public class SqliteHealthCheck : IHealthCheck
     /// <param name="degradedDiskSpaceThresholdBytes">
     /// Available disk space below which the check reports Degraded. Defaults to 512 MB.
     /// </param>
-    public SqliteHealthCheck(string databasePath, long degradedDiskSpaceThresholdBytes = 512 * 1024 * 1024)
+    public SqliteHealthCheck(string databasePath, long degradedDiskSpaceThresholdBytes = SqliteHealthCheckConstants.DefaultDegradedDiskSpaceThresholdBytes)
     {
         ArgumentException.ThrowIfNullOrEmpty(databasePath);
         _databasePath = databasePath;
@@ -35,7 +35,7 @@ public class SqliteHealthCheck : IHealthCheck
     {
         // Enforce timeout to prevent hung SQLite operations from stalling health checks
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(SqliteHealthCheckConstants.TimeoutSeconds));
 
         var data = new Dictionary<string, object>();
 
@@ -44,18 +44,18 @@ public class SqliteHealthCheck : IHealthCheck
         data["databasePath"] = fullPath;
 
         // Check disk space on the volume that holds the database directory.
-        var directory = Path.GetDirectoryName(fullPath) ?? ".";
+        var directory = Path.GetDirectoryName(fullPath) ?? SqliteHealthCheckConstants.CurrentDirectoryIndicator;
         try
         {
             var driveInfo = new DriveInfo(directory);
             var availableBytes = driveInfo.AvailableFreeSpace;
             data["diskAvailableBytes"] = availableBytes;
-            data["diskAvailableMB"] = availableBytes / (1024 * 1024);
+            data["diskAvailableMB"] = availableBytes / SqliteHealthCheckConstants.BytesPerMebibyte;
 
             if (availableBytes < _degradedDiskSpaceThresholdBytes)
             {
                 return HealthCheckResult.Degraded(
-                    $"Low disk space: {availableBytes / (1024 * 1024)} MB available on {driveInfo.Name}",
+                    $"Low disk space: {availableBytes / SqliteHealthCheckConstants.BytesPerMebibyte} MB available on {driveInfo.Name}",
                     data: data);
             }
         }
@@ -74,7 +74,7 @@ public class SqliteHealthCheck : IHealthCheck
                 var probe = Path.Combine(directory, $".write-probe-{Guid.NewGuid():N}");
                 await File.WriteAllTextAsync(probe, string.Empty, timeoutCts.Token);
                 File.Delete(probe);
-                data["fileExists"] = false;
+                data[SqliteHealthCheckConstants.FileExistsKey] = false;
                 return HealthCheckResult.Healthy(
                     "SQLite database file will be created on first write; directory is writable.",
                     data);
@@ -93,12 +93,12 @@ public class SqliteHealthCheck : IHealthCheck
             }
         }
 
-        data["fileExists"] = true;
+        data[SqliteHealthCheckConstants.FileExistsKey] = true;
 
         // Verify the file is readable.
         try
         {
-            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 4096, useAsync: true);
+            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: SqliteHealthCheckConstants.FileStreamBufferSize, useAsync: true);
         }
         catch (OperationCanceledException)
         {
@@ -116,7 +116,7 @@ public class SqliteHealthCheck : IHealthCheck
         // Verify the file is writable.
         try
         {
-            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, bufferSize: 4096, useAsync: true);
+            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, bufferSize: SqliteHealthCheckConstants.FileStreamBufferSize, useAsync: true);
         }
         catch (OperationCanceledException)
         {
