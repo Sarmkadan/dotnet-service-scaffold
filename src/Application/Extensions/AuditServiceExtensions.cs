@@ -36,8 +36,8 @@ public static class AuditServiceExtensions
 
         return auditService.LogActionAsync(
             userId: null,
-            action: "MessageLogged",
-            entityType: "System",
+            action: AuditServiceExtensionsConstants.MessageLoggedAction,
+            entityType: AuditServiceExtensionsConstants.SystemEntityType,
             entityId: null,
             description: message);
     }
