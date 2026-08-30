@@ -33,7 +33,7 @@ public static class ExceptionExtensions
             innerException = innerException.InnerException;
         }
 
-        return string.Join(" -> ", messages);
+        return string.Join(ExceptionExtensionsConstants.ExceptionMessageSeparator, messages);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ public static class ExceptionExtensions
         {
             if (!string.IsNullOrEmpty(current.StackTrace))
             {
-                traces.Add($"Level {level}: {current.GetType().Name}");
+                traces.Add(string.Format(ExceptionExtensionsConstants.ExceptionLevelFormat, level, current.GetType().Name));
                 traces.Add(current.StackTrace);
                 traces.Add(string.Empty);
             }
@@ -143,14 +143,14 @@ public static class ExceptionExtensions
 
         return exception switch
         {
-            ArgumentNullException => 400,
-            ArgumentException => 400,
-            KeyNotFoundException => 404,
-            InvalidOperationException => 409,
-            TimeoutException => 504,
-            NotImplementedException => 501,
-            HttpRequestException => 502,
-            _ => 500
+            ArgumentNullException => ExceptionExtensionsConstants.HttpStatusCodeBadRequest,
+            ArgumentException => ExceptionExtensionsConstants.HttpStatusCodeBadRequest,
+            KeyNotFoundException => ExceptionExtensionsConstants.HttpStatusCodeNotFound,
+            InvalidOperationException => ExceptionExtensionsConstants.HttpStatusCodeConflict,
+            TimeoutException => ExceptionExtensionsConstants.HttpStatusCodeGatewayTimeout,
+            NotImplementedException => ExceptionExtensionsConstants.HttpStatusCodeNotImplemented,
+            HttpRequestException => ExceptionExtensionsConstants.HttpStatusCodeBadGateway,
+            _ => ExceptionExtensionsConstants.HttpStatusCodeInternalServerError
         };
     }
 
@@ -202,7 +202,7 @@ public static class ExceptionExtensions
     /// <param name="context">Optional context label for the error.</param>
     /// <returns>A formatted log message containing exception details.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/>.</exception>
-    public static string ToLogMessage(this Exception exception, string context = "Error")
+    public static string ToLogMessage(this Exception exception, string context = ExceptionExtensionsConstants.DefaultLogContext)
     {
         ArgumentNullException.ThrowIfNull(exception);
         ArgumentException.ThrowIfNullOrEmpty(context);
