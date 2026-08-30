@@ -106,7 +106,7 @@ public static class HttpContextExtensions
         ArgumentNullException.ThrowIfNull(context);
 
         // Check for X-Forwarded-For header (common with reverse proxies)
-        if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
+        if (context.Request.Headers.TryGetValue(HttpContextExtensionsConstants.XForwardedForHeader, out var forwardedFor))
         {
             var forwardedAddress = forwardedFor.FirstOrDefault()?.Split(',').FirstOrDefault()?.Trim();
             if (!string.IsNullOrEmpty(forwardedAddress))
@@ -116,7 +116,7 @@ public static class HttpContextExtensions
         }
 
         // Check for X-Real-IP header (Nginx)
-        if (context.Request.Headers.TryGetValue("X-Real-IP", out var realIp))
+        if (context.Request.Headers.TryGetValue(HttpContextExtensionsConstants.XRealIpHeader, out var realIp))
         {
             var ipAddress = realIp.FirstOrDefault();
             if (!string.IsNullOrEmpty(ipAddress))
@@ -152,7 +152,7 @@ public static class HttpContextExtensions
     {
         ArgumentNullException.ThrowIfNull(context);
         return context.Request.Headers.FirstOrDefault(h =>
-            h.Key.Equals("X-Api-Key", StringComparison.OrdinalIgnoreCase)).Value.FirstOrDefault();
+            h.Key.Equals(HttpContextExtensionsConstants.ApiKeyHeader, StringComparison.OrdinalIgnoreCase)).Value.FirstOrDefault();
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ public static class HttpContextExtensions
     public static string GetContentType(this HttpContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        return context.Request.ContentType ?? "application/octet-stream";
+        return context.Request.ContentType ?? HttpContextExtensionsConstants.DefaultContentType;
     }
 
     /// <summary>
@@ -269,6 +269,6 @@ public static class HttpContextExtensions
     {
         ArgumentNullException.ThrowIfNull(context);
         var userAgent = context.GetUserAgent() ?? string.Empty;
-        return userAgent.Contains("Mozilla") || userAgent.Contains("Chrome") || userAgent.Contains("Safari");
+        return userAgent.Contains(HttpContextExtensionsConstants.MozillaBrowserIndicator) || userAgent.Contains(HttpContextExtensionsConstants.ChromeBrowserIndicator) || userAgent.Contains(HttpContextExtensionsConstants.SafariBrowserIndicator);
     }
 }
