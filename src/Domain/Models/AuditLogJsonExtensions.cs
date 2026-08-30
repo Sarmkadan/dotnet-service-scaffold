@@ -85,7 +85,7 @@ public static class AuditLogJsonExtensions
 
         if (string.IsNullOrWhiteSpace(json))
         {
-            errorMessage = "JSON string cannot be null or whitespace.";
+            errorMessage = AuditLogJsonExtensionsConstants.JsonNullOrWhitespaceErrorMessage;
             return false;
         }
 
