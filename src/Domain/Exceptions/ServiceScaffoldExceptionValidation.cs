@@ -29,21 +29,21 @@ public static class ServiceScaffoldExceptionValidation
         // Validate ErrorCode
         if (string.IsNullOrWhiteSpace(value.ErrorCode))
         {
-            problems.Add("ErrorCode must not be null or whitespace.");
+            problems.Add(ServiceScaffoldExceptionValidationConstants.ErrorCodeMustNotBeNullOrWhitespace);
         }
-        else if (value.ErrorCode.Length > 50)
+        else if (value.ErrorCode.Length > ServiceScaffoldExceptionValidationConstants.ErrorCodeMaxLength)
         {
-            problems.Add("ErrorCode must be 50 characters or less.");
+            problems.Add(string.Format(ServiceScaffoldExceptionValidationConstants.ErrorCodeMustBeMaxLength, ServiceScaffoldExceptionValidationConstants.ErrorCodeMaxLength));
         }
 
         // Validate Message
         if (string.IsNullOrWhiteSpace(value.Message))
         {
-            problems.Add("Message must not be null or whitespace.");
+            problems.Add(ServiceScaffoldExceptionValidationConstants.MessageMustNotBeNullOrWhitespace);
         }
-        else if (value.Message.Length > 1000)
+        else if (value.Message.Length > ServiceScaffoldExceptionValidationConstants.MessageMaxLength)
         {
-            problems.Add("Message must be 1000 characters or less.");
+            problems.Add(string.Format(ServiceScaffoldExceptionValidationConstants.MessageMustBeMaxLength, ServiceScaffoldExceptionValidationConstants.MessageMaxLength));
         }
 
         return problems.AsReadOnly();
@@ -74,7 +74,7 @@ public static class ServiceScaffoldExceptionValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"ServiceScaffoldException is invalid. Problems: {string.Join(" ", problems)}",
+                string.Format(ServiceScaffoldExceptionValidationConstants.ServiceScaffoldExceptionInvalidFormat, string.Join(" ", problems)),
                 nameof(value));
         }
     }
@@ -132,11 +132,11 @@ public static class ServiceScaffoldExceptionValidation
         // Validate Errors collection
         if (value.Errors is null)
         {
-            problems.Add("Errors collection must not be null.");
+            problems.Add(ServiceScaffoldExceptionValidationConstants.ErrorsCollectionMustNotBeNull);
         }
         else if (value.Errors.Count == 0)
         {
-            problems.Add("Errors collection must contain at least one error.");
+            problems.Add(ServiceScaffoldExceptionValidationConstants.ErrorsCollectionMustContainAtLeastOneError);
         }
         else
         {
@@ -145,11 +145,11 @@ public static class ServiceScaffoldExceptionValidation
                 var error = value.Errors[i];
                 if (string.IsNullOrWhiteSpace(error))
                 {
-                    problems.Add($"Errors[{i}] must not be null or whitespace.");
+                    problems.Add(string.Format(ServiceScaffoldExceptionValidationConstants.ErrorsItemMustNotBeNullOrWhitespace, i));
                 }
-                else if (error.Length > 500)
+                else if (error.Length > ServiceScaffoldExceptionValidationConstants.ErrorsItemMaxLength)
                 {
-                    problems.Add($"Errors[{i}] must be 500 characters or less.");
+                    problems.Add(string.Format(ServiceScaffoldExceptionValidationConstants.ErrorsItemMustBeMaxLength, i, ServiceScaffoldExceptionValidationConstants.ErrorsItemMaxLength));
                 }
             }
         }
@@ -182,7 +182,7 @@ public static class ServiceScaffoldExceptionValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"ServiceValidationException is invalid. Problems: {string.Join(" ", problems)}",
+                string.Format(ServiceScaffoldExceptionValidationConstants.ServiceValidationExceptionInvalidFormat, string.Join(" ", problems)),
                 nameof(value));
         }
     }
