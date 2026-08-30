@@ -29,16 +29,16 @@ public static class PerformanceUtilityValidation
         var errors = new List<string>();
 
         if (stats.WorkingSetMb < 0)
-            errors.Add($"WorkingSetMb must be non-negative, got {stats.WorkingSetMb} MB");
+            errors.Add($"WorkingSetMb{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.WorkingSetMb}{PerformanceUtilityValidationConstants.MbSuffix}");
 
         if (stats.PrivateMemoryMb < 0)
-            errors.Add($"PrivateMemoryMb must be non-negative, got {stats.PrivateMemoryMb} MB");
+            errors.Add($"PrivateMemoryMb{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.PrivateMemoryMb}{PerformanceUtilityValidationConstants.MbSuffix}");
 
         if (stats.PeakWorkingSetMb < 0)
-            errors.Add($"PeakWorkingSetMb must be non-negative, got {stats.PeakWorkingSetMb} MB");
+            errors.Add($"PeakWorkingSetMb{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.PeakWorkingSetMb}{PerformanceUtilityValidationConstants.MbSuffix}");
 
         if (stats.PeakWorkingSetMb < stats.WorkingSetMb)
-            errors.Add($"PeakWorkingSetMb ({stats.PeakWorkingSetMb} MB) cannot be less than WorkingSetMb ({stats.WorkingSetMb} MB)");
+            errors.Add($"PeakWorkingSetMb ({stats.PeakWorkingSetMb}{PerformanceUtilityValidationConstants.MbSuffix}){PerformanceUtilityValidationConstants.CannotBeLessThan}WorkingSetMb ({stats.WorkingSetMb}{PerformanceUtilityValidationConstants.MbSuffix})");
 
         return errors.AsReadOnly();
     }
@@ -56,16 +56,16 @@ public static class PerformanceUtilityValidation
         var errors = new List<string>();
 
         if (stats.Gen0Collections < 0)
-            errors.Add($"Gen0Collections must be non-negative, got {stats.Gen0Collections}");
+            errors.Add($"Gen0Collections{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.Gen0Collections}");
 
         if (stats.Gen1Collections < 0)
-            errors.Add($"Gen1Collections must be non-negative, got {stats.Gen1Collections}");
+            errors.Add($"Gen1Collections{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.Gen1Collections}");
 
         if (stats.Gen2Collections < 0)
-            errors.Add($"Gen2Collections must be non-negative, got {stats.Gen2Collections}");
+            errors.Add($"Gen2Collections{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.Gen2Collections}");
 
         if (stats.TotalMemoryBytes < 0)
-            errors.Add($"TotalMemoryBytes must be non-negative, got {stats.TotalMemoryBytes} bytes");
+            errors.Add($"TotalMemoryBytes{PerformanceUtilityValidationConstants.MustBeNonNegativeGot}{stats.TotalMemoryBytes}{PerformanceUtilityValidationConstants.BytesSuffix}");
 
         return errors.AsReadOnly();
     }
@@ -96,8 +96,7 @@ public static class PerformanceUtilityValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"MemoryStats instance is not valid. Validation errors:{Environment.NewLine}- {
-                string.Join($"{Environment.NewLine}- ", errors)}");
+                $"MemoryStats instance is not valid.{PerformanceUtilityValidationConstants.ValidationHeaderPrefix}{string.Join(PerformanceUtilityValidationConstants.ValidationErrorsSeparator, errors)}");
         }
     }
 
@@ -127,8 +126,7 @@ public static class PerformanceUtilityValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"GarbageCollectionStats instance is not valid. Validation errors:{Environment.NewLine}- {
-                string.Join($"{Environment.NewLine}- ", errors)}");
+                $"GarbageCollectionStats instance is not valid.{PerformanceUtilityValidationConstants.ValidationHeaderPrefix}{string.Join(PerformanceUtilityValidationConstants.ValidationErrorsSeparator, errors)}");
         }
     }
 }
