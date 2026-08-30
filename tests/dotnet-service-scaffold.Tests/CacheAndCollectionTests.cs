@@ -40,10 +40,10 @@ public class CacheAndCollectionTests : ICacheAndCollectionTests
     [Fact]
     public void ValidateRange_ValueAboveUpperBound_ThrowsArgumentExceptionWithParamName()
     {
-        var act = () => ValidationUtility.ValidateRange(15, 1, 10, "pageSize");
+        var act = () => ValidationUtility.ValidateRange(15, 1, 10, CacheAndCollectionTestsConstants.TestValidateRangeParamName);
 
         act.Should().Throw<ArgumentException>()
-           .WithMessage("*pageSize*");
+           .WithMessage($"*{CacheAndCollectionTestsConstants.TestValidateRangeParamName}*");
     }
 
     /// <summary>
@@ -54,12 +54,12 @@ public class CacheAndCollectionTests : ICacheAndCollectionTests
     {
         var source = Enumerable.Range(1, 10);
 
-        var batches = source.Batch(3).ToList();
+        var batches = source.Batch(CacheAndCollectionTestsConstants.DefaultBatchSize).ToList();
 
         batches.Should().HaveCount(4);
-        batches[0].Should().HaveCount(3);
-        batches[1].Should().HaveCount(3);
-        batches[2].Should().HaveCount(3);
+        batches[0].Should().HaveCount(CacheAndCollectionTestsConstants.DefaultBatchSize);
+        batches[1].Should().HaveCount(CacheAndCollectionTestsConstants.DefaultBatchSize);
+        batches[2].Should().HaveCount(CacheAndCollectionTestsConstants.DefaultBatchSize);
         batches[3].Should().HaveCount(1); // remainder
     }
 
@@ -86,8 +86,10 @@ public class CacheAndCollectionTests : ICacheAndCollectionTests
         var loggerMock = new Mock<ILogger<InMemoryCacheService>>();
         var cache = new InMemoryCacheService(loggerMock.Object);
 
-        await cache.SetAsync("greeting", "hello-world", TimeSpan.FromMinutes(5));
-        var result = await cache.GetAsync<string>("greeting");
+        await cache.SetAsync(CacheAndCollectionTestsConstants.TestCacheKeyGreeting,
+                             CacheAndCollectionTestsConstants.TestCacheValueGreeting,
+                             TimeSpan.FromMinutes(CacheAndCollectionTestsConstants.DefaultCacheExpirationMinutes));
+        var result = await cache.GetAsync<string>(CacheAndCollectionTestsConstants.TestCacheKeyGreeting);
 
         result.Should().Be("hello-world");
     }
@@ -101,9 +103,9 @@ public class CacheAndCollectionTests : ICacheAndCollectionTests
         var loggerMock = new Mock<ILogger<InMemoryCacheService>>();
         var cache = new InMemoryCacheService(loggerMock.Object);
 
-        await cache.SetAsync("temp-key", "some-value");
-        await cache.RemoveAsync("temp-key");
-        var exists = await cache.ExistsAsync("temp-key");
+        await cache.SetAsync(CacheAndCollectionTestsConstants.TestCacheKeyTemp, "some-value");
+        await cache.RemoveAsync(CacheAndCollectionTestsConstants.TestCacheKeyTemp);
+        var exists = await cache.ExistsAsync(CacheAndCollectionTestsConstants.TestCacheKeyTemp);
 
         exists.Should().BeFalse();
     }
