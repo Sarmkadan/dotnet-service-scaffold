@@ -57,14 +57,14 @@ public sealed class LogContextService : ILogContextService
     public string? CorrelationId
     {
         get => _currentContext.Value?.CorrelationId ??
-               CurrentContext.CustomProperties.GetValueOrDefault("CorrelationId")?.ToString();
+               CurrentContext.CustomProperties.GetValueOrDefault(LogContextServiceConstants.CorrelationIdKey)?.ToString();
 
         set
         {
             var context = _currentContext.Value ?? new ContextState();
             context.CorrelationId = value;
             _currentContext.Value = context;
-            CurrentContext.CustomProperties["CorrelationId"] = value;
+            CurrentContext.CustomProperties[LogContextServiceConstants.CorrelationIdKey] = value;
         }
     }
 
@@ -74,14 +74,14 @@ public sealed class LogContextService : ILogContextService
     public string? UserId
     {
         get => _currentContext.Value?.UserId ??
-               CurrentContext.CustomProperties.GetValueOrDefault("UserId")?.ToString();
+               CurrentContext.CustomProperties.GetValueOrDefault(LogContextServiceConstants.UserIdKey)?.ToString();
 
         set
         {
             var context = _currentContext.Value ?? new ContextState();
             context.UserId = value;
             _currentContext.Value = context;
-            CurrentContext.CustomProperties["UserId"] = value;
+            CurrentContext.CustomProperties[LogContextServiceConstants.UserIdKey] = value;
         }
     }
 
@@ -104,15 +104,15 @@ public sealed class LogContextService : ILogContextService
             CorrelationId = activity.TraceId.ToHexString();
             TraceParent = activity.IdFormat switch
             {
-                ActivityIdFormat.W3C => $"00-{activity.TraceId:D32}-{activity.SpanId:D16}-00",
-                _ => $"00-{activity.TraceId:D32}-{activity.SpanId:D16}-01"
+                ActivityIdFormat.W3C => string.Format(LogContextServiceConstants.TraceParentFormatW3C, activity.TraceId, activity.SpanId),
+                _ => string.Format(LogContextServiceConstants.TraceParentFormatLegacy, activity.TraceId, activity.SpanId)
             };
             ActivityId = activity.Id;
             return CorrelationId;
         }
 
         // Generate a new correlation ID
-        CorrelationId = Guid.NewGuid().ToString("N");
+        CorrelationId = Guid.NewGuid().ToString(LogContextServiceConstants.GuidFormatN);
         return CorrelationId;
     }
 
@@ -152,22 +152,22 @@ public sealed class LogContextService : ILogContextService
         // Add AsyncLocal context properties to the snapshot
         if (contextState.CorrelationId is not null)
         {
-            snapshot["CorrelationId"] = contextState.CorrelationId;
+            snapshot[LogContextServiceConstants.CorrelationIdKey] = contextState.CorrelationId;
         }
 
         if (contextState.UserId is not null)
         {
-            snapshot["UserId"] = contextState.UserId;
+            snapshot[LogContextServiceConstants.UserIdKey] = contextState.UserId;
         }
 
         if (contextState.ActivityId is not null)
         {
-            snapshot["ActivityId"] = contextState.ActivityId;
+            snapshot[LogContextServiceConstants.ActivityIdKey] = contextState.ActivityId;
         }
 
         if (contextState.TraceParent is not null)
         {
-            snapshot["TraceParent"] = contextState.TraceParent;
+            snapshot[LogContextServiceConstants.TraceParentKey] = contextState.TraceParent;
         }
 
         // Push each property onto Serilog's LogContext
