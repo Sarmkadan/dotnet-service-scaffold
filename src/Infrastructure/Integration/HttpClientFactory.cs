@@ -34,12 +34,12 @@ public class HttpClientFactory : ICustomHttpClientFactory
         var client = _factory.CreateClient(name);
 
         // Set standard timeouts
-        client.Timeout = TimeSpan.FromSeconds(30);
+        client.Timeout = TimeSpan.FromSeconds(HttpClientFactoryConstants.DefaultTimeoutSeconds);
 
         // Add default headers if not already present
-        if (!client.DefaultRequestHeaders.Contains("User-Agent"))
+        if (!client.DefaultRequestHeaders.Contains(HttpClientFactoryConstants.DefaultUserAgentHeaderName))
         {
-            client.DefaultRequestHeaders.Add("User-Agent", "DotnetServiceScaffold/1.0");
+            client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.DefaultUserAgentHeaderName, HttpClientFactoryConstants.DefaultUserAgentHeaderValue);
         }
 
         return client;
@@ -52,7 +52,7 @@ public class HttpClientFactory : ICustomHttpClientFactory
     public HttpClient CreateAuthenticatedClient(string apiKey, string name = "authenticated")
     {
         var client = CreateClient(name);
-        client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+        client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.ApiKeyHeaderName, apiKey);
         return client;
     }
 
@@ -63,7 +63,7 @@ public class HttpClientFactory : ICustomHttpClientFactory
     {
         var client = CreateClient(name);
         var bearerToken = HttpUtility.CreateBearerAuthHeader(token);
-        client.DefaultRequestHeaders.Add("Authorization", bearerToken);
+        client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.AuthorizationHeaderName, bearerToken);
         return client;
     }
 
