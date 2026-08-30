@@ -38,7 +38,7 @@ public sealed class CorrelationIdMiddleware
         ArgumentNullException.ThrowIfNull(logContext);
 
         var headerName = string.IsNullOrWhiteSpace(_options.CorrelationIdHeader)
-            ? "X-Correlation-Id"
+            ? CorrelationIdMiddlewareConstants.DefaultCorrelationIdHeader
             : _options.CorrelationIdHeader;
 
         // Try to read correlation ID from header
@@ -55,8 +55,8 @@ public sealed class CorrelationIdMiddleware
             logContext.ActivityId = activity.Id;
             logContext.TraceParent = activity.IdFormat switch
             {
-                ActivityIdFormat.W3C => $"00-{activity.TraceId:D32}-{activity.SpanId:D16}-00",
-                _ => $"00-{activity.TraceId:D32}-{activity.SpanId:D16}-01"
+                ActivityIdFormat.W3C => string.Format(CorrelationIdMiddlewareConstants.TraceParentFormatW3C, activity.TraceId, activity.SpanId),
+                _ => string.Format(CorrelationIdMiddlewareConstants.TraceParentFormatLegacy, activity.TraceId, activity.SpanId)
             };
 
             // If no correlation ID from header, use the W3C trace ID
