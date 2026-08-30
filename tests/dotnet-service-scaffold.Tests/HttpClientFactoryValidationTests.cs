@@ -55,7 +55,7 @@ namespace DotnetServiceScaffold.Tests
         public void ValidateCreateClient_NullOrWhiteSpaceName_ReturnsProblem()
         {
             var problems = HttpClientFactoryValidation.ValidateCreateClient(null);
-            Assert.Contains("Client name cannot be null, empty, or whitespace.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.ClientNameNullOrWhitespace, problems);
         }
 
         public Task ValidateCreateClient_NullOrWhiteSpaceName_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -67,9 +67,9 @@ namespace DotnetServiceScaffold.Tests
         [Fact]
         public void ValidateCreateClient_NameTooLong_ReturnsProblem()
         {
-            var longName = new string('a', 101);
+            var longName = new string('a', HttpClientFactoryValidationTestsConstants.MaxClientNameLength + 1);
             var problems = HttpClientFactoryValidation.ValidateCreateClient(longName);
-            Assert.Contains("Client name cannot exceed 100 characters.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.ClientNameTooLong, problems);
         }
 
         public Task ValidateCreateClient_NameTooLong_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -108,7 +108,7 @@ namespace DotnetServiceScaffold.Tests
         public void ValidateCreateAuthenticatedClient_NullApiKey_ReturnsProblem()
         {
             var problems = HttpClientFactoryValidation.ValidateCreateAuthenticatedClient(null, "client");
-            Assert.Contains("API key cannot be null, empty, or whitespace.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.ApiKeyNullOrWhitespace, problems);
         }
 
         public Task ValidateCreateAuthenticatedClient_NullApiKey_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -120,9 +120,9 @@ namespace DotnetServiceScaffold.Tests
         [Fact]
         public void ValidateCreateAuthenticatedClient_ApiKeyTooLong_ReturnsProblem()
         {
-            var longKey = new string('k', 501);
+            var longKey = new string('k', HttpClientFactoryValidationTestsConstants.MaxApiKeyLength + 1);
             var problems = HttpClientFactoryValidation.ValidateCreateAuthenticatedClient(longKey, "client");
-            Assert.Contains("API key cannot exceed 500 characters.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.ApiKeyTooLong, problems);
         }
 
         public Task ValidateCreateAuthenticatedClient_ApiKeyTooLong_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -161,7 +161,7 @@ namespace DotnetServiceScaffold.Tests
         public void ValidateCreateBearerClient_NullToken_ReturnsProblem()
         {
             var problems = HttpClientFactoryValidation.ValidateCreateBearerClient(null, "client");
-            Assert.Contains("Bearer token cannot be null, empty, or whitespace.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.BearerTokenNullOrWhitespace, problems);
         }
 
         public Task ValidateCreateBearerClient_NullToken_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -173,9 +173,9 @@ namespace DotnetServiceScaffold.Tests
         [Fact]
         public void ValidateCreateBearerClient_TokenTooLong_ReturnsProblem()
         {
-            var longToken = new string('t', 2001);
+            var longToken = new string('t', HttpClientFactoryValidationTestsConstants.MaxBearerTokenLength + 1);
             var problems = HttpClientFactoryValidation.ValidateCreateBearerClient(longToken, "client");
-            Assert.Contains("Bearer token cannot exceed 2000 characters.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.BearerTokenTooLong, problems);
         }
 
         public Task ValidateCreateBearerClient_TokenTooLong_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -214,7 +214,7 @@ namespace DotnetServiceScaffold.Tests
         public void ValidateCreateClientWithBaseUrl_NullBaseUrl_ReturnsProblem()
         {
             var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl(null, "client");
-            Assert.Contains("Base URL cannot be null, empty, or whitespace.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.BaseUrlNullOrWhitespace, problems);
         }
 
         public Task ValidateCreateClientWithBaseUrl_NullBaseUrl_ReturnsProblemAsync(CancellationToken cancellationToken = default)
@@ -227,7 +227,7 @@ namespace DotnetServiceScaffold.Tests
         public void ValidateCreateClientWithBaseUrl_InvalidUri_ReturnsProblem()
         {
             var problems = HttpClientFactoryValidation.ValidateCreateClientWithBaseUrl("not-a-uri", "client");
-            Assert.Contains("Base URL must be a valid absolute URI.", problems);
+            Assert.Contains(HttpClientFactoryValidationTestsConstants.BaseUrlInvalidUri, problems);
         }
 
         public Task ValidateCreateClientWithBaseUrl_InvalidUri_ReturnsProblemAsync(CancellationToken cancellationToken = default)
