@@ -35,12 +35,12 @@ public static class MetricsBenchmarksValidation
 
         // Check if the metrics service reference is null (indicates Setup() wasn't called)
         // We use reflection to check the private field since it's the most reliable indicator
-        var metricsField = typeof(MetricsBenchmarks).GetField("_metrics",
+        var metricsField = typeof(MetricsBenchmarks).GetField(MetricsBenchmarksValidationConstants.MetricsFieldName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         if (metricsField?.GetValue(value) is null)
         {
-            errors.Add("MetricsBenchmarks instance is not properly initialized. Setup() method must be called before benchmarking.");
+            errors.Add(MetricsBenchmarksValidationConstants.MetricsNotInitializedError);
         }
 
         return errors.AsReadOnly();
@@ -72,7 +72,7 @@ public static class MetricsBenchmarksValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"MetricsBenchmarks instance is not valid. Problems:\n{string.Join("\n", errors)}");
+                $"{MetricsBenchmarksValidationConstants.MetricsInvalidErrorHeader}{string.Join("\n", errors)}");
         }
     }
 }
