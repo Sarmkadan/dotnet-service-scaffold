@@ -15,24 +15,24 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
     /// Determines how often health checks are performed for registered services.
     /// </summary>
     /// <example>60</example>
-    [Range(5, 3600, ErrorMessage = "HealthCheckInterval must be between 5 and 3600 seconds")]
-    public int HealthCheckInterval { get; set; } = 60;
+    [Range(DotnetServiceScaffoldOptionsConstants.HealthCheckIntervalMin, DotnetServiceScaffoldOptionsConstants.HealthCheckIntervalMax, ErrorMessage = "HealthCheckInterval must be between 5 and 3600 seconds")]
+    public int HealthCheckInterval { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultHealthCheckInterval;
 
     /// <summary>
     /// Gets or sets the health check timeout in seconds.
     /// Maximum time allowed for a single health check request to complete.
     /// </summary>
     /// <example>10</example>
-    [Range(1, 300, ErrorMessage = "HealthCheckTimeout must be between 1 and 300 seconds")]
-    public int HealthCheckTimeout { get; set; } = 10;
+    [Range(DotnetServiceScaffoldOptionsConstants.HealthCheckTimeoutMin, DotnetServiceScaffoldOptionsConstants.HealthCheckTimeoutMax, ErrorMessage = "HealthCheckTimeout must be between 1 and 300 seconds")]
+    public int HealthCheckTimeout { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultHealthCheckTimeout;
 
     /// <summary>
     /// Gets or sets the maximum number of concurrent health checks.
     /// Limits parallel health check execution to prevent resource exhaustion.
     /// </summary>
     /// <example>5</example>
-    [Range(1, 100, ErrorMessage = "MaxConcurrentHealthChecks must be between 1 and 100")]
-    public int MaxConcurrentHealthChecks { get; set; } = 5;
+    [Range(DotnetServiceScaffoldOptionsConstants.MaxConcurrentHealthChecksMin, DotnetServiceScaffoldOptionsConstants.MaxConcurrentHealthChecksMax, ErrorMessage = "MaxConcurrentHealthChecks must be between 1 and 100")]
+    public int MaxConcurrentHealthChecks { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultMaxConcurrentHealthChecks;
 
     /// <summary>
     /// Gets or sets whether maintenance mode is enabled.
@@ -45,43 +45,43 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
     /// Older logs are automatically purged based on this setting.
     /// </summary>
     /// <example>90</example>
-    [Range(1, 3650, ErrorMessage = "AuditLogRetentionDays must be between 1 and 3650 days")]
-    public int AuditLogRetentionDays { get; set; } = 90;
+    [Range(DotnetServiceScaffoldOptionsConstants.AuditLogRetentionDaysMin, DotnetServiceScaffoldOptionsConstants.AuditLogRetentionDaysMax, ErrorMessage = "AuditLogRetentionDays must be between 1 and 3650 days")]
+    public int AuditLogRetentionDays { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultAuditLogRetentionDays;
 
     /// <summary>
     /// Gets or sets the number of days to retain health check results.
     /// Historical health check data is cleaned up based on this retention policy.
     /// </summary>
     /// <example>30</example>
-    [Range(1, 365, ErrorMessage = "HealthCheckResultRetentionDays must be between 1 and 365 days")]
-    public int HealthCheckResultRetentionDays { get; set; } = 30;
+    [Range(DotnetServiceScaffoldOptionsConstants.HealthCheckResultRetentionDaysMin, DotnetServiceScaffoldOptionsConstants.HealthCheckResultRetentionDaysMax, ErrorMessage = "HealthCheckResultRetentionDays must be between 1 and 365 days")]
+    public int HealthCheckResultRetentionDays { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultHealthCheckResultRetentionDays;
 
     /// <summary>
     /// Gets or sets the maximum number of failed login attempts before account lockout.
     /// </summary>
     /// <example>5</example>
-    [Range(1, 20, ErrorMessage = "MaxFailedLoginAttempts must be between 1 and 20")]
-    public int MaxFailedLoginAttempts { get; set; } = 5;
+    [Range(DotnetServiceScaffoldOptionsConstants.MaxFailedLoginAttemptsMin, DotnetServiceScaffoldOptionsConstants.MaxFailedLoginAttemptsMax, ErrorMessage = "MaxFailedLoginAttempts must be between 1 and 20")]
+    public int MaxFailedLoginAttempts { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultMaxFailedLoginAttempts;
 
     /// <summary>
     /// Gets or sets the duration of account lockout in minutes.
     /// </summary>
     /// <example>30</example>
-    [Range(1, 1440, ErrorMessage = "AccountLockoutDurationMinutes must be between 1 and 1440 minutes")]
-    public int AccountLockoutDurationMinutes { get; set; } = 30;
+    [Range(DotnetServiceScaffoldOptionsConstants.AccountLockoutDurationMinutesMin, DotnetServiceScaffoldOptionsConstants.AccountLockoutDurationMinutesMax, ErrorMessage = "AccountLockoutDurationMinutes must be between 1 and 1440 minutes")]
+    public int AccountLockoutDurationMinutes { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultAccountLockoutDurationMinutes;
 
     /// <summary>
     /// Gets or sets the minimum password length requirement.
     /// </summary>
     /// <example>8</example>
-    [Range(4, 128, ErrorMessage = "PasswordMinimumLength must be between 4 and 128 characters")]
-    public int PasswordMinimumLength { get; set; } = 8;
+    [Range(DotnetServiceScaffoldOptionsConstants.PasswordMinimumLengthMin, DotnetServiceScaffoldOptionsConstants.PasswordMinimumLengthMax, ErrorMessage = "PasswordMinimumLength must be between 4 and 128 characters")]
+    public int PasswordMinimumLength { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultPasswordMinimumLength;
 
     /// <summary>
     /// Gets or sets whether CORS is enabled for cross-origin requests.
     /// Should be disabled in production unless specific cross-origin access is required.
     /// </summary>
-    public bool EnableCors { get; set; }
+    public bool EnableCors { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultEnableCors;
 
     /// <summary>
     /// Gets or sets the list of allowed origins for CORS.
@@ -94,66 +94,66 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
     /// Prevents abuse and brute force attacks.
     /// </summary>
     /// <example>60</example>
-    [Range(10, 10000, ErrorMessage = "RateLimitPerMinute must be between 10 and 10000 requests")]
-    public int RateLimitPerMinute { get; set; } = 60;
+    [Range(DotnetServiceScaffoldOptionsConstants.RateLimitPerMinuteMin, DotnetServiceScaffoldOptionsConstants.RateLimitPerMinuteMax, ErrorMessage = "RateLimitPerMinute must be between 10 and 10000 requests")]
+    public int RateLimitPerMinute { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultRateLimitPerMinute;
 
     /// <summary>
     /// Gets or sets the maximum concurrent service registrations allowed.
     /// Prevents system overload from excessive service registrations.
     /// </summary>
     /// <example>100</example>
-    [Range(1, 1000, ErrorMessage = "MaxServiceRegistrations must be between 1 and 1000")]
-    public int MaxServiceRegistrations { get; set; } = 100;
+    [Range(DotnetServiceScaffoldOptionsConstants.MaxServiceRegistrationsMin, DotnetServiceScaffoldOptionsConstants.MaxServiceRegistrationsMax, ErrorMessage = "MaxServiceRegistrations must be between 1 and 1000")]
+    public int MaxServiceRegistrations { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultMaxServiceRegistrations;
 
     /// <summary>
     /// Gets or sets the maximum response size in bytes for API responses.
     /// Large responses are truncated to prevent memory issues.
     /// </summary>
     /// <example>1048576</example>
-    [Range(1024, 10485760, ErrorMessage = "MaxResponseSize must be between 1KB and 10MB")]
-    public int MaxResponseSize { get; set; } = 1048576; // 1MB
+    [Range(DotnetServiceScaffoldOptionsConstants.MaxResponseSizeMin, DotnetServiceScaffoldOptionsConstants.MaxResponseSizeMax, ErrorMessage = "MaxResponseSize must be between 1KB and 10MB")]
+    public int MaxResponseSize { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultMaxResponseSize; // 1MB
 
     /// <summary>
     /// Gets or sets whether to enable detailed error pages in development.
     /// Should be disabled in production for security.
     /// </summary>
-    public bool EnableDetailedErrors { get; set; } = true;
+    public bool EnableDetailedErrors { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultEnableDetailedErrors;
 
     /// <summary>
     /// Gets or sets the default page size for paginated API responses.
     /// </summary>
     /// <example>50</example>
-    [Range(1, 1000, ErrorMessage = "DefaultPageSize must be between 1 and 1000")]
-    public int DefaultPageSize { get; set; } = 50;
+    [Range(DotnetServiceScaffoldOptionsConstants.DefaultPageSizeMin, DotnetServiceScaffoldOptionsConstants.DefaultPageSizeMax, ErrorMessage = "DefaultPageSize must be between 1 and 1000")]
+    public int DefaultPageSize { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultPageSize;
 
     /// <summary>
     /// Gets or sets the maximum page size for paginated API responses.
     /// Clients cannot request pages larger than this value.
     /// </summary>
     /// <example>200</example>
-    [Range(10, 10000, ErrorMessage = "MaxPageSize must be between 10 and 10000")]
-    public int MaxPageSize { get; set; } = 200;
+    [Range(DotnetServiceScaffoldOptionsConstants.MaxPageSizeMin, DotnetServiceScaffoldOptionsConstants.MaxPageSizeMax, ErrorMessage = "MaxPageSize must be between 10 and 10000")]
+    public int MaxPageSize { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultMaxPageSize;
 
     /// <summary>
     /// Gets or sets the cache duration in seconds for frequently accessed data.
     /// </summary>
     /// <example>300</example>
-    [Range(1, 86400, ErrorMessage = "CacheDurationSeconds must be between 1 and 86400 seconds")]
-    public int CacheDurationSeconds { get; set; } = 300; // 5 minutes
+    [Range(DotnetServiceScaffoldOptionsConstants.CacheDurationSecondsMin, DotnetServiceScaffoldOptionsConstants.CacheDurationSecondsMax, ErrorMessage = "CacheDurationSeconds must be between 1 and 86400 seconds")]
+    public int CacheDurationSeconds { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultCacheDurationSeconds; // 5 minutes
 
     /// <summary>
     /// Gets or sets whether to enable request logging for all endpoints.
     /// Can impact performance if enabled with high traffic.
     /// </summary>
-    public bool EnableRequestLogging { get; set; } = true;
+    public bool EnableRequestLogging { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultEnableRequestLogging;
 
     /// <summary>
     /// Gets or sets the maximum number of items to return in collection responses.
     /// Prevents excessive data transfer.
     /// </summary>
     /// <example>1000</example>
-    [Range(10, 10000, ErrorMessage = "MaxCollectionSize must be between 10 and 10000")]
-    public int MaxCollectionSize { get; set; } = 1000;
+    [Range(DotnetServiceScaffoldOptionsConstants.MaxCollectionSizeMin, DotnetServiceScaffoldOptionsConstants.MaxCollectionSizeMax, ErrorMessage = "MaxCollectionSize must be between 10 and 10000")]
+    public int MaxCollectionSize { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultMaxCollectionSize;
 
     /// <summary>
     /// Gets or sets the API key prefix for generated API keys.
@@ -161,23 +161,23 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
     /// </summary>
     /// <example>sk_live_</example>
     [RegularExpression(
-        "^[a-zA-Z0-9_]+_$",
+        DotnetServiceScaffoldOptionsConstants.ApiKeyPrefixRegexPattern,
         ErrorMessage = "ApiKeyPrefix must contain only alphanumeric characters and underscores, ending with underscore")]
-    public string ApiKeyPrefix { get; set; } = "sk_live_";
+    public string ApiKeyPrefix { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultApiKeyPrefix;
 
     /// <summary>
     /// Gets or sets the API key length for generated API keys.
     /// </summary>
     /// <example>32</example>
-    [Range(16, 64, ErrorMessage = "ApiKeyLength must be between 16 and 64 characters")]
-    public int ApiKeyLength { get; set; } = 32;
+    [Range(DotnetServiceScaffoldOptionsConstants.ApiKeyLengthMin, DotnetServiceScaffoldOptionsConstants.ApiKeyLengthMax, ErrorMessage = "ApiKeyLength must be between 16 and 64 characters")]
+    public int ApiKeyLength { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultApiKeyLength;
 
     /// <summary>
     /// Gets or sets the JWT token expiration time in minutes.
     /// </summary>
     /// <example>60</example>
-    [Range(5, 1440, ErrorMessage = "JwtTokenExpirationMinutes must be between 5 and 1440 minutes")]
-    public int JwtTokenExpirationMinutes { get; set; } = 60;
+    [Range(DotnetServiceScaffoldOptionsConstants.JwtTokenExpirationMinutesMin, DotnetServiceScaffoldOptionsConstants.JwtTokenExpirationMinutesMax, ErrorMessage = "JwtTokenExpirationMinutes must be between 5 and 1440 minutes")]
+    public int JwtTokenExpirationMinutes { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultJwtTokenExpirationMinutes;
 
     /// <summary>
     /// Gets or sets the JWT secret key for token signing.
@@ -192,12 +192,12 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
     /// Options: Auto, Manual, None
     /// </summary>
     /// <example>Auto</example>
-    public string DatabaseMigrationStrategy { get; set; } = "Auto";
+    public string DatabaseMigrationStrategy { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultDatabaseMigrationStrategy;
 
     /// <summary>
     /// Gets or sets whether to enable automatic database backup on startup.
     /// </summary>
-    public bool EnableDatabaseBackup { get; set; } = false;
+    public bool EnableDatabaseBackup { get; set; } = DotnetServiceScaffoldOptionsConstants.DefaultEnableDatabaseBackup;
 
     /// <summary>
     /// Gets or sets the backup directory path.
