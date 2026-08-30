@@ -31,12 +31,12 @@ public static class ResultValidation
         {
             if (string.IsNullOrWhiteSpace(value.ErrorMessage))
             {
-                problems.Add("Failed result must have a non-empty ErrorMessage.");
+                problems.Add(ResultValidationConstants.FailedResultMustHaveNonEmptyErrorMessage);
             }
 
             if (value.ErrorCode is null)
             {
-                problems.Add("Failed result must have a non-null ErrorCode.");
+                problems.Add(ResultValidationConstants.FailedResultMustHaveNonNullErrorCode);
             }
         }
 
@@ -60,12 +60,12 @@ public static class ResultValidation
         {
             if (string.IsNullOrWhiteSpace(value.ErrorMessage))
             {
-                problems.Add("Failed result must have a non-empty ErrorMessage.");
+                problems.Add(ResultValidationConstants.FailedResultMustHaveNonEmptyErrorMessage);
             }
 
             if (value.ErrorCode is null)
             {
-                problems.Add("Failed result must have a non-null ErrorCode.");
+                problems.Add(ResultValidationConstants.FailedResultMustHaveNonNullErrorCode);
             }
         }
         else
@@ -78,7 +78,7 @@ public static class ResultValidation
             }
             else if (value.Value is string str && string.IsNullOrWhiteSpace(str))
             {
-                problems.Add("Successful result with string value must not be empty or whitespace.");
+                problems.Add(ResultValidationConstants.SuccessfulResultStringMustNotBeEmptyOrWhitespace);
             }
             else if (value.Value is IFormattable && !typeof(T).IsValueType)
             {
@@ -86,7 +86,7 @@ public static class ResultValidation
                 // Skip value types as they may legitimately have default values
                 if (EqualityComparer<T>.Default.Equals(value.Value, default!))
                 {
-                    problems.Add($"Successful result must not contain default value of type {typeof(T).Name}.");
+                    problems.Add(string.Format(ResultValidationConstants.SuccessfulResultMustNotContainDefaultValueFormat, typeof(T).Name));
                 }
             }
         }
@@ -125,8 +125,8 @@ public static class ResultValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Result validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)}");
+                $"{ResultValidationConstants.ResultValidationFailedPrefix}{ResultValidationConstants.NewLine}- {
+                    string.Join($"{ResultValidationConstants.NewLine}- ", problems)}");
         }
     }
 
@@ -145,8 +145,8 @@ public static class ResultValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"Result<T> validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)}");
+                $"{ResultValidationConstants.ResultTValidationFailedPrefix}{ResultValidationConstants.NewLine}- {
+                    string.Join($"{ResultValidationConstants.NewLine}- ", problems)}");
         }
     }
 }
