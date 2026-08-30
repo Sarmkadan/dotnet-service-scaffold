@@ -108,6 +108,9 @@ public class WebhookClient : IWebhookClient
     /// <exception cref="ArgumentException">Thrown if webhookUrl is invalid or blocked by SSRF protection.</exception>
     public async Task<bool> SendWebhookAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(webhookUrl);
+        ArgumentNullException.ThrowIfNull(payload);
+
         var result = await DeliverAsync(webhookUrl, payload, eventType, webhookSecret, cancellationToken);
         return result.Delivered;
     }
@@ -126,7 +129,7 @@ public class WebhookClient : IWebhookClient
     /// <exception cref="ArgumentException">Thrown if webhookUrl is invalid or blocked by SSRF protection.</exception>
     public async Task<WebhookDeliveryResult> DeliverAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(webhookUrl);
+        ArgumentException.ThrowIfNullOrWhiteSpace(webhookUrl);
         ArgumentNullException.ThrowIfNull(payload);
 
         ValidateWebhookUrl(webhookUrl);
