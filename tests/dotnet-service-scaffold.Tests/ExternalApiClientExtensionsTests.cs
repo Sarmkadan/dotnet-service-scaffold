@@ -56,7 +56,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
 
         _httpClient = new HttpClient(_httpMessageHandlerMock.Object)
         {
-            BaseAddress = new Uri("http://localhost/")
+            BaseAddress = new Uri(ExternalApiClientExtensionsTestsConstants.LocalhostBaseAddress)
         };
 
         _sut = new ExternalApiClient(_httpClient, _loggerMock.Object);
@@ -66,7 +66,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task GetWithRetryAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var expectedResponse = new { Id = 1, Name = "Test" };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
 
@@ -78,12 +78,12 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             })
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.OK,
+                StatusCode = ExternalApiClientExtensionsTestsConstants.Ok,
                 Content = new StringContent(jsonResponse)
             });
 
@@ -105,7 +105,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task GetWithRetryAsync_RequestFailsAfterAllRetries_ThrowsHttpRequestException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -115,16 +115,16 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             });
 
         // Act
-        Func<Task> act = () => _sut.GetWithRetryAsync<TestObject>(url, maxRetries: 2);
+        Func<Task> act = () => _sut.GetWithRetryAsync<TestObject>(url, maxRetries: ExternalApiClientExtensionsTestsConstants.DefaultRetryCount);
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
-            .WithMessage("*failed after 2 retries*");
+            .WithMessage(ExternalApiClientExtensionsTestsConstants.FailedAfterRetriesMessage);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         ExternalApiClient? nullClient = null;
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
 
         // Act
         Func<Task> act = () => nullClient!.GetWithRetryAsync<TestObject>(url);
@@ -158,10 +158,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task GetWithRetryAsync_InvalidMaxRetries_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
 
         // Act
-        Func<Task> act = () => _sut.GetWithRetryAsync<TestObject>(url, maxRetries: 0);
+        Func<Task> act = () => _sut.GetWithRetryAsync<TestObject>(url, maxRetries: ExternalApiClientExtensionsTestsConstants.InvalidZero);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
@@ -171,10 +171,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task GetWithRetryAsync_InvalidTimeoutSeconds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
 
         // Act
-        Func<Task> act = () => _sut.GetWithRetryAsync<TestObject>(url, timeoutSeconds: 0);
+        Func<Task> act = () => _sut.GetWithRetryAsync<TestObject>(url, timeoutSeconds: ExternalApiClientExtensionsTestsConstants.InvalidZero);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
@@ -184,7 +184,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PostWithRetryAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var payload = new { Id = 1, Name = "Test" };
         var expectedResponse = new { Status = "Created" };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
@@ -197,12 +197,12 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             })
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.Created,
+                StatusCode = ExternalApiClientExtensionsTestsConstants.Created,
                 Content = new StringContent(jsonResponse)
             });
 
@@ -223,7 +223,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PostWithRetryAsync_RequestFailsAfterAllRetries_ThrowsHttpRequestException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var payload = new { Id = 1 };
 
         _httpMessageHandlerMock.Protected()
@@ -234,12 +234,12 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             });
 
         // Act
-        Func<Task> act = () => _sut.PostWithRetryAsync<ResponseObject>(url, payload, maxRetries: 1);
+        Func<Task> act = () => _sut.PostWithRetryAsync<ResponseObject>(url, payload, maxRetries: ExternalApiClientExtensionsTestsConstants.SingleRetryCount);
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
@@ -251,7 +251,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         ExternalApiClient? nullClient = null;
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var payload = new { Id = 1 };
 
         // Act
@@ -278,7 +278,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PostWithRetryAsync_NullPayload_ThrowsArgumentNullException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         object? nullPayload = null;
 
         // Act
@@ -292,11 +292,11 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PostWithRetryAsync_InvalidMaxRetries_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var url = "api/test";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var payload = new { Id = 1 };
 
         // Act
-        Func<Task> act = () => _sut.PostWithRetryAsync<ResponseObject>(url, payload, maxRetries: -1);
+        Func<Task> act = () => _sut.PostWithRetryAsync<ResponseObject>(url, payload, maxRetries: ExternalApiClientExtensionsTestsConstants.InvalidNegativeOne);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
@@ -306,7 +306,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PutWithRetryAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
         var payload = new { Id = 1, Name = "Updated" };
         var expectedResponse = new { Status = "Updated" };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
@@ -319,12 +319,12 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             })
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.OK,
+                StatusCode = ExternalApiClientExtensionsTestsConstants.Ok,
                 Content = new StringContent(jsonResponse)
             });
 
@@ -345,7 +345,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PutWithRetryAsync_RequestFailsAfterAllRetries_ThrowsHttpRequestException()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
         var payload = new { Id = 1 };
 
         _httpMessageHandlerMock.Protected()
@@ -356,12 +356,12 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             });
 
         // Act
-        Func<Task> act = () => _sut.PutWithRetryAsync<ResponseObject>(url, payload, maxRetries: 1);
+        Func<Task> act = () => _sut.PutWithRetryAsync<ResponseObject>(url, payload, maxRetries: ExternalApiClientExtensionsTestsConstants.SingleRetryCount);
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
@@ -373,7 +373,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         ExternalApiClient? nullClient = null;
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
         var payload = new { Id = 1 };
 
         // Act
@@ -400,7 +400,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PutWithRetryAsync_NullPayload_ThrowsArgumentNullException()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
         object? nullPayload = null;
 
         // Act
@@ -414,11 +414,11 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task PutWithRetryAsync_InvalidTimeoutSeconds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
         var payload = new { Id = 1 };
 
         // Act
-        Func<Task> act = () => _sut.PutWithRetryAsync<ResponseObject>(url, payload, timeoutSeconds: -5);
+        Func<Task> act = () => _sut.PutWithRetryAsync<ResponseObject>(url, payload, timeoutSeconds: ExternalApiClientExtensionsTestsConstants.InvalidNegativeFive);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
@@ -428,7 +428,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task DeleteWithRetryAsync_ValidRequest_ReturnsTrue()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -438,7 +438,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.OK
+                StatusCode = ExternalApiClientExtensionsTestsConstants.Ok
             });
 
         // Act
@@ -452,7 +452,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task DeleteWithRetryAsync_FailedRequestAfterAllRetries_ReturnsFalse()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -462,12 +462,12 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
-                Content = new StringContent("Error")
+                StatusCode = ExternalApiClientExtensionsTestsConstants.InternalServerError,
+                Content = new StringContent(ExternalApiClientExtensionsTestsConstants.ErrorContent)
             });
 
         // Act
-        var result = await _sut.DeleteWithRetryAsync(url, maxRetries: 3);
+        var result = await _sut.DeleteWithRetryAsync(url, maxRetries: ExternalApiClientExtensionsTestsConstants.TripleRetryCount);
 
         // Assert - DeleteWithRetryAsync returns false when base DeleteAsync returns false after all retries
         result.Should().BeFalse();
@@ -478,7 +478,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         ExternalApiClient? nullClient = null;
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
 
         // Act
         Func<Task> act = () => nullClient!.DeleteWithRetryAsync(url);
@@ -504,10 +504,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task DeleteWithRetryAsync_InvalidMaxRetries_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
 
         // Act
-        Func<Task> act = () => _sut.DeleteWithRetryAsync(url, maxRetries: -10);
+        Func<Task> act = () => _sut.DeleteWithRetryAsync(url, maxRetries: ExternalApiClientExtensionsTestsConstants.InvalidNegativeTen);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
@@ -517,10 +517,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task DeleteWithRetryAsync_InvalidTimeoutSeconds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var url = "api/test/1";
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
 
         // Act
-        Func<Task> act = () => _sut.DeleteWithRetryAsync(url, timeoutSeconds: 0);
+        Func<Task> act = () => _sut.DeleteWithRetryAsync(url, timeoutSeconds: ExternalApiClientExtensionsTestsConstants.InvalidZero);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
@@ -530,8 +530,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     public async Task GetWithRetryAsync_WithHeaders_SendsHeadersWithRequest()
     {
         // Arrange
-        var url = "api/test";
-        var headers = new Dictionary<string, string> { { "Authorization", "Bearer token" }, { "X-Custom", "value" } };
+        var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
+        var headers = new Dictionary<string, string> { { ExternalApiClientExtensionsTestsConstants.AuthorizationHeader, ExternalApiClientExtensionsTestsConstants.BearerTokenValue }, { ExternalApiClientExtensionsTestsConstants.CustomHeader, ExternalApiClientExtensionsTestsConstants.CustomHeaderValue } };
         var expectedResponse = new { Id = 1 };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
 
@@ -547,7 +547,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             )
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.OK,
+                StatusCode = ExternalApiClientExtensionsTestsConstants.Ok,
                 Content = new StringContent(jsonResponse)
             });
 
