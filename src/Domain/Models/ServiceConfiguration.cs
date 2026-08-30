@@ -19,14 +19,14 @@ public class ServiceConfiguration : IServiceConfiguration
     public Guid Id { get; set; }
 
     [Required]
-    [StringLength(255)]
+    [StringLength(ServiceConfigurationConstants.MaxKeyLength)]
     public required string Key { get; set; }
 
     [Required]
-    [StringLength(4000)]
+    [StringLength(ServiceConfigurationConstants.MaxValueLength)]
     public required string Value { get; set; }
 
-    [StringLength(255)]
+    [StringLength(ServiceConfigurationConstants.MaxConfigTypeLength)]
     public string? ConfigType { get; set; }
 
     public Guid? ServiceId { get; set; }
@@ -41,7 +41,7 @@ public class ServiceConfiguration : IServiceConfiguration
 
     public bool IsSystemConfig { get; set; }
 
-    [StringLength(1000)]
+    [StringLength(ServiceConfigurationConstants.MaxDescriptionLength)]
     public string? Description { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -116,7 +116,7 @@ public class ServiceConfiguration : IServiceConfiguration
         if (lowerKey.Contains("password") || lowerKey.Contains("secret") ||
             lowerKey.Contains("key") || lowerKey.Contains("token"))
         {
-            return "***REDACTED***";
+            return ServiceConfigurationConstants.RedactedValue;
         }
 
         return Value;
