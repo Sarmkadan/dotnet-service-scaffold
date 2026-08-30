@@ -53,20 +53,20 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
 
         // Assert
         client.Should().NotBeNull();
-        client.Timeout.Should().Be(TimeSpan.FromSeconds(30));
-        client.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
-        client.DefaultRequestHeaders.UserAgent.ToString().Should().Be("DotnetServiceScaffold/1.0");
+        client.Timeout.Should().Be(HttpClientFactoryTestsConstants.DefaultTimeout);
+        client.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
+        client.DefaultRequestHeaders.UserAgent.ToString().Should().Be(HttpClientFactoryTestsConstants.UserAgentValue);
     }
 
     [Fact]
     public void CreateClient_WithCustomName_ReturnsConfiguredHttpClient()
     {
         // Act
-        var client = _httpClientFactory.CreateClient("custom-client");
+        var client = _httpClientFactory.CreateClient(HttpClientFactoryTestsConstants.CustomClientName);
 
         // Assert
         client.Should().NotBeNull();
-        _httpClientFactoryMock.Verify(f => f.CreateClient("custom-client"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.CustomClientName), Times.Once);
     }
 
     [Fact]
@@ -75,59 +75,59 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
         // Arrange
         var mockHandler = new MockHttpMessageHandler();
         var httpClient = new HttpClient(mockHandler);
-        httpClient.DefaultRequestHeaders.Add("User-Agent", "Existing-Agent/1.0");
+        httpClient.DefaultRequestHeaders.Add(HttpClientFactoryTestsConstants.UserAgentHeaderName, HttpClientFactoryTestsConstants.ExistingAgentValue);
 
-        _httpClientFactoryMock.Setup(f => f.CreateClient("existing"))
+        _httpClientFactoryMock.Setup(f => f.CreateClient(HttpClientFactoryTestsConstants.ExistingClientName))
             .Returns(httpClient);
 
         // Act
-        var client = _httpClientFactory.CreateClient("existing");
+        var client = _httpClientFactory.CreateClient(HttpClientFactoryTestsConstants.ExistingClientName);
 
         // Assert
-        client.DefaultRequestHeaders.UserAgent.ToString().Should().Be("Existing-Agent/1.0");
+        client.DefaultRequestHeaders.UserAgent.ToString().Should().Be(HttpClientFactoryTestsConstants.ExistingAgentValue);
     }
 
     [Fact]
     public void CreateAuthenticatedClient_WithValidApiKey_AddsApiKeyHeader()
     {
         // Arrange
-        var apiKey = "test-api-key-12345";
+        var apiKey = HttpClientFactoryTestsConstants.TestApiKey;
 
         // Act
         var client = _httpClientFactory.CreateAuthenticatedClient(apiKey);
 
         // Assert
         client.Should().NotBeNull();
-        client.DefaultRequestHeaders.Should().Contain(h => h.Key == "X-Api-Key");
-        client.DefaultRequestHeaders.GetValues("X-Api-Key").First().Should().Be(apiKey);
+        client.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.ApiKeyHeaderName);
+        client.DefaultRequestHeaders.GetValues(HttpClientFactoryTestsConstants.ApiKeyHeaderName).First().Should().Be(apiKey);
     }
 
     [Fact]
     public void CreateAuthenticatedClient_WithCustomName_UsesCustomName()
     {
         // Arrange
-        var apiKey = "test-api-key";
+        var apiKey = HttpClientFactoryTestsConstants.TestApiKeyBase;
 
         // Act
-        var client = _httpClientFactory.CreateAuthenticatedClient(apiKey, "custom-auth");
+        var client = _httpClientFactory.CreateAuthenticatedClient(apiKey, HttpClientFactoryTestsConstants.CustomAuthClientName);
 
         // Assert
-        _httpClientFactoryMock.Verify(f => f.CreateClient("custom-auth"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.CustomAuthClientName), Times.Once);
     }
 
     [Fact]
     public void CreateBearerClient_WithValidToken_AddsAuthorizationHeader()
     {
         // Arrange
-        var token = "test-token-abc123";
+        var token = HttpClientFactoryTestsConstants.TestBearerToken;
 
         // Act
         var client = _httpClientFactory.CreateBearerClient(token);
 
         // Assert
         client.Should().NotBeNull();
-        client.DefaultRequestHeaders.Should().Contain(h => h.Key == "Authorization");
-        client.DefaultRequestHeaders.Authorization?.Scheme.Should().Be("Bearer");
+        client.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.AuthorizationHeaderName);
+        client.DefaultRequestHeaders.Authorization?.Scheme.Should().Be(HttpClientFactoryTestsConstants.BearerScheme);
         client.DefaultRequestHeaders.Authorization?.Parameter.Should().Be(token);
     }
 
@@ -135,20 +135,20 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateBearerClient_WithCustomName_UsesCustomName()
     {
         // Arrange
-        var token = "test-token";
+        var token = HttpClientFactoryTestsConstants.TestToken;
 
         // Act
-        var client = _httpClientFactory.CreateBearerClient(token, "custom-bearer");
+        var client = _httpClientFactory.CreateBearerClient(token, HttpClientFactoryTestsConstants.CustomBearerClientName);
 
         // Assert
-        _httpClientFactoryMock.Verify(f => f.CreateClient("custom-bearer"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.CustomBearerClientName), Times.Once);
     }
 
     [Fact]
     public void CreateClientWithBaseUrl_WithValidUrl_SetsBaseAddress()
     {
         // Arrange
-        var baseUrl = "https://api.example.com";
+        var baseUrl = HttpClientFactoryTestsConstants.ExampleBaseUrl;
 
         // Act
         var client = _httpClientFactory.CreateClientWithBaseUrl(baseUrl);
@@ -162,20 +162,20 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateClientWithBaseUrl_WithCustomName_UsesCustomName()
     {
         // Arrange
-        var baseUrl = "https://api.example.com";
+        var baseUrl = HttpClientFactoryTestsConstants.ExampleBaseUrl;
 
         // Act
-        var client = _httpClientFactory.CreateClientWithBaseUrl(baseUrl, "custom-base");
+        var client = _httpClientFactory.CreateClientWithBaseUrl(baseUrl, HttpClientFactoryTestsConstants.CustomBaseClientName);
 
         // Assert
-        _httpClientFactoryMock.Verify(f => f.CreateClient("custom-base"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.CustomBaseClientName), Times.Once);
     }
 
     [Fact]
     public void CreateClientWithBaseUrl_WithTrailingSlash_HandlesCorrectly()
     {
         // Arrange
-        var baseUrl = "https://api.example.com/";
+        var baseUrl = HttpClientFactoryTestsConstants.ExampleBaseUrlWithTrailingSlash;
 
         // Act
         var client = _httpClientFactory.CreateClientWithBaseUrl(baseUrl);
@@ -201,7 +201,7 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateBearerClient_WithEmptyToken_ThrowsArgumentException()
     {
         // Arrange
-        var emptyToken = "";
+        var emptyToken = HttpClientFactoryTestsConstants.EmptyString;
 
         // Act
         Action act = () => _httpClientFactory.CreateBearerClient(emptyToken);
@@ -214,7 +214,7 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateBearerClient_WithWhitespaceToken_ThrowsArgumentException()
     {
         // Arrange
-        var whitespaceToken = "   ";
+        var whitespaceToken = HttpClientFactoryTestsConstants.WhitespaceString;
 
         // Act
         Action act = () => _httpClientFactory.CreateBearerClient(whitespaceToken);
@@ -240,7 +240,7 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsUriFormatException()
     {
         // Arrange
-        var emptyBaseUrl = "";
+        var emptyBaseUrl = HttpClientFactoryTestsConstants.EmptyString;
 
         // Act
         Action act = () => _httpClientFactory.CreateClientWithBaseUrl(emptyBaseUrl);
@@ -253,7 +253,7 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateClientWithBaseUrl_WithInvalidUrl_ThrowsUriFormatException()
     {
         // Arrange
-        var invalidUrl = "not-a-valid-url";
+        var invalidUrl = HttpClientFactoryTestsConstants.InvalidUrlString;
 
         // Act
         Action act = () => _httpClientFactory.CreateClientWithBaseUrl(invalidUrl);
@@ -266,56 +266,56 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     public void CreateClient_WithMultipleCalls_ReturnsIndependentClients()
     {
         // Act
-        var client1 = _httpClientFactory.CreateClient("client1");
-        var client2 = _httpClientFactory.CreateClient("client2");
+        var client1 = _httpClientFactory.CreateClient(HttpClientFactoryTestsConstants.TestClientName1);
+        var client2 = _httpClientFactory.CreateClient(HttpClientFactoryTestsConstants.TestClientName2);
 
         // Assert
         client1.Should().NotBeSameAs(client2);
-        client1.DefaultRequestHeaders.UserAgent.ToString().Should().Be("DotnetServiceScaffold/1.0");
-        client2.DefaultRequestHeaders.UserAgent.ToString().Should().Be("DotnetServiceScaffold/1.0");
+        client1.DefaultRequestHeaders.UserAgent.ToString().Should().Be(HttpClientFactoryTestsConstants.UserAgentValue);
+        client2.DefaultRequestHeaders.UserAgent.ToString().Should().Be(HttpClientFactoryTestsConstants.UserAgentValue);
     }
 
     [Fact]
     public void CreateAuthenticatedClient_AfterCreateClient_HasBothHeaders()
     {
         // Arrange
-        var apiKey = "test-key";
+        var apiKey = HttpClientFactoryTestsConstants.TestKey;
 
         // Act
         var baseClient = _httpClientFactory.CreateClient();
         var authClient = _httpClientFactory.CreateAuthenticatedClient(apiKey);
 
         // Assert
-        baseClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
-        baseClient.DefaultRequestHeaders.Should().NotContain(h => h.Key == "X-Api-Key");
+        baseClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
+        baseClient.DefaultRequestHeaders.Should().NotContain(h => h.Key == HttpClientFactoryTestsConstants.ApiKeyHeaderName);
 
-        authClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
-        authClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "X-Api-Key");
+        authClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
+        authClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.ApiKeyHeaderName);
     }
 
     [Fact]
     public void CreateBearerClient_AfterCreateClient_HasBothHeaders()
     {
         // Arrange
-        var token = "test-token";
+        var token = HttpClientFactoryTestsConstants.TestToken;
 
         // Act
         var baseClient = _httpClientFactory.CreateClient();
         var bearerClient = _httpClientFactory.CreateBearerClient(token);
 
         // Assert
-        baseClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
-        baseClient.DefaultRequestHeaders.Should().NotContain(h => h.Key == "Authorization");
+        baseClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
+        baseClient.DefaultRequestHeaders.Should().NotContain(h => h.Key == HttpClientFactoryTestsConstants.AuthorizationHeaderName);
 
-        bearerClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
-        bearerClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "Authorization");
+        bearerClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
+        bearerClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.AuthorizationHeaderName);
     }
 
     [Fact]
     public void CreateClientWithBaseUrl_AfterCreateClient_HasBaseAddressAndUserAgent()
     {
         // Arrange
-        var baseUrl = "https://api.example.com";
+        var baseUrl = HttpClientFactoryTestsConstants.ExampleBaseUrl;
 
         // Act
         var baseClient = _httpClientFactory.CreateClient();
@@ -323,10 +323,10 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
 
         // Assert
         baseClient.BaseAddress.Should().BeNull();
-        baseClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
+        baseClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
 
         urlClient.BaseAddress.Should().Be(new Uri(baseUrl));
-        urlClient.DefaultRequestHeaders.Should().Contain(h => h.Key == "User-Agent");
+        urlClient.DefaultRequestHeaders.Should().Contain(h => h.Key == HttpClientFactoryTestsConstants.UserAgentHeaderName);
     }
 
     [Fact]
@@ -336,7 +336,7 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
         var client = _httpClientFactory.CreateClient();
 
         // Assert
-        client.Timeout.Should().Be(TimeSpan.FromSeconds(30));
+        client.Timeout.Should().Be(HttpClientFactoryTestsConstants.DefaultTimeout);
     }
 
     [Fact]
@@ -346,33 +346,33 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
         var client = _httpClientFactory.CreateClient();
 
         // Assert
-        _httpClientFactoryMock.Verify(f => f.CreateClient("default"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.DefaultClientName), Times.Once);
     }
 
     [Fact]
     public void CreateAuthenticatedClient_UsesDefaultAuthenticatedName()
     {
         // Arrange
-        var apiKey = "test-key";
+        var apiKey = HttpClientFactoryTestsConstants.TestKey;
 
         // Act
         var client = _httpClientFactory.CreateAuthenticatedClient(apiKey);
 
         // Assert
-        _httpClientFactoryMock.Verify(f => f.CreateClient("authenticated"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.AuthenticatedClientName), Times.Once);
     }
 
     [Fact]
     public void CreateBearerClient_UsesDefaultBearerName()
     {
         // Arrange
-        var token = "test-token";
+        var token = HttpClientFactoryTestsConstants.TestToken;
 
         // Act
         var client = _httpClientFactory.CreateBearerClient(token);
 
         // Assert
-        _httpClientFactoryMock.Verify(f => f.CreateClient("bearer"), Times.Once);
+        _httpClientFactoryMock.Verify(f => f.CreateClient(HttpClientFactoryTestsConstants.BearerClientName), Times.Once);
     }
 
     // Mock HttpMessageHandler to avoid actual HTTP calls
