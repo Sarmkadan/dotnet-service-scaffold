@@ -31,6 +31,7 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
 
     public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
         return await _dbSet
             .Where(a => a.EntityType == entityType && a.EntityId == entityId)
             .OrderByDescending(a => a.CreatedAt)
@@ -138,6 +139,7 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
         var query = _dbSet
             .Where(a => a.EntityType == entityType)
             .OrderByDescending(a => a.CreatedAt);
