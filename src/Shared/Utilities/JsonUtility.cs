@@ -63,6 +63,7 @@ public static class JsonUtility
     /// </summary>
     public static string Serialize<T>(T obj)
     {
+        ArgumentNullException.ThrowIfNull(obj);
         return JsonSerializer.Serialize(obj, DefaultOptions);
     }
 
@@ -71,6 +72,7 @@ public static class JsonUtility
     /// </summary>
     public static string SerializeWeb<T>(T obj)
     {
+        ArgumentNullException.ThrowIfNull(obj);
         return JsonSerializer.Serialize(obj, WebDefaultOptions);
     }
 
@@ -79,6 +81,7 @@ public static class JsonUtility
     /// </summary>
     public static string SerializePretty<T>(T obj)
     {
+        ArgumentNullException.ThrowIfNull(obj);
         return JsonSerializer.Serialize(obj, PrettyOptions);
     }
 
@@ -87,8 +90,7 @@ public static class JsonUtility
     /// </summary>
     public static T? Deserialize<T>(string json)
     {
-        if (string.IsNullOrEmpty(json))
-            return default;
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
@@ -105,8 +107,7 @@ public static class JsonUtility
     /// </summary>
     public static dynamic? DeserializeDynamic(string json)
     {
-        if (string.IsNullOrEmpty(json))
-            return null;
+        ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
@@ -124,8 +125,8 @@ public static class JsonUtility
     /// </summary>
     public static T? GetProperty<T>(string json, string propertyPath)
     {
-        if (string.IsNullOrEmpty(json) || string.IsNullOrEmpty(propertyPath))
-            return default;
+        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentException.ThrowIfNullOrEmpty(propertyPath);
 
         try
         {
@@ -160,6 +161,9 @@ public static class JsonUtility
     /// </summary>
     public static string MergeJson(string json1, string json2)
     {
+        ArgumentException.ThrowIfNullOrEmpty(json1);
+        ArgumentException.ThrowIfNullOrEmpty(json2);
+
         if (string.IsNullOrEmpty(json1))
             return json2 ?? string.Empty;
 
