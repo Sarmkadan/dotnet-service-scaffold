@@ -47,6 +47,9 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
         IOptions<ServiceDiscoveryOptions> options,
         ILogger<RegistryServiceDiscoveryProvider> logger)
     {
+        ArgumentNullException.ThrowIfNull(httpClientFactory);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
         _httpFactory = httpClientFactory;
         _options = options.Value;
         _logger = logger;
@@ -59,6 +62,8 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
         string serviceName,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
+
         try
         {
             var reg = _options.Registry;
@@ -91,6 +96,8 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
         ServiceDiscoveryRecord record,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(record);
+
         try
         {
             var self = _options.SelfRegistration;
@@ -161,6 +168,8 @@ public sealed class RegistryServiceDiscoveryProvider : IServiceDiscoveryProvider
         string serviceName,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
+
         var previousIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         while (!cancellationToken.IsCancellationRequested)
