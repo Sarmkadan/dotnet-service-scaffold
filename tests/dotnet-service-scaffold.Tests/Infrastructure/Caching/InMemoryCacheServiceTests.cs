@@ -78,19 +78,15 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task SetAsync_GetAsync_ReturnsStoredValue()
     {
         // Arrange
-        const string key = "test-key";
-        const string value = "test-value";
-
-        // Act
-        await _cache.SetAsync(key, value);
-        var result = await _cache.GetAsync<string>(key);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.TestKey, InMemoryCacheServiceTestsConstants.TestValue);
+        var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.TestKey);
 
         // Assert
-        result.Should().Be(value);
+        result.Should().Be(InMemoryCacheServiceTestsConstants.TestValue);
         _loggerMock.Verify(x => x.Log(
             LogLevel.Debug,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Cached value for key test-key")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(string.Format(InMemoryCacheServiceTestsConstants.LogCachedValueFormat, InMemoryCacheServiceTestsConstants.TestKey))),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -103,14 +99,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task GetAsync_NonExistentKey_ReturnsNull()
     {
         // Arrange & Act
-        var result = await _cache.GetAsync<string>("non-existent-key");
+        var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.NonExistentKey);
 
         // Assert
         result.Should().BeNull();
         _loggerMock.Verify(x => x.Log(
             LogLevel.Debug,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Cache miss for key non-existent-key")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(string.Format(InMemoryCacheServiceTestsConstants.LogCacheMissFormat, InMemoryCacheServiceTestsConstants.NonExistentKey))),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -123,7 +119,7 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task GetAsync_EmptyKey_ReturnsNull()
     {
         // Arrange & Act
-        var result = await _cache.GetAsync<string>("");
+        var result = await _cache.GetAsync<string>(string.Empty);
 
         // Assert
         result.Should().BeNull();
@@ -149,14 +145,12 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public void SetAsync_NullKey_ThrowsArgumentException()
     {
         // Arrange
-        const string value = "test-value";
-
         // Act
-        Action act = () => _cache.SetAsync(null!, value);
+        Action act = () => _cache.SetAsync(null!, InMemoryCacheServiceTestsConstants.TestValue);
 
         // Assert
         act.Should().Throw<ArgumentException>(
-            "because null key is not allowed");
+            InMemoryCacheServiceTestsConstants.NullKeyExceptionMessage);
     }
 
     /// <summary>
@@ -166,14 +160,12 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public void SetAsync_EmptyKey_ThrowsArgumentException()
     {
         // Arrange
-        const string value = "test-value";
-
         // Act
-        Action act = () => _cache.SetAsync("", value);
+        Action act = () => _cache.SetAsync(string.Empty, InMemoryCacheServiceTestsConstants.TestValue);
 
         // Assert
         act.Should().Throw<ArgumentException>(
-            "because empty key is not allowed");
+            InMemoryCacheServiceTestsConstants.EmptyKeyExceptionMessage);
     }
 
     /// <summary>
@@ -183,21 +175,17 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task SetAsync_WithExpiration_EntryExpiresAndIsRemoved()
     {
         // Arrange
-        const string key = "expiring-key";
-        const string value = "expiring-value";
-
-        // Act - set with 10ms expiration
-        await _cache.SetAsync(key, value, TimeSpan.FromMilliseconds(10));
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ExpiringKey, InMemoryCacheServiceTestsConstants.ExpiringValue, TimeSpan.FromMilliseconds(InMemoryCacheServiceTestsConstants.ExpirationDelayMs));
 
         // Assert - should be present immediately
-        var result = await _cache.GetAsync<string>(key);
-        result.Should().Be(value);
+        var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.ExpiringKey);
+        result.Should().Be(InMemoryCacheServiceTestsConstants.ExpiringValue);
 
         // Wait for expiration
-        await Task.Delay(20);
+        await Task.Delay(InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
 
         // Assert - should be null after expiration
-        result = await _cache.GetAsync<string>(key);
+        result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.ExpiringKey);
         result.Should().BeNull();
     }
 
@@ -208,16 +196,13 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task ExistsAsync_KeyBehavior_ReturnsCorrectResult()
     {
         // Arrange
-        const string existingKey = "existing-key";
-        const string nonExistentKey = "non-existent-key";
-
-        await _cache.SetAsync(existingKey, "value");
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ExistingKey, InMemoryCacheServiceTestsConstants.TestValue);
 
         // Act & Assert
-        var exists = await _cache.ExistsAsync(existingKey);
+        var exists = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.ExistingKey);
         exists.Should().BeTrue();
 
-        exists = await _cache.ExistsAsync(nonExistentKey);
+        exists = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.NonExistentKey);
         exists.Should().BeFalse();
     }
 
@@ -228,15 +213,13 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task ExistsAsync_ExpiredEntry_ReturnsFalse()
     {
         // Arrange
-        const string key = "expiring-key";
-
-        await _cache.SetAsync(key, "value", TimeSpan.FromMilliseconds(10));
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ExpiringKey, InMemoryCacheServiceTestsConstants.TestValue, TimeSpan.FromMilliseconds(InMemoryCacheServiceTestsConstants.ExpirationDelayMs));
 
         // Wait for expiration
-        await Task.Delay(20);
+        await Task.Delay(InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
 
         // Act & Assert
-        var exists = await _cache.ExistsAsync(key);
+        var exists = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.ExpiringKey);
         exists.Should().BeFalse();
     }
 
@@ -247,24 +230,21 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task RemoveAsync_RemovesEntryFromCache()
     {
         // Arrange
-        const string key = "removable-key";
-        const string value = "removable-value";
-
-        await _cache.SetAsync(key, value);
-        var existsBefore = await _cache.ExistsAsync(key);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.RemovableKey, InMemoryCacheServiceTestsConstants.RemovableValue);
+        var existsBefore = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.RemovableKey);
         existsBefore.Should().BeTrue();
 
         // Act
-        await _cache.RemoveAsync(key);
+        await _cache.RemoveAsync(InMemoryCacheServiceTestsConstants.RemovableKey);
 
         // Assert
-        var existsAfter = await _cache.ExistsAsync(key);
+        var existsAfter = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.RemovableKey);
         existsAfter.Should().BeFalse();
 
         _loggerMock.Verify(x => x.Log(
             LogLevel.Debug,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Removed cache entry for key removable-key")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(string.Format(InMemoryCacheServiceTestsConstants.LogRemovedCacheEntryFormat, InMemoryCacheServiceTestsConstants.RemovableKey))),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -288,7 +268,7 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public void RemoveAsync_EmptyKey_DoesNotThrow()
     {
         // Act - should not throw
-        Action act = () => _cache.RemoveAsync("");
+        Action act = () => _cache.RemoveAsync(string.Empty);
         act.Should().NotThrow();
     }
 
@@ -299,27 +279,27 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task ClearAsync_RemovesAllEntries()
     {
         // Arrange - add multiple entries
-        await _cache.SetAsync("key1", "value1");
-        await _cache.SetAsync("key2", "value2");
-        await _cache.SetAsync("key3", "value3");
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.Key1, InMemoryCacheServiceTestsConstants.Value1);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.Key2, InMemoryCacheServiceTestsConstants.Value2);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.Key3, InMemoryCacheServiceTestsConstants.Value3);
 
         // Verify entries exist
-        (await _cache.ExistsAsync("key1")).Should().BeTrue();
-        (await _cache.ExistsAsync("key2")).Should().BeTrue();
-        (await _cache.ExistsAsync("key3")).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Key1)).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Key2)).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Key3)).Should().BeTrue();
 
         // Act
         await _cache.ClearAsync();
 
         // Assert - all entries should be gone
-        (await _cache.ExistsAsync("key1")).Should().BeFalse();
-        (await _cache.ExistsAsync("key2")).Should().BeFalse();
-        (await _cache.ExistsAsync("key3")).Should().BeFalse();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Key1)).Should().BeFalse();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Key2)).Should().BeFalse();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Key3)).Should().BeFalse();
 
         _loggerMock.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Cleared cache")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(InMemoryCacheServiceTestsConstants.LogClearedCache)),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -332,23 +312,21 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task GetOrSetAsync_CacheHit_ReturnsCachedValueWithoutCallingFactory()
     {
         // Arrange
-        const string key = "factory-key";
-        const string cachedValue = "cached-value";
         var factoryCallCount = 0;
 
-        await _cache.SetAsync(key, cachedValue);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.FactoryKey, InMemoryCacheServiceTestsConstants.CachedValue);
 
         // Act - factory should not be called on cache hit
         var result = await _cache.GetOrSetAsync(
-            key,
+            InMemoryCacheServiceTestsConstants.FactoryKey,
             () =>
             {
                 factoryCallCount++;
-                return Task.FromResult("new-value");
+                return Task.FromResult(InMemoryCacheServiceTestsConstants.NewValue);
             });
 
         // Assert
-        result.Should().Be(cachedValue);
+        result.Should().Be(InMemoryCacheServiceTestsConstants.CachedValue);
         factoryCallCount.Should().Be(0);
     }
 
@@ -359,25 +337,24 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task GetOrSetAsync_CacheMiss_CallsFactoryAndCachesResult()
     {
         // Arrange
-        const string key = "factory-key";
         var factoryCallCount = 0;
 
         // Act - factory should be called on cache miss
         var result = await _cache.GetOrSetAsync(
-            key,
+            InMemoryCacheServiceTestsConstants.FactoryKey,
             () =>
             {
                 factoryCallCount++;
-                return Task.FromResult("computed-value");
+                return Task.FromResult(InMemoryCacheServiceTestsConstants.ComputedValue);
             });
 
         // Assert
-        result.Should().Be("computed-value");
+        result.Should().Be(InMemoryCacheServiceTestsConstants.ComputedValue);
         factoryCallCount.Should().Be(1);
 
         // Verify it was cached
-        var cachedResult = await _cache.GetAsync<string>(key);
-        cachedResult.Should().Be("computed-value");
+        var cachedResult = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.FactoryKey);
+        cachedResult.Should().Be(InMemoryCacheServiceTestsConstants.ComputedValue);
     }
 
     /// <summary>
@@ -387,26 +364,24 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task GetOrSetAsync_WithExpiration_CachesWithExpiration()
     {
         // Arrange
-        const string key = "expiring-factory-key";
-
         // Act
         var result = await _cache.GetOrSetAsync(
-            key,
-            () => Task.FromResult("computed-value"),
-            TimeSpan.FromMilliseconds(10));
+            InMemoryCacheServiceTestsConstants.ExpiringFactoryKey,
+            () => Task.FromResult(InMemoryCacheServiceTestsConstants.ComputedValue),
+            TimeSpan.FromMilliseconds(InMemoryCacheServiceTestsConstants.ExpirationDelayMs));
 
         // Assert
-        result.Should().Be("computed-value");
+        result.Should().Be(InMemoryCacheServiceTestsConstants.ComputedValue);
 
         // Should be present immediately
-        var cachedResult = await _cache.GetAsync<string>(key);
-        cachedResult.Should().Be("computed-value");
+        var cachedResult = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.ExpiringFactoryKey);
+        cachedResult.Should().Be(InMemoryCacheServiceTestsConstants.ComputedValue);
 
         // Wait for expiration
-        await Task.Delay(20);
+        await Task.Delay(InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
 
         // Should be null after expiration
-        cachedResult = await _cache.GetAsync<string>(key);
+        cachedResult = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.ExpiringFactoryKey);
         cachedResult.Should().BeNull();
     }
 
@@ -417,29 +392,29 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task RemoveByPatternAsync_RemovesMatchingEntries()
     {
         // Arrange - add multiple entries with matching pattern
-        await _cache.SetAsync("user:1:profile", "profile1");
-        await _cache.SetAsync("user:2:profile", "profile2");
-        await _cache.SetAsync("user:3:settings", "settings3");
-        await _cache.SetAsync("cache:1:data", "data1");
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.User1Profile, InMemoryCacheServiceTestsConstants.Profile1);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.User2Profile, InMemoryCacheServiceTestsConstants.Profile2);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.User3Settings, InMemoryCacheServiceTestsConstants.Settings3);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.Cache1Data, InMemoryCacheServiceTestsConstants.Data1);
 
         // Verify entries exist
-        (await _cache.ExistsAsync("user:1:profile")).Should().BeTrue();
-        (await _cache.ExistsAsync("user:2:profile")).Should().BeTrue();
-        (await _cache.ExistsAsync("user:3:settings")).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.User1Profile)).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.User2Profile)).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.User3Settings)).Should().BeTrue();
 
         // Act - remove all user:* entries
-        await _cache.RemoveByPatternAsync("user:*");
+        await _cache.RemoveByPatternAsync(InMemoryCacheServiceTestsConstants.UserPattern);
 
         // Assert - user entries should be gone, others remain
-        (await _cache.ExistsAsync("user:1:profile")).Should().BeFalse();
-        (await _cache.ExistsAsync("user:2:profile")).Should().BeFalse();
-        (await _cache.ExistsAsync("user:3:settings")).Should().BeFalse();
-        (await _cache.ExistsAsync("cache:1:data")).Should().BeTrue();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.User1Profile)).Should().BeFalse();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.User2Profile)).Should().BeFalse();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.User3Settings)).Should().BeFalse();
+        (await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.Cache1Data)).Should().BeTrue();
 
         _loggerMock.Verify(x => x.Log(
             LogLevel.Debug,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Removed 3 cache entries matching pattern user:*")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(string.Format(InMemoryCacheServiceTestsConstants.LogRemovedPatternFormat, InMemoryCacheServiceTestsConstants.RemovedPatternEntryCount, InMemoryCacheServiceTestsConstants.UserPattern))),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -463,7 +438,7 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public void RemoveByPatternAsync_EmptyPattern_DoesNotThrow()
     {
         // Act - should not throw
-        Action act = () => _cache.RemoveByPatternAsync("");
+        Action act = () => _cache.RemoveByPatternAsync(string.Empty);
         act.Should().NotThrow();
     }
 
@@ -474,22 +449,20 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task ConcurrentAccess_MultipleThreads_HandlesCorrectly()
     {
         // Arrange
-        const int threadCount = 10;
-        const int operationsPerThread = 100;
         var tasks = new List<Task>();
         var counter = 0;
         var counterLock = new object();
 
         // Act - multiple threads setting and getting values concurrently
-        for (var i = 0; i < threadCount; i++)
+        for (var i = 0; i < InMemoryCacheServiceTestsConstants.ConcurrentThreadCount; i++)
         {
             var threadId = i;
             tasks.Add(Task.Run(async () =>
             {
-                for (var j = 0; j < operationsPerThread; j++)
+                for (var j = 0; j < InMemoryCacheServiceTestsConstants.ConcurrentOperationsPerThread; j++)
                 {
-                    var key = $"concurrent-key-{threadId}-{j}";
-                    var value = $"value-{threadId}-{j}";
+                    var key = string.Format(InMemoryCacheServiceTestsConstants.ConcurrentKeyFormat, threadId, j);
+                    var value = string.Format(InMemoryCacheServiceTestsConstants.ConcurrentValueFormat, threadId, j);
 
                     await _cache.SetAsync(key, value);
                     var result = await _cache.GetAsync<string>(key);
@@ -507,14 +480,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         await Task.WhenAll(tasks);
 
         // Assert - all operations should have succeeded
-        counter.Should().Be(threadCount * operationsPerThread);
+        counter.Should().Be(InMemoryCacheServiceTestsConstants.ConcurrentThreadCount * InMemoryCacheServiceTestsConstants.ConcurrentOperationsPerThread);
 
         // Verify all entries exist
-        for (var i = 0; i < threadCount; i++)
+        for (var i = 0; i < InMemoryCacheServiceTestsConstants.ConcurrentThreadCount; i++)
         {
-            for (var j = 0; j < operationsPerThread; j++)
+            for (var j = 0; j < InMemoryCacheServiceTestsConstants.ConcurrentOperationsPerThread; j++)
             {
-                var key = $"concurrent-key-{i}-{j}";
+                var key = string.Format(InMemoryCacheServiceTestsConstants.ConcurrentKeyFormat, i, j);
                 var exists = await _cache.ExistsAsync(key);
                 exists.Should().BeTrue();
             }
@@ -538,7 +511,7 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         _loggerMock.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Cleared cache")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(InMemoryCacheServiceTestsConstants.LogClearedCache)),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never); // Timer disposal doesn't log
@@ -551,12 +524,16 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task SetAsync_GetAsync_ComplexObject_ReturnsCorrectInstance()
     {
         // Arrange
-        const string key = "complex-object-key";
-        var complexObject = new TestCacheObject { Id = 1, Name = "Test", Value = 42.5m };
+        var complexObject = new TestCacheObject
+        {
+            Id = InMemoryCacheServiceTestsConstants.ComplexObjectId,
+            Name = InMemoryCacheServiceTestsConstants.ComplexObjectName,
+            Value = InMemoryCacheServiceTestsConstants.ComplexObjectValue
+        };
 
         // Act
-        await _cache.SetAsync(key, complexObject);
-        var result = await _cache.GetAsync<TestCacheObject>(key);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ComplexObjectKey, complexObject);
+        var result = await _cache.GetAsync<TestCacheObject>(InMemoryCacheServiceTestsConstants.ComplexObjectKey);
 
         // Assert
         result.Should().NotBeNull();
@@ -572,11 +549,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task SetAsync_NullValue_StoresAndRetrievesNull()
     {
         // Arrange
-        const string key = "null-value-key";
-
         // Act - store null
-        await _cache.SetAsync(key, (object)null!);
-        var result = await _cache.GetAsync<string>(key);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.NullValueKey, (object)null!);
+        var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.NullValueKey);
 
         // Assert
         result.Should().BeNull();
@@ -589,17 +564,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     public async Task SetAsync_WithoutExpiration_NeverExpires()
     {
         // Arrange
-        const string key = "no-expiry-key";
-        const string value = "no-expiry-value";
-
-        await _cache.SetAsync(key, value);
+        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.NoExpiryKey, InMemoryCacheServiceTestsConstants.NoExpiryValue);
 
         // Wait long enough that any expiration would have triggered
-        await Task.Delay(100);
+        await Task.Delay(InMemoryCacheServiceTestsConstants.NoExpiryWaitMs);
 
         // Act & Assert - should still be present
-        var result = await _cache.GetAsync<string>(key);
-        result.Should().Be(value);
+        var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.NoExpiryKey);
+        result.Should().Be(InMemoryCacheServiceTestsConstants.NoExpiryValue);
     }
 
     private class TestCacheObject
