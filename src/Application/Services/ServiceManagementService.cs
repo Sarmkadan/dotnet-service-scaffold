@@ -41,6 +41,9 @@ public class ServiceManagementService : IServiceManagementService
         Guid ownerId,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
+        ArgumentException.ThrowIfNullOrEmpty(endpoint);
+        ArgumentException.ThrowIfNullOrEmpty(healthCheckUrl);
         cancellationToken.ThrowIfCancellationRequested();
         var errors = new List<string>();
 
@@ -103,6 +106,7 @@ public class ServiceManagementService : IServiceManagementService
         string serviceName,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
         return await _serviceRepository.GetByNameAsync(serviceName, cancellationToken);
     }
 
@@ -121,6 +125,7 @@ public class ServiceManagementService : IServiceManagementService
 
     public async Task<ServiceRegistration> UpdateServiceAsync(ServiceRegistration service)
     {
+        ArgumentNullException.ThrowIfNull(service);
         if (!service.IsValid())
             throw new ServiceValidationException(ServiceManagementServiceConstants.ServiceConfigurationInvalid);
 
@@ -163,6 +168,7 @@ public class ServiceManagementService : IServiceManagementService
 
     public async Task<ServiceRegistration> DisableServiceAsync(Guid serviceId, string reason, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(reason);
         var service = await _serviceRepository.GetByIdAsync(serviceId, cancellationToken);
         if (service is null)
             throw new ServiceNotFoundException(serviceId);
