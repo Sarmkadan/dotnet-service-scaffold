@@ -42,6 +42,8 @@ public class MetricsService : IMetricsService
     /// </summary>
     public void IncrementCounter(string metricName, long value = 1, IDictionary<string, string>? tags = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(metricName);
+
         var key = BuildMetricKey(metricName, tags);
 
         _metrics.AddOrUpdate(key,
@@ -60,6 +62,8 @@ public class MetricsService : IMetricsService
     /// </summary>
     public void RecordGauge(string metricName, double value, IDictionary<string, string>? tags = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(metricName);
+
         var key = BuildMetricKey(metricName, tags);
 
         _metrics.AddOrUpdate(key,
@@ -74,6 +78,8 @@ public class MetricsService : IMetricsService
     /// </summary>
     public void RecordTiming(string metricName, long elapsedMs, IDictionary<string, string>? tags = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(metricName);
+
         var key = BuildMetricKey(metricName, tags);
 
         _metrics.AddOrUpdate(key,
@@ -95,6 +101,9 @@ public class MetricsService : IMetricsService
     /// </summary>
     public async Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(metricName);
+        ArgumentNullException.ThrowIfNull(operation);
+
         var sw = Stopwatch.StartNew();
 
         try
@@ -113,6 +122,9 @@ public class MetricsService : IMetricsService
     /// </summary>
     public void RecordHistogram(string metricName, double value, double[] buckets, IDictionary<string, string>? tags = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(metricName);
+        ArgumentNullException.ThrowIfNull(buckets);
+
         var key = BuildMetricKey(metricName, tags);
 
         _metrics.AddOrUpdate(key,
