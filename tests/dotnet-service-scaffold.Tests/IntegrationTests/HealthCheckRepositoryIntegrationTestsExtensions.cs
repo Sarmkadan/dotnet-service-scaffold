@@ -32,7 +32,7 @@ public static class HealthCheckRepositoryIntegrationTestsExtensions
 		this HealthCheckRepositoryIntegrationTests test,
 		Guid serviceId,
 		HealthStatus status = HealthStatus.Healthy,
-		int responseTimeMs = 150,
+		int responseTimeMs = HealthCheckRepositoryIntegrationTestsExtensionsConstants.DefaultResponseTimeMs,
 		string? details = null)
 	{
 		ArgumentNullException.ThrowIfNull(test);
@@ -43,7 +43,7 @@ public static class HealthCheckRepositoryIntegrationTestsExtensions
 			Status = status,
 			CheckedAt = DateTime.UtcNow,
 			ResponseTimeMs = responseTimeMs,
-			Details = details ?? "Test health check"
+			Details = details ?? HealthCheckRepositoryIntegrationTestsExtensionsConstants.DefaultDetails
 		};
 
 		await test._healthCheckRepository.AddHealthCheckResultAsync(result);
@@ -70,7 +70,9 @@ public static class HealthCheckRepositoryIntegrationTestsExtensions
 		int[]? responseTimes = null)
 	{
 		ArgumentNullException.ThrowIfNull(test);
-		ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(count, 0);
+		ArgumentOutOfRangeException.ThrowIfLessThan(
+			count,
+			HealthCheckRepositoryIntegrationTestsExtensionsConstants.MinimumResultCount);
 
 		var results = new List<HealthCheckResult>();
 		var random = new Random();
@@ -80,10 +82,20 @@ public static class HealthCheckRepositoryIntegrationTestsExtensions
 			var result = new HealthCheckResult
 			{
 				ServiceId = serviceId,
-				Status = statuses != null && i < statuses.Length ? statuses[i] : (HealthStatus)random.Next(0, 3),
+				Status = statuses != null && i < statuses.Length
+					? statuses[i]
+					: (HealthStatus)random.Next(
+						HealthCheckRepositoryIntegrationTestsExtensionsConstants.MinimumRandomHealthStatusValue,
+						HealthCheckRepositoryIntegrationTestsExtensionsConstants.MaximumRandomHealthStatusValueExclusive),
 				CheckedAt = DateTime.UtcNow.AddMinutes(-i),
-				ResponseTimeMs = responseTimes != null && i < responseTimes.Length ? responseTimes[i] : random.Next(50, 500),
-				Details = $"Health check #{i}"
+				ResponseTimeMs = responseTimes != null && i < responseTimes.Length
+					? responseTimes[i]
+					: random.Next(
+						HealthCheckRepositoryIntegrationTestsExtensionsConstants.MinimumRandomResponseTimeMs,
+						HealthCheckRepositoryIntegrationTestsExtensionsConstants.MaximumRandomResponseTimeMsExclusive),
+				Details = string.Format(
+					HealthCheckRepositoryIntegrationTestsExtensionsConstants.IndexedHealthCheckDetailsFormat,
+					i)
 			};
 			results.Add(result);
 		}
@@ -110,7 +122,7 @@ public static class HealthCheckRepositoryIntegrationTestsExtensions
 		HealthCheckResult result,
 		Guid expectedServiceId,
 		HealthStatus expectedStatus = HealthStatus.Healthy,
-		int expectedResponseTimeMs = 150,
+		int expectedResponseTimeMs = HealthCheckRepositoryIntegrationTestsExtensionsConstants.DefaultResponseTimeMs,
 		string? expectedDetails = null)
 	{
 		ArgumentNullException.ThrowIfNull(test);
