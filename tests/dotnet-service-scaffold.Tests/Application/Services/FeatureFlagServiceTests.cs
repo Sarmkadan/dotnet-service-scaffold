@@ -38,10 +38,10 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void IsEnabled_ShouldReturnTrue_WhenFeatureIsEnabled()
     {
         // Arrange
-        _featureFlagService.EnableFeature("audit_logging"); // Default is true, but good to explicitly set
+        _featureFlagService.EnableFeature(FeatureFlagServiceTestsConstants.AuditLoggingFeatureName); // Default is true, but good to explicitly set
 
         // Act
-        var result = _featureFlagService.IsEnabled("audit_logging");
+        var result = _featureFlagService.IsEnabled(FeatureFlagServiceTestsConstants.AuditLoggingFeatureName);
 
         // Assert
         result.Should().BeTrue();
@@ -54,10 +54,10 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void IsEnabled_ShouldReturnFalse_WhenFeatureIsDisabled()
     {
         // Arrange
-        _featureFlagService.DisableFeature("audit_logging");
+        _featureFlagService.DisableFeature(FeatureFlagServiceTestsConstants.AuditLoggingFeatureName);
 
         // Act
-        var result = _featureFlagService.IsEnabled("audit_logging");
+        var result = _featureFlagService.IsEnabled(FeatureFlagServiceTestsConstants.AuditLoggingFeatureName);
 
         // Assert
         result.Should().BeFalse();
@@ -70,11 +70,11 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void IsEnabled_ShouldReturnFalse_WhenFeatureNotFound()
     {
         // Act
-        var result = _featureFlagService.IsEnabled("non_existent_feature");
+        var result = _featureFlagService.IsEnabled(FeatureFlagServiceTestsConstants.NonExistentFeatureName);
 
         // Assert
         result.Should().BeFalse();
-        _logger.Received(1).LogWarning("Feature flag '{FeatureName}' not found, defaulting to false", "non_existent_feature");
+        _logger.Received(FeatureFlagServiceTestsConstants.ExpectedLogInvocationCount).LogWarning(FeatureFlagServiceTestsConstants.FeatureNotFoundLogFormat, FeatureFlagServiceTestsConstants.NonExistentFeatureName);
     }
 
     /// <summary>
@@ -84,14 +84,14 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void EnableFeature_ShouldSetFeatureToEnabled()
     {
         // Arrange
-        _featureFlagService.DisableFeature("rate_limiting"); // Ensure it's disabled first
+        _featureFlagService.DisableFeature(FeatureFlagServiceTestsConstants.RateLimitingFeatureName); // Ensure it's disabled first
 
         // Act
-        _featureFlagService.EnableFeature("rate_limiting");
+        _featureFlagService.EnableFeature(FeatureFlagServiceTestsConstants.RateLimitingFeatureName);
 
         // Assert
-        _featureFlagService.IsEnabled("rate_limiting").Should().BeTrue();
-        _logger.Received(1).LogInformation("Feature '{FeatureName}' enabled", "rate_limiting");
+        _featureFlagService.IsEnabled(FeatureFlagServiceTestsConstants.RateLimitingFeatureName).Should().BeTrue();
+        _logger.Received(FeatureFlagServiceTestsConstants.ExpectedLogInvocationCount).LogInformation(FeatureFlagServiceTestsConstants.FeatureEnabledLogFormat, FeatureFlagServiceTestsConstants.RateLimitingFeatureName);
     }
 
     /// <summary>
@@ -101,14 +101,14 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void DisableFeature_ShouldSetFeatureToDisabled()
     {
         // Arrange
-        _featureFlagService.EnableFeature("rate_limiting"); // Ensure it's enabled first
+        _featureFlagService.EnableFeature(FeatureFlagServiceTestsConstants.RateLimitingFeatureName); // Ensure it's enabled first
 
         // Act
-        _featureFlagService.DisableFeature("rate_limiting");
+        _featureFlagService.DisableFeature(FeatureFlagServiceTestsConstants.RateLimitingFeatureName);
 
         // Assert
-        _featureFlagService.IsEnabled("rate_limiting").Should().BeFalse();
-        _logger.Received(1).LogInformation("Feature '{FeatureName}' disabled", "rate_limiting");
+        _featureFlagService.IsEnabled(FeatureFlagServiceTestsConstants.RateLimitingFeatureName).Should().BeFalse();
+        _logger.Received(FeatureFlagServiceTestsConstants.ExpectedLogInvocationCount).LogInformation(FeatureFlagServiceTestsConstants.FeatureDisabledLogFormat, FeatureFlagServiceTestsConstants.RateLimitingFeatureName);
     }
 
     /// <summary>
@@ -118,16 +118,16 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void SetRolloutPercentage_ShouldUpdatePercentage()
     {
         // Arrange
-        var featureName = "advanced_analytics"; // This is initially false, but has a rollout.
-        _featureFlagService.SetRolloutPercentage(featureName, 50);
+        var featureName = FeatureFlagServiceTestsConstants.AdvancedAnalyticsFeatureName; // This is initially false, but has a rollout.
+        _featureFlagService.SetRolloutPercentage(featureName, FeatureFlagServiceTestsConstants.ValidRolloutPercentage);
 
         // Act
         var flag = _featureFlagService.GetFlag(featureName);
 
         // Assert
         flag.Should().NotBeNull();
-        flag.RolloutPercentage.Should().Be(50);
-        _logger.Received(1).LogInformation("Feature '{FeatureName}' rollout percentage set to {Percentage}%", featureName, 50);
+        flag.RolloutPercentage.Should().Be(FeatureFlagServiceTestsConstants.ValidRolloutPercentage);
+        _logger.Received(FeatureFlagServiceTestsConstants.ExpectedLogInvocationCount).LogInformation(FeatureFlagServiceTestsConstants.RolloutPercentageSetLogFormat, featureName, FeatureFlagServiceTestsConstants.ValidRolloutPercentage);
     }
 
     /// <summary>
@@ -135,19 +135,19 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     /// </summary>
     /// <param name="invalidPercentage">The invalid percentage to test.</param>
     [Theory]
-    [InlineData(-1)]
-    [InlineData(101)]
+    [InlineData(FeatureFlagServiceTestsConstants.InvalidLowRolloutPercentage)]
+    [InlineData(FeatureFlagServiceTestsConstants.InvalidHighRolloutPercentage)]
     public void SetRolloutPercentage_ShouldThrowArgumentException_ForInvalidPercentage(int invalidPercentage)
     {
         // Arrange
-        var featureName = "health_checks";
+        var featureName = FeatureFlagServiceTestsConstants.HealthChecksFeatureName;
 
         // Act
         Action act = () => _featureFlagService.SetRolloutPercentage(featureName, invalidPercentage);
 
         // Assert
         act.Should().Throw<ArgumentException>()
-           .WithMessage("Rollout percentage must be between 0 and 100*");
+           .WithMessage(FeatureFlagServiceTestsConstants.InvalidRolloutPercentageMessagePattern);
     }
 
     /// <summary>
@@ -157,8 +157,8 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void RegisterFeature_ShouldAddNewFeature()
     {
         // Arrange
-        var newFeatureName = "new_cool_feature";
-        var description = "A brand new feature";
+        var newFeatureName = FeatureFlagServiceTestsConstants.NewCoolFeatureName;
+        var description = FeatureFlagServiceTestsConstants.NewCoolFeatureDescription;
 
         // Act
         _featureFlagService.RegisterFeature(newFeatureName, description, true);
@@ -167,7 +167,7 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
         _featureFlagService.IsEnabled(newFeatureName).Should().BeTrue();
         _featureFlagService.GetFlag(newFeatureName).Should().NotBeNull()
             .And.Match<FeatureFlagInfo>(f => f.Name == newFeatureName && f.Description == description && f.IsEnabled);
-        _logger.Received(1).LogInformation("Feature '{FeatureName}' registered (enabled: {Enabled})", newFeatureName, true);
+        _logger.Received(FeatureFlagServiceTestsConstants.ExpectedLogInvocationCount).LogInformation(FeatureFlagServiceTestsConstants.FeatureRegisteredLogFormat, newFeatureName, true);
     }
 
     /// <summary>
@@ -177,14 +177,14 @@ public class FeatureFlagServiceTests : IFeatureFlagServiceTests
     public void GetAllFlags_ShouldReturnAllRegisteredFlags()
     {
         // Arrange (initial flags are already registered in constructor)
-        _featureFlagService.RegisterFeature("another_feature", "Just another feature");
+        _featureFlagService.RegisterFeature(FeatureFlagServiceTestsConstants.AnotherFeatureName, FeatureFlagServiceTestsConstants.AnotherFeatureDescription);
 
         // Act
         var allFlags = _featureFlagService.GetAllFlags().ToList();
 
         // Assert
-        allFlags.Should().HaveCountGreaterOrEqualTo(7); // Initial 6 + 1 new one
-        allFlags.Should().Contain(f => f.Name == "audit_logging" && f.IsEnabled == true);
-        allFlags.Should().Contain(f => f.Name == "another_feature" && f.IsEnabled == false);
+        allFlags.Should().HaveCountGreaterOrEqualTo(FeatureFlagServiceTestsConstants.MinimumExpectedFlagCount); // Initial 6 + 1 new one
+        allFlags.Should().Contain(f => f.Name == FeatureFlagServiceTestsConstants.AuditLoggingFeatureName && f.IsEnabled == true);
+        allFlags.Should().Contain(f => f.Name == FeatureFlagServiceTestsConstants.AnotherFeatureName && f.IsEnabled == false);
     }
 }
