@@ -21,11 +21,13 @@ public class ApiKeyRepository : Repository<ApiKey>, IApiKeyRepository
 
     public async Task<ApiKey?> GetByKeyPrefixAsync(string keyPrefix)
     {
+        ArgumentException.ThrowIfNullOrEmpty(keyPrefix);
         return await _dbSet.FirstOrDefaultAsync(ak => ak.KeyPrefix == keyPrefix);
     }
 
     public async Task<ApiKey?> GetByFullKeyHashAsync(string keyHash)
     {
+        ArgumentException.ThrowIfNullOrEmpty(keyHash);
         return await _dbSet.FirstOrDefaultAsync(ak => ak.KeyHash == keyHash);
     }
 
