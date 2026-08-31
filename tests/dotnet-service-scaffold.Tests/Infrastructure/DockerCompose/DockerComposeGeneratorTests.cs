@@ -39,17 +39,17 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         _logger.LogInformation("Generate_ShouldContainServiceName_WhenOptionsProvided called");
         var options = new DockerComposeOptions
         {
-            ServiceName = "my-api",
-            ImageName = "my-api:1.0",
-            HostPort = 8080,
-            ContainerPort = 8080
+            ServiceName = DockerComposeGeneratorTestsConstants.MyApiServiceName,
+            ImageName = DockerComposeGeneratorTestsConstants.MyApiImageName,
+            HostPort = DockerComposeGeneratorTestsConstants.MyApiPort,
+            ContainerPort = DockerComposeGeneratorTestsConstants.MyApiPort
         };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("my-api:");
-        yaml.Should().Contain("image: my-api:1.0");
-        yaml.Should().Contain("8080:8080");
+        yaml.Should().Contain($"{DockerComposeGeneratorTestsConstants.MyApiServiceName}:");
+        yaml.Should().Contain($"image: {DockerComposeGeneratorTestsConstants.MyApiImageName}");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.MyApiPortMapping);
     }
 
     public async Task Generate_ShouldContainServiceName_WhenOptionsProvidedAsync(CancellationToken cancellationToken = default)
@@ -66,12 +66,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
     public void Generate_ShouldIncludeHealthCheck()
     {
         _logger.LogInformation("Generate_ShouldIncludeHealthCheck called");
-        var options = new DockerComposeOptions { ServiceName = "svc", ContainerPort = 5001 };
+        var options = new DockerComposeOptions { ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName, ContainerPort = DockerComposeGeneratorTestsConstants.DefaultContainerPort };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("healthcheck:");
-        yaml.Should().Contain("http://localhost:5001/health");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.HealthCheckSection);
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.DefaultHealthCheckUrl);
     }
 
     public async Task Generate_ShouldIncludeHealthCheckAsync(CancellationToken cancellationToken = default)
@@ -90,16 +90,16 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         _logger.LogInformation("Generate_ShouldIncludeCaddy_WhenRequested called");
         var options = new DockerComposeOptions
         {
-            ServiceName = "svc",
+            ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName,
             IncludeCaddy = true,
-            CaddyDomain = "example.com"
+            CaddyDomain = DockerComposeGeneratorTestsConstants.CaddyDomain
         };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("caddy:");
-        yaml.Should().Contain("example.com");
-        yaml.Should().Contain("caddy-data:");
+        yaml.Should().Contain($"{DockerComposeGeneratorTestsConstants.CaddyServiceName}:");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.CaddyDomain);
+        yaml.Should().Contain($"{DockerComposeGeneratorTestsConstants.CaddyDataServiceName}:");
     }
 
     public async Task Generate_ShouldIncludeCaddy_WhenRequestedAsync(CancellationToken cancellationToken = default)
@@ -116,11 +116,11 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
     public void Generate_ShouldNotIncludeCaddy_WhenNotRequested()
     {
         _logger.LogInformation("Generate_ShouldNotIncludeCaddy_WhenNotRequested called");
-        var options = new DockerComposeOptions { ServiceName = "svc", IncludeCaddy = false };
+        var options = new DockerComposeOptions { ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName, IncludeCaddy = false };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().NotContain("caddy:");
+        yaml.Should().NotContain($"{DockerComposeGeneratorTestsConstants.CaddyServiceName}:");
     }
 
     public async Task Generate_ShouldNotIncludeCaddy_WhenNotRequestedAsync(CancellationToken cancellationToken = default)
@@ -137,12 +137,12 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
     public void Generate_ShouldIncludeRedis_WhenRequested()
     {
         _logger.LogInformation("Generate_ShouldIncludeRedis_WhenRequested called");
-        var options = new DockerComposeOptions { ServiceName = "svc", IncludeRedis = true };
+        var options = new DockerComposeOptions { ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName, IncludeRedis = true };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("redis:");
-        yaml.Should().Contain("redis:7-alpine");
+        yaml.Should().Contain($"{DockerComposeGeneratorTestsConstants.RedisServiceName}:");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.RedisImageName);
     }
 
     public async Task Generate_ShouldIncludeRedis_WhenRequestedAsync(CancellationToken cancellationToken = default)
@@ -161,13 +161,13 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         _logger.LogInformation("Generate_ShouldIncludeExtraEnvVars_WhenProvided called");
         var options = new DockerComposeOptions
         {
-            ServiceName = "svc",
-            EnvironmentVariables = new Dictionary<string, string> { ["MY_VAR"] = "hello" }
+            ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName,
+            EnvironmentVariables = new Dictionary<string, string> { [DockerComposeGeneratorTestsConstants.TestEnvVarName] = DockerComposeGeneratorTestsConstants.TestEnvVarValue }
         };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("MY_VAR: hello");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.TestEnvVarEntry);
     }
 
     public async Task Generate_ShouldIncludeExtraEnvVars_WhenProvidedAsync(CancellationToken cancellationToken = default)
@@ -203,11 +203,11 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
     public void Generate_ShouldIncludePrometheusComment_WhenRequested()
     {
         _logger.LogInformation("Generate_ShouldIncludePrometheusComment_WhenRequested called");
-        var options = new DockerComposeOptions { ServiceName = "svc", IncludePrometheus = true };
+        var options = new DockerComposeOptions { ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName, IncludePrometheus = true };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("metrics_path: /metrics");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.PrometheusMetricsPath);
     }
 
     public async Task Generate_ShouldIncludePrometheusComment_WhenRequestedAsync(CancellationToken cancellationToken = default)
@@ -226,15 +226,15 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
         _logger.LogInformation("Generate_ShouldIncludeResourceLimits called");
         var options = new DockerComposeOptions
         {
-            ServiceName = "svc",
-            CpuLimit = "2",
-            MemoryLimit = "1G"
+            ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName,
+            CpuLimit = DockerComposeGeneratorTestsConstants.CpuLimitValue,
+            MemoryLimit = DockerComposeGeneratorTestsConstants.MemoryLimitValue
         };
 
         var yaml = _generator.Generate(options);
 
-        yaml.Should().Contain("cpus: '2'");
-        yaml.Should().Contain("memory: 1G");
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.CpusEntry);
+        yaml.Should().Contain(DockerComposeGeneratorTestsConstants.MemoryEntry);
     }
 
     public async Task Generate_ShouldIncludeResourceLimitsAsync(CancellationToken cancellationToken = default)
@@ -251,8 +251,8 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
     public async Task WriteToFileAsync_ShouldWriteYamlFile()
     {
         _logger.LogInformation("WriteToFileAsync_ShouldWriteYamlFile called");
-        var options = new DockerComposeOptions { ServiceName = "svc" };
-        var path = Path.Combine(AppContext.BaseDirectory, $"test-compose-{Guid.NewGuid()}.yml");
+        var options = new DockerComposeOptions { ServiceName = DockerComposeGeneratorTestsConstants.DefaultServiceName };
+        var path = Path.Combine(AppContext.BaseDirectory, $"{DockerComposeGeneratorTestsConstants.TestComposeFilePrefix}{Guid.NewGuid()}{DockerComposeGeneratorTestsConstants.YamlFileExtension}");
 
         try
         {
@@ -260,7 +260,7 @@ public class DockerComposeGeneratorTests : IDockerComposeGeneratorTests
 
             File.Exists(path).Should().BeTrue();
             var content = await File.ReadAllTextAsync(path);
-            content.Should().Contain("svc:");
+            content.Should().Contain($"{DockerComposeGeneratorTestsConstants.DefaultServiceName}:");
         }
         catch (Exception ex)
         {
