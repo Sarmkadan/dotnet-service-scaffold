@@ -135,6 +135,7 @@ public static class DateTimeUtility
     /// </summary>
     public static TimeSpan ParseIsoDuration(string duration)
     {
+        ArgumentException.ThrowIfNullOrEmpty(duration);
         return System.Xml.XmlConvert.ToTimeSpan(duration);
     }
 }
