@@ -5,6 +5,7 @@
 // =============================================================================
 
 using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Enums;
 using DotnetServiceScaffold.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -21,15 +22,88 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 public class HealthCheckController : ControllerBase, IHealthCheckController
 {
     private readonly IHealthCheckService _healthCheckService;
+    private readonly IServiceManagementService? _serviceManagementService;
     private readonly ILogger<HealthCheckController> _logger;
 
-    public HealthCheckController(IHealthCheckService healthCheckService, ILogger<HealthCheckController> logger)
+    public HealthCheckController(
+        IHealthCheckService healthCheckService,
+        ILogger<HealthCheckController> logger,
+        IServiceManagementService? serviceManagementService = null)
     {
         ArgumentNullException.ThrowIfNull(healthCheckService);
         ArgumentNullException.ThrowIfNull(logger);
         _healthCheckService = healthCheckService;
         _logger = logger;
+        _serviceManagementService = serviceManagementService;
     }
+
+    /// <summary>
+    /// Gets an aggregated health summary for all registered services.
+    /// </summary>
+    [HttpGet("summary")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetHealthSummary(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetHealthSummary called");
+
+        try
+        {
+            var serviceManagementService = _serviceManagementService
+                ?? HttpContext.RequestServices.GetRequiredService<IServiceManagementService>();
+            var services = (await serviceManagementService.GetAllServicesAsync(cancellationToken)).ToList();
+            var latestChecks = await Task.WhenAll(services.Select(async service =>
+                (await _healthCheckService.GetServiceHealthHistoryAsync(service.Id, 1)
+                    .WaitAsync(cancellationToken))
+                .OrderByDescending(result => result.CheckedAt)
+                .FirstOrDefault()));
+
+            var statuses = latestChecks
+                .Select(check => check?.Status ?? HealthStatus.Unknown)
+                .ToList();
+            var statusCounts = Enum.GetValues<HealthStatus>()
+                .ToDictionary(status => status.ToString(), status => statuses.Count(value => value == status));
+            var overallStatus = statuses
+                .OrderByDescending(GetHealthStatusSeverity)
+                .FirstOrDefault();
+
+            _logger.LogInformation("GetHealthSummary completed for {ServiceCount} services", services.Count);
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    statusCounts,
+                    overallStatus,
+                    latestCheckAt = latestChecks
+                        .Where(check => check is not null)
+                        .Select(check => (DateTime?)check!.CheckedAt)
+                        .Max()
+                }
+            });
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Failed to get aggregated health summary");
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                success = false,
+                data = new { error = "Failed to retrieve health summary" }
+            });
+        }
+    }
+
+    private static int GetHealthStatusSeverity(HealthStatus status) => status switch
+    {
+        HealthStatus.Error => 5,
+        HealthStatus.Timeout => 4,
+        HealthStatus.Unhealthy => 3,
+        HealthStatus.Degraded => 2,
+        HealthStatus.Unknown => 1,
+        HealthStatus.Healthy => 0,
+        _ => 1
+    };
 
     /// <summary>
     /// Performs an immediate health check on a service.
