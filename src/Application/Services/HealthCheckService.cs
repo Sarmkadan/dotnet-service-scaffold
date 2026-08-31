@@ -192,7 +192,6 @@ public class HealthCheckService : IHealthCheckService
         long responseTimeMs,
         string? errorMessage = null)
     {
-        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
         var service = await _serviceRepository.GetByIdAsync(serviceId);
         if (service is null)
             throw new ServiceNotFoundException(serviceId);
