@@ -58,6 +58,7 @@ public class Repository<T> : IRepository<T> where T : class
 
 	public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
 	{
+		ArgumentNullException.ThrowIfNull(entity);
 		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
@@ -76,6 +77,7 @@ public class Repository<T> : IRepository<T> where T : class
 
 	public virtual async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default)
 	{
+		ArgumentNullException.ThrowIfNull(entity);
 		cancellationToken.ThrowIfCancellationRequested();
 		try
 		{
