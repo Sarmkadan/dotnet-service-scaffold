@@ -21,6 +21,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
 
     public async Task<ServiceConfiguration?> GetByKeyAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .FirstOrDefaultAsync(c => c.Key == key && c.ServiceId == serviceId, cancellationToken);
@@ -37,6 +38,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
 
     public async Task<bool> KeyExistsAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet
             .AnyAsync(c => c.Key == key && c.ServiceId == serviceId, cancellationToken);
@@ -44,6 +46,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
 
     public async Task DeleteByKeyAsync(string key, Guid? serviceId = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(key);
         var config = await GetByKeyAsync(key, serviceId, CancellationToken.None);
         if (config is not null)
         {
