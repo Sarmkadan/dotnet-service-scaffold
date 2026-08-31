@@ -19,8 +19,8 @@ public class Startup : IStartup
         // Add HttpClient with configured base address and API key
         services.AddHttpClient("ScaffoldClient", client =>
         {
-            client.BaseAddress = new Uri("http://localhost:5000");
-            client.DefaultRequestHeaders.Add("X-API-Key", "sk_live_YOUR_KEY_HERE");
+            client.BaseAddress = new Uri(StartupConstants.BaseAddressUrl);
+            client.DefaultRequestHeaders.Add(StartupConstants.ApiKeyHeaderName, StartupConstants.ApiKeyValue);
         });
 
         // Register a wrapper service that uses the HttpClient
