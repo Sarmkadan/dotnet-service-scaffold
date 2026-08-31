@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using Serilog;
+using System.Net.Mail;
 
 namespace DotnetServiceScaffold.Application.Services;
 
@@ -31,24 +31,20 @@ public class NotificationService : INotificationService
         NotificationType type = NotificationType.Email,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _logger.LogInformation(
-                "Sending {NotificationType} notification to user {UserId}: {Subject}",
-                type, userId, subject);
+        cancellationToken.ThrowIfCancellationRequested();
 
-            // TODO: Implement actual notification sending based on type
-            // This is a template - implement with actual email/SMS/push service
-
-            return await Task.FromResult(true);
-        }
-        catch (Exception ex)
+        if (userId == Guid.Empty || string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(message))
         {
-            _logger.LogError(ex,
-                "Failed to send {NotificationType} notification to user {UserId}",
-                type, userId);
+            _logger.LogWarning(
+                "Notification was not sent because user ID, subject, or message is invalid");
             return false;
         }
+
+        _logger.LogWarning(
+            "{NotificationType} notification delivery to user {UserId} is not implemented",
+            type, userId);
+
+        return false;
     }
 
     /// <summary>
@@ -60,22 +56,23 @@ public class NotificationService : INotificationService
         string htmlBody,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            _logger.LogInformation(
-                "Sending email to {EmailAddress}: {Subject}",
-                emailAddress, subject);
+        cancellationToken.ThrowIfCancellationRequested();
 
-            // TODO: Implement actual email sending
-            // Services: SendGrid, MailKit, AWS SES, etc.
-
-            return await Task.FromResult(true);
-        }
-        catch (Exception ex)
+        if (string.IsNullOrWhiteSpace(emailAddress)
+            || !MailAddress.TryCreate(emailAddress, out _)
+            || string.IsNullOrWhiteSpace(subject)
+            || string.IsNullOrWhiteSpace(htmlBody))
         {
-            _logger.LogError(ex, "Failed to send email to {EmailAddress}", emailAddress);
+            _logger.LogWarning(
+                "Email was not sent because the email address, subject, or body is invalid");
             return false;
         }
+
+        _logger.LogWarning(
+            "Email delivery to {EmailAddress} is not implemented",
+            emailAddress);
+
+        return false;
     }
 
     /// <summary>
@@ -88,12 +85,28 @@ public class NotificationService : INotificationService
         NotificationType type = NotificationType.Email,
         CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (userIds is null || string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(message))
+        {
+            _logger.LogWarning(
+                "Bulk notification was not sent because user IDs, subject, or message is invalid");
+            return 0;
+        }
+
         var userList = userIds.ToList();
         var successCount = 0;
 
-        _logger.LogInformation(
-            "Sending bulk {NotificationType} notification to {Count} users: {Subject}",
-            type, userList.Count, subject);
+        if (userList.Count == 0 || userList.Any(userId => userId == Guid.Empty))
+        {
+            _logger.LogWarning(
+                "Bulk notification was not sent because the user ID collection is empty or contains an invalid ID");
+            return 0;
+        }
+
+        _logger.LogWarning(
+            "Bulk {NotificationType} notification delivery to {Count} users is not implemented",
+            type, userList.Count);
 
         foreach (var userId in userList)
         {
@@ -102,10 +115,6 @@ public class NotificationService : INotificationService
                 successCount++;
             }
         }
-
-        _logger.LogInformation(
-            "Bulk notification completed: {SuccessCount}/{TotalCount} successful",
-            successCount, userList.Count);
 
         return successCount;
     }
@@ -119,21 +128,20 @@ public class NotificationService : INotificationService
         string? details = null,
         CancellationToken cancellationToken = default)
     {
-        try
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (string.IsNullOrWhiteSpace(alertType) || string.IsNullOrWhiteSpace(description))
         {
             _logger.LogWarning(
-                "Alert: {AlertType} - {Description}. Details: {Details}",
-                alertType, description, details ?? "N/A");
-
-            // TODO: Implement alert sending (Slack, PagerDuty, etc.)
-
-            return await Task.FromResult(true);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send alert: {AlertType}", alertType);
+                "Alert was not sent because the alert type or description is invalid");
             return false;
         }
+
+        _logger.LogWarning(
+            "Alert delivery for {AlertType} is not implemented. Description: {Description}. Details: {Details}",
+            alertType, description, details ?? "N/A");
+
+        return false;
     }
 }
 
