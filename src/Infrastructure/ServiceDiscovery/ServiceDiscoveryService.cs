@@ -70,11 +70,17 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         ILogger<ServiceDiscoveryService> logger,
         ServiceScaffoldDbContext dbContext)
     {
-        _providerSelector = providerSelector ?? throw new ArgumentNullException(nameof(providerSelector));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        ArgumentNullException.ThrowIfNull(providerSelector);
+        ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(dbContext);
+
+        _providerSelector = providerSelector;
+        _cache = cache;
+        _options = options.Value;
+        _logger = logger;
+        _dbContext = dbContext;
 
         // Get the active provider for this instance
         _provider = _providerSelector.GetProvider();
@@ -86,7 +92,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         string serviceName,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(serviceName);
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
 
         if (!_options.Enabled)
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(Array.Empty<ServiceDiscoveryRecord>());
@@ -121,7 +127,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         string serviceName,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(serviceName);
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
 
         var discovery = await DiscoverAsync(serviceName, cancellationToken);
         if (!discovery.IsSuccess)
@@ -276,7 +282,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         string serviceName,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(serviceName);
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
 
         var discovery = await DiscoverAsync(serviceName, cancellationToken);
         var records = discovery.IsSuccess ? discovery.Value! : Array.Empty<ServiceDiscoveryRecord>();
