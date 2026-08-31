@@ -22,6 +22,7 @@ public static class EncryptionUtility
     /// </summary>
     public static string HashPassword(string password)
     {
+        ArgumentException.ThrowIfNullOrEmpty(password);
         ValidatePassword(password);
 
         byte[] salt = RandomNumberGenerator.GetBytes(16);
@@ -47,8 +48,8 @@ public static class EncryptionUtility
     /// </summary>
     public static bool VerifyPassword(string password, string hash)
     {
-        if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
-            return false;
+        ArgumentException.ThrowIfNullOrEmpty(password);
+        ArgumentException.ThrowIfNullOrEmpty(hash);
 
         try
         {
@@ -84,6 +85,7 @@ public static class EncryptionUtility
     /// </summary>
     public static string EncryptAes(string plaintext, byte[] key)
     {
+        ArgumentNullException.ThrowIfNull(key);
         if (string.IsNullOrEmpty(plaintext))
             throw new ArgumentException("Plaintext cannot be null or empty", nameof(plaintext));
 
@@ -117,6 +119,7 @@ public static class EncryptionUtility
     /// </summary>
     public static string DecryptAes(string ciphertext, byte[] key)
     {
+        ArgumentNullException.ThrowIfNull(key);
         if (string.IsNullOrEmpty(ciphertext))
             throw new ArgumentException("Ciphertext cannot be null or empty", nameof(ciphertext));
 
@@ -187,8 +190,8 @@ public static class EncryptionUtility
     /// </summary>
     public static string ComputeHmacSha256(string message, string key)
     {
-        if (string.IsNullOrEmpty(message) || string.IsNullOrEmpty(key))
-            throw new ArgumentException("Message and key cannot be null or empty");
+        ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentException.ThrowIfNullOrEmpty(key);
 
         using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
         {
