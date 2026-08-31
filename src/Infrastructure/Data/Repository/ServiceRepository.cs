@@ -22,6 +22,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
 
     public async Task<ServiceRegistration?> GetByNameAsync(string serviceName, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
         cancellationToken.ThrowIfCancellationRequested();
         return await _dbSet.FirstOrDefaultAsync(s => s.ServiceName == serviceName, cancellationToken);
     }
