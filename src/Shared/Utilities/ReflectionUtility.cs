@@ -26,6 +26,7 @@ public static class ReflectionUtility
     /// </summary>
     public static PropertyInfo[] GetPublicProperties(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return PublicPropertiesCache.GetOrAdd(
             type,
             static t => t.GetProperties(
@@ -50,6 +51,8 @@ public static class ReflectionUtility
     /// </summary>
     public static object? GetPropertyValue(object obj, string propertyName)
     {
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentException.ThrowIfNullOrEmpty(propertyName);
         var property = GetCachedProperty(obj.GetType(), propertyName);
 
         return property?.GetValue(obj);
@@ -61,6 +64,9 @@ public static class ReflectionUtility
     /// </summary>
     public static bool SetPropertyValue(object obj, string propertyName, object? value)
     {
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentException.ThrowIfNullOrEmpty(propertyName);
+        ArgumentNullException.ThrowIfNull(value);
         var property = GetCachedProperty(obj.GetType(), propertyName);
 
         if (property is null || !property.CanWrite)
@@ -82,6 +88,7 @@ public static class ReflectionUtility
     /// </summary>
     public static T? GetAttribute<T>(MemberInfo member) where T : Attribute
     {
+        ArgumentNullException.ThrowIfNull(member);
         return member.GetCustomAttribute<T>();
     }
 
@@ -90,6 +97,7 @@ public static class ReflectionUtility
     /// </summary>
     public static IEnumerable<T> GetAttributes<T>(MemberInfo member) where T : Attribute
     {
+        ArgumentNullException.ThrowIfNull(member);
         return member.GetCustomAttributes<T>();
     }
 
@@ -98,6 +106,7 @@ public static class ReflectionUtility
     /// </summary>
     public static bool HasAttribute<T>(MemberInfo member) where T : Attribute
     {
+        ArgumentNullException.ThrowIfNull(member);
         return member.GetCustomAttribute<T>() is not null;
     }
 
@@ -106,6 +115,8 @@ public static class ReflectionUtility
     /// </summary>
     public static IEnumerable<Type> GetTypesByBaseClass(Assembly assembly, Type baseType)
     {
+        ArgumentNullException.ThrowIfNull(assembly);
+        ArgumentNullException.ThrowIfNull(baseType);
         return assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && baseType.IsAssignableFrom(t));
     }
@@ -115,6 +126,8 @@ public static class ReflectionUtility
     /// </summary>
     public static IEnumerable<Type> GetTypesByInterface(Assembly assembly, Type interfaceType)
     {
+        ArgumentNullException.ThrowIfNull(assembly);
+        ArgumentNullException.ThrowIfNull(interfaceType);
         return assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && interfaceType.IsAssignableFrom(t));
     }
@@ -124,6 +137,7 @@ public static class ReflectionUtility
     /// </summary>
     public static MethodInfo[] GetPublicMethods(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return type.GetMethods(
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
     }
@@ -133,6 +147,8 @@ public static class ReflectionUtility
     /// </summary>
     public static MethodInfo? GetMethod(Type type, string methodName)
     {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentException.ThrowIfNullOrEmpty(methodName);
         return type.GetMethod(
             methodName,
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
@@ -143,6 +159,9 @@ public static class ReflectionUtility
     /// </summary>
     public static object? InvokeMethod(object obj, string methodName, params object?[] parameters)
     {
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentException.ThrowIfNullOrEmpty(methodName);
+        ArgumentNullException.ThrowIfNull(parameters);
         var method = GetMethod(obj.GetType(), methodName);
         if (method is null)
             return null;
@@ -155,6 +174,7 @@ public static class ReflectionUtility
     /// </summary>
     public static object? CreateInstance(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         try
         {
             return Activator.CreateInstance(type);
@@ -170,6 +190,8 @@ public static class ReflectionUtility
     /// </summary>
     public static object? CreateInstance(Type type, params object?[] constructorParams)
     {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(constructorParams);
         try
         {
             return Activator.CreateInstance(type, constructorParams);
@@ -185,6 +207,7 @@ public static class ReflectionUtility
     /// </summary>
     public static bool IsNullableType(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return type.IsGenericType &&
                type.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
@@ -194,6 +217,7 @@ public static class ReflectionUtility
     /// </summary>
     public static Type? GetUnderlyingType(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return IsNullableType(type)
             ? Nullable.GetUnderlyingType(type)
             : type;
@@ -204,6 +228,7 @@ public static class ReflectionUtility
     /// </summary>
     public static bool IsCollectionType(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return type != typeof(string) &&
                typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
     }
@@ -213,6 +238,7 @@ public static class ReflectionUtility
     /// </summary>
     public static Type? GetCollectionElementType(Type collectionType)
     {
+        ArgumentNullException.ThrowIfNull(collectionType);
         if (collectionType.IsArray)
             return collectionType.GetElementType();
 
@@ -228,8 +254,8 @@ public static class ReflectionUtility
     /// </summary>
     public static object? ConvertValue(object? value, Type targetType)
     {
-        if (value is null)
-            return null;
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(targetType);
 
         if (targetType.IsAssignableFrom(value.GetType()))
             return value;
@@ -255,6 +281,7 @@ public static class ReflectionUtility
     /// </summary>
     public static IEnumerable<PropertyInfo> GetPropertiesWithAttribute<T>(Type type) where T : Attribute
     {
+        ArgumentNullException.ThrowIfNull(type);
         return GetPublicProperties(type)
             .Where(p => HasAttribute<T>(p));
     }
