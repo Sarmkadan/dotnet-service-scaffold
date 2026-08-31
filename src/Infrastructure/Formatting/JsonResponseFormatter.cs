@@ -40,8 +40,7 @@ public class JsonResponseFormatter : IResponseFormatter
     /// </summary>
     public Task<string> FormatAsync(object? data)
     {
-        if (data is null)
-            return Task.FromResult("null");
+        ArgumentNullException.ThrowIfNull(data);
 
         try
         {
@@ -60,6 +59,8 @@ public class JsonResponseFormatter : IResponseFormatter
     /// </summary>
     public bool CanFormat(string mediaType)
     {
+        ArgumentException.ThrowIfNullOrEmpty(mediaType);
+
         return !string.IsNullOrEmpty(mediaType) &&
                (mediaType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) ||
                 mediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase));
