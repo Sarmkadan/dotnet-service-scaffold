@@ -20,7 +20,7 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     private readonly string _baseUrl;
     private readonly HttpClient _httpClient;
 
-    public BasicServiceSetupExample(string apiKey, string baseUrl = "http://localhost:5000")
+    public BasicServiceSetupExample(string apiKey, string baseUrl = BasicServiceSetupExampleConstants.DefaultBaseUrl)
     {
         _apiKey = apiKey;
         _baseUrl = baseUrl;
@@ -49,15 +49,15 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
         };
 
         var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var content = new StringContent(json, Encoding.UTF8, BasicServiceSetupExampleConstants.JsonContentType);
 
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
-            $"{_baseUrl}/api/service/register")
+            $"{_baseUrl}{BasicServiceSetupExampleConstants.RegisterEndpoint}")
         {
             Content = content
         };
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+        httpRequest.Headers.Add(BasicServiceSetupExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -71,8 +71,8 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
         using (var doc = JsonDocument.Parse(responseJson))
         {
             var serviceId = doc.RootElement
-                .GetProperty("data")
-                .GetProperty("id")
+                .GetProperty(BasicServiceSetupExampleConstants.JsonDataProperty)
+                .GetProperty(BasicServiceSetupExampleConstants.JsonIdProperty)
                 .GetString();
             return serviceId!;
         }
@@ -85,8 +85,8 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     {
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
-            $"{_baseUrl}/api/service?limit=50");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{BasicServiceSetupExampleConstants.ListServicesEndpoint}?limit={BasicServiceSetupExampleConstants.ListServicesLimit}");
+        httpRequest.Headers.Add(BasicServiceSetupExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest);
         var responseJson = await response.Content.ReadAsStringAsync();
@@ -99,15 +99,15 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
 
         using (var doc = JsonDocument.Parse(responseJson))
         {
-            var services = doc.RootElement.GetProperty("data").EnumerateArray();
+            var services = doc.RootElement.GetProperty(BasicServiceSetupExampleConstants.JsonDataProperty).EnumerateArray();
 
             Console.WriteLine("=== Registered Services ===\n");
             foreach (var service in services)
             {
-                var id = service.GetProperty("id").GetString();
-                var name = service.GetProperty("name").GetString();
-                var status = service.GetProperty("status").GetString();
-                var successRate = service.GetProperty("successRate").GetDouble();
+                var id = service.GetProperty(BasicServiceSetupExampleConstants.JsonIdProperty).GetString();
+                var name = service.GetProperty(BasicServiceSetupExampleConstants.JsonNameProperty).GetString();
+                var status = service.GetProperty(BasicServiceSetupExampleConstants.JsonStatusProperty).GetString();
+                var successRate = service.GetProperty(BasicServiceSetupExampleConstants.JsonSuccessRateProperty).GetDouble();
 
                 Console.WriteLine($"ID: {id}");
                 Console.WriteLine($"  Name: {name}");
@@ -124,8 +124,8 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     {
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
-            $"{_baseUrl}/api/service/{serviceId}/enable");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{string.Format(BasicServiceSetupExampleConstants.EnableServiceEndpoint, serviceId)}");
+        httpRequest.Headers.Add(BasicServiceSetupExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest);
 
@@ -145,8 +145,8 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     {
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
-            $"{_baseUrl}/api/service/{serviceId}/disable");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{string.Format(BasicServiceSetupExampleConstants.DisableServiceEndpoint, serviceId)}");
+        httpRequest.Headers.Add(BasicServiceSetupExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest);
 
@@ -166,8 +166,8 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     {
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
-            $"{_baseUrl}/api/service/{serviceId}");
-        httpRequest.Headers.Add("X-API-Key", _apiKey);
+            $"{_baseUrl}{string.Format(BasicServiceSetupExampleConstants.GetServiceDetailsEndpoint, serviceId)}");
+        httpRequest.Headers.Add(BasicServiceSetupExampleConstants.ApiKeyHeader, _apiKey);
 
         var response = await _httpClient.SendAsync(httpRequest);
         var responseJson = await response.Content.ReadAsStringAsync();
@@ -180,14 +180,14 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
 
         using (var doc = JsonDocument.Parse(responseJson))
         {
-            var service = doc.RootElement.GetProperty("data");
+            var service = doc.RootElement.GetProperty(BasicServiceSetupExampleConstants.JsonDataProperty);
 
             Console.WriteLine("=== Service Details ===\n");
-            Console.WriteLine($"ID: {service.GetProperty("id").GetString()}");
-            Console.WriteLine($"Name: {service.GetProperty("name").GetString()}");
-            Console.WriteLine($"Description: {service.GetProperty("description").GetString()}");
-            Console.WriteLine($"Status: {service.GetProperty("status").GetString()}");
-            Console.WriteLine($"Health Check URL: {service.GetProperty("healthCheckUrl").GetString()}");
+            Console.WriteLine($"ID: {service.GetProperty(BasicServiceSetupExampleConstants.JsonIdProperty).GetString()}");
+            Console.WriteLine($"Name: {service.GetProperty(BasicServiceSetupExampleConstants.JsonNameProperty).GetString()}");
+            Console.WriteLine($"Description: {service.GetProperty(BasicServiceSetupExampleConstants.JsonDescriptionProperty).GetString()}");
+            Console.WriteLine($"Status: {service.GetProperty(BasicServiceSetupExampleConstants.JsonStatusProperty).GetString()}");
+            Console.WriteLine($"Health Check URL: {service.GetProperty(BasicServiceSetupExampleConstants.JsonHealthCheckUrlProperty).GetString()}");
             Console.WriteLine($"Success Rate: {service.GetProperty("successRate").GetDouble():F1}%");
             Console.WriteLine($"Last Checked: {service.GetProperty("lastCheckedAt").GetString()}");
             Console.WriteLine($"Enabled: {service.GetProperty("isEnabled").GetBoolean()}");
