@@ -32,6 +32,8 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
 
     public HealthCheckMonitorExample(string apiKey, string baseUrl = HealthCheckMonitorExampleConstants.DefaultBaseUrl)
     {
+        ArgumentException.ThrowIfNullOrEmpty(apiKey);
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
         _apiKey = apiKey;
         _baseUrl = baseUrl;
         _httpClient = new HttpClient();
@@ -73,6 +75,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     /// </summary>
     public async Task<(string status, int responseTime)> CheckServiceHealthAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
             $"{_baseUrl}{string.Format(HealthCheckMonitorExampleConstants.HealthCheckEndpoint, serviceId)}");
@@ -101,6 +104,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     /// </summary>
     public async Task<List<HealthCheckEntry>> GetHealthHistoryAsync(string serviceId, int days = HealthCheckMonitorExampleConstants.DefaultHistoryDays, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
@@ -143,6 +147,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     /// </summary>
     public async Task<List<HealthCheckEntry>> GetFailuresAsync(string serviceId, int limit = HealthCheckMonitorExampleConstants.DefaultFailuresLimit, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         cancellationToken.ThrowIfCancellationRequested();
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
@@ -186,6 +191,7 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     /// </summary>
     public void AnalyzeTrends(List<HealthCheckEntry> history)
     {
+        ArgumentNullException.ThrowIfNull(history);
         if (history.Count == 0)
         {
             Console.WriteLine("No history available");
@@ -254,6 +260,8 @@ public class HealthCheckMonitorExample : IHealthCheckMonitorExample, IEquatable<
     /// </summary>
     public async Task MonitorServiceAsync(string serviceName, string serviceId, int intervalSeconds = HealthCheckMonitorExampleConstants.DefaultMonitorIntervalSeconds)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         Console.WriteLine($"Starting monitoring of {serviceName} (every {intervalSeconds}s)");
         Console.WriteLine("Press Ctrl+C to stop\n");
 
