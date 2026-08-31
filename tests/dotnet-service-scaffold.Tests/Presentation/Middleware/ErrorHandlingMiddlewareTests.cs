@@ -50,7 +50,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
 
-        _webHostEnvironment.EnvironmentName.Returns(isDevelopment ? "Development" : "Production");
+        _webHostEnvironment.EnvironmentName.Returns(isDevelopment ? ErrorHandlingMiddlewareTestsConstants.DevelopmentEnvironment : ErrorHandlingMiddlewareTestsConstants.ProductionEnvironment);
 
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddSingleton(_webHostEnvironment);
@@ -89,7 +89,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
         context.Response.ContentType.Should().StartWith("application/json");
         var responseBody = await GetResponseBody(context);
-        responseBody.Should().Contain("An error occurred processing your request.");
+        responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.GenericErrorMessage);
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         var responseBody = await GetResponseBody(context);
-        responseBody.Should().Contain("Bad request error");
+        responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.BadRequestMessage);
     }
 
     /// <summary>
@@ -127,7 +127,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         var responseBody = await GetResponseBody(context);
-        responseBody.Should().Contain("Argument null error");
+        responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.ArgumentNullMessage);
     }
 
     /// <summary>
@@ -137,7 +137,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     public async Task InvokeAsync_ShouldCatchArgumentExceptionAndReturn400()
     {
         // Arrange
-        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new ArgumentException("Invalid argument"));
+        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new ArgumentException(ErrorHandlingMiddlewareTestsConstants.ArgumentMessage));
         var context = CreateHttpContext(true);
 
         // Act
@@ -146,7 +146,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         var responseBody = await GetResponseBody(context);
-        responseBody.Should().Contain("Invalid argument");
+        responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.ArgumentMessage);
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     public async Task InvokeAsync_ShouldCatchInvalidOperationExceptionAndReturn409()
     {
         // Arrange
-        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new InvalidOperationException("Operation not allowed"));
+        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new InvalidOperationException(ErrorHandlingMiddlewareTestsConstants.InvalidOperationMessage));
         var context = CreateHttpContext(true);
 
         // Act
@@ -165,7 +165,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         var responseBody = await GetResponseBody(context);
-        responseBody.Should().Contain("Operation not allowed");
+        responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.InvalidOperationMessage);
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     public async Task InvokeAsync_ShouldCatchKeyNotFoundExceptionAndReturn404()
     {
         // Arrange
-        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new KeyNotFoundException("Resource not found"));
+        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new KeyNotFoundException(ErrorHandlingMiddlewareTestsConstants.KeyNotFoundMessage));
         var context = CreateHttpContext(true);
 
         // Act
@@ -194,7 +194,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     public async Task InvokeAsync_ShouldReturnGenericMessageInProduction()
     {
         // Arrange
-        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new Exception("Sensitive error details"));
+        _next.When(x => x(Arg.Any<HttpContext>())).Throw(new Exception(ErrorHandlingMiddlewareTestsConstants.SensitiveErrorDetails));
         var context = CreateHttpContext(false); // Production environment
 
         // Act
@@ -203,7 +203,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
         var responseBody = await GetResponseBody(context);
-        responseBody.Should().Contain("An error occurred processing your request. Please contact support with the error ID.");
-        responseBody.Should().NotContain("Sensitive error details");
+        responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.ProductionErrorMessage);
+        responseBody.Should().NotContain(ErrorHandlingMiddlewareTestsConstants.SensitiveErrorDetails);
     }
 }
