@@ -31,6 +31,9 @@ public class NotificationService : INotificationService
         NotificationType type = NotificationType.Email,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(subject);
+        ArgumentException.ThrowIfNullOrEmpty(message);
+
         cancellationToken.ThrowIfCancellationRequested();
 
         if (userId == Guid.Empty || string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(message))
@@ -56,6 +59,10 @@ public class NotificationService : INotificationService
         string htmlBody,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(emailAddress);
+        ArgumentException.ThrowIfNullOrEmpty(subject);
+        ArgumentException.ThrowIfNullOrEmpty(htmlBody);
+
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(emailAddress)
@@ -85,6 +92,10 @@ public class NotificationService : INotificationService
         NotificationType type = NotificationType.Email,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(userIds);
+        ArgumentException.ThrowIfNullOrEmpty(subject);
+        ArgumentException.ThrowIfNullOrEmpty(message);
+
         cancellationToken.ThrowIfCancellationRequested();
 
         if (userIds is null || string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(message))
@@ -128,6 +139,9 @@ public class NotificationService : INotificationService
         string? details = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(alertType);
+        ArgumentException.ThrowIfNullOrEmpty(description);
+
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(alertType) || string.IsNullOrWhiteSpace(description))
