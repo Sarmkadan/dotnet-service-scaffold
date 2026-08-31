@@ -41,10 +41,10 @@ public class AuditServiceTests : IAuditServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var entityType = "User";
+        var entityType = AuditServiceTestsConstants.UserEntityType;
         var entityId = Guid.NewGuid();
-        var action = "Create";
-        var details = "User created successfully";
+        var action = AuditServiceTestsConstants.CreateAction;
+        var details = AuditServiceTestsConstants.UserCreatedSuccessfullyDetails;
 
         _auditLogRepository.AddAuditLogAsync(Arg.Any<AuditLog>()).Returns(Task.CompletedTask);
 
@@ -70,10 +70,10 @@ public class AuditServiceTests : IAuditServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var entityType = "Service";
+        var entityType = AuditServiceTestsConstants.ServiceEntityType;
         var entityId = Guid.NewGuid();
-        var action = "Update";
-        var details = "Service updated";
+        var action = AuditServiceTestsConstants.UpdateAction;
+        var details = AuditServiceTestsConstants.ServiceUpdatedDetails;
 
         _auditLogRepository.AddAuditLogAsync(Arg.Any<AuditLog>()).Returns(Task.CompletedTask);
 
@@ -97,8 +97,8 @@ public class AuditServiceTests : IAuditServiceTests
         var userId = Guid.NewGuid();
         var logs = new List<AuditLog>
         {
-            new AuditLog { UserId = userId, EntityType = "User", Action = "Login" },
-            new AuditLog { UserId = userId, EntityType = "Service", Action = "View" }
+            new AuditLog { UserId = userId, EntityType = AuditServiceTestsConstants.UserEntityType, Action = AuditServiceTestsConstants.LoginAction },
+            new AuditLog { UserId = userId, EntityType = AuditServiceTestsConstants.ServiceEntityType, Action = AuditServiceTestsConstants.ViewAction }
         };
         _auditLogRepository.GetAuditLogsByUserIdAsync(userId).Returns(logs);
 
@@ -140,12 +140,12 @@ public class AuditServiceTests : IAuditServiceTests
     public async Task GetAuditLogsForEntityAsync_ShouldReturnLogsForEntity()
     {
         // Arrange
-        var entityType = "Service";
+        var entityType = AuditServiceTestsConstants.ServiceEntityType;
         var entityId = Guid.NewGuid();
         var logs = new List<AuditLog>
         {
-            new AuditLog { EntityType = entityType, EntityId = entityId, Action = "Create" },
-            new AuditLog { EntityType = entityType, EntityId = entityId, Action = "Delete" }
+            new AuditLog { EntityType = entityType, EntityId = entityId, Action = AuditServiceTestsConstants.CreateAction },
+            new AuditLog { EntityType = entityType, EntityId = entityId, Action = AuditServiceTestsConstants.DeleteAction }
         };
         _auditLogRepository.GetAuditLogsByEntityAsync(entityType, entityId).Returns(logs);
 
