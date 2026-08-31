@@ -22,6 +22,8 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
 
     public BasicServiceSetupExample(string apiKey, string baseUrl = BasicServiceSetupExampleConstants.DefaultBaseUrl)
     {
+        ArgumentException.ThrowIfNullOrEmpty(apiKey);
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
         _apiKey = apiKey;
         _baseUrl = baseUrl;
         _httpClient = new HttpClient();
@@ -37,6 +39,10 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
         string ownerId,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(description);
+        ArgumentException.ThrowIfNullOrEmpty(healthCheckUrl);
+        ArgumentException.ThrowIfNullOrEmpty(ownerId);
         cancellationToken.ThrowIfCancellationRequested();
 
         var request = new
@@ -122,6 +128,7 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     /// </summary>
     public async Task EnableServiceAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
             $"{_baseUrl}{string.Format(BasicServiceSetupExampleConstants.EnableServiceEndpoint, serviceId)}");
@@ -143,6 +150,7 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     /// </summary>
     public async Task DisableServiceAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
             $"{_baseUrl}{string.Format(BasicServiceSetupExampleConstants.DisableServiceEndpoint, serviceId)}");
@@ -164,6 +172,7 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     /// </summary>
     public async Task GetServiceDetailsAsync(string serviceId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(serviceId);
         var httpRequest = new HttpRequestMessage(
             HttpMethod.Get,
             $"{_baseUrl}{string.Format(BasicServiceSetupExampleConstants.GetServiceDetailsEndpoint, serviceId)}");
@@ -199,6 +208,7 @@ public class BasicServiceSetupExample : IBasicServiceSetupExample
     /// </summary>
     public static async Task Main(string[] args)
     {
+        ArgumentNullException.ThrowIfNull(args);
         const string apiKey = "sk_live_your_api_key_here";
         var example = new BasicServiceSetupExample(apiKey);
 
