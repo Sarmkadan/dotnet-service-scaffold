@@ -36,6 +36,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -64,6 +65,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -122,6 +124,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ChangePassword(Guid userId, [FromBody] ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -161,6 +164,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SearchUsers([FromQuery] string q, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
+        ArgumentException.ThrowIfNullOrEmpty(q);
         if (string.IsNullOrWhiteSpace(q))
         {
             _logger.LogWarning(UserControllerConstants.SearchQueryParameterQRequired);
