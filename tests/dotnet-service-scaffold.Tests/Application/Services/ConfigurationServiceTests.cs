@@ -41,7 +41,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     {
         // Arrange
         var configId = Guid.NewGuid();
-        var expectedConfig = new ServiceConfiguration { Id = configId, Key = "TestConfig", Value = "TestValue" };
+        var expectedConfig = new ServiceConfiguration { Id = configId, Key = ConfigurationServiceTestsConstants.TestConfigKey, Value = ConfigurationServiceTestsConstants.TestConfigValue };
         _configurationRepository.GetConfigurationByIdAsync(configId).Returns(expectedConfig);
 
         // Act
@@ -81,8 +81,8 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     public async Task GetConfigurationByKeyAsync_ShouldReturnConfiguration_WhenConfigurationExists()
     {
         // Arrange
-        var configKey = "ExistingKey";
-        var expectedConfig = new ServiceConfiguration { Id = Guid.NewGuid(), Key = configKey, Value = "ExistingValue" };
+        var configKey = ConfigurationServiceTestsConstants.ExistingKey;
+        var expectedConfig = new ServiceConfiguration { Id = Guid.NewGuid(), Key = configKey, Value = ConfigurationServiceTestsConstants.ExistingValue };
         _configurationRepository.GetConfigurationByKeyAsync(configKey).Returns(expectedConfig);
 
         // Act
@@ -102,7 +102,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     public async Task GetConfigurationByKeyAsync_ShouldReturnNull_WhenConfigurationDoesNotExist()
     {
         // Arrange
-        var configKey = "NonExistentKey";
+        var configKey = ConfigurationServiceTestsConstants.NonExistentKey;
         _configurationRepository.GetConfigurationByKeyAsync(configKey).Returns((ServiceConfiguration)null);
 
         // Act
@@ -122,7 +122,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     public async Task CreateConfigurationAsync_ShouldReturnConfiguration_WhenCreatedSuccessfully()
     {
         // Arrange
-        var newConfig = new ServiceConfiguration { Key = "NewConfig", Value = "NewValue" };
+        var newConfig = new ServiceConfiguration { Key = ConfigurationServiceTestsConstants.NewConfigKey, Value = ConfigurationServiceTestsConstants.NewConfigValue };
         _configurationRepository.AddConfigurationAsync(Arg.Any<ServiceConfiguration>()).Returns(Task.CompletedTask);
         _configurationRepository.GetConfigurationByKeyAsync(newConfig.Key).Returns((ServiceConfiguration)null);
 
@@ -145,7 +145,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     public async Task CreateConfigurationAsync_ShouldThrowException_WhenKeyAlreadyExists()
     {
         // Arrange
-        var existingConfig = new ServiceConfiguration { Key = "ExistingKey", Value = "ExistingValue" };
+        var existingConfig = new ServiceConfiguration { Key = ConfigurationServiceTestsConstants.ExistingKey, Value = ConfigurationServiceTestsConstants.ExistingValue };
         _configurationRepository.GetConfigurationByKeyAsync(existingConfig.Key).Returns(existingConfig);
 
         // Act
@@ -153,7 +153,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
 
         // Assert
         await action.Should().ThrowAsync<ServiceScaffoldException>()
-                    .WithMessage($"Configuration with key '{existingConfig.Key}' already exists.");
+                    .WithMessage(string.Format(ConfigurationServiceTestsConstants.ConfigurationKeyAlreadyExistsFormat, existingConfig.Key));
         await _configurationRepository.DidNotReceive().AddConfigurationAsync(Arg.Any<ServiceConfiguration>());
     }
 
@@ -167,8 +167,8 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     {
         // Arrange
         var configId = Guid.NewGuid();
-        var existingConfig = new ServiceConfiguration { Id = configId, Key = "OldKey", Value = "OldValue" };
-        var updatedConfig = new ServiceConfiguration { Id = configId, Key = "UpdatedKey", Value = "UpdatedValue" };
+        var existingConfig = new ServiceConfiguration { Id = configId, Key = ConfigurationServiceTestsConstants.OldKey, Value = ConfigurationServiceTestsConstants.OldValue };
+        var updatedConfig = new ServiceConfiguration { Id = configId, Key = ConfigurationServiceTestsConstants.UpdatedKey, Value = ConfigurationServiceTestsConstants.UpdatedValue };
 
         _configurationRepository.GetConfigurationByIdAsync(configId).Returns(existingConfig);
         _configurationRepository.UpdateConfigurationAsync(Arg.Any<ServiceConfiguration>()).Returns(Task.CompletedTask);
@@ -192,7 +192,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
     {
         // Arrange
         var configId = Guid.NewGuid();
-        var updatedConfig = new ServiceConfiguration { Id = configId, Key = "NonExistent", Value = "Value" };
+        var updatedConfig = new ServiceConfiguration { Id = configId, Key = ConfigurationServiceTestsConstants.NonExistent, Value = "Value" };
 
         _configurationRepository.GetConfigurationByIdAsync(configId).Returns((ServiceConfiguration)null);
 
@@ -201,7 +201,7 @@ public class ConfigurationServiceTests : IConfigurationServiceTests
 
         // Assert
         await action.Should().ThrowAsync<ServiceScaffoldException>()
-                    .WithMessage($"Configuration with ID '{configId}' not found.");
+                    .WithMessage(string.Format(ConfigurationServiceTestsConstants.ConfigurationNotFoundByIdFormat, configId));
         await _configurationRepository.DidNotReceive().UpdateConfigurationAsync(Arg.Any<ServiceConfiguration>());
     }
 }
