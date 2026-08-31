@@ -22,9 +22,9 @@ public static class UserServiceTestsJsonExtensions
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
+        WriteIndented = UserServiceTestsJsonExtensionsConstants.DefaultWriteIndented,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNameCaseInsensitive = true,
+        PropertyNameCaseInsensitive = UserServiceTestsJsonExtensionsConstants.PropertyNameCaseInsensitive,
     };
 
     /// <summary>
@@ -34,12 +34,17 @@ public static class UserServiceTestsJsonExtensions
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>A JSON string representation of the value.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this UserServiceTests value, bool indented = false)
+    public static string ToJson(
+        this UserServiceTests value,
+        bool indented = UserServiceTestsJsonExtensionsConstants.DefaultWriteIndented)
     {
         ArgumentNullException.ThrowIfNull(value);
 
         var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+            ? new JsonSerializerOptions(_jsonOptions)
+            {
+                WriteIndented = UserServiceTestsJsonExtensionsConstants.WriteIndented,
+            }
             : _jsonOptions;
 
         return JsonSerializer.Serialize(value, options);
