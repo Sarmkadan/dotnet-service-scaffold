@@ -28,6 +28,10 @@ public class HealthCheckService : IHealthCheckService
         HttpClient httpClient,
         ILogger<HealthCheckService> logger)
     {
+        ArgumentNullException.ThrowIfNull(healthCheckRepository);
+        ArgumentNullException.ThrowIfNull(serviceRepository);
+        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(logger);
         _healthCheckRepository = healthCheckRepository;
         _serviceRepository = serviceRepository;
         _httpClient = httpClient;
@@ -188,6 +192,7 @@ public class HealthCheckService : IHealthCheckService
         long responseTimeMs,
         string? errorMessage = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
         var service = await _serviceRepository.GetByIdAsync(serviceId);
         if (service is null)
             throw new ServiceNotFoundException(serviceId);
