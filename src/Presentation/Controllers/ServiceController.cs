@@ -25,6 +25,8 @@ public class ServiceController : ControllerBase, IServiceController
         IServiceManagementService serviceManagementService,
         ILogger<ServiceController> logger)
     {
+        ArgumentNullException.ThrowIfNull(serviceManagementService);
+        ArgumentNullException.ThrowIfNull(logger);
         _serviceManagementService = serviceManagementService;
         _logger = logger;
     }
@@ -38,6 +40,7 @@ public class ServiceController : ControllerBase, IServiceController
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> RegisterService([FromBody] RegisterServiceRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -194,6 +197,7 @@ public class ServiceController : ControllerBase, IServiceController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DisableService(Guid serviceId, [FromBody] DisableServiceRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
