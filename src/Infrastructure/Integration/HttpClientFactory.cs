@@ -31,6 +31,8 @@ public class HttpClientFactory : ICustomHttpClientFactory
     /// </summary>
     public HttpClient CreateClient(string name = "default")
     {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+
         var client = _factory.CreateClient(name);
 
         // Set standard timeouts
@@ -51,6 +53,9 @@ public class HttpClientFactory : ICustomHttpClientFactory
     /// </summary>
     public HttpClient CreateAuthenticatedClient(string apiKey, string name = "authenticated")
     {
+        ArgumentException.ThrowIfNullOrEmpty(apiKey);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+
         var client = CreateClient(name);
         client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.ApiKeyHeaderName, apiKey);
         return client;
@@ -61,6 +66,9 @@ public class HttpClientFactory : ICustomHttpClientFactory
     /// </summary>
     public HttpClient CreateBearerClient(string token, string name = "bearer")
     {
+        ArgumentException.ThrowIfNullOrEmpty(token);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+
         var client = CreateClient(name);
         var bearerToken = HttpUtility.CreateBearerAuthHeader(token);
         client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.AuthorizationHeaderName, bearerToken);
@@ -72,6 +80,9 @@ public class HttpClientFactory : ICustomHttpClientFactory
     /// </summary>
     public HttpClient CreateClientWithBaseUrl(string baseUrl, string name = "default")
     {
+        ArgumentException.ThrowIfNullOrEmpty(baseUrl);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+
         var client = CreateClient(name);
         client.BaseAddress = new Uri(baseUrl);
         return client;
