@@ -31,6 +31,8 @@ public class AuditService : IAuditService
         Guid? entityId,
         string? description = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(action);
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
         var log = new AuditLog
         {
             Id = Guid.NewGuid(),
@@ -61,6 +63,7 @@ public class AuditService : IAuditService
 
     public async Task<IEnumerable<AuditLog>> GetEntityAuditLogsAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
         cancellationToken.ThrowIfCancellationRequested();
         return await _auditLogRepository.GetByEntityAsync(entityType, entityId, cancellationToken);
     }
@@ -79,6 +82,9 @@ public class AuditService : IAuditService
 
     public async Task LogFailedActionAsync(Guid? userId, string action, string entityType, string reason)
     {
+        ArgumentException.ThrowIfNullOrEmpty(action);
+        ArgumentException.ThrowIfNullOrEmpty(entityType);
+        ArgumentException.ThrowIfNullOrEmpty(reason);
         var log = new AuditLog
         {
             Id = Guid.NewGuid(),
