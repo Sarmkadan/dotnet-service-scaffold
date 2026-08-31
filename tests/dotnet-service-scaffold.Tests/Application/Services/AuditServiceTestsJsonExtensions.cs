@@ -20,7 +20,7 @@ namespace DotnetServiceScaffold.Tests.Application.Services;
 public static class AuditServiceTestsJsonExtensions
 {
     // Seal the class as it's a pure utility class with no inheritance needed
-    private const string DefaultDateFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+    private const string DefaultDateFormat = AuditServiceTestsJsonExtensionsConstants.DefaultDateFormat;
 
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
