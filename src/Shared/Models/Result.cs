@@ -34,14 +34,20 @@ public class Result
     /// <summary>
     /// Creates a failed result with an error message.
     /// </summary>
-    public static Result Failure(string errorMessage, string? errorCode = null) =>
-        new(false, errorMessage, errorCode);
+    public static Result Failure(string errorMessage, string? errorCode = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
+        return new(false, errorMessage, errorCode);
+    }
 
     /// <summary>
     /// Creates a failed result from an exception.
     /// </summary>
-    public static Result Failure(Exception exception) =>
-        new(false, exception.Message, exception.GetType().Name);
+    public static Result Failure(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return new(false, exception.Message, exception.GetType().Name);
+    }
 }
 
 /// <summary>
@@ -71,8 +77,11 @@ public class Result<T>
     /// <summary>
     /// Creates a failed result with an error message.
     /// </summary>
-    public static Result<T> Failure(string errorMessage, string? errorCode = null) =>
-        new(false, default, errorMessage, errorCode);
+    public static Result<T> Failure(string errorMessage, string? errorCode = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(errorMessage);
+        return new(false, default, errorMessage, errorCode);
+    }
 
     /// <summary>
     /// Creates a failed result from an exception.
@@ -85,6 +94,7 @@ public class Result<T>
     /// </summary>
     public static Result<T> FromResult(Result result, T value)
     {
+        ArgumentNullException.ThrowIfNull(result);
         return result.IsSuccess
             ? Success(value)
             : Failure(result.ErrorMessage ?? "Unknown error", result.ErrorCode);
@@ -95,6 +105,7 @@ public class Result<T>
     /// </summary>
     public Result<TNext> Map<TNext>(Func<T?, TNext> mapper)
     {
+        ArgumentNullException.ThrowIfNull(mapper);
         if (!IsSuccess)
             return Result<TNext>.Failure(ErrorMessage ?? "Unknown error", ErrorCode);
 
