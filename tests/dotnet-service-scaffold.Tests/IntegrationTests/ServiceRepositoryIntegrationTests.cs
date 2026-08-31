@@ -38,9 +38,9 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
         // Arrange
         var service = new ServiceRegistration
         {
-            Name = "TestService",
-            Description = "A service for testing",
-            BaseUrl = "http://test.com",
+            Name = ServiceRepositoryIntegrationTestsConstants.TestServiceName,
+            Description = ServiceRepositoryIntegrationTestsConstants.TestServiceDescription,
+            BaseUrl = ServiceRepositoryIntegrationTestsConstants.TestServiceBaseUrl,
             Status = ServiceStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
@@ -65,9 +65,9 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
         // Arrange
         var service = new ServiceRegistration
         {
-            Name = "AnotherService",
-            Description = "Another service for testing",
-            BaseUrl = "http://another.com",
+            Name = ServiceRepositoryIntegrationTestsConstants.AnotherServiceName,
+            Description = ServiceRepositoryIntegrationTestsConstants.AnotherServiceDescription,
+            BaseUrl = ServiceRepositoryIntegrationTestsConstants.AnotherServiceBaseUrl,
             Status = ServiceStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
@@ -110,16 +110,16 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
         // Arrange
         var service = new ServiceRegistration
         {
-            Name = "ServiceToUpdate",
-            Description = "Initial description",
-            BaseUrl = "http://initial.com",
+            Name = ServiceRepositoryIntegrationTestsConstants.ServiceToUpdateName,
+            Description = ServiceRepositoryIntegrationTestsConstants.InitialServiceDescription,
+            BaseUrl = ServiceRepositoryIntegrationTestsConstants.InitialServiceBaseUrl,
             Status = ServiceStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
         await DbContext.ServiceRegistrations.AddAsync(service);
         await DbContext.SaveChangesAsync();
 
-        service.Description = "Updated description";
+        service.Description = ServiceRepositoryIntegrationTestsConstants.UpdatedServiceDescription;
         service.Status = ServiceStatus.Inactive;
 
         // Act
@@ -128,7 +128,7 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
         // Assert
         var updatedService = await DbContext.ServiceRegistrations.FindAsync(service.Id);
         updatedService.Should().NotBeNull();
-        updatedService.Description.Should().Be("Updated description");
+        updatedService.Description.Should().Be(ServiceRepositoryIntegrationTestsConstants.UpdatedServiceDescription);
         updatedService.Status.Should().Be(ServiceStatus.Inactive);
     }
 
@@ -142,9 +142,9 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
         // Arrange
         var service = new ServiceRegistration
         {
-            Name = "ServiceToDelete",
-            Description = "Service to be deleted",
-            BaseUrl = "http://delete.com",
+            Name = ServiceRepositoryIntegrationTestsConstants.ServiceToDeleteName,
+            Description = ServiceRepositoryIntegrationTestsConstants.ServiceToDeleteDescription,
+            BaseUrl = ServiceRepositoryIntegrationTestsConstants.ServiceToDeleteBaseUrl,
             Status = ServiceStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
@@ -168,8 +168,8 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
     public async Task GetAllServiceRegistrationsAsync_ShouldReturnAllServices()
     {
         // Arrange
-        var service1 = new ServiceRegistration { Name = "S1", BaseUrl = "http://s1.com", Status = ServiceStatus.Active, CreatedAt = DateTime.UtcNow };
-        var service2 = new ServiceRegistration { Name = "S2", BaseUrl = "http://s2.com", Status = ServiceStatus.Inactive, CreatedAt = DateTime.UtcNow };
+        var service1 = new ServiceRegistration { Name = ServiceRepositoryIntegrationTestsConstants.FirstServiceName, BaseUrl = ServiceRepositoryIntegrationTestsConstants.FirstServiceBaseUrl, Status = ServiceStatus.Active, CreatedAt = DateTime.UtcNow };
+        var service2 = new ServiceRegistration { Name = ServiceRepositoryIntegrationTestsConstants.SecondServiceName, BaseUrl = ServiceRepositoryIntegrationTestsConstants.SecondServiceBaseUrl, Status = ServiceStatus.Inactive, CreatedAt = DateTime.UtcNow };
         await DbContext.ServiceRegistrations.AddRangeAsync(service1, service2);
         await DbContext.SaveChangesAsync();
 
@@ -177,7 +177,7 @@ public class ServiceRepositoryIntegrationTests : WebApplicationFactoryIntegratio
         var allServices = await _serviceRepository.GetAllServiceRegistrationsAsync();
 
         // Assert
-        allServices.Should().HaveCount(2);
+        allServices.Should().HaveCount(ServiceRepositoryIntegrationTestsConstants.ExpectedServiceCount);
         allServices.Should().ContainEquivalentOf(service1);
         allServices.Should().ContainEquivalentOf(service2);
     }
