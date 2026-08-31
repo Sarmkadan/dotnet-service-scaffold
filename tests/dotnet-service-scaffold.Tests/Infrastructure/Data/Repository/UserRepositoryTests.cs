@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using static UserRepositoryTestsConstants;
 
 /// <summary>
 /// Tests for the UserRepository class.
@@ -25,7 +26,7 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
     /// </summary>
     public UserRepositoryTests()
     {
-        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection = new SqliteConnection(InMemoryConnectionString);
         _connection.Open();
 
         _dbContextOptions = new DbContextOptionsBuilder<ServiceScaffoldDbContext>()
@@ -46,7 +47,7 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Arrange
         using var context = new ServiceScaffoldDbContext(_dbContextOptions);
         var userRepository = new UserRepository(context);
-        var user = new User { Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com", FullName = "Test User" };
+        var user = new User { Id = Guid.NewGuid(), Username = TestUserUsername, Email = TestUserEmail, FullName = TestUserFullName };
 
         // Act
         await userRepository.AddUserAsync(user);
@@ -54,7 +55,7 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Assert
         var addedUser = await context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
         addedUser.Should().NotBeNull();
-        addedUser?.Username.Should().Be("testuser");
+        addedUser?.Username.Should().Be(TestUserUsername);
     }
 
     /// <summary>
@@ -66,7 +67,7 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Arrange
         using var context = new ServiceScaffoldDbContext(_dbContextOptions);
         var userRepository = new UserRepository(context);
-        var user = new User { Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com", FullName = "Test User" };
+        var user = new User { Id = Guid.NewGuid(), Username = TestUserUsername, Email = TestUserEmail, FullName = TestUserFullName };
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -103,12 +104,12 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Arrange
         using var context = new ServiceScaffoldDbContext(_dbContextOptions);
         var userRepository = new UserRepository(context);
-        var user = new User { Id = Guid.NewGuid(), Username = "uniqueuser", Email = "unique@example.com", FullName = "Unique User" };
+        var user = new User { Id = Guid.NewGuid(), Username = UniqueUserUsername, Email = UniqueUserEmail, FullName = UniqueUserFullName };
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await userRepository.GetUserByUsernameAsync("uniqueuser");
+        var result = await userRepository.GetUserByUsernameAsync(UniqueUserUsername);
 
         // Assert
         result.Should().Be(user);
@@ -125,7 +126,7 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         var userRepository = new UserRepository(context);
 
         // Act
-        var result = await userRepository.GetUserByUsernameAsync("nonexistent");
+        var result = await userRepository.GetUserByUsernameAsync(NonExistentUsername);
 
         // Assert
         result.Should().BeNull();
@@ -140,13 +141,13 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Arrange
         using var context = new ServiceScaffoldDbContext(_dbContextOptions);
         var userRepository = new UserRepository(context);
-        var user = new User { Id = Guid.NewGuid(), Username = "originaluser", Email = "original@example.com", FullName = "Original User" };
+        var user = new User { Id = Guid.NewGuid(), Username = OriginalUserUsername, Email = OriginalUserEmail, FullName = OriginalUserFullName };
         context.Users.Add(user);
         await context.SaveChangesAsync();
         context.Entry(user).State = EntityState.Detached; // Detach to simulate a fresh object from an update operation
 
-        user.Username = "updateduser";
-        user.Email = "updated@example.com";
+        user.Username = UpdatedUserUsername;
+        user.Email = UpdatedUserEmail;
 
         // Act
         await userRepository.UpdateUserAsync(user);
@@ -154,8 +155,8 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Assert
         var updatedUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == user.Id);
         updatedUser.Should().NotBeNull();
-        updatedUser?.Username.Should().Be("updateduser");
-        updatedUser?.Email.Should().Be("updated@example.com");
+        updatedUser?.Username.Should().Be(UpdatedUserUsername);
+        updatedUser?.Email.Should().Be(UpdatedUserEmail);
     }
 
     /// <summary>
@@ -167,7 +168,7 @@ public class UserRepositoryTests : IDisposable, IUserRepositoryTests
         // Arrange
         using var context = new ServiceScaffoldDbContext(_dbContextOptions);
         var userRepository = new UserRepository(context);
-        var user = new User { Id = Guid.NewGuid(), Username = "userToDelete", Email = "delete@example.com", FullName = "User To Delete" };
+        var user = new User { Id = Guid.NewGuid(), Username = UserToDeleteUsername, Email = UserToDeleteEmail, FullName = UserToDeleteFullName };
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
