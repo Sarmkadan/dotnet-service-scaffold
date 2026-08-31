@@ -61,6 +61,7 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public bool IsEnabled(string featureName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(featureName);
         if (!_flags.TryGetValue(featureName, out var flag))
         {
             _logger.LogWarning("Feature flag '{FeatureName}' not found, defaulting to false", featureName);
@@ -76,6 +77,7 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public bool IsEnabledForUser(string featureName, Guid userId)
     {
+        ArgumentException.ThrowIfNullOrEmpty(featureName);
         if (!IsEnabled(featureName))
             return false;
 
@@ -97,6 +99,7 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public void EnableFeature(string featureName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(featureName);
         if (_flags.TryGetValue(featureName, out var flag))
         {
             flag.IsEnabled = true;
@@ -114,6 +117,7 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public void DisableFeature(string featureName)
     {
+        ArgumentException.ThrowIfNullOrEmpty(featureName);
         if (_flags.TryGetValue(featureName, out var flag))
         {
             flag.IsEnabled = false;
@@ -131,6 +135,7 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public void SetRolloutPercentage(string featureName, int percentage)
     {
+        ArgumentException.ThrowIfNullOrEmpty(featureName);
         if (percentage < FeatureFlagServiceConstants.PercentageMin || percentage > FeatureFlagServiceConstants.PercentageMax)
             throw new ArgumentException("Rollout percentage must be between 0 and 100", nameof(percentage));
 
@@ -153,6 +158,8 @@ public class FeatureFlagService : IFeatureFlagService
     /// </summary>
     public void RegisterFeature(string featureName, string description, bool initiallyEnabled = false)
     {
+        ArgumentException.ThrowIfNullOrEmpty(featureName);
+        ArgumentException.ThrowIfNullOrEmpty(description);
         if (_flags.ContainsKey(featureName))
         {
             _logger.LogWarning("Feature '{FeatureName}' already registered", featureName);
