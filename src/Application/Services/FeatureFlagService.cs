@@ -241,6 +241,11 @@ internal class FeatureFlag
         Description = description;
         IsEnabled = isEnabled;
     }
+
+    public override string ToString()
+    {
+        return $"FeatureFlag {{ Name = {Name}, Description = {Description}, IsEnabled = {IsEnabled}, RolloutPercentage = {RolloutPercentage}, CreatedAt = {CreatedAt}, LastModified = {LastModified} }}";
+    }
 }
 
 /// <summary>
