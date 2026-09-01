@@ -37,42 +37,57 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
     /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
-        // Skip rate limiting for specific paths
-        if (context.Request.Path.StartsWithSegments(RateLimitingMiddlewareConstants.HealthCheckPath))
+        try
         {
-            await _next(context);
-            return;
-        }
+            _logger.LogInformation("Processing request {Method} {Path}", context.Request.Method, context.Request.Path);
 
-        var clientId = GetClientIdentifier(context);
-        var limit = context.User?.Identity?.IsAuthenticated ?? false
-            ? _options.AuthenticatedRequestsPerMinute
-            : _options.AnonymousRequestsPerMinute;
-
-        var bucket = _buckets.GetOrAdd(clientId, _ => new TokenBucketState(limit));
-
-        if (!bucket.TryTakeToken())
-        {
-            _logger.LogWarning("Rate limit exceeded for client {ClientId}", clientId);
-            context.Response.StatusCode = RateLimitingMiddlewareConstants.StatusCodeTooManyRequests;
-            context.Response.ContentType = RateLimitingMiddlewareConstants.JsonContentType;
-            var retryAfter = bucket.GetRetryAfterSeconds();
-            context.Response.Headers[RateLimitingMiddlewareConstants.RetryAfterHeaderName] = retryAfter.ToString();
-
-            await context.Response.WriteAsJsonAsync(new
+            // Skip rate limiting for specific paths
+            if (context.Request.Path.StartsWithSegments(RateLimitingMiddlewareConstants.HealthCheckPath))
             {
-                error = RateLimitingMiddlewareConstants.TooManyRequestsError,
-                message = RateLimitingMiddlewareConstants.RateLimitExceededMessage,
-                retryAfter = retryAfter
-            });
-            return;
+                _logger.LogInformation("Skipping rate limiting for health check path {Path}", context.Request.Path);
+                await _next(context);
+                return;
+            }
+
+            var clientId = GetClientIdentifier(context);
+            var limit = context.User?.Identity?.IsAuthenticated ?? false
+                ? _options.AuthenticatedRequestsPerMinute
+                : _options.AnonymousRequestsPerMinute;
+
+            _logger.LogInformation("Checking rate limit for client {ClientId} with limit {Limit} per minute", clientId, limit);
+
+            var bucket = _buckets.GetOrAdd(clientId, _ => new TokenBucketState(limit));
+
+            if (!bucket.TryTakeToken())
+            {
+                _logger.LogWarning("Rate limit exceeded for client {ClientId}", clientId);
+                context.Response.StatusCode = RateLimitingMiddlewareConstants.StatusCodeTooManyRequests;
+                context.Response.ContentType = RateLimitingMiddlewareConstants.JsonContentType;
+                var retryAfter = bucket.GetRetryAfterSeconds();
+                context.Response.Headers[RateLimitingMiddlewareConstants.RetryAfterHeaderName] = retryAfter.ToString();
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = RateLimitingMiddlewareConstants.TooManyRequestsError,
+                    message = RateLimitingMiddlewareConstants.RateLimitExceededMessage,
+                    retryAfter = retryAfter
+                });
+                return;
+            }
+
+            // Add rate limit headers to response
+            context.Response.Headers[RateLimitingMiddlewareConstants.RateLimitLimitHeaderName] = limit.ToString();
+            context.Response.Headers[RateLimitingMiddlewareConstants.RateLimitRemainingHeaderName] = bucket.GetRemainingTokens().ToString();
+
+            await _next(context);
+
+            _logger.LogInformation("Request {Method} {Path} processed successfully", context.Request.Method, context.Request.Path);
         }
-
-        // Add rate limit headers to response
-        context.Response.Headers[RateLimitingMiddlewareConstants.RateLimitLimitHeaderName] = limit.ToString();
-        context.Response.Headers[RateLimitingMiddlewareConstants.RateLimitRemainingHeaderName] = bucket.GetRemainingTokens().ToString();
-
-        await _next(context);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while processing the request for {Path}", context.Request.Path);
+            throw;
+        }
     }
 
     /// <summary>
