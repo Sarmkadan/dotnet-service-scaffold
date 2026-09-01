@@ -33,17 +33,22 @@ public class HttpClientFactory : ICustomHttpClientFactory
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        _logger.LogInformation("Entering CreateClient with {Name}", name);
+
         var client = _factory.CreateClient(name);
 
         // Set standard timeouts
         client.Timeout = TimeSpan.FromSeconds(HttpClientFactoryConstants.DefaultTimeoutSeconds);
+        _logger.LogInformation("Setting timeout to {Timeout} seconds for client {Name}", HttpClientFactoryConstants.DefaultTimeoutSeconds, name);
 
         // Add default headers if not already present
         if (!client.DefaultRequestHeaders.Contains(HttpClientFactoryConstants.DefaultUserAgentHeaderName))
         {
             client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.DefaultUserAgentHeaderName, HttpClientFactoryConstants.DefaultUserAgentHeaderValue);
+            _logger.LogInformation("Adding default User-Agent header for client {Name}", name);
         }
 
+        _logger.LogInformation("Exiting CreateClient.");
         return client;
     }
 
@@ -56,8 +61,13 @@ public class HttpClientFactory : ICustomHttpClientFactory
         ArgumentException.ThrowIfNullOrEmpty(apiKey);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        _logger.LogInformation("Entering CreateAuthenticatedClient with {Name}", name);
+
         var client = CreateClient(name);
+        _logger.LogInformation("Adding API key header for client {Name}", name);
         client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.ApiKeyHeaderName, apiKey);
+
+        _logger.LogInformation("Exiting CreateAuthenticatedClient.");
         return client;
     }
 
@@ -69,9 +79,14 @@ public class HttpClientFactory : ICustomHttpClientFactory
         ArgumentException.ThrowIfNullOrEmpty(token);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        _logger.LogInformation("Entering CreateBearerClient with {Name}", name);
+
         var client = CreateClient(name);
         var bearerToken = HttpUtility.CreateBearerAuthHeader(token);
+        _logger.LogInformation("Adding Bearer token header for client {Name}", name);
         client.DefaultRequestHeaders.Add(HttpClientFactoryConstants.AuthorizationHeaderName, bearerToken);
+
+        _logger.LogInformation("Exiting CreateBearerClient.");
         return client;
     }
 
@@ -83,8 +98,12 @@ public class HttpClientFactory : ICustomHttpClientFactory
         ArgumentException.ThrowIfNullOrEmpty(baseUrl);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        _logger.LogInformation("Entering CreateClientWithBaseUrl with {BaseUrl} and {Name}", baseUrl, name);
+
         var client = CreateClient(name);
         client.BaseAddress = new Uri(baseUrl);
+
+        _logger.LogInformation("Exiting CreateClientWithBaseUrl.");
         return client;
     }
 }
