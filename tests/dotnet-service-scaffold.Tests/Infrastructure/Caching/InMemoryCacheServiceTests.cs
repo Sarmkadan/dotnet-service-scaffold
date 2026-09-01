@@ -77,6 +77,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task SetAsync_GetAsync_ReturnsStoredValue()
     {
+        _loggerMock.Object.LogInformation("Starting cache set and get test for {CacheKey}", InMemoryCacheServiceTestsConstants.TestKey);
+
         // Arrange
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.TestKey, InMemoryCacheServiceTestsConstants.TestValue);
         var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.TestKey);
@@ -90,6 +92,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+
+        _loggerMock.Object.LogInformation("Completed cache set and get test for {CacheKey}", InMemoryCacheServiceTestsConstants.TestKey);
     }
 
     /// <summary>
@@ -98,6 +102,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task GetAsync_NonExistentKey_ReturnsNull()
     {
+        _loggerMock.Object.LogInformation("Starting cache miss test for {CacheKey}", InMemoryCacheServiceTestsConstants.NonExistentKey);
+        _loggerMock.Object.LogWarning("Testing fallback behavior for missing cache key {CacheKey}", InMemoryCacheServiceTestsConstants.NonExistentKey);
+
         // Arrange & Act
         var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.NonExistentKey);
 
@@ -110,6 +117,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+
+        _loggerMock.Object.LogInformation("Completed cache miss test for {CacheKey}", InMemoryCacheServiceTestsConstants.NonExistentKey);
     }
 
     /// <summary>
@@ -118,11 +127,16 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task GetAsync_EmptyKey_ReturnsNull()
     {
+        _loggerMock.Object.LogInformation("Starting cache lookup test for empty key");
+        _loggerMock.Object.LogWarning("Testing degraded cache lookup path for empty key");
+
         // Arrange & Act
         var result = await _cache.GetAsync<string>(string.Empty);
 
         // Assert
         result.Should().BeNull();
+
+        _loggerMock.Object.LogInformation("Completed cache lookup test for empty key");
     }
 
     /// <summary>
@@ -131,11 +145,16 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task GetAsync_NullKey_ReturnsNull()
     {
+        _loggerMock.Object.LogInformation("Starting cache lookup test for null key");
+        _loggerMock.Object.LogWarning("Testing degraded cache lookup path for null key");
+
         // Arrange & Act
         var result = await _cache.GetAsync<string>(null!);
 
         // Assert
         result.Should().BeNull();
+
+        _loggerMock.Object.LogInformation("Completed cache lookup test for null key");
     }
 
     /// <summary>
@@ -144,6 +163,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void SetAsync_NullKey_ThrowsArgumentException()
     {
+        _loggerMock.Object.LogInformation("Starting cache set validation test for null key");
+        _loggerMock.Object.LogWarning("Testing rejected cache set path for null key");
+
         // Arrange
         // Act
         Action act = () => _cache.SetAsync(null!, InMemoryCacheServiceTestsConstants.TestValue);
@@ -151,6 +173,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         // Assert
         act.Should().Throw<ArgumentException>(
             InMemoryCacheServiceTestsConstants.NullKeyExceptionMessage);
+
+        _loggerMock.Object.LogInformation("Completed cache set validation test for null key");
     }
 
     /// <summary>
@@ -159,6 +183,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void SetAsync_EmptyKey_ThrowsArgumentException()
     {
+        _loggerMock.Object.LogInformation("Starting cache set validation test for empty key");
+        _loggerMock.Object.LogWarning("Testing rejected cache set path for empty key");
+
         // Arrange
         // Act
         Action act = () => _cache.SetAsync(string.Empty, InMemoryCacheServiceTestsConstants.TestValue);
@@ -166,6 +193,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         // Assert
         act.Should().Throw<ArgumentException>(
             InMemoryCacheServiceTestsConstants.EmptyKeyExceptionMessage);
+
+        _loggerMock.Object.LogInformation("Completed cache set validation test for empty key");
     }
 
     /// <summary>
@@ -174,6 +203,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task SetAsync_WithExpiration_EntryExpiresAndIsRemoved()
     {
+        _loggerMock.Object.LogInformation(
+            "Starting cache expiration test for {CacheKey} with delay {ExpirationDelayMs}",
+            InMemoryCacheServiceTestsConstants.ExpiringKey,
+            InMemoryCacheServiceTestsConstants.ExpirationDelayMs);
+
         // Arrange
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ExpiringKey, InMemoryCacheServiceTestsConstants.ExpiringValue, TimeSpan.FromMilliseconds(InMemoryCacheServiceTestsConstants.ExpirationDelayMs));
 
@@ -183,10 +217,16 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
 
         // Wait for expiration
         await Task.Delay(InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
+        _loggerMock.Object.LogWarning(
+            "Cache entry {CacheKey} reached its expiration fallback path after {ExpirationWaitMs}",
+            InMemoryCacheServiceTestsConstants.ExpiringKey,
+            InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
 
         // Assert - should be null after expiration
         result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.ExpiringKey);
         result.Should().BeNull();
+
+        _loggerMock.Object.LogInformation("Completed cache expiration test for {CacheKey}", InMemoryCacheServiceTestsConstants.ExpiringKey);
     }
 
     /// <summary>
@@ -195,6 +235,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task ExistsAsync_KeyBehavior_ReturnsCorrectResult()
     {
+        _loggerMock.Object.LogInformation(
+            "Starting cache existence test for existing key {ExistingKey} and missing key {MissingKey}",
+            InMemoryCacheServiceTestsConstants.ExistingKey,
+            InMemoryCacheServiceTestsConstants.NonExistentKey);
+
         // Arrange
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ExistingKey, InMemoryCacheServiceTestsConstants.TestValue);
 
@@ -204,6 +249,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
 
         exists = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.NonExistentKey);
         exists.Should().BeFalse();
+        _loggerMock.Object.LogWarning("Cache existence check used missing-key fallback for {CacheKey}", InMemoryCacheServiceTestsConstants.NonExistentKey);
+
+        _loggerMock.Object.LogInformation("Completed cache existence behavior test");
     }
 
     /// <summary>
@@ -212,15 +260,20 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task ExistsAsync_ExpiredEntry_ReturnsFalse()
     {
+        _loggerMock.Object.LogInformation("Starting expired entry existence test for {CacheKey}", InMemoryCacheServiceTestsConstants.ExpiringKey);
+
         // Arrange
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.ExpiringKey, InMemoryCacheServiceTestsConstants.TestValue, TimeSpan.FromMilliseconds(InMemoryCacheServiceTestsConstants.ExpirationDelayMs));
 
         // Wait for expiration
         await Task.Delay(InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
+        _loggerMock.Object.LogWarning("Checking degraded path for expired cache key {CacheKey}", InMemoryCacheServiceTestsConstants.ExpiringKey);
 
         // Act & Assert
         var exists = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.ExpiringKey);
         exists.Should().BeFalse();
+
+        _loggerMock.Object.LogInformation("Completed expired entry existence test for {CacheKey}", InMemoryCacheServiceTestsConstants.ExpiringKey);
     }
 
     /// <summary>
@@ -229,6 +282,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task RemoveAsync_RemovesEntryFromCache()
     {
+        _loggerMock.Object.LogInformation("Starting cache removal test for {CacheKey}", InMemoryCacheServiceTestsConstants.RemovableKey);
+
         // Arrange
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.RemovableKey, InMemoryCacheServiceTestsConstants.RemovableValue);
         var existsBefore = await _cache.ExistsAsync(InMemoryCacheServiceTestsConstants.RemovableKey);
@@ -248,6 +303,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+
+        _loggerMock.Object.LogInformation("Completed cache removal test for {CacheKey}", InMemoryCacheServiceTestsConstants.RemovableKey);
     }
 
     /// <summary>
@@ -256,9 +313,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void RemoveAsync_NullKey_DoesNotThrow()
     {
+        _loggerMock.Object.LogInformation("Starting cache removal test for null key");
+        _loggerMock.Object.LogWarning("Testing no-op cache removal fallback for null key");
+
         // Act - should not throw
         Action act = () => _cache.RemoveAsync(null!);
         act.Should().NotThrow();
+
+        _loggerMock.Object.LogInformation("Completed cache removal test for null key");
     }
 
     /// <summary>
@@ -267,9 +329,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void RemoveAsync_EmptyKey_DoesNotThrow()
     {
+        _loggerMock.Object.LogInformation("Starting cache removal test for empty key");
+        _loggerMock.Object.LogWarning("Testing no-op cache removal fallback for empty key");
+
         // Act - should not throw
         Action act = () => _cache.RemoveAsync(string.Empty);
         act.Should().NotThrow();
+
+        _loggerMock.Object.LogInformation("Completed cache removal test for empty key");
     }
 
     /// <summary>
@@ -278,6 +345,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task ClearAsync_RemovesAllEntries()
     {
+        _loggerMock.Object.LogInformation("Starting cache clear test with {EntryCount} entries", 3);
+
         // Arrange - add multiple entries
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.Key1, InMemoryCacheServiceTestsConstants.Value1);
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.Key2, InMemoryCacheServiceTestsConstants.Value2);
@@ -303,6 +372,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+
+        _loggerMock.Object.LogInformation("Completed cache clear test with {EntryCount} entries removed", 3);
     }
 
     /// <summary>
@@ -311,6 +382,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task GetOrSetAsync_CacheHit_ReturnsCachedValueWithoutCallingFactory()
     {
+        _loggerMock.Object.LogInformation("Starting get-or-set cache hit test for {CacheKey}", InMemoryCacheServiceTestsConstants.FactoryKey);
+
         // Arrange
         var factoryCallCount = 0;
 
@@ -328,6 +401,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         // Assert
         result.Should().Be(InMemoryCacheServiceTestsConstants.CachedValue);
         factoryCallCount.Should().Be(0);
+
+        _loggerMock.Object.LogInformation(
+            "Completed get-or-set cache hit test for {CacheKey} with {FactoryCallCount} factory calls",
+            InMemoryCacheServiceTestsConstants.FactoryKey,
+            factoryCallCount);
     }
 
     /// <summary>
@@ -336,6 +414,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task GetOrSetAsync_CacheMiss_CallsFactoryAndCachesResult()
     {
+        _loggerMock.Object.LogInformation("Starting get-or-set cache miss test for {CacheKey}", InMemoryCacheServiceTestsConstants.FactoryKey);
+        _loggerMock.Object.LogWarning("Cache miss for {CacheKey} requires factory fallback", InMemoryCacheServiceTestsConstants.FactoryKey);
+
         // Arrange
         var factoryCallCount = 0;
 
@@ -355,6 +436,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         // Verify it was cached
         var cachedResult = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.FactoryKey);
         cachedResult.Should().Be(InMemoryCacheServiceTestsConstants.ComputedValue);
+
+        _loggerMock.Object.LogInformation(
+            "Completed get-or-set cache miss test for {CacheKey} with {FactoryCallCount} factory calls",
+            InMemoryCacheServiceTestsConstants.FactoryKey,
+            factoryCallCount);
     }
 
     /// <summary>
@@ -363,6 +449,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task GetOrSetAsync_WithExpiration_CachesWithExpiration()
     {
+        _loggerMock.Object.LogInformation(
+            "Starting expiring get-or-set test for {CacheKey} with delay {ExpirationDelayMs}",
+            InMemoryCacheServiceTestsConstants.ExpiringFactoryKey,
+            InMemoryCacheServiceTestsConstants.ExpirationDelayMs);
+
         // Arrange
         // Act
         var result = await _cache.GetOrSetAsync(
@@ -379,10 +470,13 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
 
         // Wait for expiration
         await Task.Delay(InMemoryCacheServiceTestsConstants.ExpirationWaitMs);
+        _loggerMock.Object.LogWarning("Testing expired get-or-set fallback for {CacheKey}", InMemoryCacheServiceTestsConstants.ExpiringFactoryKey);
 
         // Should be null after expiration
         cachedResult = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.ExpiringFactoryKey);
         cachedResult.Should().BeNull();
+
+        _loggerMock.Object.LogInformation("Completed expiring get-or-set test for {CacheKey}", InMemoryCacheServiceTestsConstants.ExpiringFactoryKey);
     }
 
     /// <summary>
@@ -391,6 +485,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task RemoveByPatternAsync_RemovesMatchingEntries()
     {
+        _loggerMock.Object.LogInformation("Starting pattern removal test for {CachePattern}", InMemoryCacheServiceTestsConstants.UserPattern);
+
         // Arrange - add multiple entries with matching pattern
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.User1Profile, InMemoryCacheServiceTestsConstants.Profile1);
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.User2Profile, InMemoryCacheServiceTestsConstants.Profile2);
@@ -418,6 +514,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+
+        _loggerMock.Object.LogInformation(
+            "Completed pattern removal test for {CachePattern} with {RemovedEntryCount} entries removed",
+            InMemoryCacheServiceTestsConstants.UserPattern,
+            InMemoryCacheServiceTestsConstants.RemovedPatternEntryCount);
     }
 
     /// <summary>
@@ -426,9 +527,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void RemoveByPatternAsync_NullPattern_DoesNotThrow()
     {
+        _loggerMock.Object.LogInformation("Starting pattern removal test for null pattern");
+        _loggerMock.Object.LogWarning("Testing no-op pattern removal fallback for null pattern");
+
         // Act - should not throw
         Action act = () => _cache.RemoveByPatternAsync(null!);
         act.Should().NotThrow();
+
+        _loggerMock.Object.LogInformation("Completed pattern removal test for null pattern");
     }
 
     /// <summary>
@@ -437,9 +543,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void RemoveByPatternAsync_EmptyPattern_DoesNotThrow()
     {
+        _loggerMock.Object.LogInformation("Starting pattern removal test for empty pattern");
+        _loggerMock.Object.LogWarning("Testing no-op pattern removal fallback for empty pattern");
+
         // Act - should not throw
         Action act = () => _cache.RemoveByPatternAsync(string.Empty);
         act.Should().NotThrow();
+
+        _loggerMock.Object.LogInformation("Completed pattern removal test for empty pattern");
     }
 
     /// <summary>
@@ -448,6 +559,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task ConcurrentAccess_MultipleThreads_HandlesCorrectly()
     {
+        _loggerMock.Object.LogInformation(
+            "Starting concurrent cache access test with {ThreadCount} threads and {OperationsPerThread} operations per thread",
+            InMemoryCacheServiceTestsConstants.ConcurrentThreadCount,
+            InMemoryCacheServiceTestsConstants.ConcurrentOperationsPerThread);
+
         // Arrange
         var tasks = new List<Task>();
         var counter = 0;
@@ -492,6 +608,10 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
                 exists.Should().BeTrue();
             }
         }
+
+        _loggerMock.Object.LogInformation(
+            "Completed concurrent cache access test with {CompletedOperationCount} operations",
+            counter);
     }
 
     /// <summary>
@@ -500,6 +620,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public void Dispose_CleansUpTimer()
     {
+        _loggerMock.Object.LogInformation("Starting cache disposal test");
+
         // Arrange
         var cache = new InMemoryCacheService(_loggerMock.Object);
 
@@ -515,6 +637,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never); // Timer disposal doesn't log
+
+        _loggerMock.Object.LogInformation("Completed cache disposal test");
     }
 
     /// <summary>
@@ -523,6 +647,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task SetAsync_GetAsync_ComplexObject_ReturnsCorrectInstance()
     {
+        _loggerMock.Object.LogInformation(
+            "Starting complex object cache test for {CacheKey} and object {ObjectId}",
+            InMemoryCacheServiceTestsConstants.ComplexObjectKey,
+            InMemoryCacheServiceTestsConstants.ComplexObjectId);
+
         // Arrange
         var complexObject = new TestCacheObject
         {
@@ -540,6 +669,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         result!.Id.Should().Be(complexObject.Id);
         result.Name.Should().Be(complexObject.Name);
         result.Value.Should().Be(complexObject.Value);
+
+        _loggerMock.Object.LogInformation(
+            "Completed complex object cache test for {CacheKey} and object {ObjectId}",
+            InMemoryCacheServiceTestsConstants.ComplexObjectKey,
+            complexObject.Id);
     }
 
     /// <summary>
@@ -548,6 +682,9 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task SetAsync_NullValue_StoresAndRetrievesNull()
     {
+        _loggerMock.Object.LogInformation("Starting null value cache test for {CacheKey}", InMemoryCacheServiceTestsConstants.NullValueKey);
+        _loggerMock.Object.LogWarning("Testing null value cache fallback for {CacheKey}", InMemoryCacheServiceTestsConstants.NullValueKey);
+
         // Arrange
         // Act - store null
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.NullValueKey, (object)null!);
@@ -555,6 +692,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
 
         // Assert
         result.Should().BeNull();
+
+        _loggerMock.Object.LogInformation("Completed null value cache test for {CacheKey}", InMemoryCacheServiceTestsConstants.NullValueKey);
     }
 
     /// <summary>
@@ -563,6 +702,11 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     [Fact]
     public async Task SetAsync_WithoutExpiration_NeverExpires()
     {
+        _loggerMock.Object.LogInformation(
+            "Starting non-expiring cache test for {CacheKey} with wait {WaitMs}",
+            InMemoryCacheServiceTestsConstants.NoExpiryKey,
+            InMemoryCacheServiceTestsConstants.NoExpiryWaitMs);
+
         // Arrange
         await _cache.SetAsync(InMemoryCacheServiceTestsConstants.NoExpiryKey, InMemoryCacheServiceTestsConstants.NoExpiryValue);
 
@@ -572,6 +716,8 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
         // Act & Assert - should still be present
         var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.NoExpiryKey);
         result.Should().Be(InMemoryCacheServiceTestsConstants.NoExpiryValue);
+
+        _loggerMock.Object.LogInformation("Completed non-expiring cache test for {CacheKey}", InMemoryCacheServiceTestsConstants.NoExpiryKey);
     }
 
     private class TestCacheObject
