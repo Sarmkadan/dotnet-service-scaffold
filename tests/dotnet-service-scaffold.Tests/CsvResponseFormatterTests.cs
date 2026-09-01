@@ -5,19 +5,39 @@ using DotnetServiceScaffold.Infrastructure.Formatting;
 
 namespace DotnetServiceScaffold.Tests;
 
+/// <summary>
+/// Verifies CSV formatting behavior and provides value-based equality for the test fixture's public data properties.
+/// </summary>
 public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<CsvResponseFormatterTests>
 {
     private readonly CsvResponseFormatter _formatter;
 
+    /// <summary>
+    /// Gets or sets the identifier used when comparing test fixture instances.
+    /// </summary>
     public int Id { get; set; }
+    /// <summary>
+    /// Gets or sets the name used when comparing test fixture instances.
+    /// </summary>
     public string? Name { get; set; }
+    /// <summary>
+    /// Gets or sets the numeric value used when comparing test fixture instances.
+    /// </summary>
     public double Value { get; set; }
 
+    /// <summary>
+    /// Initializes a test fixture with a new CSV response formatter.
+    /// </summary>
     public CsvResponseFormatterTests()
     {
         _formatter = new CsvResponseFormatter();
     }
 
+    /// <summary>
+    /// Determines whether another test fixture has the same identifier, name, and numeric value.
+    /// </summary>
+    /// <param name="other">The test fixture to compare with this instance.</param>
+    /// <returns><see langword="true"/> when all three public data properties are equal; otherwise, <see langword="false"/>.</returns>
     public bool Equals(CsvResponseFormatterTests? other)
     {
         if (other is null)
@@ -28,26 +48,51 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
                Value == other.Value;
     }
 
+    /// <summary>
+    /// Determines whether an object is a test fixture with the same identifier, name, and numeric value.
+    /// </summary>
+    /// <param name="obj">The object to compare with this instance.</param>
+    /// <returns><see langword="true"/> when the object is an equal test fixture; otherwise, <see langword="false"/>.</returns>
     public override bool Equals(object? obj)
     {
         return Equals(obj as CsvResponseFormatterTests);
     }
 
+    /// <summary>
+    /// Computes a hash code from the identifier, name, and numeric value.
+    /// </summary>
+    /// <returns>A hash code for the fixture's public data properties.</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(Id, Name, Value);
     }
 
+    /// <summary>
+    /// Determines whether two test fixtures are equal using their value-based equality implementation.
+    /// </summary>
+    /// <param name="left">The first test fixture to compare.</param>
+    /// <param name="right">The second test fixture to compare.</param>
+    /// <returns><see langword="true"/> when the fixtures are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(CsvResponseFormatterTests? left, CsvResponseFormatterTests? right)
     {
         return EqualityComparer<CsvResponseFormatterTests>.Default.Equals(left, right);
     }
 
+    /// <summary>
+    /// Determines whether two test fixtures differ using their value-based equality implementation.
+    /// </summary>
+    /// <param name="left">The first test fixture to compare.</param>
+    /// <param name="right">The second test fixture to compare.</param>
+    /// <returns><see langword="true"/> when the fixtures are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(CsvResponseFormatterTests? left, CsvResponseFormatterTests? right)
     {
         return !(left == right);
     }
 
+    /// <summary>
+    /// Verifies that formatting a list of simple objects produces a header and one CSV row per object.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task FormatAsync_SimpleObjectList_ReturnsCorrectCsv()
     {
@@ -68,6 +113,12 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Contains("2,Bob,200", result);
     }
 
+    /// <summary>
+    /// Verifies that commas, quotes, line breaks, and tabs in string values are escaped in the CSV output.
+    /// </summary>
+    /// <param name="input">The string value containing a character that requires CSV escaping.</param>
+    /// <param name="expectedOutput">The escaped representation expected in the formatted CSV.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Theory]
     [InlineData("Doe, John", "\"Doe, John\"")]
     [InlineData("He said \"Hi\"", "\"He said \"\"Hi\"\"\"")]
@@ -88,6 +139,10 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Contains(expectedOutput, result);
     }
 
+    /// <summary>
+    /// Verifies that formatting an empty collection produces an empty string.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task FormatAsync_EmptyCollection_ReturnsEmptyString()
     {
@@ -102,6 +157,10 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Equal(CsvResponseFormatterTestsConstants.EmptyString, result);
     }
 
+    /// <summary>
+    /// Verifies that a null property value is represented by an empty CSV field.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task FormatAsync_NullPropertyValues_HandlesCorrectly()
     {
@@ -119,6 +178,10 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Contains("1,,100", result);
     }
 
+    /// <summary>
+    /// Verifies that formatting a null input produces an empty string.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task FormatAsync_NullInput_ReturnsEmptyString()
     {
@@ -129,6 +192,10 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Equal(CsvResponseFormatterTestsConstants.EmptyString, result);
     }
 
+    /// <summary>
+    /// Verifies that formatting a single object produces a header and one CSV row.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task FormatAsync_SingleObject_ReturnsHeaderAndOneRow()
     {
@@ -143,6 +210,10 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Contains("1,Single,50", result);
     }
 
+    /// <summary>
+    /// Creates a concise representation containing the fixture's identifier, name, and numeric value.
+    /// </summary>
+    /// <returns>A string containing the type name and current public data property values.</returns>
     public override string ToString()
     {
         return $"CsvResponseFormatterTests {{ Id = {Id}, Name = {Name}, Value = {Value} }}";
@@ -150,8 +221,17 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
 
     private class TestDto
     {
+        /// <summary>
+        /// Gets or sets the identifier written to the first CSV column.
+        /// </summary>
         public int Id { get; set; }
+        /// <summary>
+        /// Gets or sets the optional name written to the second CSV column.
+        /// </summary>
         public string? Name { get; set; }
+        /// <summary>
+        /// Gets or sets the numeric value written to the third CSV column.
+        /// </summary>
         public double Value { get; set; }
     }
 }
