@@ -111,6 +111,8 @@ public class ServiceEvent : IEquatable<ServiceEvent>
         return HashCode.Combine(Id, ServiceId, Service, EventType, Message, CreatedAt, Severity, SourceHost);
     }
 
+    public override string ToString() => $"ServiceEvent {{ Id = {Id}, ServiceId = {ServiceId}, Service = {Service}, EventType = {EventType}, Message = {Message}, CreatedAt = {CreatedAt} }}";
+
     public static bool operator ==(ServiceEvent? left, ServiceEvent? right)
     {
         if (left is null) return right is null;
