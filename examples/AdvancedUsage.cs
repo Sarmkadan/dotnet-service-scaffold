@@ -94,6 +94,8 @@ public class AdvancedUsage : IAdvancedUsage, IEquatable<AdvancedUsage>
     /// <returns>A hash code for the current object.</returns>
     public override int GetHashCode() => HashCode.Combine(Data, CpuUsage, ErrorRate);
 
+    public override string ToString() => $"AdvancedUsage {{ Data = {Data}, CpuUsage = {CpuUsage}, ErrorRate = {ErrorRate} }}";
+
     /// <summary>
     /// Equality operator.
     /// </summary>
