@@ -32,13 +32,15 @@ public class MetricsService : IMetricsService
         }.ToFrozenDictionary();
 
     /// <summary>
-/// Initializes a new instance of the <see cref="MetricsService"/> class.
-/// </summary>
-public MetricsService(ILogger<MetricsService> logger)
+    /// Initializes a new instance of the <see cref="MetricsService"/> class.
+    /// </summary>
+    public MetricsService(ILogger<MetricsService> logger)
     {
         _metrics = new ConcurrentDictionary<string, MetricValue>();
         _logger = logger;
     }
+
+    public override string ToString() => $"MetricsService {{ MetricCount = {_metrics.Count} }}";
 
     /// <summary>
     /// Increments a counter metric.
