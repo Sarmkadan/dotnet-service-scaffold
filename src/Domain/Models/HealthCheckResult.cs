@@ -164,4 +164,13 @@ public sealed class HealthCheckResult : IHealthCheckResult, IEquatable<HealthChe
     {
         return !(left == right);
     }
+
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString()
+    {
+        return $"HealthCheckResult {{ Id = {Id}, ServiceId = {ServiceId}, Service = {Service}, Status = {Status}, HttpStatusCode = {HttpStatusCode}, ResponseTimeMs = {ResponseTimeMs} }}";
+    }
 }
