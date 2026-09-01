@@ -24,12 +24,14 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
     {
         ArgumentException.ThrowIfNullOrEmpty(serviceName);
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetByNameAsync called with {ServiceName}", serviceName);
         return await _dbSet.FirstOrDefaultAsync(s => s.ServiceName == serviceName, cancellationToken);
     }
 
     public async Task<IEnumerable<ServiceRegistration>> GetByStatusAsync(ServiceStatus status, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetByStatusAsync called with {Status}", status);
         return await _dbSet
             .Where(s => s.Status == status)
             .OrderBy(s => s.ServiceName)
@@ -39,6 +41,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
     public async Task<IEnumerable<ServiceRegistration>> GetEnabledServicesAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetEnabledServicesAsync called");
         return await _dbSet
             .Where(s => s.IsEnabled)
             .OrderBy(s => s.ServiceName)
@@ -48,6 +51,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
     public async Task<IEnumerable<ServiceRegistration>> GetByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetByOwnerAsync called with {OwnerId}", ownerId);
         return await _dbSet
             .Where(s => s.OwnerId == ownerId)
             .OrderBy(s => s.ServiceName)
@@ -57,6 +61,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
     public async Task<ServiceRegistration?> GetWithMetricsAsync(Guid serviceId, int metricsCount = 10, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetWithMetricsAsync called with {ServiceId} and {MetricsCount}", serviceId, metricsCount);
         return await _dbSet
             .Include(s => s.Metrics.OrderByDescending(m => m.RecordedAt).Take(metricsCount))
             .FirstOrDefaultAsync(s => s.Id == serviceId, cancellationToken);
@@ -64,6 +69,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
 
     public async Task<IEnumerable<ServiceRegistration>> GetUnhealthyServicesAsync()
     {
+        _logger.LogInformation("GetUnhealthyServicesAsync called");
         return await _dbSet
             .Where(s => s.IsEnabled &&
                         (s.Status == ServiceStatus.Unhealthy ||
@@ -74,6 +80,7 @@ public class ServiceRepository : Repository<ServiceRegistration>, IServiceReposi
 
     public async Task<IEnumerable<ServiceRegistration>> GetServicesWithoutRecentHealthCheckAsync(int minutesThreshold = 5)
     {
+        _logger.LogInformation("GetServicesWithoutRecentHealthCheckAsync called with {MinutesThreshold}", minutesThreshold);
         var threshold = DateTime.UtcNow.AddMinutes(-minutesThreshold);
 
         return await _dbSet
