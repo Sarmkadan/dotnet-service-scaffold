@@ -273,6 +273,9 @@ public class MetricValue
     public double[]? Buckets { get; set; }
     public long[]? BucketCounts { get; set; }
     public long? BucketSum { get; set; }
+
+    public override string ToString() =>
+        $"{nameof(MetricValue)} {{ Type = {Type}, Value = {Value}, Count = {Count}, Min = {Min}, Max = {Max}, Buckets = {Buckets} }}";
 }
 
 /// <summary>
