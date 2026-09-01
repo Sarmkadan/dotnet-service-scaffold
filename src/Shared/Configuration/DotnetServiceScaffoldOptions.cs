@@ -286,4 +286,9 @@ public sealed class DotnetServiceScaffoldOptions : IDotnetServiceScaffoldOptions
     {
         return !Equals(left, right);
     }
+
+    public override string ToString()
+    {
+        return $"DotnetServiceScaffoldOptions {{ HealthCheckInterval = {HealthCheckInterval}, HealthCheckTimeout = {HealthCheckTimeout}, MaxConcurrentHealthChecks = {MaxConcurrentHealthChecks}, MaintenanceMode = {MaintenanceMode}, AuditLogRetentionDays = {AuditLogRetentionDays}, HealthCheckResultRetentionDays = {HealthCheckResultRetentionDays} }}";
+    }
 }
