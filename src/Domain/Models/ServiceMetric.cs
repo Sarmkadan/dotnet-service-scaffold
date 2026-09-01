@@ -125,4 +125,5 @@ public class ServiceMetric : IServiceMetric, IEquatable<ServiceMetric>
     public override int GetHashCode() => HashCode.Combine(Id, ServiceId, Service, CpuUsagePercent, MemoryUsagePercent, MemoryUsageBytes, DiskUsagePercent, DiskUsageBytes);
     public static bool operator ==(ServiceMetric? left, ServiceMetric? right) => EqualityComparer<ServiceMetric>.Default.Equals(left, right);
     public static bool operator !=(ServiceMetric? left, ServiceMetric? right) => !(left == right);
+    public override string ToString() => $"ServiceMetric {{ Id = {Id}, ServiceId = {ServiceId}, Service = {Service}, CpuUsagePercent = {CpuUsagePercent}, MemoryUsagePercent = {MemoryUsagePercent}, MemoryUsageBytes = {MemoryUsageBytes} }}";
 }
