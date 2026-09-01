@@ -131,4 +131,9 @@ public class ServiceConfiguration : IServiceConfiguration
         UpdatedAt = DateTime.UtcNow;
         UpdatedByUserId = userId;
     }
+
+    public override string ToString()
+    {
+        return $"ServiceConfiguration {{ Id = {Id}, Key = {Key}, Value = {Value}, ConfigType = {ConfigType}, ServiceId = {ServiceId}, Service = {Service} }}";
+    }
 }
