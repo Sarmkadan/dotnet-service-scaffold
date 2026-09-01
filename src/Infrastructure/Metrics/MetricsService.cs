@@ -43,6 +43,7 @@ public class MetricsService : IMetricsService
     public void IncrementCounter(string metricName, long value = 1, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
+        _logger.LogInformation("Starting IncrementCounter for metric {MetricName} with value {Value}", metricName, value);
 
         var key = BuildMetricKey(metricName, tags);
 
@@ -55,6 +56,7 @@ public class MetricsService : IMetricsService
             });
 
         _logger.LogDebug("Counter metric {MetricName} incremented by {Value}", metricName, value);
+        _logger.LogInformation("Finished IncrementCounter for metric {MetricName}", metricName);
     }
 
     /// <summary>
@@ -63,6 +65,7 @@ public class MetricsService : IMetricsService
     public void RecordGauge(string metricName, double value, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
+        _logger.LogInformation("Starting RecordGauge for metric {MetricName} with value {Value}", metricName, value);
 
         var key = BuildMetricKey(metricName, tags);
 
@@ -71,6 +74,7 @@ public class MetricsService : IMetricsService
             (_, _) => new MetricValue { Type = MetricType.Gauge, Value = value });
 
         _logger.LogDebug("Gauge metric {MetricName} set to {Value}", metricName, value);
+        _logger.LogInformation("Finished RecordGauge for metric {MetricName}", metricName);
     }
 
     /// <summary>
@@ -79,6 +83,7 @@ public class MetricsService : IMetricsService
     public void RecordTiming(string metricName, long elapsedMs, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
+        _logger.LogInformation("Starting RecordTiming for metric {MetricName} with elapsed {ElapsedMs}ms", metricName, elapsedMs);
 
         var key = BuildMetricKey(metricName, tags);
 
@@ -94,6 +99,7 @@ public class MetricsService : IMetricsService
             });
 
         _logger.LogDebug("Timer metric {MetricName} recorded {ElapsedMs}ms", metricName, elapsedMs);
+        _logger.LogInformation("Finished RecordTiming for metric {MetricName}", metricName);
     }
 
     /// <summary>
@@ -103,6 +109,7 @@ public class MetricsService : IMetricsService
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
         ArgumentNullException.ThrowIfNull(operation);
+        _logger.LogInformation("Starting MeasureAsync for metric {MetricName}", metricName);
 
         var sw = Stopwatch.StartNew();
 
@@ -110,10 +117,16 @@ public class MetricsService : IMetricsService
         {
             return await operation();
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred during MeasureAsync for metric {MetricName}", metricName);
+            throw;
+        }
         finally
         {
             sw.Stop();
             RecordTiming(metricName, sw.ElapsedMilliseconds, tags);
+            _logger.LogInformation("Finished MeasureAsync for metric {MetricName}", metricName);
         }
     }
 
@@ -124,6 +137,7 @@ public class MetricsService : IMetricsService
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
         ArgumentNullException.ThrowIfNull(buckets);
+        _logger.LogInformation("Starting RecordHistogram for metric {MetricName} with value {Value} and {BucketCount} buckets", metricName, value, buckets.Length);
 
         var key = BuildMetricKey(metricName, tags);
 
@@ -137,6 +151,7 @@ public class MetricsService : IMetricsService
             });
 
         _logger.LogDebug("Histogram metric {MetricName} recorded value {Value} with {BucketCount} buckets", metricName, value, buckets.Length);
+        _logger.LogInformation("Finished RecordHistogram for metric {MetricName}", metricName);
     }
 
     /// <summary>
