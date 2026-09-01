@@ -33,6 +33,11 @@ public class ServiceScaffoldException : Exception, IServiceScaffoldException
     {
         ErrorCode = errorCode;
     }
+
+    public override string ToString()
+    {
+        return $"ServiceScaffoldException {{ ErrorCode = {ErrorCode} }}";
+    }
 }
 
 /// <summary>
