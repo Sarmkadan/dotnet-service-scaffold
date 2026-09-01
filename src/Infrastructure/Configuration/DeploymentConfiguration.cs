@@ -96,6 +96,12 @@ public class DeploymentConfiguration : IDeploymentConfiguration, IEquatable<Depl
         HashCode.Combine(ServiceName, ServiceDescription, ServiceUser, ApplicationPath, DataPath, LogPath, ServerDomain, ApplicationPort);
 
     /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"DeploymentConfiguration {{ ServiceName = {ServiceName}, ServiceDescription = {ServiceDescription}, ServiceUser = {ServiceUser}, ApplicationPath = {ApplicationPath}, DataPath = {DataPath}, LogPath = {LogPath} }}";
+
+    /// <summary>
     /// Equality operator.
     /// </summary>
     /// <param name="left">The first object to compare.</param>
