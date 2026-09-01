@@ -185,6 +185,11 @@ public class ServiceRegistration : IServiceRegistration, IEquatable<ServiceRegis
         return HashCode.Combine(Id, ServiceName, Description, HealthCheckUrl, Version, Endpoint, Status, CreatedAt);
     }
 
+    public override string ToString()
+    {
+        return $"ServiceRegistration {{ Id = {Id}, ServiceName = {ServiceName}, Description = {Description}, HealthCheckUrl = {HealthCheckUrl}, Version = {Version}, Endpoint = {Endpoint} }}";
+    }
+
     public static bool operator ==(ServiceRegistration? left, ServiceRegistration? right)
     {
         if (left is null)
