@@ -63,6 +63,12 @@ public class CacheBenchmarks : ICacheBenchmarks, IEquatable<CacheBenchmarks>
 
     public override int GetHashCode() => _cachedHashCode;
 
+    public override string ToString()
+    {
+        var firstService = _serviceList.Services[0];
+        return $"CacheBenchmarks {{ Services = {_serviceList.Services.Count}, Id = {firstService.Id}, Name = {firstService.Name}, IsHealthy = {firstService.IsHealthy} }}";
+    }
+
     public static bool operator ==(CacheBenchmarks? left, CacheBenchmarks? right) => Equals(left, right);
 
     public static bool operator !=(CacheBenchmarks? left, CacheBenchmarks? right) => !(left == right);
