@@ -108,6 +108,11 @@ public sealed class ServiceDiscoveryOptions : IServiceDiscoveryOptions, IEquatab
     {
         return !(left == right);
     }
+
+    public override string ToString()
+    {
+        return $"ServiceDiscoveryOptions {{ Enabled = {Enabled}, Mode = {Mode}, LoadBalancing = {LoadBalancing}, CacheTtl = {CacheTtl}, RefreshInterval = {RefreshInterval}, ResolutionTimeout = {ResolutionTimeout} }}";
+    }
 }
 
 /// <summary>DNS-specific settings for service-instance resolution.</summary>
