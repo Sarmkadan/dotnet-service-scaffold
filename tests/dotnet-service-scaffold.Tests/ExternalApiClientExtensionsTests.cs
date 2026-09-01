@@ -69,6 +69,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var expectedResponse = new { Id = 1, Name = "Test" };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
+        _loggerMock.Object.LogInformation("Starting GET request test for {Url}", url);
+        _loggerMock.Object.LogWarning("Simulating transient GET failure for {Url} before retry", url);
 
         _httpMessageHandlerMock.Protected()
             .SetupSequence<Task<HttpResponseMessage>>(
@@ -99,6 +101,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             Times.Exactly(2),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
+        _loggerMock.Object.LogInformation("Completed GET request test for {Url} with {RequestCount} requests", url, 2);
     }
 
     [Fact]
@@ -106,6 +109,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
+        _loggerMock.Object.LogInformation("Starting failed GET retry test for {Url} with {MaxRetries} retries", url, ExternalApiClientExtensionsTestsConstants.DefaultRetryCount);
+        _loggerMock.Object.LogWarning("Simulating persistent GET failures for {Url}", url);
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -125,6 +130,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
             .WithMessage(ExternalApiClientExtensionsTestsConstants.FailedAfterRetriesMessage);
+        _loggerMock.Object.LogInformation("Completed failed GET retry test for {Url}", url);
     }
 
     [Fact]
@@ -188,6 +194,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         var payload = new { Id = 1, Name = "Test" };
         var expectedResponse = new { Status = "Created" };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
+        _loggerMock.Object.LogInformation("Starting POST request test for {Url} with payload ID {PayloadId}", url, payload.Id);
+        _loggerMock.Object.LogWarning("Simulating transient POST failure for {Url} before retry", url);
 
         _httpMessageHandlerMock.Protected()
             .SetupSequence<Task<HttpResponseMessage>>(
@@ -217,6 +225,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             Times.Exactly(2),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
+        _loggerMock.Object.LogInformation("Completed POST request test for {Url} with status {Status}", url, result.Status);
     }
 
     [Fact]
@@ -225,6 +234,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         // Arrange
         var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpoint;
         var payload = new { Id = 1 };
+        _loggerMock.Object.LogInformation("Starting failed POST retry test for {Url} with {MaxRetries} retries", url, ExternalApiClientExtensionsTestsConstants.SingleRetryCount);
+        _loggerMock.Object.LogWarning("Simulating persistent POST failures for {Url}", url);
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -244,6 +255,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
             .WithMessage("*failed after 1 retries*");
+        _loggerMock.Object.LogInformation("Completed failed POST retry test for {Url}", url);
     }
 
     [Fact]
@@ -310,6 +322,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         var payload = new { Id = 1, Name = "Updated" };
         var expectedResponse = new { Status = "Updated" };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
+        _loggerMock.Object.LogInformation("Starting PUT request test for {Url} with payload ID {PayloadId}", url, payload.Id);
+        _loggerMock.Object.LogWarning("Simulating transient PUT failure for {Url} before retry", url);
 
         _httpMessageHandlerMock.Protected()
             .SetupSequence<Task<HttpResponseMessage>>(
@@ -339,6 +353,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
             Times.Exactly(2),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
+        _loggerMock.Object.LogInformation("Completed PUT request test for {Url} with status {Status}", url, result.Status);
     }
 
     [Fact]
@@ -347,6 +362,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         // Arrange
         var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
         var payload = new { Id = 1 };
+        _loggerMock.Object.LogInformation("Starting failed PUT retry test for {Url} with {MaxRetries} retries", url, ExternalApiClientExtensionsTestsConstants.SingleRetryCount);
+        _loggerMock.Object.LogWarning("Simulating persistent PUT failures for {Url}", url);
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -366,6 +383,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
             .WithMessage("*failed after 1 retries*");
+        _loggerMock.Object.LogInformation("Completed failed PUT retry test for {Url}", url);
     }
 
     [Fact]
@@ -429,6 +447,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
+        _loggerMock.Object.LogInformation("Starting DELETE request test for {Url}", url);
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -446,6 +465,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
 
         // Assert
         result.Should().BeTrue();
+        _loggerMock.Object.LogInformation("Completed DELETE request test for {Url} with result {Result}", url, result);
     }
 
     [Fact]
@@ -453,6 +473,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     {
         // Arrange
         var url = ExternalApiClientExtensionsTestsConstants.TestApiEndpointWithId;
+        _loggerMock.Object.LogInformation("Starting degraded DELETE retry test for {Url} with {MaxRetries} retries", url, ExternalApiClientExtensionsTestsConstants.TripleRetryCount);
+        _loggerMock.Object.LogWarning("Simulating persistent DELETE failures for {Url}", url);
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -471,6 +493,8 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
 
         // Assert - DeleteWithRetryAsync returns false when base DeleteAsync returns false after all retries
         result.Should().BeFalse();
+        _loggerMock.Object.LogWarning("DELETE request test for {Url} completed with degraded result {Result}", url, result);
+        _loggerMock.Object.LogInformation("Completed degraded DELETE retry test for {Url}", url);
     }
 
     [Fact]
@@ -534,6 +558,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         var headers = new Dictionary<string, string> { { ExternalApiClientExtensionsTestsConstants.AuthorizationHeader, ExternalApiClientExtensionsTestsConstants.BearerTokenValue }, { ExternalApiClientExtensionsTestsConstants.CustomHeader, ExternalApiClientExtensionsTestsConstants.CustomHeaderValue } };
         var expectedResponse = new { Id = 1 };
         var jsonResponse = JsonSerializer.Serialize(expectedResponse);
+        _loggerMock.Object.LogInformation("Starting GET request header test for {Url} with {HeaderCount} headers", url, headers.Count);
 
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -557,6 +582,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(1);
+        _loggerMock.Object.LogInformation("Completed GET request header test for {Url} with response ID {ResponseId}", url, result.Id);
     }
 
     private class TestObject
