@@ -159,6 +159,7 @@ public class MetricsService : IMetricsService
     /// </summary>
     public Task<Dictionary<string, object>> GetMetricsAsync(CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Starting GetMetricsAsync with {MetricCount} recorded metrics", _metrics.Count);
         cancellationToken.ThrowIfCancellationRequested();
         var result = new Dictionary<string, object>(_metrics.Count);
 
@@ -166,6 +167,12 @@ public class MetricsService : IMetricsService
         {
             var metric = kvp.Value;
             var typeName = _typeNames.GetValueOrDefault(metric.Type, "unknown");
+
+            if (typeName == "unknown")
+                _logger.LogWarning("Using fallback type name for metric {MetricKey} with type {MetricType}", kvp.Key, metric.Type);
+
+            if (metric.Type == MetricType.Histogram && (metric.Buckets == null || metric.BucketCounts == null))
+                _logger.LogWarning("Using degraded serialization for histogram metric {MetricKey} because bucket data is incomplete", kvp.Key);
 
         object metricData = metric.Type switch
         {
@@ -192,6 +199,7 @@ public class MetricsService : IMetricsService
             result[kvp.Key] = metricData;
         }
 
+        _logger.LogInformation("Finished GetMetricsAsync with {MetricCount} metrics", result.Count);
         return Task.FromResult(result);
     }
 
@@ -200,9 +208,11 @@ public class MetricsService : IMetricsService
     /// </summary>
     public Task ResetAsync(CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Starting ResetAsync with {MetricCount} recorded metrics", _metrics.Count);
         cancellationToken.ThrowIfCancellationRequested();
         _metrics.Clear();
         _logger.LogInformation("All metrics reset");
+        _logger.LogInformation("Finished ResetAsync with {MetricCount} recorded metrics", _metrics.Count);
         return Task.CompletedTask;
     }
 
