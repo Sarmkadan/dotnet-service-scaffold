@@ -284,7 +284,7 @@ public class AuditLogDto
 
     public override string ToString()
     {
-        return $"AuditLogController {{ Id = {Id}, UserId = {UserId}, ActionName = {ActionName}, EntityType = {EntityType}, Description = {Description}, CreatedAt = {CreatedAt} }}";
+        return $"AuditLogDto {{ Id = {Id}, UserId = {UserId}, ActionName = {ActionName}, EntityType = {EntityType}, Description = {Description}, CreatedAt = {CreatedAt} }}";
     }
 }
 
