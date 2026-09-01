@@ -52,6 +52,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(serviceName);
+        _logger.LogInformation("Resolving service {ServiceName}", serviceName);
         try
         {
             var dns = _options.Dns;
@@ -86,6 +87,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
                 // Fallback: plain A-record lookup for <service>.<searchdomain>
                 var aFqdn = $"{serviceName.ToLowerInvariant()}.{dns.SearchDomain}";
                 _logger.LogDebug("SRV lookup returned no results; falling back to A record for {Fqdn}", aFqdn);
+                _logger.LogWarning("SRV lookup returned no results; falling back to A record for {Fqdn}", aFqdn);
 
                 var addresses = await System.Net.Dns.GetHostAddressesAsync(aFqdn, cancellationToken);
                 foreach (var addr in addresses.Where(a => a.AddressFamily == AddressFamily.InterNetwork))
@@ -95,6 +97,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
             }
 
             _logger.LogDebug("DNS resolved {Count} instance(s) for {ServiceName}", records.Count, serviceName);
+            _logger.LogInformation("Resolved {Count} instance(s) for {ServiceName}", records.Count, serviceName);
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Success(records);
         }
         catch (SocketException ex) when (ex.SocketErrorCode == SocketError.HostNotFound)
@@ -105,6 +108,7 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         catch (Exception ex)
         {
             _logger.LogWarning(ex, DnsServiceDiscoveryProviderConstants.DnsResolutionFailed, serviceName);
+            _logger.LogError(ex, "DNS resolution failed for {ServiceName}", serviceName);
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Failure(ex);
         }
     }
