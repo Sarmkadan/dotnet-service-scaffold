@@ -238,4 +238,9 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
             throw;
         }
     }
+
+    public override string ToString()
+    {
+        return $"ServiceScaffoldDbContext {{ Users = {Users}, ServiceRegistrations = {ServiceRegistrations}, HealthCheckResults = {HealthCheckResults}, ServiceMetrics = {ServiceMetrics}, ServiceEvents = {ServiceEvents}, ApiKeys = {ApiKeys} }}";
+    }
 }
