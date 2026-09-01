@@ -27,6 +27,9 @@ public sealed class DockerComposeGenerator : IDockerComposeGenerator
     {
         ArgumentNullException.ThrowIfNull(options);
 
+        _logger.LogInformation("Generating Docker Compose for service {ServiceName} (IncludeCaddy={IncludeCaddy}, IncludeRedis={IncludeRedis}, IncludePrometheus={IncludePrometheus})",
+            options.ServiceName, options.IncludeCaddy, options.IncludeRedis, options.IncludePrometheus);
+
         var sb = new StringBuilder();
 
         AppendHeader(sb);
@@ -57,6 +60,9 @@ public sealed class DockerComposeGenerator : IDockerComposeGenerator
             CountServices(options),
             options.ServiceName);
 
+        _logger.LogInformation("Finished generating Docker Compose for service {ServiceName} with {ServiceCount} service(s)",
+            options.ServiceName, CountServices(options));
+
         return result;
     }
 
@@ -66,9 +72,18 @@ public sealed class DockerComposeGenerator : IDockerComposeGenerator
         string outputPath,
         CancellationToken cancellationToken = default)
     {
-        var content = Generate(options);
-        await File.WriteAllTextAsync(outputPath, content, Encoding.UTF8, cancellationToken);
-        _logger.LogInformation("Docker Compose file written to {OutputPath}", outputPath);
+        _logger.LogInformation("Writing Docker Compose file to {OutputPath} for service {ServiceName}", outputPath, options.ServiceName);
+        try
+        {
+            var content = Generate(options);
+            await File.WriteAllTextAsync(outputPath, content, Encoding.UTF8, cancellationToken);
+            _logger.LogInformation("Docker Compose file written to {OutputPath}", outputPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to write Docker Compose file to {OutputPath}", outputPath);
+            throw;
+        }
     }
 
     private static void AppendHeader(StringBuilder sb)
