@@ -25,6 +25,7 @@ public class UserRepository : Repository<User>, IUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrEmpty(email);
+        _logger.LogInformation("GetByEmailAsync called with {Email}", email);
         _logger.LogDebug("Querying user by email: {Email}", email);
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
@@ -32,6 +33,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<IEnumerable<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetActiveUsersAsync called");
         _logger.LogDebug("Querying active users");
         return await _dbSet
             .Where(u => u.IsActive && !u.IsLocked)
@@ -42,6 +44,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<IEnumerable<User>> GetLockedUsersAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetLockedUsersAsync called");
         _logger.LogDebug("Querying locked users");
         return await _dbSet
             .Where(u => u.IsLocked && u.LockedUntil > DateTime.UtcNow)
@@ -53,6 +56,7 @@ public class UserRepository : Repository<User>, IUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrEmpty(email);
+        _logger.LogInformation("EmailExistsAsync called with {Email}", email);
         _logger.LogDebug("Checking if email exists: {Email}", email);
         return await _dbSet.AnyAsync(u => u.Email == email, cancellationToken);
     }
@@ -60,6 +64,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<User?> GetWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogInformation("GetWithApiKeysAsync called with {UserId}", userId);
         _logger.LogDebug("Querying user with API keys: {UserId}", userId);
         return await _dbSet
             .Include(u => u.ApiKeys)
@@ -71,10 +76,12 @@ public class UserRepository : Repository<User>, IUserRepository
         ArgumentException.ThrowIfNullOrEmpty(query);
         if (string.IsNullOrWhiteSpace(query))
         {
+            _logger.LogWarning("SearchUsersAsync called with empty query, returning empty result");
             _logger.LogDebug("Search query is empty, returning empty result");
             return Enumerable.Empty<User>();
         }
 
+        _logger.LogInformation("SearchUsersAsync called with {Query}, page: {Page}, pageSize: {PageSize}", query, page, pageSize);
         _logger.LogDebug("Searching users with query: {Query}, page: {Page}, pageSize: {PageSize}", query, page, pageSize);
 
         var normalizedQuery = query.Trim().ToLowerInvariant();
