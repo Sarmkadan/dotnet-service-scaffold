@@ -78,6 +78,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldCatchGenericExceptionAndReturn500()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldCatchGenericExceptionAndReturn500));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new Exception("Test exception"));
         var context = CreateHttpContext();
@@ -90,6 +92,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.ContentType.Should().StartWith("application/json");
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.GenericErrorMessage);
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldCatchGenericExceptionAndReturn500), context.Response.StatusCode);
     }
 
     /// <summary>
@@ -98,6 +102,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldCatchServiceScaffoldExceptionAndReturn400()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldCatchServiceScaffoldExceptionAndReturn400));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new ServiceScaffoldException("Bad request error"));
         var context = CreateHttpContext(true); // Development environment to see full message
@@ -109,6 +115,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.BadRequestMessage);
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldCatchServiceScaffoldExceptionAndReturn400), context.Response.StatusCode);
     }
 
     /// <summary>
@@ -117,6 +125,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldCatchArgumentNullExceptionAndReturn400()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldCatchArgumentNullExceptionAndReturn400));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new ArgumentNullException("param", "Argument null error"));
         var context = CreateHttpContext(true);
@@ -128,6 +138,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.ArgumentNullMessage);
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldCatchArgumentNullExceptionAndReturn400), context.Response.StatusCode);
     }
 
     /// <summary>
@@ -136,6 +148,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldCatchArgumentExceptionAndReturn400()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldCatchArgumentExceptionAndReturn400));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new ArgumentException(ErrorHandlingMiddlewareTestsConstants.ArgumentMessage));
         var context = CreateHttpContext(true);
@@ -147,6 +161,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.ArgumentMessage);
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldCatchArgumentExceptionAndReturn400), context.Response.StatusCode);
     }
 
     /// <summary>
@@ -155,6 +171,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldCatchInvalidOperationExceptionAndReturn409()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldCatchInvalidOperationExceptionAndReturn409));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new InvalidOperationException(ErrorHandlingMiddlewareTestsConstants.InvalidOperationMessage));
         var context = CreateHttpContext(true);
@@ -166,6 +184,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.InvalidOperationMessage);
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldCatchInvalidOperationExceptionAndReturn409), context.Response.StatusCode);
     }
 
     /// <summary>
@@ -174,6 +194,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldCatchKeyNotFoundExceptionAndReturn404()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldCatchKeyNotFoundExceptionAndReturn404));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new KeyNotFoundException(ErrorHandlingMiddlewareTestsConstants.KeyNotFoundMessage));
         var context = CreateHttpContext(true);
@@ -185,6 +207,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain("Resource not found");
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldCatchKeyNotFoundExceptionAndReturn404), context.Response.StatusCode);
     }
 
     /// <summary>
@@ -193,6 +217,8 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ShouldReturnGenericMessageInProduction()
     {
+        _logger.LogInformation("Starting test {TestName}", nameof(InvokeAsync_ShouldReturnGenericMessageInProduction));
+
         // Arrange
         _next.When(x => x(Arg.Any<HttpContext>())).Throw(new Exception(ErrorHandlingMiddlewareTestsConstants.SensitiveErrorDetails));
         var context = CreateHttpContext(false); // Production environment
@@ -205,5 +231,7 @@ public class ErrorHandlingMiddlewareTests : IErrorHandlingMiddlewareTests
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain(ErrorHandlingMiddlewareTestsConstants.ProductionErrorMessage);
         responseBody.Should().NotContain(ErrorHandlingMiddlewareTestsConstants.SensitiveErrorDetails);
+
+        _logger.LogInformation("Completed test {TestName} with status code {StatusCode}", nameof(InvokeAsync_ShouldReturnGenericMessageInProduction), context.Response.StatusCode);
     }
 }
