@@ -168,4 +168,9 @@ public sealed class ApiKey : IApiKey, IEquatable<ApiKey>
     {
         return !(left == right);
     }
+
+    public override string ToString()
+    {
+        return $"ApiKey {{ Id = {Id}, UserId = {UserId}, User = {User}, Name = {Name}, KeyHash = {KeyHash}, KeyPrefix = {KeyPrefix} }}";
+    }
 }
