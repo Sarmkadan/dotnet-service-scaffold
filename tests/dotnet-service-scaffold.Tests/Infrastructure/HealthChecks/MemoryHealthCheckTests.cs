@@ -7,8 +7,14 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests.Infrastructure.HealthChecks;
 
+/// <summary>
+/// Test class for <see cref="MemoryHealthCheck"/>.
+/// </summary>
 public class MemoryHealthCheckTests
 {
+    /// <summary>
+    /// Verifies that the health check returns a healthy status when using default thresholds.
+    /// </summary>
     [Fact]
     public async Task CheckHealthAsync_WithDefaultThresholds_ReturnsHealthyStatus()
     {
@@ -30,6 +36,9 @@ public class MemoryHealthCheckTests
         result.Data.Should().ContainKey("unhealthyThresholdPercent");
     }
 
+    /// <summary>
+    /// Verifies that the health check result contains expected memory metrics.
+    /// </summary>
     [Fact]
     public async Task CheckHealthAsync_ReturnsDataWithMemoryMetrics()
     {
@@ -49,6 +58,9 @@ public class MemoryHealthCheckTests
         result.Data.Should().ContainKey("memoryUsagePercent").WhoseValue.Should().BeOfType<double>();
     }
 
+    /// <summary>
+    /// Verifies that the constructor does not throw when provided with valid threshold values.
+    /// </summary>
     [Fact]
     public void Constructor_WithValidThresholds_DoesNotThrow()
     {
@@ -58,6 +70,9 @@ public class MemoryHealthCheckTests
         var check3 = new MemoryHealthCheck(healthyThresholdPercent: 1, degradedThresholdPercent: 2, unhealthyThresholdPercent: 3);
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws an <see cref="ArgumentOutOfRangeException"/> when provided with invalid threshold values.
+    /// </summary>
     [Fact]
     public void Constructor_WithInvalidThresholds_ThrowsArgumentOutOfRangeException()
     {
