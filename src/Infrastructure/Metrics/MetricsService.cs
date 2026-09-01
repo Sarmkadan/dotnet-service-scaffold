@@ -31,7 +31,10 @@ public class MetricsService : IMetricsService
             [MetricType.Timer]   = "timer"
         }.ToFrozenDictionary();
 
-    public MetricsService(ILogger<MetricsService> logger)
+    /// <summary>
+/// Initializes a new instance of the <see cref="MetricsService"/> class.
+/// </summary>
+public MetricsService(ILogger<MetricsService> logger)
     {
         _metrics = new ConcurrentDictionary<string, MetricValue>();
         _logger = logger;
