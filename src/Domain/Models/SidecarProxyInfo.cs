@@ -57,6 +57,9 @@ public class UpstreamCluster : IUpstreamCluster, IEquatable<UpstreamCluster>
     public decimal GetHealthPercent() =>
         TotalHosts == 0 ? 100m : (decimal)HealthyHosts / TotalHosts * 100;
 
+    public override string ToString() =>
+        $"UpstreamCluster {{ Name = {Name}, Endpoint = {Endpoint}, HealthyHosts = {HealthyHosts}, TotalHosts = {TotalHosts}, CircuitBreakerOpen = {CircuitBreakerOpen} }}";
+
     public bool Equals(UpstreamCluster? other)
     {
         if (other is null) return false;
