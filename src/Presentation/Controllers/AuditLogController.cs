@@ -36,6 +36,11 @@ public class AuditLogController : ControllerBase, IAuditLogController
         _logger = logger;
     }
 
+    public override string ToString()
+    {
+        return $"AuditLogController {{ _auditLogRepository = {_auditLogRepository}, _logger = {_logger} }}";
+    }
+
     /// <summary>
     /// Lists audit logs with optional filtering by date range, entity type, and user.
     /// </summary>
@@ -276,6 +281,11 @@ public class AuditLogDto
     public string? EntityType { get; set; }
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public override string ToString()
+    {
+        return $"AuditLogController {{ Id = {Id}, UserId = {UserId}, ActionName = {ActionName}, EntityType = {EntityType}, Description = {Description}, CreatedAt = {CreatedAt} }}";
+    }
 }
 
 /// <summary>
