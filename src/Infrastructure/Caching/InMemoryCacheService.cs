@@ -45,19 +45,23 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     public ValueTask<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
+        _logger.LogInformation("Getting cache entry for key {Key}", key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
             if (entry.IsExpired)
             {
                 _cache.TryRemove(key, out _);
+                _logger.LogInformation("Cache entry for key {Key} has expired", key);
                 return ValueTask.FromResult<T?>(null);
             }
 
+            _logger.LogInformation("Cache hit for key {Key}", key);
             _logger.LogDebug("Cache hit for key {Key}", key);
             return ValueTask.FromResult(entry.Value as T);
         }
 
+        _logger.LogInformation("Cache miss for key {Key}", key);
         _logger.LogDebug("Cache miss for key {Key}", key);
         return ValueTask.FromResult<T?>(null);
     }
@@ -69,6 +73,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNull(value);
+        _logger.LogInformation("Setting cache entry for key {Key}", key);
 
         var entry = new CacheEntry
         {
@@ -79,6 +84,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
 
         _cache.AddOrUpdate(key, entry, (_, _) => entry);
 
+        _logger.LogInformation("Cached value for key {Key} with expiration {ExpirationSeconds}s", key, expiration?.TotalSeconds ?? -1);
         _logger.LogDebug(
             "Cached value for key {Key} with expiration {ExpirationSeconds}s",
             key, expiration?.TotalSeconds ?? -1);
@@ -92,8 +98,10 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     public ValueTask RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
+        _logger.LogInformation("Removing cache entry for key {Key}", key);
 
         _cache.TryRemove(key, out _);
+        _logger.LogInformation("Removed cache entry for key {Key}", key);
         _logger.LogDebug("Removed cache entry for key {Key}", key);
 
         return ValueTask.CompletedTask;
@@ -105,17 +113,21 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     public ValueTask<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
+        _logger.LogInformation("Checking existence of cache entry for key {Key}", key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
             if (entry.IsExpired)
             {
                 _cache.TryRemove(key, out _);
+                _logger.LogInformation("Cache entry for key {Key} has expired", key);
                 return ValueTask.FromResult(false);
             }
+            _logger.LogInformation("Cache entry for key {Key} exists", key);
             return ValueTask.FromResult(true);
         }
 
+        _logger.LogInformation("Cache entry for key {Key} does not exist", key);
         return ValueTask.FromResult(false);
     }
 
@@ -127,14 +139,26 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNull(factory);
+        _logger.LogInformation("Getting or setting cache entry for key {Key}", key);
 
         var cached = await GetAsync<T>(key, cancellationToken);
         if (cached is not null)
+        {
+            _logger.LogInformation("Cache hit for key {Key} in GetOrSetAsync", key);
             return cached;
+        }
 
+        _logger.LogInformation("Cache miss for key {Key} in GetOrSetAsync, invoking factory", key);
         var value = await factory();
         if (value is not null)
+        {
             await SetAsync(key, value, expiration, cancellationToken);
+            _logger.LogInformation("Value set for key {Key} in GetOrSetAsync", key);
+        }
+        else
+        {
+            _logger.LogWarning("Factory returned null for key {Key} in GetOrSetAsync", key);
+        }
 
         return value;
     }
