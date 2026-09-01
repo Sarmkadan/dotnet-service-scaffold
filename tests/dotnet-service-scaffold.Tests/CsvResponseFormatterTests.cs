@@ -143,6 +143,11 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
         Assert.Contains("1,Single,50", result);
     }
 
+    public override string ToString()
+    {
+        return $"CsvResponseFormatterTests {{ Id = {Id}, Name = {Name}, Value = {Value} }}";
+    }
+
     private class TestDto
     {
         public int Id { get; set; }
