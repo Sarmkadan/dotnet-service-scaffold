@@ -218,6 +218,8 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     {
         _cleanupTimer?.Dispose();
     }
+
+    public override string ToString() => $"InMemoryCacheService {{ CacheCount = {_cache.Count} }}";
 }
 
 /// <summary>
@@ -230,4 +232,9 @@ internal class CacheEntry
     public DateTime? ExpiresAt { get; set; }
 
     public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+
+    public override string ToString()
+    {
+        return $"CacheEntry {{ Value = {Value}, CreatedAt = {CreatedAt}, ExpiresAt = {ExpiresAt} }}";
+    }
 }
