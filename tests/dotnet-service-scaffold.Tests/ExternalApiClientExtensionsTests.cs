@@ -39,6 +39,11 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         return HashCode.Combine(Id, Name, Status);
     }
 
+    public override string ToString()
+    {
+        return $"ExternalApiClientExtensionsTests {{ Id = {Id}, Name = {Name}, Status = {Status} }}";
+    }
+
     public static bool operator ==(ExternalApiClientExtensionsTests? left, ExternalApiClientExtensionsTests? right)
     {
         return Equals(left, right);
