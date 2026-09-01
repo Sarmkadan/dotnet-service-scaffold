@@ -22,53 +22,76 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
 
     public async Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId, int count = 50, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        _logger.LogInformation("Getting audit logs for user {UserId} with count {Count}", userId, count);
+        var result = await _dbSet
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
             .ToListAsync(cancellationToken);
+        _logger.LogInformation("Retrieved {Count} audit logs for user {UserId}", result.Count(), userId);
+        return result;
     }
 
     public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(entityType);
-        return await _dbSet
+        _logger.LogInformation("Getting audit logs for entity {EntityType} with id {EntityId}", entityType, entityId);
+        var result = await _dbSet
             .Where(a => a.EntityType == entityType && a.EntityId == entityId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
+        _logger.LogInformation("Retrieved {Count} audit logs for entity {EntityType} with id {EntityId}", result.Count(), entityType, entityId);
+        return result;
     }
 
     public async Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        _logger.LogInformation("Getting recent audit logs with count {Count}", count);
+        var result = await _dbSet
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
             .ToListAsync(cancellationToken);
+        _logger.LogInformation("Retrieved {Count} recent audit logs", result.Count());
+        return result;
     }
 
     public async Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        _logger.LogInformation("Getting failed audit logs with count {Count}", count);
+        var result = await _dbSet
             .Where(a => a.Status == "Failure")
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
             .ToListAsync(cancellationToken);
+        _logger.LogInformation("Retrieved {Count} failed audit logs", result.Count());
+        return result;
     }
 
     public async Task DeleteOldLogsAsync(int daysToKeep = 90, CancellationToken cancellationToken = default)
     {
-        var threshold = DateTime.UtcNow.AddDays(-daysToKeep);
-
-        var oldLogs = await _dbSet
-            .Where(a => a.CreatedAt < threshold)
-            .ToListAsync(cancellationToken);
-
-        foreach (var log in oldLogs)
+        _logger.LogInformation("Deleting old audit logs older than {DaysToKeep} days", daysToKeep);
+        try
         {
-            _dbSet.Remove(log);
-        }
+            var threshold = DateTime.UtcNow.AddDays(-daysToKeep);
 
-        await SaveChangesAsync();
+            var oldLogs = await _dbSet
+                .Where(a => a.CreatedAt < threshold)
+                .ToListAsync(cancellationToken);
+
+            foreach (var log in oldLogs)
+            {
+                _dbSet.Remove(log);
+            }
+
+            await SaveChangesAsync();
+
+            _logger.LogInformation("Deleted {Count} old audit logs", oldLogs.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete old audit logs older than {DaysToKeep} days", daysToKeep);
+            throw;
+        }
     }
 
     public async Task<PagedResult<AuditLog>> GetFilteredAsync(
@@ -77,6 +100,11 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation(
+            "Getting filtered audit logs for page {Page} with page size {PageSize}; predicate supplied: {HasPredicate}",
+            page,
+            pageSize,
+            predicate != null);
         var query = _dbSet.AsQueryable();
 
         if (predicate != null)
@@ -92,6 +120,12 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Retrieved {ItemCount} filtered audit logs for page {Page} with total count {TotalCount}",
+            items.Count,
+            page,
+            totalCount);
 
         return new PagedResult<AuditLog>
         {
@@ -110,6 +144,12 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation(
+            "Getting audit logs from {From} to {To} for page {Page} with page size {PageSize}",
+            from,
+            to,
+            page,
+            pageSize);
         var query = _dbSet
             .Where(a => a.CreatedAt >= from.UtcDateTime)
             .Where(a => a.CreatedAt <= to.UtcDateTime);
@@ -122,6 +162,14 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Retrieved {ItemCount} audit logs from {From} to {To} for page {Page} with total count {TotalCount}",
+            items.Count,
+            from,
+            to,
+            page,
+            totalCount);
 
         return new PagedResult<AuditLog>
         {
@@ -140,6 +188,11 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(entityType);
+        _logger.LogInformation(
+            "Getting audit logs for entity type {EntityType} for page {Page} with page size {PageSize}",
+            entityType,
+            page,
+            pageSize);
         var query = _dbSet
             .Where(a => a.EntityType == entityType)
             .OrderByDescending(a => a.CreatedAt);
@@ -150,6 +203,13 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Retrieved {ItemCount} audit logs for entity type {EntityType} for page {Page} with total count {TotalCount}",
+            items.Count,
+            entityType,
+            page,
+            totalCount);
 
         return new PagedResult<AuditLog>
         {
@@ -167,6 +227,11 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation(
+            "Getting audit logs for user {UserId} for page {Page} with page size {PageSize}",
+            userId,
+            page,
+            pageSize);
         var query = _dbSet
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.CreatedAt);
@@ -177,6 +242,13 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Retrieved {ItemCount} audit logs for user {UserId} for page {Page} with total count {TotalCount}",
+            items.Count,
+            userId,
+            page,
+            totalCount);
 
         return new PagedResult<AuditLog>
         {
