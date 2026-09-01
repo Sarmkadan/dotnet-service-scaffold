@@ -122,4 +122,9 @@ public sealed class DockerComposeOptions : IEquatable<DockerComposeOptions>
     {
         return !Equals(left, right);
     }
+
+    public override string ToString()
+    {
+        return $"DockerComposeOptions {{ ServiceName = {ServiceName}, ImageName = {ImageName}, HostPort = {HostPort}, ContainerPort = {ContainerPort}, Environment = {Environment}, ConnectionString = {ConnectionString} }}";
+    }
 }
