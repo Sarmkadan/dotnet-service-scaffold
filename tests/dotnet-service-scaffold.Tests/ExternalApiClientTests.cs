@@ -88,6 +88,9 @@ public class ExternalApiClientTests : IExternalApiClientTests, IEquatable<Extern
                 Content = new StringContent(jsonResponse)
             });
 
+        // Log start of test
+        _loggerMock.Object.LogInformation("Starting test {TestMethodName}", nameof(GetAsync_ValidRequest_ReturnsDeserializedObject));
+
         // Act
         var result = await _sut.GetAsync<TestObject>(url);
 
@@ -95,6 +98,9 @@ public class ExternalApiClientTests : IExternalApiClientTests, IEquatable<Extern
         result.Should().NotBeNull();
         result!.Id.Should().Be(ExternalApiClientTestsConstants.TestObjectId);
         result.Name.Should().Be(ExternalApiClientTestsConstants.TestObjectName);
+
+        // Log end of test
+        _loggerMock.Object.LogInformation("Finished test {TestMethodName}", nameof(GetAsync_ValidRequest_ReturnsDeserializedObject));
     }
 
     [Fact]
@@ -117,12 +123,18 @@ public class ExternalApiClientTests : IExternalApiClientTests, IEquatable<Extern
                 Content = new StringContent(jsonResponse)
             });
 
+        // Log start of test
+        _loggerMock.Object.LogInformation("Starting test {TestMethodName}", nameof(PostAsync_ValidRequest_ReturnsDeserializedObject));
+
         // Act
         var result = await _sut.PostAsync<ResponseObject>(url, payload);
 
         // Assert
         result.Should().NotBeNull();
         result!.Status.Should().Be(ExternalApiClientTestsConstants.ResponseStatusCreated);
+
+        // Log end of test
+        _loggerMock.Object.LogInformation("Finished test {TestMethodName}", nameof(PostAsync_ValidRequest_ReturnsDeserializedObject));
     }
 
     [Fact]
@@ -141,11 +153,17 @@ public class ExternalApiClientTests : IExternalApiClientTests, IEquatable<Extern
                 StatusCode = HttpStatusCode.NoContent
             });
 
+        // Log start of test
+        _loggerMock.Object.LogInformation("Starting test {TestMethodName}", nameof(DeleteAsync_ValidRequest_ReturnsTrue));
+
         // Act
         var result = await _sut.DeleteAsync(url);
 
         // Assert
         result.Should().BeTrue();
+
+        // Log end of test
+        _loggerMock.Object.LogInformation("Finished test {TestMethodName}", nameof(DeleteAsync_ValidRequest_ReturnsTrue));
     }
 
     [Fact]
@@ -165,11 +183,17 @@ public class ExternalApiClientTests : IExternalApiClientTests, IEquatable<Extern
                 Content = new StringContent(ExternalApiClientTestsConstants.ErrorContent)
             });
 
+        // Log start of test
+        _loggerMock.Object.LogInformation("Starting test {TestMethodName} with url {Url}", nameof(GetAsync_UnsuccessfulResponse_ThrowsHttpRequestException), url);
+
         // Act
         Func<Task> act = () => _sut.GetAsync<TestObject>(url);
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>();
+
+        // Log end of test
+        _loggerMock.Object.LogInformation("Finished test {TestMethodName}", nameof(GetAsync_UnsuccessfulResponse_ThrowsHttpRequestException));
     }
 
     private class TestObject
