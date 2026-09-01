@@ -82,4 +82,7 @@ public sealed class StructuredLoggingOptions : IStructuredLoggingOptions, IEquat
     {
         return !(left == right);
     }
+
+    public override string ToString() =>
+        $"{nameof(StructuredLoggingOptions)} {{ ApplicationName = {ApplicationName}, EnrichWithMachineName = {EnrichWithMachineName}, EnrichWithEnvironment = {EnrichWithEnvironment}, EnableCorrelationId = {EnableCorrelationId}, CorrelationIdHeader = {CorrelationIdHeader}, EnrichWithRequestContext = {EnrichWithRequestContext} }}";
 }
