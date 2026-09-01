@@ -50,6 +50,7 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 	[Fact]
 	public async Task RegisterServiceAsync_ShouldRegisterService_WhenInputsAreValid()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(RegisterServiceAsync_ShouldRegisterService_WhenInputsAreValid));
 		// Arrange
 		var serviceName = "NewService";
 		var endpoint = "http://newservice.com";
@@ -71,6 +72,7 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		result.OwnerId.Should().Be(ownerId);
 		await _serviceRepository.Received(1).AddAsync(Arg.Any<ServiceRegistration>());
 		await _auditService.Received(1).LogActionAsync(ownerId, "Create", "ServiceRegistration", result.Id, string.Format(ServiceManagementServiceTestsConstants.RegisteredServiceLogFormat, serviceName));
+		_logger.LogInformation("Finished {MethodName}", nameof(RegisterServiceAsync_ShouldRegisterService_WhenInputsAreValid));
 	}
 
 	[Theory]
@@ -82,6 +84,7 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 	public async Task RegisterServiceAsync_ShouldThrowValidationException_WhenInputsAreInvalid(
 		string serviceName, string endpoint, string healthCheckUrl, string expectedError)
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(RegisterServiceAsync_ShouldThrowValidationException_WhenInputsAreInvalid));
 		ArgumentException.ThrowIfNullOrEmpty(serviceName);
 		ArgumentException.ThrowIfNullOrEmpty(endpoint);
 		ArgumentException.ThrowIfNullOrEmpty(healthCheckUrl);
@@ -98,11 +101,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		// Assert
 		await act.Should().ThrowAsync<ServiceValidationException>()
 			.WithMessage(expectedError);
+		_logger.LogInformation("Finished {MethodName}", nameof(RegisterServiceAsync_ShouldThrowValidationException_WhenInputsAreInvalid));
 	}
 
 	[Fact]
 	public async Task RegisterServiceAsync_ShouldThrowException_WhenOwnerNotFound()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(RegisterServiceAsync_ShouldThrowException_WhenOwnerNotFound));
 		// Arrange
 		var serviceName = "NewService";
 		var endpoint = "http://newservice.com";
@@ -118,11 +123,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		await act.Should().ThrowAsync<ServiceScaffoldException>()
 			.WithMessage("Service owner not found")
 			.And.ErrorCode.Should().Be("OWNER_NOT_FOUND");
+		_logger.LogInformation("Finished {MethodName}", nameof(RegisterServiceAsync_ShouldThrowException_WhenOwnerNotFound));
 	}
 
 	[Fact]
 	public async Task RegisterServiceAsync_ShouldThrowValidationException_WhenServiceNameAlreadyExists()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(RegisterServiceAsync_ShouldThrowValidationException_WhenServiceNameAlreadyExists));
 		// Arrange
 		var serviceName = "ExistingService";
 		var endpoint = "http://existing.com";
@@ -140,11 +147,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		// Assert
 		await act.Should().ThrowAsync<ServiceValidationException>()
 			.WithMessage("Service name already registered");
+		_logger.LogInformation("Finished {MethodName}", nameof(RegisterServiceAsync_ShouldThrowValidationException_WhenServiceNameAlreadyExists));
 	}
 
 	[Fact]
 	public async Task GetServiceAsync_ShouldReturnService_WhenFound()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(GetServiceAsync_ShouldReturnService_WhenFound));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		var service = new ServiceRegistration { Id = serviceId, ServiceName = "TestService" };
@@ -155,11 +164,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 
 		// Assert
 		result.Should().Be(service);
+		_logger.LogInformation("Finished {MethodName}", nameof(GetServiceAsync_ShouldReturnService_WhenFound));
 	}
 
 	[Fact]
 	public async Task UnregisterServiceAsync_ShouldDeleteService()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(UnregisterServiceAsync_ShouldDeleteService));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceToDelete", OwnerId = Guid.NewGuid() };
@@ -172,11 +183,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		// Assert
 		await _serviceRepository.Received(1).DeleteAsync(serviceId);
 		await _auditService.Received(1).LogActionAsync(service.OwnerId, "Delete", "ServiceRegistration", serviceId, string.Format(ServiceManagementServiceTestsConstants.UnregisteredServiceLogFormat, service.ServiceName));
+		_logger.LogInformation("Finished {MethodName}", nameof(UnregisterServiceAsync_ShouldDeleteService));
 	}
 
 	[Fact]
 	public async Task UnregisterServiceAsync_ShouldThrowNotFoundException_WhenServiceNotFound()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(UnregisterServiceAsync_ShouldThrowNotFoundException_WhenServiceNotFound));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		_serviceRepository.GetByIdAsync(serviceId).Returns((ServiceRegistration)null);
@@ -186,11 +199,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 
 		// Assert
 		await act.Should().ThrowAsync<ServiceNotFoundException>();
+		_logger.LogInformation("Finished {MethodName}", nameof(UnregisterServiceAsync_ShouldThrowNotFoundException_WhenServiceNotFound));
 	}
 
 	[Fact]
 	public async Task DisableServiceAsync_ShouldDisableService()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(DisableServiceAsync_ShouldDisableService));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceToDisable", IsActive = true };
@@ -206,11 +221,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		result.DeactivationReason.Should().Be(reason);
 		await _serviceRepository.Received(1).UpdateAsync(Arg.Is<ServiceRegistration>(s => s.Id == serviceId && !s.IsActive));
 		await _auditService.Received(1).LogActionAsync(null, "Update", "ServiceRegistration", serviceId, string.Format(ServiceManagementServiceTestsConstants.DisabledServiceLogFormat, reason));
+		_logger.LogInformation("Finished {MethodName}", nameof(DisableServiceAsync_ShouldDisableService));
 	}
 
 	[Fact]
 	public async Task EnableServiceAsync_ShouldEnableService()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(EnableServiceAsync_ShouldEnableService));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceToEnable", IsActive = false, DeactivationReason = "Old reason" };
@@ -225,11 +242,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 		result.DeactivationReason.Should().BeNull();
 		await _serviceRepository.Received(1).UpdateAsync(Arg.Is<ServiceRegistration>(s => s.Id == serviceId && s.IsActive));
 		await _auditService.Received(1).LogActionAsync(null, "Update", "ServiceRegistration", serviceId, ServiceManagementServiceTestsConstants.ReenabledServiceLogMessage);
+		_logger.LogInformation("Finished {MethodName}", nameof(EnableServiceAsync_ShouldEnableService));
 	}
 
 	[Fact]
 	public async Task GetServiceSuccessRateAsync_ShouldReturnSuccessRate()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(GetServiceSuccessRateAsync_ShouldReturnSuccessRate));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceWithMetrics", TotalRequests = ServiceManagementServiceTestsConstants.SuccessRateTest_TotalRequests, SuccessfulRequests = ServiceManagementServiceTestsConstants.SuccessRateTest_SuccessfulRequests };
@@ -240,11 +259,13 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 
 		// Assert
 		rate.Should().Be(90m);
+		_logger.LogInformation("Finished {MethodName}", nameof(GetServiceSuccessRateAsync_ShouldReturnSuccessRate));
 	}
 
 	[Fact]
 	public async Task GetServiceSuccessRateAsync_ShouldReturn100_WhenNoRequests()
 	{
+		_logger.LogInformation("Starting {MethodName}", nameof(GetServiceSuccessRateAsync_ShouldReturn100_WhenNoRequests));
 		// Arrange
 		var serviceId = Guid.NewGuid();
 		var service = new ServiceRegistration { Id = serviceId, ServiceName = "ServiceWithNoMetrics", TotalRequests = ServiceManagementServiceTestsConstants.NoMetricsTest_TotalRequests, SuccessfulRequests = ServiceManagementServiceTestsConstants.NoMetricsTest_SuccessfulRequests };
@@ -255,5 +276,6 @@ public class ServiceManagementServiceTests : IServiceManagementServiceTests
 
 		// Assert
 		rate.Should().Be(100m);
+		_logger.LogInformation("Finished {MethodName}", nameof(GetServiceSuccessRateAsync_ShouldReturn100_WhenNoRequests));
 	}
 }
