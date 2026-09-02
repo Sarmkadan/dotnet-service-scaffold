@@ -11,6 +11,9 @@ using Xunit;
 
 namespace DotnetServiceScaffold.Tests;
 
+/// <summary>
+/// Verifies retry, validation, serialization, and request-header behavior for external API client extension methods.
+/// </summary>
 public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExtensionsTests>, IExternalApiClientExtensionsTests
 {
     private readonly Mock<ILogger<ExternalApiClient>> _loggerMock;
@@ -18,10 +21,24 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     private readonly HttpClient _httpClient;
     private readonly ExternalApiClient _sut;
 
+    /// <summary>
+    /// Gets or sets the identifier used when comparing test fixture instances.
+    /// </summary>
     public int Id { get; set; }
+    /// <summary>
+    /// Gets or sets the name used when comparing test fixture instances.
+    /// </summary>
     public string? Name { get; set; }
+    /// <summary>
+    /// Gets or sets the status used when comparing test fixture instances.
+    /// </summary>
     public string? Status { get; set; }
 
+    /// <summary>
+    /// Determines whether another test fixture has the same identifier, name, and status.
+    /// </summary>
+    /// <param name="other">The test fixture to compare with this instance.</param>
+    /// <returns><see langword="true"/> when the instances have equal property values; otherwise, <see langword="false"/>.</returns>
     public bool Equals(ExternalApiClientExtensionsTests? other)
     {
         if (other is null) return false;
@@ -29,31 +46,59 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
         return Id == other.Id && Name == other.Name && Status == other.Status;
     }
 
+    /// <summary>
+    /// Determines whether an object is a test fixture with the same identifier, name, and status.
+    /// </summary>
+    /// <param name="obj">The object to compare with this instance.</param>
+    /// <returns><see langword="true"/> when the object is an equivalent test fixture; otherwise, <see langword="false"/>.</returns>
     public override bool Equals(object? obj)
     {
         return Equals(obj as ExternalApiClientExtensionsTests);
     }
 
+    /// <summary>
+    /// Calculates a hash code from the identifier, name, and status.
+    /// </summary>
+    /// <returns>A hash code representing the fixture's comparison properties.</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(Id, Name, Status);
     }
 
+    /// <summary>
+    /// Formats the fixture's identifier, name, and status as a concise diagnostic string.
+    /// </summary>
+    /// <returns>A string containing the fixture type and its comparison property values.</returns>
     public override string ToString()
     {
         return $"ExternalApiClientExtensionsTests {{ Id = {Id}, Name = {Name}, Status = {Status} }}";
     }
 
+    /// <summary>
+    /// Determines whether two test fixtures have equal identifier, name, and status values.
+    /// </summary>
+    /// <param name="left">The first fixture to compare.</param>
+    /// <param name="right">The second fixture to compare.</param>
+    /// <returns><see langword="true"/> when the fixtures are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(ExternalApiClientExtensionsTests? left, ExternalApiClientExtensionsTests? right)
     {
         return Equals(left, right);
     }
 
+    /// <summary>
+    /// Determines whether two test fixtures have different identifier, name, or status values.
+    /// </summary>
+    /// <param name="left">The first fixture to compare.</param>
+    /// <param name="right">The second fixture to compare.</param>
+    /// <returns><see langword="true"/> when the fixtures are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(ExternalApiClientExtensionsTests? left, ExternalApiClientExtensionsTests? right)
     {
         return !Equals(left, right);
     }
 
+    /// <summary>
+    /// Initializes mocked logging and HTTP dependencies and creates the external API client under test.
+    /// </summary>
     public ExternalApiClientExtensionsTests()
     {
         _loggerMock = new Mock<ILogger<ExternalApiClient>>();
@@ -68,6 +113,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request retries after a server error and deserializes the successful response.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
@@ -110,6 +159,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request throws after persistent server errors exhaust all retries.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_RequestFailsAfterAllRetries_ThrowsHttpRequestException()
     {
         // Arrange
@@ -139,6 +192,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request made through a null client throws an argument-null exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_NullClient_ThrowsArgumentNullException()
     {
         // Arrange
@@ -153,6 +210,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request with an empty URL throws an argument exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_NullOrEmptyUrl_ThrowsArgumentException()
     {
         // Arrange
@@ -166,6 +227,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request with zero maximum retries throws an argument-out-of-range exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_InvalidMaxRetries_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -179,6 +244,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request with a zero-second timeout throws an argument-out-of-range exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_InvalidTimeoutSeconds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -192,6 +261,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a POST request retries after a server error and deserializes the created response.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PostWithRetryAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
@@ -234,6 +307,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a POST request throws after persistent server errors exhaust the configured retry.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PostWithRetryAsync_RequestFailsAfterAllRetries_ThrowsHttpRequestException()
     {
         // Arrange
@@ -264,6 +341,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a POST request made through a null client throws an argument-null exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PostWithRetryAsync_NullClient_ThrowsArgumentNullException()
     {
         // Arrange
@@ -279,6 +360,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a POST request with a null URL throws an argument exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PostWithRetryAsync_NullUrl_ThrowsArgumentException()
     {
         // Arrange
@@ -292,6 +377,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a POST request with a null payload throws an argument-null exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PostWithRetryAsync_NullPayload_ThrowsArgumentNullException()
     {
         // Arrange
@@ -306,6 +395,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a POST request with a negative maximum retry count throws an argument-out-of-range exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PostWithRetryAsync_InvalidMaxRetries_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -320,6 +413,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a PUT request retries after a server error and deserializes the updated response.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PutWithRetryAsync_ValidRequest_ReturnsDeserializedObject()
     {
         // Arrange
@@ -362,6 +459,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a PUT request throws after persistent server errors exhaust the configured retry.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PutWithRetryAsync_RequestFailsAfterAllRetries_ThrowsHttpRequestException()
     {
         // Arrange
@@ -392,6 +493,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a PUT request made through a null client throws an argument-null exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PutWithRetryAsync_NullClient_ThrowsArgumentNullException()
     {
         // Arrange
@@ -407,6 +512,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a PUT request with a null URL throws an argument exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PutWithRetryAsync_NullUrl_ThrowsArgumentException()
     {
         // Arrange
@@ -420,6 +529,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a PUT request with a null payload throws an argument-null exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PutWithRetryAsync_NullPayload_ThrowsArgumentNullException()
     {
         // Arrange
@@ -434,6 +547,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a PUT request with a negative timeout throws an argument-out-of-range exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task PutWithRetryAsync_InvalidTimeoutSeconds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -448,6 +565,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a successful DELETE request returns <see langword="true"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task DeleteWithRetryAsync_ValidRequest_ReturnsTrue()
     {
         // Arrange
@@ -474,6 +595,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a DELETE request returns <see langword="false"/> after persistent failures exhaust all retries.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task DeleteWithRetryAsync_FailedRequestAfterAllRetries_ReturnsFalse()
     {
         // Arrange
@@ -503,6 +628,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a DELETE request made through a null client throws an argument-null exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task DeleteWithRetryAsync_NullClient_ThrowsArgumentNullException()
     {
         // Arrange
@@ -517,6 +646,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a DELETE request with an empty URL throws an argument exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task DeleteWithRetryAsync_NullOrEmptyUrl_ThrowsArgumentException()
     {
         // Arrange
@@ -530,6 +663,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a DELETE request with a negative maximum retry count throws an argument-out-of-range exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task DeleteWithRetryAsync_InvalidMaxRetries_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -543,6 +680,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a DELETE request with a zero-second timeout throws an argument-out-of-range exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task DeleteWithRetryAsync_InvalidTimeoutSeconds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -556,6 +697,10 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
     }
 
     [Fact]
+    /// <summary>
+    /// Verifies that a GET request sends the supplied authorization and custom headers.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
     public async Task GetWithRetryAsync_WithHeaders_SendsHeadersWithRequest()
     {
         // Arrange
