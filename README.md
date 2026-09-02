@@ -5,6 +5,29 @@
 
 # Service Scaffold
 
+## CsvResponseFormatterTests
+
+The `CsvResponseFormatterTests` class verifies that CSV formatting handles object collections, single objects, empty or null input, null property values, and characters that require escaping. Its public `Id`, `Name`, and `Value` properties can also hold representative fixture data while the asynchronous test methods exercise the formatter's expected output.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests;
+
+var tests = new CsvResponseFormatterTests
+{
+    Id = 42,
+    Name = "Quarterly report",
+    Value = 1250.75
+};
+
+await tests.FormatAsync_SimpleObjectList_ReturnsCorrectCsv();
+await tests.FormatAsync_EmptyCollection_ReturnsEmptyString();
+await tests.FormatAsync_NullPropertyValues_HandlesCorrectly();
+await tests.FormatAsync_NullInput_ReturnsEmptyString();
+await tests.FormatAsync_SingleObject_ReturnsHeaderAndOneRow();
+```
+
 ## InMemoryCacheServiceTests
 
 The `InMemoryCacheServiceTests` class verifies the in-memory cache service's storage, retrieval, expiration, existence checks, removal, clearing, and get-or-set behavior. It also covers null and empty inputs, pattern-based removal, cache factory invocation, and resource cleanup through `Dispose`.
