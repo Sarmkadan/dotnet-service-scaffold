@@ -5787,6 +5787,48 @@ var deleted = await apiClient.DeleteAsync("https://api.example.com/products/789"
 
 This example demonstrates how to use the `ExternalApiClient` to perform common CRUD operations against external APIs with proper type safety and error handling.
 
+## ExternalApiClientExtensionsTests
+
+`ExternalApiClientExtensionsTests` is an xUnit test fixture that verifies the retry, validation, serialization, and request-header behavior of the `ExternalApiClientExtensions` methods. It covers successful GET, POST, PUT, and DELETE calls that retry after transient server errors and deserialize the response, as well as failure paths that throw `HttpRequestException` once all retries are exhausted. It also validates argument guards, asserting `ArgumentNullException`, `ArgumentException`, and `ArgumentOutOfRangeException` for null clients, null or empty URLs, null payloads, and invalid retry or timeout values.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Infrastructure.Integration;
+using DotnetServiceScaffold.Tests;
+
+public class ExternalApiClientExtensionsDemo
+{
+    public async Task DemonstrateAsync(ExternalApiClient client)
+    {
+        var user = await client.GetWithRetryAsync<User>("https://api.example.com/users/123");
+        var created = await client.PostWithRetryAsync<Response>(
+            "https://api.example.com/users",
+            new { Name = "New User" });
+        var updated = await client.PutWithRetryAsync<Response>(
+            "https://api.example.com/users/123",
+            new { Name = "Updated User" });
+        var deleted = await client.DeleteWithRetryAsync("https://api.example.com/users/123");
+    }
+
+    private class User
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+    }
+
+    private class Response
+    {
+        public string? Status { get; set; }
+    }
+}
+```
+
+This example demonstrates how the retry-aware extension methods are exercised in the test fixture, showing successful deserialization for GET, POST, and PUT requests and the boolean result returned by DELETE.
+
 ## ResponseFormatterFactory
 
 The `ResponseFormatterFactory` creates and manages response formatters for different media types, implementing the Factory pattern to decouple formatter selection from usage. It maintains a registry of available formatters (JSON, CSV) and selects the appropriate formatter based on the requested media type, falling back to JSON for unsupported types. The factory also allows registering custom formatters at runtime.
