@@ -7522,3 +7522,48 @@ public class LogContextServiceJsonExtensionsTestsDemo
 ```
 
 This example shows how the test fixture is constructed and how each of its public test methods is invoked to verify the JSON extension methods' behavior under various conditions.
+
+
+## EncryptionUtilityTests
+
+`EncryptionUtilityTests` is an xUnit test fixture that verifies the cryptographic operations in the `EncryptionUtility` class. It tests password hashing and verification, AES encryption and decryption, secure random byte and token generation, and HMAC-SHA256 and SHA256 hash computation. The fixture ensures that cryptographic operations work correctly for valid inputs and properly handle error conditions such as null/empty values and invalid key lengths.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests.Shared.Utilities;
+
+public class EncryptionUtilityTestsDemo
+{
+    public void Demonstrate()
+    {
+        var tests = new EncryptionUtilityTests();
+        
+        // Test password hashing round-trip
+        tests.HashPassword_VerifyPassword_RoundTrip_Success();
+        
+        // Test different passwords produce different hashes
+        tests.HashPassword_DifferentInputs_DifferentOutputs();
+        
+        // Test AES encryption round-trip
+        tests.EncryptAes_DecryptAes_RoundTrip_Success();
+        
+        // Test different plaintexts produce different ciphertexts
+        tests.EncryptAes_DifferentInputs_DifferentOutputs();
+        
+        // Test secure token generation
+        tests.GenerateSecureToken_ProducesUrlSafeBase64();
+        tests.GenerateSecureToken_DefaultLength();
+        
+        // Test HMAC-SHA256 consistency
+        tests.ComputeHmacSha256_SameInputs_SameOutput();
+        tests.ComputeHmacSha256_DifferentInputs_DifferentOutputs();
+        
+        // Test SHA256 consistency
+        tests.ComputeSha256_SameInputs_SameOutput();
+        tests.ComputeSha256_DifferentInputs_DifferentOutputs();
+    }
+}
+```
+
+This example shows how the test fixture is constructed and how each of its public test methods is invoked to verify the encryption utility's behavior under various conditions.
