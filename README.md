@@ -7350,3 +7350,53 @@ tests.ValidateCreateBearerClient_TokenTooLong_ReturnsProblem();
 tests.ValidateCreateClientWithBaseUrl_WrongScheme_ReturnsProblem();
 tests.EnsureValidCreateClientWithBaseUrl_InvalidParameters_ThrowsArgumentException();
 ```
+
+
+## ProblemDetailsFactoryTests
+
+`ProblemDetailsFactoryTests` is an xUnit test fixture that verifies the behavior of the ProblemDetailsFactory class.
+It tests the creation of problem details objects, including setting default type, trace IDs, error codes, custom extensions,
+JSON serialization, and compliance with RFC 7807.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests;
+
+var tests = new ProblemDetailsFactoryTests();
+
+tests.CreateProblemDetails_ShouldCreateValidProblemDetails();
+tests.CreateProblemDetails_ShouldSetDefaultTypeToAboutBlank();
+tests.CreateProblemDetails_ShouldIncludeTraceIdFromActivity();
+tests.CreateProblemDetails_ShouldIncludeTraceIdFromHttpContext();
+tests.CreateProblemDetails_ShouldIncludeErrorCodeFromServiceScaffoldException();
+tests.CreateProblemDetails_ShouldIncludeCustomExtensions();
+tests.ProblemDetails_ShouldSerializeToJsonWithCamelCase().GetAwaiter().GetResult();
+tests.ProblemDetails_ShouldIncludeAllRequiredRfc7807Fields();
+tests.ProblemDetails_ShouldHaveCorrectContentType();
+```
+
+
+## ProblemDetailsFactoryTests
+
+`ProblemDetailsFactoryTests` is an xUnit test fixture that verifies the behavior of the ProblemDetailsFactory class.
+It tests the creation of problem details objects, including setting default type, trace IDs, error codes, custom extensions,
+JSON serialization, and compliance with RFC 7807.
+
+### Usage Example
+
+```csharp
+using DotnetServiceScaffold.Tests;
+
+var tests = new ProblemDetailsFactoryTests();
+
+tests.CreateProblemDetails_ShouldCreateValidProblemDetails();
+tests.CreateProblemDetails_ShouldSetDefaultTypeToAboutBlank();
+tests.CreateProblemDetails_ShouldIncludeTraceIdFromActivity();
+tests.CreateProblemDetails_ShouldIncludeTraceIdFromHttpContext();
+tests.CreateProblemDetails_ShouldIncludeErrorCodeFromServiceScaffoldException();
+tests.CreateProblemDetails_ShouldIncludeCustomExtensions();
+tests.ProblemDetails_ShouldSerializeToJsonWithCamelCase().GetAwaiter().GetResult();
+tests.ProblemDetails_ShouldIncludeAllRequiredRfc7807Fields();
+tests.ProblemDetails_ShouldHaveCorrectContentType();
+```
