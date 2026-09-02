@@ -7442,3 +7442,35 @@ tests.ProblemDetails_ShouldSerializeToJsonWithCamelCase().GetAwaiter().GetResult
 tests.ProblemDetails_ShouldIncludeAllRequiredRfc7807Fields();
 tests.ProblemDetails_ShouldHaveCorrectContentType();
 ```
+
+## ExternalApiClientTests
+
+`ExternalApiClientTests` is an xUnit test fixture that verifies the HTTP GET, POST, and DELETE behavior of the `ExternalApiClient` class against a mocked `HttpMessageHandler`. It confirms that successful responses are deserialized into typed objects, that a no-content DELETE is reported as successful, and that an unsuccessful GET response throws `HttpRequestException`. The fixture also implements value-based equality over its `Id`, `Name`, and `Status` properties so instances can be compared by their identifying values.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using DotnetServiceScaffold.Tests;
+
+public class ExternalApiClientTestsDemo
+{
+    public async Task DemonstrateAsync()
+    {
+        var tests = new ExternalApiClientTests
+        {
+            Id = 42,
+            Name = "Sample",
+            Status = "Active"
+        };
+
+        await tests.GetAsync_ValidRequest_ReturnsDeserializedObject();
+        await tests.PostAsync_ValidRequest_ReturnsDeserializedObject();
+        await tests.DeleteAsync_ValidRequest_ReturnsTrue();
+        await tests.GetAsync_UnsuccessfulResponse_ThrowsHttpRequestException();
+    }
+}
+```
+
+This example shows how the fixture is constructed with identifying values and how each of its public test methods is invoked to exercise the GET, POST, and DELETE paths of the `ExternalApiClient`.
