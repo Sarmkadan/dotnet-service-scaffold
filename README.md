@@ -7474,3 +7474,51 @@ public class ExternalApiClientTestsDemo
 ```
 
 This example shows how the fixture is constructed with identifying values and how each of its public test methods is invoked to exercise the GET, POST, and DELETE paths of the `ExternalApiClient`.
+
+
+## LogContextServiceJsonExtensionsTests
+
+`LogContextServiceJsonExtensionsTests` is an xUnit test fixture that verifies the JSON serialization and deserialization behavior of the `LogContextServiceJsonExtensions` class. It tests conversion of `LogContextService` instances to and from JSON strings, including handling of null values, empty strings, invalid JSON, and formatted output with indentation.
+
+### Usage Example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using DotnetServiceScaffold.Infrastructure.Logging;
+using DotnetServiceScaffold.Tests.Logging;
+
+public class LogContextServiceJsonExtensionsTestsDemo
+{
+    public void Demonstrate()
+    {
+        var tests = new LogContextServiceJsonExtensionsTests();
+        
+        // Test serialization with valid service
+        tests.ToJson_WithValidService_ReturnsCorrectJson();
+        
+        // Test serialization with indentation
+        tests.ToJson_WithIndentation_ProducesIndentedJson();
+        
+        // Test deserialization from valid JSON
+        tests.FromJson_ValidJson_ReturnsServiceWithProperties();
+        
+        // Test TryFromJson with valid JSON
+        tests.TryFromJson_ValidJson_ReturnsTrueAndService();
+        
+        // Test error cases
+        try { tests.ToJson_NullService_ThrowsArgumentNullException(); }
+        catch (ArgumentNullException) { /* Expected */ }
+        
+        try { tests.FromJson_NullJson_ThrowsArgumentNullException(); }
+        catch (ArgumentNullException) { /* Expected */ }
+        
+        tests.FromJson_EmptyJson_ReturnsNull();
+        tests.TryFromJson_InvalidJson_ReturnsFalse();
+        tests.TryFromJson_EmptyJson_ReturnsFalse();
+    }
+}
+```
+
+This example shows how the test fixture is constructed and how each of its public test methods is invoked to verify the JSON extension methods' behavior under various conditions.
