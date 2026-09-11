@@ -19,12 +19,25 @@ public class ConfigurationService : IConfigurationService
     private readonly IConfigurationRepository _configRepository;
     private readonly ILogger<ConfigurationService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConfigurationService"/> class.
+    /// </summary>
+    /// <param name="configRepository">The configuration repository.</param>
+    /// <param name="logger">The logger.</param>
     public ConfigurationService(IConfigurationRepository configRepository, ILogger<ConfigurationService> logger)
     {
         _configRepository = configRepository;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Retrieves a configuration by its key and optional service identifier.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="serviceId">The optional service identifier.</param>
+    /// <returns>The configuration if found; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the key is null or empty.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while retrieving the configuration.</exception>
     public async Task<ServiceConfiguration?> GetConfigurationAsync(string key, Guid? serviceId = null)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -41,6 +54,11 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
+    /// <summary>
+    /// Retrieves all configurations.
+    /// </summary>
+    /// <returns>An enumerable collection of all configurations.</returns>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while retrieving the configurations.</exception>
     public async Task<IEnumerable<ServiceConfiguration>> GetAllConfigurationsAsync()
     {
         try
@@ -54,6 +72,12 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
+    /// <summary>
+    /// Retrieves all configurations for a specific service.
+    /// </summary>
+    /// <param name="serviceId">The service identifier.</param>
+    /// <returns>An enumerable collection of configurations for the specified service.</returns>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while retrieving the configurations.</exception>
     public async Task<IEnumerable<ServiceConfiguration>> GetServiceConfigurationsAsync(Guid serviceId)
     {
         try
@@ -67,6 +91,18 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
+    /// <summary>
+    /// Sets a configuration value. If a configuration with the same key and serviceId exists, it updates it; otherwise, it creates a new one.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="value">The configuration value.</param>
+    /// <param name="configType">The configuration type.</param>
+    /// <param name="serviceId">The optional service identifier.</param>
+    /// <param name="description">The optional description.</param>
+    /// <returns>The configuration that was set.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the key or value is null or empty.</exception>
+    /// <exception cref="ConfigurationException">Thrown when the configuration value is invalid for the given type.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while accessing the data.</exception>
     public async Task<ServiceConfiguration> SetConfigurationAsync(
         string key,
         string value,
@@ -127,6 +163,13 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
+    /// <summary>
+    /// Deletes a configuration by its key and optional service identifier.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="serviceId">The optional service identifier.</param>
+    /// <exception cref="ArgumentNullException">Thrown when the key is null or empty.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while deleting the configuration.</exception>
     public async Task DeleteConfigurationAsync(string key, Guid? serviceId = null)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -144,18 +187,36 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
+    /// <summary>
+    /// Retrieves a configuration value as an integer.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="defaultValue">The default value to return if the configuration is not found or cannot be parsed.</param>
+    /// <returns>The configuration value as an integer, or the default value if not found.</returns>
     public async Task<int> GetConfigIntAsync(string key, int defaultValue = 0)
     {
         var config = await GetConfigurationAsync(key);
         return config?.GetIntValue(defaultValue) ?? defaultValue;
     }
 
+    /// <summary>
+    /// Retrieves a configuration value as a boolean.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="defaultValue">The default value to return if the configuration is not found or cannot be parsed.</param>
+    /// <returns>The configuration value as a boolean, or the default value if not found.</returns>
     public async Task<bool> GetConfigBoolAsync(string key, bool defaultValue = false)
     {
         var config = await GetConfigurationAsync(key);
         return config?.GetBoolValue(defaultValue) ?? defaultValue;
     }
 
+    /// <summary>
+    /// Retrieves a configuration value as a string.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="defaultValue">The default value to return if the configuration is not found.</param>
+    /// <returns>The configuration value as a string, or the default value if not found.</returns>
     public async Task<string> GetConfigStringAsync(string key, string defaultValue = "")
     {
         var config = await GetConfigurationAsync(key);
