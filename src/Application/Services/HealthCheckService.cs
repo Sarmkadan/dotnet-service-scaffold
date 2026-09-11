@@ -22,6 +22,13 @@ public class HealthCheckService : IHealthCheckService
     private readonly HttpClient _httpClient;
     private readonly ILogger<HealthCheckService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HealthCheckService"/> class.
+    /// </summary>
+    /// <param name="healthCheckRepository">The health check repository.</param>
+    /// <param name="serviceRepository">The service repository.</param>
+    /// <param name="httpClient">The HTTP client used to perform health checks.</param>
+    /// <param name="logger">The logger.</param>
     public HealthCheckService(
         IHealthCheckRepository healthCheckRepository,
         IServiceRepository serviceRepository,
@@ -38,6 +45,13 @@ public class HealthCheckService : IHealthCheckService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Performs a health check for the specified service.
+    /// </summary>
+    /// <param name="serviceId">The unique identifier of the service to check.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the health check result.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service with the given ID is not found.</exception>
+    /// <exception cref="ServiceScaffoldException">Thrown when the service is disabled.</exception>
     public async Task<HealthCheckResult> PerformHealthCheckAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -124,6 +138,13 @@ public class HealthCheckService : IHealthCheckService
         }
     }
 
+    /// <summary>
+    /// Gets the health check history for the specified service.
+    /// </summary>
+    /// <param name="serviceId">The unique identifier of the service.</param>
+    /// <param name="count">The maximum number of health check results to return. Default is 20.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the health check history.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service with the given ID is not found.</exception>
     public async Task<IEnumerable<HealthCheckResult>> GetServiceHealthHistoryAsync(Guid serviceId, int count = 20)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -133,6 +154,13 @@ public class HealthCheckService : IHealthCheckService
         return await _healthCheckRepository.GetRecentResultsAsync(serviceId, count);
     }
 
+    /// <summary>
+    /// Gets the success rate of health checks for the specified service within the specified time frame.
+    /// </summary>
+    /// <param name="serviceId">The unique identifier of the service.</param>
+    /// <param name="minutesBack">The number of minutes in the past to consider for health checks. Default is 60.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the success rate as a percentage.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service with the given ID is not found.</exception>
     public async Task<decimal> GetServiceSuccessRateAsync(Guid serviceId, int minutesBack = 60)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -153,6 +181,12 @@ public class HealthCheckService : IHealthCheckService
         return (decimal)healthyCount / recentResults.Count * 100;
     }
 
+    /// <summary>
+    /// Gets the current health status of the specified service.
+    /// </summary>
+    /// <param name="serviceId">The unique identifier of the service.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the health status as a string.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service with the given ID is not found.</exception>
     public async Task<string> GetServiceHealthStatusAsync(Guid serviceId)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -165,6 +199,13 @@ public class HealthCheckService : IHealthCheckService
         return service.Status.ToString();
     }
 
+    /// <summary>
+    /// Gets the failed health checks for the specified service within the specified time frame.
+    /// </summary>
+    /// <param name="serviceId">The unique identifier of the service.</param>
+    /// <param name="hoursBack">The number of hours in the past to consider for failed health checks. Default is 24.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the failed health checks.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service with the given ID is not found.</exception>
     public async Task<IEnumerable<HealthCheckResult>> GetFailedChecksAsync(Guid serviceId, int hoursBack = 24)
     {
         var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -174,6 +215,11 @@ public class HealthCheckService : IHealthCheckService
         return await _healthCheckRepository.GetFailedResultsAsync(serviceId, hoursBack);
     }
 
+    /// <summary>
+    /// Cleans up old health check results for all services.
+    /// </summary>
+    /// <param name="daysToKeep">The number of days of health check results to keep. Older results will be deleted. Default is 30.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task CleanupOldResultsAsync(int daysToKeep = 30)
     {
         var services = await _serviceRepository.GetAllAsync();
@@ -186,6 +232,15 @@ public class HealthCheckService : IHealthCheckService
         _logger.LogInformation("Cleaned up health check results older than {DaysToKeep} days", daysToKeep);
     }
 
+    /// <summary>
+    /// Creates a health check result manually.
+    /// </summary>
+    /// <param name="serviceId">The unique identifier of the service.</param>
+    /// <param name="statusCode">The HTTP status code of the health check.</param>
+    /// <param name="responseTimeMs">The response time in milliseconds.</param>
+    /// <param name="errorMessage">The error message if the health check failed, otherwise null.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created health check result.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when the service with the given ID is not found.</exception>
     public async Task<HealthCheckResult> CreateHealthCheckResultAsync(
         Guid serviceId,
         int statusCode,
