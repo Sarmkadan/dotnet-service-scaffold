@@ -20,6 +20,11 @@ public class DomainEventPublisher : IDomainEventPublisher
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DomainEventPublisher> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the DomainEventPublisher class.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider used to resolve event handlers.</param>
+    /// <param name="logger">The logger used for logging events and errors.</param>
     public DomainEventPublisher(IServiceProvider serviceProvider, ILogger<DomainEventPublisher> logger)
     {
         _serviceProvider = serviceProvider;
@@ -109,6 +114,21 @@ public class DomainEventPublisher : IDomainEventPublisher
 /// </summary>
 public interface IDomainEventPublisher
 {
+    /// <summary>
+    /// Publishes an event to all registered handlers. Executes handlers sequentially.
+    /// Logs any exceptions from handlers but continues publishing to other handlers.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the domain event to publish.</typeparam>
+    /// <param name="@event">The domain event to publish.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous publish operation.</returns>
     Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : IDomainEvent;
+
+    /// <summary>
+    /// Publishes multiple events. Useful for domain aggregates that produce multiple events.
+    /// </summary>
+    /// <param name="events">The collection of domain events to publish.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous publish operation.</returns>
     Task PublishMultipleAsync(IEnumerable<IDomainEvent> events, CancellationToken cancellationToken = default);
 }
