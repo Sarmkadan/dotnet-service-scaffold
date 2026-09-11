@@ -22,6 +22,13 @@ public class ServiceManagementService : IServiceManagementService
     private readonly IAuditService _auditService;
     private readonly ILogger<ServiceManagementService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ServiceManagementService"/> class.
+    /// </summary>
+    /// <param name="serviceRepository">The service repository.</param>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="logger">The logger.</param>
     public ServiceManagementService(
         IServiceRepository serviceRepository,
         IUserRepository userRepository,
