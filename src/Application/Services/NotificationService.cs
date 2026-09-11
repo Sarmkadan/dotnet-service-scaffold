@@ -16,7 +16,11 @@ public class NotificationService : INotificationService
 {
     private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(ILogger<NotificationService> logger)
+    /// <summary>
+/// Initializes a new instance of the <see cref="NotificationService"/> class.
+/// </summary>
+/// <param name="logger">The logger.</param>
+public NotificationService(ILogger<NotificationService> logger)
     {
         _logger = logger;
     }
@@ -24,6 +28,12 @@ public class NotificationService : INotificationService
     /// <summary>
     /// Sends a notification to a user.
     /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="subject">The notification subject.</param>
+    /// <param name="message">The notification message.</param>
+    /// <param name="type">The type of notification to send.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the notification was sent successfully; otherwise, false.</returns>
     public async Task<bool> SendNotificationAsync(
         Guid userId,
         string subject,
@@ -53,6 +63,11 @@ public class NotificationService : INotificationService
     /// <summary>
     /// Sends a notification to an email address.
     /// </summary>
+    /// <param name="emailAddress">The recipient email address.</param>
+    /// <param name="subject">The email subject.</param>
+    /// <param name="htmlBody">The email body in HTML format.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the email was sent successfully; otherwise, false.</returns>
     public async Task<bool> SendEmailAsync(
         string emailAddress,
         string subject,
@@ -85,6 +100,12 @@ public class NotificationService : INotificationService
     /// <summary>
     /// Sends a bulk notification to multiple users.
     /// </summary>
+    /// <param name="userIds">The collection of user IDs to send notifications to.</param>
+    /// <param name="subject">The notification subject.</param>
+    /// <param name="message">The notification message.</param>
+    /// <param name="type">The type of notification to send.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The number of notifications sent successfully.</returns>
     public async Task<int> SendBulkNotificationAsync(
         IEnumerable<Guid> userIds,
         string subject,
@@ -133,6 +154,11 @@ public class NotificationService : INotificationService
     /// <summary>
     /// Sends an alert notification for critical events.
     /// </summary>
+    /// <param name="alertType">The type of alert (e.g., "Error", "Warning", "Info").</param>
+    /// <param name="description">The alert description.</param>
+    /// <param name="details">Additional details about the alert (optional).</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the alert was sent successfully; otherwise, false.</returns>
     public async Task<bool> SendAlertAsync(
         string alertType,
         string description,
@@ -164,6 +190,15 @@ public class NotificationService : INotificationService
 /// </summary>
 public interface INotificationService
 {
+    /// <summary>
+    /// Sends a notification to a user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="subject">The notification subject.</param>
+    /// <param name="message">The notification message.</param>
+    /// <param name="type">The type of notification to send.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the notification was sent successfully; otherwise, false.</returns>
     Task<bool> SendNotificationAsync(
         Guid userId,
         string subject,
@@ -171,12 +206,29 @@ public interface INotificationService
         NotificationType type = NotificationType.Email,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends a notification to an email address.
+    /// </summary>
+    /// <param name="emailAddress">The recipient email address.</param>
+    /// <param name="subject">The email subject.</param>
+    /// <param name="htmlBody">The email body in HTML format.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the email was sent successfully; otherwise, false.</returns>
     Task<bool> SendEmailAsync(
         string emailAddress,
         string subject,
         string htmlBody,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends a bulk notification to multiple users.
+    /// </summary>
+    /// <param name="userIds">The collection of user IDs to send notifications to.</param>
+    /// <param name="subject">The notification subject.</param>
+    /// <param name="message">The notification message.</param>
+    /// <param name="type">The type of notification to send.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The number of notifications sent successfully.</returns>
     Task<int> SendBulkNotificationAsync(
         IEnumerable<Guid> userIds,
         string subject,
@@ -184,6 +236,14 @@ public interface INotificationService
         NotificationType type = NotificationType.Email,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sends an alert notification for critical events.
+    /// </summary>
+    /// <param name="alertType">The type of alert (e.g., "Error", "Warning", "Info").</param>
+    /// <param name="description">The alert description.</param>
+    /// <param name="details">Additional details about the alert (optional).</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the alert was sent successfully; otherwise, false.</returns>
     Task<bool> SendAlertAsync(
         string alertType,
         string description,
