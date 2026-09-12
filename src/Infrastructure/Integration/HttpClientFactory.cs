@@ -21,6 +21,8 @@ public class HttpClientFactory : ICustomHttpClientFactory
 
     public HttpClientFactory(IHttpClientFactory factory, ILogger<HttpClientFactory> logger)
     {
+        ArgumentNullException.ThrowIfNull(factory);
+        ArgumentNullException.ThrowIfNull(logger);
         _factory = factory;
         _logger = logger;
     }
