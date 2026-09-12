@@ -22,6 +22,9 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
 
     public ExternalApiClient(HttpClient httpClient, ILogger<ExternalApiClient> logger)
     {
+        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _httpClient = httpClient;
         _logger = logger;
     }
@@ -31,6 +34,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
     /// </summary>
     public async Task<T?> GetAsync<T>(string url, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -56,6 +60,8 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
     /// </summary>
     public async Task<T?> PostAsync<T>(string url, object payload, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(payload);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
@@ -84,6 +90,8 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
     /// </summary>
     public async Task<T?> PutAsync<T>(string url, object payload, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(payload);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
         using var request = new HttpRequestMessage(HttpMethod.Put, url);
@@ -112,6 +120,7 @@ public class ExternalApiClient : IExternalReadClient, IExternalWriteClient
     /// </summary>
     public async Task<bool> DeleteAsync(string url, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
         ValidationUtility.ValidateNotNullOrEmpty(url, nameof(url));
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
