@@ -20,6 +20,12 @@ public class UserService : IUserService
     private readonly IApiKeyRepository _apiKeyRepository;
     private readonly ILogger<UserService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserService"/> class.
+    /// </summary>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="apiKeyRepository">The API key repository.</param>
+    /// <param name="logger">The logger.</param>
     public UserService(IUserRepository userRepository, IApiKeyRepository apiKeyRepository, ILogger<UserService> logger)
     {
         _userRepository = userRepository;
@@ -27,6 +33,17 @@ public class UserService : IUserService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Creates a new user with the specified email, full name, and password.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="fullName">The user's full name.</param>
+    /// <param name="password">The user's password.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The created user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when email, fullName, or password is null or whitespace.</exception>
+    /// <exception cref="ServiceValidationException">Thrown when the email format is invalid, email is already registered, or password is too short.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while creating the user.</exception>
     public async Task<User> CreateUserAsync(string email, string fullName, string password, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -74,6 +91,14 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Retrieves a user by their email address.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The user if found, otherwise null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when email is null or whitespace.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while retrieving the user.</exception>
     public async Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -91,6 +116,15 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Authenticates a user with the specified email and password.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="password">The user's password.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The authenticated user if successful, otherwise null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when email or password is null or whitespace.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs during authentication.</exception>
     public async Task<User?> AuthenticateUserAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -134,6 +168,15 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Updates the specified user.
+    /// </summary>
+    /// <param name="user">The user to update.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The updated user.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when user is null.</exception>
+    /// <exception cref="ServiceValidationException">Thrown when the user data is invalid.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while updating the user.</exception>
     public async Task<User> UpdateUserAsync(User user, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -157,6 +200,12 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Deletes the user with the specified ID.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to delete.</param>
+    /// <exception cref="ServiceScaffoldException">Thrown when the user with the specified ID is not found.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while deleting the user.</exception>
     public async Task DeleteUserAsync(Guid userId)
     {
         try
@@ -179,6 +228,12 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Retrieves all active users.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A collection of active users.</returns>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while retrieving active users.</exception>
     public async Task<IEnumerable<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -193,6 +248,14 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Validates the password for the user with the specified email.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="password">The password to validate.</param>
+    /// <returns>True if the password is valid, otherwise false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when email or password is null or whitespace.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while validating the password.</exception>
     public async Task<bool> ValidatePasswordAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -215,6 +278,18 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Changes the password for the specified user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="oldPassword">The user's current password.</param>
+    /// <param name="newPassword">The user's new password.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the password was changed successfully, otherwise false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when oldPassword or newPassword is null or whitespace.</exception>
+    /// <exception cref="ServiceScaffoldException">Thrown when the user with the specified ID is not found.</exception>
+    /// <exception cref="ServiceValidationException">Thrown when the new password is too short.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while changing the password.</exception>
     public async Task<bool> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -256,6 +331,13 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Unlocks the user with the specified ID.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to unlock.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <exception cref="ServiceScaffoldException">Thrown when the user with the specified ID is not found.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while unlocking the user.</exception>
     public async Task UnlockUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -284,6 +366,13 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Retrieves a user with their associated API keys.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The user with API keys if found, otherwise null.</returns>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while retrieving the user with API keys.</exception>
     public async Task<User?> GetUserWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -298,6 +387,13 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Validates the specified API key and returns the associated user.
+    /// </summary>
+    /// <param name="apiKey">The API key to validate.</param>
+    /// <returns>The user associated with the API key if valid, otherwise null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when apiKey is null or whitespace.</exception>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while validating the API key.</exception>
     public async Task<User?> ValidateApiKeyAsync(string apiKey)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -339,16 +435,35 @@ public class UserService : IUserService
         }
     }
 
+    /// <summary>
+    /// Hashes the specified password using BCrypt.
+    /// </summary>
+    /// <param name="password">The password to hash.</param>
+    /// <returns>The hashed password.</returns>
     private string HashPassword(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
+    /// <summary>
+    /// Verifies that the specified password matches the hashed value.
+    /// </summary>
+    /// <param name="password">The password to verify.</param>
+    /// <param name="hash">The hashed password to compare against.</param>
+    /// <returns>True if the password matches the hash, otherwise false.</returns>
     private bool VerifyPasswordHash(string password, string hash)
     {
         return BCrypt.Net.BCrypt.Verify(password, hash);
     }
 
+    /// <summary>
+    /// Searches for users matching the specified query.
+    /// </summary>
+    /// <param name="query">The search query.</param>
+    /// <param name="page">The page number (1-based). Default is 1.</param>
+    /// <param name="pageSize">The number of results per page. Default is 10, maximum is 100.</param>
+    /// <returns>A collection of users matching the search query.</returns>
+    /// <exception cref="DataAccessException">Thrown when an error occurs while searching for users.</exception>
     public async Task<IEnumerable<User>> SearchUsersAsync(string query, int page = 1, int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(query))
