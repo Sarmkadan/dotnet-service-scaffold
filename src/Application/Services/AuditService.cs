@@ -25,6 +25,8 @@ public class AuditService : IAuditService
     /// <param name="logger">The logger.</param>
     public AuditService(IAuditLogRepository auditLogRepository, ILogger<AuditService> logger)
     {
+        ArgumentNullException.ThrowIfNull(auditLogRepository);
+        ArgumentNullException.ThrowIfNull(logger);
         _auditLogRepository = auditLogRepository;
         _logger = logger;
     }
