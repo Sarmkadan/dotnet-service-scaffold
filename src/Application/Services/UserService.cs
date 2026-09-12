@@ -28,6 +28,9 @@ public class UserService : IUserService
     /// <param name="logger">The logger.</param>
     public UserService(IUserRepository userRepository, IApiKeyRepository apiKeyRepository, ILogger<UserService> logger)
     {
+        ArgumentNullException.ThrowIfNull(userRepository);
+        ArgumentNullException.ThrowIfNull(apiKeyRepository);
+        ArgumentNullException.ThrowIfNull(logger);
         _userRepository = userRepository;
         _apiKeyRepository = apiKeyRepository;
         _logger = logger;
@@ -180,8 +183,7 @@ public class UserService : IUserService
     public async Task<User> UpdateUserAsync(User user, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (user == null)
-            throw new ArgumentNullException(nameof(user), "User is required");
+        ArgumentNullException.ThrowIfNull(user);
 
         if (!user.IsValid())
             throw new ServiceValidationException("User data is invalid");
