@@ -22,6 +22,9 @@ public sealed class CorrelationIdMiddleware
 
     public CorrelationIdMiddleware(RequestDelegate next, IOptions<StructuredLoggingOptions> options)
     {
+        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(options);
+
         _next = next;
         _options = options.Value;
     }
