@@ -13,6 +13,10 @@ namespace DotnetServiceScaffold.Infrastructure.Http;
 /// and a circuit breaker that short-circuits requests once a target is consistently
 /// unavailable.
 /// </summary>
+/// <remarks>
+/// The current <see cref="ResilienceOptions"/> value is read for each request, allowing
+/// updated resilience settings to be applied without recreating the handler.
+/// </remarks>
 public class ResilientHttpMessageHandler : DelegatingHandler
 {
     private readonly IOptionsMonitor<ResilienceOptions> _optionsMonitor;
