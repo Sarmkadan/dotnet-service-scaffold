@@ -26,6 +26,11 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     private readonly IAuditService _auditService;
     private readonly ILogger<ApiKeyController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiKeyController"/> class.
+    /// </summary>
+    /// <param name="auditService">The service used to record API key audit events.</param>
+    /// <param name="logger">The logger used to record controller activity.</param>
     public ApiKeyController(
         IAuditService auditService,
         ILogger<ApiKeyController> logger)
@@ -37,6 +42,8 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     /// <summary>
     /// Gets information about current API authentication state.
     /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the current authentication information.</returns>
     [HttpGet("info")]
     public async Task<IActionResult> GetAuthInfo(CancellationToken cancellationToken = default)
     {
@@ -66,6 +73,7 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     /// Generates a new secret, invalidates the old one, and writes an audit log entry.
     /// </summary>
     /// <param name="id">The identifier of the API key to rotate.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
     /// <returns>The new secret for the API key.</returns>
     [HttpPost("{id}/rotate")]
     public async Task<IActionResult> RotateApiKey(Guid id, CancellationToken cancellationToken = default)
