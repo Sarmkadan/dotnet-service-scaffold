@@ -76,7 +76,7 @@ public sealed class AuditLog : IEquatable<AuditLog>
         return HashCode.Combine(Id, UserId, User, ActionName, EntityType, EntityId, OldValues, NewValues);
     }
 
-    public override string ToString() => $"AuditLog {{ Id = {Id}, UserId = {UserId}, User = {User}, ActionName = {ActionName}, EntityType = {EntityType}, EntityId = {EntityId} }}";
+    public override string ToString() => $"AuditLog {{ Id = {Id}, UserId = {UserId}, ActionName = {ActionName}, EntityType = {EntityType}, EntityId = {EntityId}, CreatedAt = {CreatedAt} }}";
 
     public static bool operator ==(AuditLog? left, AuditLog? right)
     {
