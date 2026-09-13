@@ -17,11 +17,18 @@ public class FeatureFlagServiceBuilder
     private DateTime _lastModified;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="FeatureFlagServiceBuilder"/> class.
+    /// </summary>
+    public FeatureFlagServiceBuilder()
+    {
+    }
+
+    /// <summary>
     /// Sets the name of the feature flag.
     /// </summary>
     /// <param name="name">The feature flag name.</param>
     /// <returns>The builder instance for chaining.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
     public FeatureFlagServiceBuilder WithName(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
