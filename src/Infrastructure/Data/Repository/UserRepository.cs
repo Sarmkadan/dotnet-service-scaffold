@@ -15,12 +15,26 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public class UserRepository : Repository<User>, IUserRepository
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserRepository"/> class.
+    /// </summary>
+    /// <param name="context">The database context used to access users.</param>
+    /// <param name="logger">The logger used to record repository operations.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> or <paramref name="logger"/> is <see langword="null"/>.</exception>
     public UserRepository(ServiceScaffoldDbContext context, ILogger<UserRepository> logger) : base(context, logger)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
     }
 
+    /// <summary>
+    /// Retrieves the user with the specified email address.
+    /// </summary>
+    /// <param name="email">The email address of the user to retrieve.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>The matching user, or <see langword="null"/> if no user is found.</returns>
+    /// <exception cref="ArgumentException"><paramref name="email"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -30,6 +44,12 @@ public class UserRepository : Repository<User>, IUserRepository
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves active users who are not locked, ordered by full name.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A collection of active, unlocked users.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public async Task<IEnumerable<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -41,6 +61,12 @@ public class UserRepository : Repository<User>, IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves users whose locks have not expired, ordered by lock expiration in descending order.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A collection of currently locked users.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public async Task<IEnumerable<User>> GetLockedUsersAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -52,6 +78,14 @@ public class UserRepository : Repository<User>, IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Determines whether a user with the specified email address exists.
+    /// </summary>
+    /// <param name="email">The email address to check.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns><see langword="true"/> if a user has the specified email address; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="email"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -61,6 +95,13 @@ public class UserRepository : Repository<User>, IUserRepository
         return await _dbSet.AnyAsync(u => u.Email == email, cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves a user and the user's API keys by unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>The matching user with API keys loaded, or <see langword="null"/> if no user is found.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public async Task<User?> GetWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -71,6 +112,16 @@ public class UserRepository : Repository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
     }
 
+    /// <summary>
+    /// Searches users by email address or full name and returns the requested page ordered by full name.
+    /// </summary>
+    /// <param name="query">The text to find in user email addresses or full names.</param>
+    /// <param name="page">The one-based page number.</param>
+    /// <param name="pageSize">The maximum number of users to return.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A collection containing the requested page of matching users, or an empty collection when <paramref name="query"/> contains only white-space characters.</returns>
+    /// <exception cref="ArgumentException"><paramref name="query"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is canceled while the database query is executing.</exception>
     public async Task<IEnumerable<User>> SearchUsersAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(query);
