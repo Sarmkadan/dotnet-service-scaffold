@@ -26,6 +26,11 @@ public class AuditLogController : ControllerBase, IAuditLogController
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly ILogger<AuditLogController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuditLogController"/> class.
+    /// </summary>
+    /// <param name="auditLogRepository">The repository used to query audit log entries.</param>
+    /// <param name="logger">The logger used to record controller activity.</param>
     public AuditLogController(
         IAuditLogRepository auditLogRepository,
         ILogger<AuditLogController> logger)
@@ -36,6 +41,10 @@ public class AuditLogController : ControllerBase, IAuditLogController
         _logger = logger;
     }
 
+    /// <summary>
+    /// Returns a string representation of the controller and its dependencies.
+    /// </summary>
+    /// <returns>A string representation of the controller.</returns>
     public override string ToString()
     {
         return $"AuditLogController {{ _auditLogRepository = {_auditLogRepository}, _logger = {_logger} }}";
