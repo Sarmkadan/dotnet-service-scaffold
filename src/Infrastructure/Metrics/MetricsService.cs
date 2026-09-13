@@ -34,17 +34,27 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Initializes a new instance of the <see cref="MetricsService"/> class.
     /// </summary>
+    /// <param name="logger">The logger used to record metric operations.</param>
     public MetricsService(ILogger<MetricsService> logger)
     {
         _metrics = new ConcurrentDictionary<string, MetricValue>();
         _logger = logger;
     }
 
+    /// <summary>
+    /// Returns a string that represents the metrics service and its current metric count.
+    /// </summary>
+    /// <returns>A string representation of the metrics service.</returns>
     public override string ToString() => $"MetricsService {{ MetricCount = {_metrics.Count} }}";
 
     /// <summary>
     /// Increments a counter metric.
     /// </summary>
+    /// <param name="metricName">The name of the counter metric.</param>
+    /// <param name="value">The value to add to the counter.</param>
+    /// <param name="tags">Optional tags used to distinguish the metric.</param>
+    /// <exception cref="ArgumentException"><paramref name="metricName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="metricName"/> is <see langword="null"/>.</exception>
     public void IncrementCounter(string metricName, long value = 1, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
@@ -67,6 +77,11 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Records a gauge (current value) metric, overwriting the previous value.
     /// </summary>
+    /// <param name="metricName">The name of the gauge metric.</param>
+    /// <param name="value">The current gauge value.</param>
+    /// <param name="tags">Optional tags used to distinguish the metric.</param>
+    /// <exception cref="ArgumentException"><paramref name="metricName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="metricName"/> is <see langword="null"/>.</exception>
     public void RecordGauge(string metricName, double value, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
@@ -85,6 +100,11 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Records a timing metric in milliseconds.
     /// </summary>
+    /// <param name="metricName">The name of the timing metric.</param>
+    /// <param name="elapsedMs">The elapsed time, in milliseconds.</param>
+    /// <param name="tags">Optional tags used to distinguish the metric.</param>
+    /// <exception cref="ArgumentException"><paramref name="metricName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="metricName"/> is <see langword="null"/>.</exception>
     public void RecordTiming(string metricName, long elapsedMs, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
@@ -110,6 +130,14 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Records timing of an operation using a stopwatch pattern.
     /// </summary>
+    /// <typeparam name="T">The type of value returned by the operation.</typeparam>
+    /// <param name="metricName">The name of the timing metric.</param>
+    /// <param name="operation">The asynchronous operation to measure.</param>
+    /// <param name="tags">Optional tags used to distinguish the metric.</param>
+    /// <param name="cancellationToken">A token supplied for cancellation.</param>
+    /// <returns>A task whose result is the value returned by <paramref name="operation"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="metricName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="metricName"/> or <paramref name="operation"/> is <see langword="null"/>.</exception>
     public async Task<T> MeasureAsync<T>(string metricName, Func<Task<T>> operation, IDictionary<string, string>? tags = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
@@ -138,6 +166,12 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Records a histogram metric with explicit bucket boundaries.
     /// </summary>
+    /// <param name="metricName">The name of the histogram metric.</param>
+    /// <param name="value">The value to record.</param>
+    /// <param name="buckets">The histogram bucket boundaries.</param>
+    /// <param name="tags">Optional tags used to distinguish the metric.</param>
+    /// <exception cref="ArgumentException"><paramref name="metricName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="metricName"/> or <paramref name="buckets"/> is <see langword="null"/>.</exception>
     public void RecordHistogram(string metricName, double value, double[] buckets, IDictionary<string, string>? tags = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(metricName);
@@ -162,6 +196,9 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Gets all recorded metrics as a dictionary suitable for serialization.
     /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A task whose result contains the recorded metrics keyed by metric name and tags.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public Task<Dictionary<string, object>> GetMetricsAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Starting GetMetricsAsync with {MetricCount} recorded metrics", _metrics.Count);
@@ -211,6 +248,9 @@ public class MetricsService : IMetricsService
     /// <summary>
     /// Resets all metrics.
     /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A task that represents the reset operation.</returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled.</exception>
     public Task ResetAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Starting ResetAsync with {MetricCount} recorded metrics", _metrics.Count);
