@@ -26,6 +26,8 @@ public class ConfigurationService : IConfigurationService
     /// <param name="logger">The logger.</param>
     public ConfigurationService(IConfigurationRepository configRepository, ILogger<ConfigurationService> logger)
     {
+        ArgumentNullException.ThrowIfNull(configRepository);
+        ArgumentNullException.ThrowIfNull(logger);
         _configRepository = configRepository;
         _logger = logger;
     }
