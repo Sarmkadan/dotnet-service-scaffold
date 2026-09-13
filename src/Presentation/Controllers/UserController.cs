@@ -21,6 +21,11 @@ public class UserController : ControllerBase
     private readonly IUserService _userService;
     private readonly ILogger<UserController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserController"/> class.
+    /// </summary>
+    /// <param name="userService">The service used to manage users and authentication.</param>
+    /// <param name="logger">The logger used to record controller activity.</param>
     public UserController(IUserService userService, ILogger<UserController> logger)
     {
         _userService = userService;
@@ -30,6 +35,9 @@ public class UserController : ControllerBase
     /// <summary>
     /// Creates a new user account.
     /// </summary>
+    /// <param name="request">The details of the user account to create.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the newly created user.</returns>
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -59,6 +67,9 @@ public class UserController : ControllerBase
     /// <summary>
     /// Authenticates a user and returns user information.
     /// </summary>
+    /// <param name="request">The credentials used to authenticate the user.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the authenticated user, or an unauthorized response.</returns>
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -94,6 +105,9 @@ public class UserController : ControllerBase
     /// <summary>
     /// Retrieves user information by ID.
     /// </summary>
+    /// <param name="userId">The identifier of the user to retrieve.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the user information, or a not-found response.</returns>
     [HttpGet("{userId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -118,6 +132,10 @@ public class UserController : ControllerBase
     /// <summary>
     /// Changes a user's password.
     /// </summary>
+    /// <param name="userId">The identifier of the user whose password is changed.</param>
+    /// <param name="request">The current and replacement passwords.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result indicating whether the password was changed.</returns>
     [HttpPost("{userId}/change-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -143,6 +161,9 @@ public class UserController : ControllerBase
     /// <summary>
     /// Unlocks a user account that is locked due to failed login attempts.
     /// </summary>
+    /// <param name="userId">The identifier of the user account to unlock.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result indicating that the user account was unlocked.</returns>
     [HttpPost("{userId}/unlock")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -156,9 +177,10 @@ public class UserController : ControllerBase
     /// <summary>
     /// Searches for users by name or email (case-insensitive) with pagination.
     /// </summary>
-    /// <param name="q">Search query to match against user email or full name</param>
-    /// <param name="page">Page number (1-based)</param>
-    /// <param name="pageSize">Number of items per page (max 100)</param>
+    /// <param name="q">The search query to match against user email addresses or full names.</param>
+    /// <param name="page">The one-based page number.</param>
+    /// <param name="pageSize">The number of users per page, up to 100.</param>
+    /// <returns>An action result containing the matching users and pagination information.</returns>
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -217,7 +239,25 @@ public class UserController : ControllerBase
         };
     }
 
+    /// <summary>
+    /// Represents the information required to register a user.
+    /// </summary>
+    /// <param name="Email">The user's email address.</param>
+    /// <param name="FullName">The user's full name.</param>
+    /// <param name="Password">The user's password.</param>
     public record RegisterRequest(string Email, string FullName, string Password);
+
+    /// <summary>
+    /// Represents the credentials required to authenticate a user.
+    /// </summary>
+    /// <param name="Email">The user's email address.</param>
+    /// <param name="Password">The user's password.</param>
     public record LoginRequest(string Email, string Password);
+
+    /// <summary>
+    /// Represents the information required to change a user's password.
+    /// </summary>
+    /// <param name="OldPassword">The user's current password.</param>
+    /// <param name="NewPassword">The user's replacement password.</param>
     public record ChangePasswordRequest(string OldPassword, string NewPassword);
 }
