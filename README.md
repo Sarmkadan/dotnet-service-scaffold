@@ -3953,19 +3953,31 @@ if (specificFlag != null)
 }
 ```
 
-## AuditService
+## Application Services
 
-The `AuditService` provides comprehensive audit logging, compliance tracking, and activity monitoring for the application. It records user actions, system events, and failed operations with timestamps, user context, and entity associations. The service supports querying audit logs by user, entity, time range, and status, and includes automated cleanup of old logs for compliance and storage management.
+### AuditService
 
-### Usage Examples
+The `AuditService` provides audit logging, compliance tracking, and activity monitoring for the application. It records successful and failed actions with UTC timestamps, optional user and entity context, and descriptive details. Stored entries can be retrieved by ID, user, entity, recency, or failure status, and old entries can be removed according to a retention period.
+
+#### Key Methods
+
+- `LogActionAsync` records a successful action and its related user, entity, and description.
+- `LogFailedActionAsync` records a failed action and the reason it failed.
+- `GetAuditLogAsync` retrieves one audit entry by ID.
+- `GetUserAuditLogsAsync` and `GetEntityAuditLogsAsync` retrieve entries associated with a user or entity.
+- `GetRecentLogsAsync` and `GetFailedActionsAsync` retrieve recent activity or recent failures.
+- `CleanupOldLogsAsync` deletes entries older than the specified retention period (90 days by default).
+
+#### Usage Example
 
 ```csharp
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Application.Services;
-using DotnetServiceScaffold.Domain.Models;
 
-// Initialize the audit service (typically via dependency injection)
+// AuditService is registered as IAuditService in Program.cs.
+// Its repository and logger dependencies are normally supplied by dependency injection.
 var auditService = new AuditService(auditLogRepository, logger);
 
 // Log a successful user action
