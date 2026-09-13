@@ -35,6 +35,10 @@ public class ServiceManagementService : IServiceManagementService
         IAuditService auditService,
         ILogger<ServiceManagementService> logger)
     {
+        ArgumentNullException.ThrowIfNull(serviceRepository);
+        ArgumentNullException.ThrowIfNull(userRepository);
+        ArgumentNullException.ThrowIfNull(auditService);
+        ArgumentNullException.ThrowIfNull(logger);
         _serviceRepository = serviceRepository;
         _userRepository = userRepository;
         _auditService = auditService;
