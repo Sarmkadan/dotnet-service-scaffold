@@ -22,6 +22,7 @@ public class NotificationService : INotificationService
 /// <param name="logger">The logger.</param>
 public NotificationService(ILogger<NotificationService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
     }
 
