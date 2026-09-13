@@ -26,6 +26,14 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
     private readonly ILogger<GlobalExceptionHandler> _logger;
     private readonly ILogContextService _logContextService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GlobalExceptionHandler"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used to record unhandled exceptions.</param>
+    /// <param name="logContextService">The service that provides the current correlation identifier.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="logger"/> or <paramref name="logContextService"/> is <see langword="null"/>.
+    /// </exception>
     public GlobalExceptionHandler(
         ILogger<GlobalExceptionHandler> logger,
         ILogContextService logContextService)
