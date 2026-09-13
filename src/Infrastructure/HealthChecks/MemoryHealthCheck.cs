@@ -86,6 +86,8 @@ public class MemoryHealthCheck : IHealthCheck
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         // Memory operations are generally fast, but enforce timeout for consistency
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(MemoryHealthCheckConstants.TimeoutSeconds));
