@@ -21,6 +21,11 @@ public class ServiceController : ControllerBase, IServiceController
     private readonly IServiceManagementService _serviceManagementService;
     private readonly ILogger<ServiceController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ServiceController"/> class.
+    /// </summary>
+    /// <param name="serviceManagementService">The service used to manage registered services.</param>
+    /// <param name="logger">The logger used to record controller activity.</param>
     public ServiceController(
         IServiceManagementService serviceManagementService,
         ILogger<ServiceController> logger)
@@ -34,6 +39,9 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Registers a new service for monitoring.
     /// </summary>
+    /// <param name="request">The service registration details.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the registered service.</returns>
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -82,6 +90,9 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Retrieves service information by ID.
     /// </summary>
+    /// <param name="serviceId">The identifier of the service to retrieve.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the service information.</returns>
     [HttpGet("{serviceId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -127,6 +138,8 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Lists all registered services.
     /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the registered services.</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListServices(CancellationToken cancellationToken = default)
@@ -160,6 +173,9 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Gets all services owned by a specific user.
     /// </summary>
+    /// <param name="ownerId">The identifier of the service owner.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the services owned by the specified user.</returns>
     [HttpGet("owner/{ownerId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetServicesByOwner(Guid ownerId, CancellationToken cancellationToken = default)
@@ -192,6 +208,10 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Disables a service from monitoring.
     /// </summary>
+    /// <param name="serviceId">The identifier of the service to disable.</param>
+    /// <param name="request">The details describing why the service is being disabled.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the disabled service.</returns>
     [HttpPost("{serviceId}/disable")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -228,6 +248,8 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Enables a previously disabled service.
     /// </summary>
+    /// <param name="serviceId">The identifier of the service to enable.</param>
+    /// <returns>An action result containing the enabled service.</returns>
     [HttpPost("{serviceId}/enable")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -262,6 +284,8 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Deregisters a service by removing it from monitoring.
     /// </summary>
+    /// <param name="serviceId">The identifier of the service to deregister.</param>
+    /// <returns>An action result indicating the outcome of the operation.</returns>
     [HttpDelete("{serviceId}/registration")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -288,6 +312,7 @@ public class ServiceController : ControllerBase, IServiceController
     /// <summary>
     /// Gets unhealthy services that need attention.
     /// </summary>
+    /// <returns>An action result containing the unhealthy services.</returns>
     [HttpGet("health/unhealthy")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUnhealthyServices()
