@@ -62,6 +62,7 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
     /// <param name="cache">Cache service for storing resolved instances.</param>
     /// <param name="options">Service discovery configuration options.</param>
     /// <param name="logger">Logger instance.</param>
+    /// <param name="dbContext">The database context used to retry self-registration operations.</param>
     /// <exception cref="ArgumentNullException">Thrown if any required parameter is null.</exception>
     public ServiceDiscoveryService(
         IServiceDiscoveryProviderSelector providerSelector,
@@ -86,8 +87,14 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         _provider = _providerSelector.GetProvider();
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceName"/> is null.</exception>
+    /// <summary>
+    /// Discovers the available instances registered for a service.
+    /// </summary>
+    /// <param name="serviceName">The name of the service to discover.</param>
+    /// <param name="cancellationToken">A token used to cancel the discovery operation.</param>
+    /// <returns>A result containing the discovered service instances.</returns>
+    /// <exception cref="ArgumentException"><paramref name="serviceName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceName"/> is <see langword="null"/>.</exception>
     public async Task<Result<IReadOnlyList<ServiceDiscoveryRecord>>> DiscoverAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
@@ -121,8 +128,14 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         return result;
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceName"/> is null.</exception>
+    /// <summary>
+    /// Selects a healthy endpoint for a service using the configured load-balancing strategy.
+    /// </summary>
+    /// <param name="serviceName">The name of the service whose endpoint is selected.</param>
+    /// <param name="cancellationToken">A token used to cancel the selection operation.</param>
+    /// <returns>A result containing the selected service endpoint.</returns>
+    /// <exception cref="ArgumentException"><paramref name="serviceName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceName"/> is <see langword="null"/>.</exception>
     public async Task<Result<ServiceDiscoveryRecord>> SelectEndpointAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
@@ -141,8 +154,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         return Result<ServiceDiscoveryRecord>.Success(SelectByStrategy(alive, serviceName));
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
+    /// <summary>
+    /// Registers this service instance with the active discovery provider when self-registration is enabled.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the registration operation.</param>
+    /// <returns>A result describing whether self-registration succeeded.</returns>
     public async Task<Result> RegisterSelfAsync(CancellationToken cancellationToken = default)
     {
         var self = _options.SelfRegistration;
@@ -185,8 +201,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         return result;
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
+    /// <summary>
+    /// Deregisters this service instance from the active discovery provider when self-registration is enabled.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the deregistration operation.</param>
+    /// <returns>A result describing whether self-deregistration succeeded.</returns>
     public async Task<Result> DeregisterSelfAsync(CancellationToken cancellationToken = default)
     {
         if (!_options.SelfRegistration.Enabled)
@@ -201,8 +220,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         return result;
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
+    /// <summary>
+    /// Gets the names of all registered services when the active provider supports catalog enumeration.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the catalog operation.</param>
+    /// <returns>A result containing the registered service names.</returns>
     public async Task<Result<IReadOnlyList<string>>> GetRegisteredServicesAsync(
         CancellationToken cancellationToken = default)
     {
@@ -215,8 +237,12 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         return Result<IReadOnlyList<string>>.Failure(ServiceDiscoveryServiceConstants.ServiceCatalogEnumRequiresRegistryMessage, ServiceDiscoveryServiceConstants.ProviderUnsupportedErrorCode);
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
+    /// <summary>
+    /// Invalidates cached discovery data for one service or for all services.
+    /// </summary>
+    /// <param name="serviceName">The service whose cached data is invalidated, or <see langword="null"/> to invalidate all cached discovery data.</param>
+    /// <param name="cancellationToken">A token used to cancel the refresh operation.</param>
+    /// <returns>A task that represents the asynchronous refresh operation.</returns>
     public async Task RefreshAsync(string? serviceName = null, CancellationToken cancellationToken = default)
     {
         if (serviceName is not null)
@@ -232,8 +258,11 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         _logger.LogDebug(ServiceDiscoveryServiceConstants.DiscoveryCacheFullyInvalidatedLogMessage);
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="cancellationToken"/> is in cancelled state.</exception>
+    /// <summary>
+    /// Updates the heartbeat for this service instance when self-registration is enabled.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the heartbeat operation.</param>
+    /// <returns>A task that represents the asynchronous heartbeat operation.</returns>
     public async Task UpdateHeartbeatAsync(CancellationToken cancellationToken = default)
     {
         if (!_options.SelfRegistration.Enabled)
@@ -276,8 +305,14 @@ public sealed class ServiceDiscoveryService : IServiceDiscoveryService
         }
     }
 
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceName"/> is null.</exception>
+    /// <summary>
+    /// Gets discovery and health statistics for a service.
+    /// </summary>
+    /// <param name="serviceName">The name of the service whose statistics are retrieved.</param>
+    /// <param name="cancellationToken">A token used to cancel the statistics operation.</param>
+    /// <returns>A result containing the service discovery statistics.</returns>
+    /// <exception cref="ArgumentException"><paramref name="serviceName"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="serviceName"/> is <see langword="null"/>.</exception>
     public async Task<Result<ServiceDiscoveryStats>> GetServiceStatsAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
