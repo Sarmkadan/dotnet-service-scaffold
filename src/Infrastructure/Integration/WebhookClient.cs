@@ -66,6 +66,10 @@ public sealed record WebhookDeliveryResult(
 /// - HMAC-SHA256 payload signing for authenticity verification
 /// - Retry logic, timeout handling, and logging for debugging webhook delivery issues.
 /// </summary>
+/// <remarks>
+/// Failed deliveries are recorded as dead letters so that they can be inspected and replayed.
+/// A single instance uses the injected <see cref="HttpClient"/> for every delivery.
+/// </remarks>
 public class WebhookClient : IWebhookClient
 {
     private readonly HttpClient _httpClient;
@@ -81,7 +85,10 @@ public class WebhookClient : IWebhookClient
     /// <param name="logger">Logger used for delivery diagnostics.</param>
     /// <param name="dbContext">Database context used to persist dead-lettered deliveries.</param>
     /// <param name="metricsService">Metrics sink used to surface delivery-attempt metadata.</param>
-    /// <exception cref="ArgumentNullException">Thrown if any dependency is null.</exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="httpClient"/>, <paramref name="logger"/>,
+    /// <paramref name="dbContext"/>, or <paramref name="metricsService"/> is <see langword="null"/>.
+    /// </exception>
     public WebhookClient(HttpClient httpClient, ILogger<WebhookClient> logger, ServiceScaffoldDbContext dbContext, IMetricsService metricsService)
     {
         ArgumentNullException.ThrowIfNull(httpClient);
@@ -98,14 +105,14 @@ public class WebhookClient : IWebhookClient
     /// <summary>
     /// Sends a webhook payload to the specified URL with automatic retry on failure.
     /// </summary>
-    /// <param name="webhookUrl">The destination URL for the webhook. Must be HTTPS and not localhost/internal.</param>
-    /// <param name="payload">The payload object to send.</param>
-    /// <param name="eventType">Optional event type identifier.</param>
-    /// <param name="webhookSecret">Optional secret for HMAC-SHA256 payload signing. If provided, signature header will be added.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>True if delivery was successful, false otherwise.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if webhookUrl or payload is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if webhookUrl is invalid or blocked by SSRF protection.</exception>
+    /// <param name="webhookUrl">The HTTP or HTTPS destination URL. Local, private, link-local, and metadata-service addresses are rejected.</param>
+    /// <param name="payload">The object to serialize as JSON and send in the request body.</param>
+    /// <param name="eventType">An optional event type to include in the webhook headers and metrics.</param>
+    /// <param name="webhookSecret">An optional secret used to add an HMAC-SHA256 signature header.</param>
+    /// <param name="cancellationToken">A token that can cancel the delivery and retry delay.</param>
+    /// <returns><see langword="true"/> when the endpoint returns a successful HTTP status code; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="webhookUrl"/> or <paramref name="payload"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="webhookUrl"/> is empty, malformed, uses an unsupported scheme, or targets a blocked address.</exception>
     public async Task<bool> SendWebhookAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(webhookUrl);
@@ -119,14 +126,14 @@ public class WebhookClient : IWebhookClient
     /// Sends a webhook payload to the specified URL with automatic retry on failure and returns
     /// a detailed delivery result describing every attempt instead of reducing the outcome to a boolean.
     /// </summary>
-    /// <param name="webhookUrl">The destination URL for the webhook. Must be HTTPS and not localhost/internal.</param>
-    /// <param name="payload">The payload object to send.</param>
-    /// <param name="eventType">Optional event type identifier.</param>
-    /// <param name="webhookSecret">Optional secret for HMAC-SHA256 payload signing. If provided, signature header will be added.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A <see cref="WebhookDeliveryResult"/> describing the delivery outcome.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if webhookUrl or payload is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if webhookUrl is invalid or blocked by SSRF protection.</exception>
+    /// <param name="webhookUrl">The HTTP or HTTPS destination URL. Local, private, link-local, and metadata-service addresses are rejected.</param>
+    /// <param name="payload">The object to serialize as JSON and send in the request body.</param>
+    /// <param name="eventType">An optional event type to include in the webhook headers and metrics.</param>
+    /// <param name="webhookSecret">An optional secret used to add an HMAC-SHA256 signature header.</param>
+    /// <param name="cancellationToken">A token that can cancel the delivery and retry delay.</param>
+    /// <returns>A result containing the final status, error details, cancellation state, and history of all delivery attempts.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="webhookUrl"/> or <paramref name="payload"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="webhookUrl"/> is empty, malformed, uses an unsupported scheme, or targets a blocked address.</exception>
     public async Task<WebhookDeliveryResult> DeliverAsync(string webhookUrl, object payload, string? eventType = null, string? webhookSecret = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(webhookUrl);
@@ -272,11 +279,11 @@ public class WebhookClient : IWebhookClient
     /// Replays a previously dead-lettered webhook delivery. On success the dead letter
     /// is marked resolved; on failure its attempt history and last-failure metadata are updated.
     /// </summary>
-    /// <param name="deadLetterId">Identifier of the dead-lettered delivery to replay.</param>
-    /// <param name="webhookSecret">Optional secret used to re-sign the payload for this replay.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>True if the replayed delivery succeeded, false otherwise.</returns>
-    /// <exception cref="ArgumentException">Thrown if no dead letter with the given identifier exists.</exception>
+    /// <param name="deadLetterId">The identifier of the dead-lettered delivery to replay.</param>
+    /// <param name="webhookSecret">An optional secret used to sign the replayed payload with HMAC-SHA256.</param>
+    /// <param name="cancellationToken">A token that can cancel the lookup, delivery, or persistence operation.</param>
+    /// <returns><see langword="true"/> when the replay succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when no dead-lettered delivery has the specified <paramref name="deadLetterId"/>.</exception>
     public async Task<bool> ReplayDeadLetterAsync(Guid deadLetterId, string? webhookSecret = null, CancellationToken cancellationToken = default)
     {
         var deadLetter = await _dbContext.WebhookDeadLetters.FindAsync(new object?[] { deadLetterId }, cancellationToken)
