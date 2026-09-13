@@ -53,6 +53,8 @@ public class XmlResponseFormatter : IResponseFormatter, IXmlResponseFormatter
     /// </summary>
     public bool CanFormat(string mediaType)
     {
+        ArgumentNullException.ThrowIfNull(mediaType);
+
         if (string.IsNullOrEmpty(mediaType))
             return false;
 
