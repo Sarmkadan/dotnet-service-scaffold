@@ -13,12 +13,29 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// <summary>
 /// Generic repository implementation with standard CRUD operations.
 /// </summary>
+/// <typeparam name="T">The type of entity managed by the repository.</typeparam>
 public class Repository<T> : IRepository<T> where T : class
 {
+	/// <summary>
+	/// The database context used by the repository.
+	/// </summary>
 	protected internal readonly ServiceScaffoldDbContext _context;
+
+	/// <summary>
+	/// The set of entities managed by the repository.
+	/// </summary>
 	protected internal readonly DbSet<T> _dbSet;
+
+	/// <summary>
+	/// The logger used to record repository operations.
+	/// </summary>
 	protected internal readonly ILogger<Repository<T>> _logger;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Repository{T}"/> class.
+	/// </summary>
+	/// <param name="context">The database context used to access persisted entities.</param>
+	/// <param name="logger">The logger used to record repository operations.</param>
 	public Repository(ServiceScaffoldDbContext context, ILogger<Repository<T>> logger)
 	{
 		_context = context;
@@ -26,6 +43,14 @@ public class Repository<T> : IRepository<T> where T : class
 		_logger = logger;
 	}
 
+	/// <summary>
+	/// Retrieves an entity by its unique identifier.
+	/// </summary>
+	/// <param name="id">The unique identifier of the entity.</param>
+	/// <param name="cancellationToken">A token used to cancel the operation.</param>
+	/// <returns>The matching entity, or <see langword="null"/> if no entity is found.</returns>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled before the operation starts.</exception>
+	/// <exception cref="DataAccessException">An error occurs while retrieving the entity.</exception>
 	public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
@@ -41,6 +66,13 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
+	/// <summary>
+	/// Retrieves all entities in the repository.
+	/// </summary>
+	/// <param name="cancellationToken">A token used to cancel the operation.</param>
+	/// <returns>A collection containing all entities.</returns>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled before the operation starts.</exception>
+	/// <exception cref="DataAccessException">An error occurs while retrieving the entities.</exception>
 	public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
@@ -56,6 +88,15 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
+	/// <summary>
+	/// Adds an entity to the repository and persists the change.
+	/// </summary>
+	/// <param name="entity">The entity to add.</param>
+	/// <param name="cancellationToken">A token used to cancel the operation.</param>
+	/// <returns>The entity that was added.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled before the operation starts.</exception>
+	/// <exception cref="DataAccessException">An error occurs while adding or persisting the entity.</exception>
 	public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(entity);
@@ -75,6 +116,15 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
+	/// <summary>
+	/// Updates an entity in the repository and persists the change.
+	/// </summary>
+	/// <param name="entity">The entity to update.</param>
+	/// <param name="cancellationToken">A token used to cancel the operation.</param>
+	/// <returns>The updated entity.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled before the operation starts.</exception>
+	/// <exception cref="DataAccessException">An error occurs while updating or persisting the entity.</exception>
 	public virtual async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(entity);
@@ -94,6 +144,12 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
+	/// <summary>
+	/// Deletes the entity with the specified unique identifier, if it exists, and persists the change.
+	/// </summary>
+	/// <param name="id">The unique identifier of the entity to delete.</param>
+	/// <returns>A task that represents the asynchronous operation.</returns>
+	/// <exception cref="DataAccessException">An error occurs while retrieving, deleting, or persisting the entity.</exception>
 	public virtual async Task DeleteAsync(Guid id)
 	{
 		try
@@ -114,6 +170,14 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
+	/// <summary>
+	/// Determines whether an entity with the specified unique identifier exists.
+	/// </summary>
+	/// <param name="id">The unique identifier of the entity.</param>
+	/// <param name="cancellationToken">A token used to cancel the operation.</param>
+	/// <returns><see langword="true"/> if the entity exists; otherwise, <see langword="false"/>.</returns>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> has been canceled before the operation starts.</exception>
+	/// <exception cref="DataAccessException">An error occurs while checking for the entity.</exception>
 	public virtual async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
@@ -129,6 +193,11 @@ public class Repository<T> : IRepository<T> where T : class
 		}
 	}
 
+	/// <summary>
+	/// Persists pending changes to the database.
+	/// </summary>
+	/// <returns>A task that represents the asynchronous operation.</returns>
+	/// <exception cref="DataAccessException">A concurrency conflict or another error occurs while saving changes.</exception>
 	public virtual async Task SaveChangesAsync()
 	{
 		try
