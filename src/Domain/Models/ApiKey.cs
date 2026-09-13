@@ -171,6 +171,6 @@ public sealed class ApiKey : IApiKey, IEquatable<ApiKey>
 
     public override string ToString()
     {
-        return $"ApiKey {{ Id = {Id}, UserId = {UserId}, User = {User}, Name = {Name}, KeyHash = {KeyHash}, KeyPrefix = {KeyPrefix} }}";
+        return $"ApiKey {{ Id = {Id}, Name = {Name}, KeyPrefix = {KeyPrefix}, IsActive = {IsActive}, CreatedAt = {CreatedAt}, ExpiresAt = {ExpiresAt}, LastUsedAt = {LastUsedAt}, ApiCallsCount = {ApiCallsCount} }}";
     }
 }
