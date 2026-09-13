@@ -18,6 +18,11 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
 {
     private readonly ILogger<ServiceScaffoldDbContext> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ServiceScaffoldDbContext"/> class.
+    /// </summary>
+    /// <param name="options">The options used to configure the database context.</param>
+    /// <param name="logger">The logger used to record database context activity.</param>
     public ServiceScaffoldDbContext(
         DbContextOptions<ServiceScaffoldDbContext> options,
         ILogger<ServiceScaffoldDbContext> logger)
@@ -26,6 +31,11 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
         _logger = logger;
     }
 
+    /// <summary>
+    /// Determines whether the current context is equal to another context.
+    /// </summary>
+    /// <param name="other">The context to compare with the current context.</param>
+    /// <returns><see langword="true"/> if the contexts are equal; otherwise, <see langword="false"/>.</returns>
     public bool Equals(ServiceScaffoldDbContext? other)
     {
         if (other is null) return false;
@@ -41,6 +51,7 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
                ServiceConfigurations.Equals(other.ServiceConfigurations);
     }
 
+    /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
         if (obj is null) return false;
@@ -49,16 +60,29 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
         return Equals((ServiceScaffoldDbContext)obj);
     }
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return HashCode.Combine(Users, ServiceRegistrations, HealthCheckResults, ServiceMetrics, ServiceEvents, ApiKeys, AuditLogs, ServiceConfigurations);
     }
 
+    /// <summary>
+    /// Determines whether two contexts are equal.
+    /// </summary>
+    /// <param name="left">The first context to compare.</param>
+    /// <param name="right">The second context to compare.</param>
+    /// <returns><see langword="true"/> if the contexts are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(ServiceScaffoldDbContext? left, ServiceScaffoldDbContext? right)
     {
         return Equals(left, right);
     }
 
+    /// <summary>
+    /// Determines whether two contexts are not equal.
+    /// </summary>
+    /// <param name="left">The first context to compare.</param>
+    /// <param name="right">The second context to compare.</param>
+    /// <returns><see langword="true"/> if the contexts are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(ServiceScaffoldDbContext? left, ServiceScaffoldDbContext? right)
     {
         return !Equals(left, right);
@@ -77,22 +101,49 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
         optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
     }
 
+    /// <summary>
+    /// Gets or sets the users stored in the database.
+    /// </summary>
     public DbSet<User> Users { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the service registrations stored in the database.
+    /// </summary>
     public DbSet<ServiceRegistration> ServiceRegistrations { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the health check results stored in the database.
+    /// </summary>
     public DbSet<HealthCheckResult> HealthCheckResults { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the service metrics stored in the database.
+    /// </summary>
     public DbSet<ServiceMetric> ServiceMetrics { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the service events stored in the database.
+    /// </summary>
     public DbSet<ServiceEvent> ServiceEvents { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the API keys stored in the database.
+    /// </summary>
     public DbSet<ApiKey> ApiKeys { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the audit logs stored in the database.
+    /// </summary>
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the service configurations stored in the database.
+    /// </summary>
     public DbSet<ServiceConfiguration> ServiceConfigurations { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the webhook dead letters stored in the database.
+    /// </summary>
     public DbSet<WebhookDeadLetter> WebhookDeadLetters { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -206,6 +257,7 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
     /// Initializes the database schema and enables WAL journal mode for better
     /// write concurrency under load.
     /// </summary>
+    /// <returns>A task that represents the asynchronous initialization operation.</returns>
     public async Task InitializeDatabaseAsync()
     {
         try
@@ -239,6 +291,7 @@ public class ServiceScaffoldDbContext : DbContext, IEquatable<ServiceScaffoldDbC
         }
     }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         return $"ServiceScaffoldDbContext {{ Users = {Users}, ServiceRegistrations = {ServiceRegistrations}, HealthCheckResults = {HealthCheckResults}, ServiceMetrics = {ServiceMetrics}, ServiceEvents = {ServiceEvents}, ApiKeys = {ApiKeys} }}";
