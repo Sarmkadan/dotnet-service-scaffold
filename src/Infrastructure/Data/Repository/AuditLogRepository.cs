@@ -16,10 +16,23 @@ namespace DotnetServiceScaffold.Infrastructure.Data.Repository;
 /// </summary>
 public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuditLogRepository"/> class.
+    /// </summary>
+    /// <param name="context">The database context used to access audit logs.</param>
+    /// <param name="logger">The logger used to record repository operations.</param>
     public AuditLogRepository(ServiceScaffoldDbContext context, ILogger<AuditLogRepository> logger) : base(context, logger)
     {
     }
 
+    /// <summary>
+    /// Gets the most recent audit logs associated with a user.
+    /// </summary>
+    /// <param name="userId">The identifier of the user whose audit logs to retrieve.</param>
+    /// <param name="count">The maximum number of audit logs to retrieve.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the matching audit logs in descending creation order.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId, int count = 50, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting audit logs for user {UserId} with count {Count}", userId, count);
@@ -32,6 +45,15 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         return result;
     }
 
+    /// <summary>
+    /// Gets audit logs associated with a specific entity.
+    /// </summary>
+    /// <param name="entityType">The type of the entity whose audit logs to retrieve.</param>
+    /// <param name="entityId">The identifier of the entity whose audit logs to retrieve.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the matching audit logs in descending creation order.</returns>
+    /// <exception cref="ArgumentException"><paramref name="entityType"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(entityType);
@@ -44,6 +66,13 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         return result;
     }
 
+    /// <summary>
+    /// Gets the most recently created audit logs.
+    /// </summary>
+    /// <param name="count">The maximum number of audit logs to retrieve.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the audit logs in descending creation order.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 100, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting recent audit logs with count {Count}", count);
@@ -55,6 +84,13 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         return result;
     }
 
+    /// <summary>
+    /// Gets the most recent audit logs for failed actions.
+    /// </summary>
+    /// <param name="count">The maximum number of audit logs to retrieve.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains failed audit logs in descending creation order.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<IEnumerable<AuditLog>> GetFailedActionsAsync(int count = 50, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting failed audit logs with count {Count}", count);
@@ -67,6 +103,13 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         return result;
     }
 
+    /// <summary>
+    /// Deletes audit logs created before the configured retention period.
+    /// </summary>
+    /// <param name="daysToKeep">The number of days of audit logs to retain.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous delete operation.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task DeleteOldLogsAsync(int daysToKeep = 90, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting old audit logs older than {DaysToKeep} days", daysToKeep);
@@ -94,6 +137,15 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         }
     }
 
+    /// <summary>
+    /// Gets a page of audit logs that satisfy an optional filter.
+    /// </summary>
+    /// <param name="predicate">An optional expression used to filter audit logs.</param>
+    /// <param name="page">The one-based page number to retrieve.</param>
+    /// <param name="pageSize">The maximum number of audit logs in the page.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the requested page and pagination metadata.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<PagedResult<AuditLog>> GetFilteredAsync(
         Expression<Func<AuditLog, bool>>? predicate = null,
         int page = 1,
@@ -137,6 +189,16 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         };
     }
 
+    /// <summary>
+    /// Gets a page of audit logs created within an inclusive date range.
+    /// </summary>
+    /// <param name="from">The start of the date range, inclusive.</param>
+    /// <param name="to">The end of the date range, inclusive.</param>
+    /// <param name="page">The one-based page number to retrieve.</param>
+    /// <param name="pageSize">The maximum number of audit logs in the page.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the requested page and pagination metadata.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<PagedResult<AuditLog>> GetByDateRangeAsync(
         DateTimeOffset from,
         DateTimeOffset to,
@@ -181,6 +243,16 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         };
     }
 
+    /// <summary>
+    /// Gets a page of audit logs associated with an entity type.
+    /// </summary>
+    /// <param name="entityType">The entity type by which to filter audit logs.</param>
+    /// <param name="page">The one-based page number to retrieve.</param>
+    /// <param name="pageSize">The maximum number of audit logs in the page.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the requested page and pagination metadata.</returns>
+    /// <exception cref="ArgumentException"><paramref name="entityType"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<PagedResult<AuditLog>> GetByEntityTypeAsync(
         string entityType,
         int page = 1,
@@ -221,6 +293,15 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
         };
     }
 
+    /// <summary>
+    /// Gets a page of audit logs associated with a user.
+    /// </summary>
+    /// <param name="userId">The identifier of the user whose audit logs to retrieve.</param>
+    /// <param name="page">The one-based page number to retrieve.</param>
+    /// <param name="pageSize">The maximum number of audit logs in the page.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the requested page and pagination metadata.</returns>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled.</exception>
     public async Task<PagedResult<AuditLog>> GetByUserIdPagedAsync(
         Guid userId,
         int page = 1,
