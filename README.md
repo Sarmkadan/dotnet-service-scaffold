@@ -3727,85 +3727,53 @@ await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
 
 ## ServiceManagementService
 
-The `ServiceManagementService` provides comprehensive service registration and lifecycle management capabilities for the service scaffold platform. It handles service registration, retrieval, updates, and status management including enabling, disabling, and health monitoring. The service integrates with the service repository for data persistence, user repository for ownership validation, and audit service for compliance tracking, enabling complete service lifecycle management with full audit trails.
+The `ServiceManagementService` coordinates service registration and lifecycle operations. It validates new registrations and their owners, persists service data through `IServiceRepository`, records registration and lifecycle actions through `IAuditService`, and logs operational events. Consumers should depend on `IServiceManagementService` so repository and audit concerns remain behind the application-service boundary.
 
-### Usage Examples
+### Key Methods
+
+- `RegisterServiceAsync` validates the service name and URLs, verifies the owner, rejects duplicate names, persists the registration, and writes an audit entry.
+- `GetServiceAsync`, `GetServiceByNameAsync`, `GetServicesByOwnerAsync`, and `GetAllServicesAsync` retrieve registered services.
+- `UpdateServiceAsync` validates and persists changes while updating the registration timestamp.
+- `DisableServiceAsync` and `EnableServiceAsync` change availability and record audit entries; `UnregisterServiceAsync` disables and removes a registration.
+- `GetUnhealthyServicesAsync` returns registrations considered unhealthy by the repository.
+- `GetServiceSuccessRateAsync` returns the registration's success-rate percentage, or `100` when it has no recorded requests.
+
+### Usage Example
 
 ```csharp
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Application.Services;
-using DotnetServiceScaffold.Domain.Models;
 
-// Initialize the service management service (typically via dependency injection)
-var serviceManagementService = new ServiceManagementService(
-    serviceRepository,
-    userRepository,
-    auditService,
-    logger
-);
-
-// Register a new service with required parameters
-var newService = await serviceManagementService.RegisterServiceAsync(
-    serviceName: "user-api",
-    endpoint: "https://api.example.com",
-    healthCheckUrl: "https://api.example.com/health",
-    ownerId: Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
-);
-Console.WriteLine($"Registered service: {newService.ServiceName} with ID: {newService.Id}");
-
-// Retrieve a service by ID
-var retrievedService = await serviceManagementService.GetServiceAsync(newService.Id);
-if (retrievedService != null)
+public sealed class ServiceProvisioner
 {
-    Console.WriteLine($"Retrieved service: {retrievedService.ServiceName} (Status: {retrievedService.Status})");
+    private readonly IServiceManagementService _services;
+
+    public ServiceProvisioner(IServiceManagementService services)
+    {
+        _services = services;
+    }
+
+    public async Task<Guid> ProvisionAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        var registration = await _services.RegisterServiceAsync(
+            serviceName: "orders-api",
+            endpoint: "https://orders.example.com",
+            healthCheckUrl: "https://orders.example.com/health",
+            ownerId,
+            cancellationToken);
+
+        var saved = await _services.GetServiceAsync(
+            registration.Id,
+            cancellationToken);
+
+        return saved?.Id
+            ?? throw new InvalidOperationException("Registration was not found.");
+    }
 }
-
-// Retrieve a service by name
-var serviceByName = await serviceManagementService.GetServiceByNameAsync("user-api");
-Console.WriteLine($"Service by name: {serviceByName?.ServiceName}");
-
-// Get all services owned by a specific user
-var userServices = await serviceManagementService.GetServicesByOwnerAsync(
-    Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
-);
-Console.WriteLine($"User owns {userServices.Count()} services");
-
-// Get all registered services
-var allServices = await serviceManagementService.GetAllServicesAsync();
-Console.WriteLine($"Total registered services: {allServices.Count()}");
-
-// Update service configuration
-if (retrievedService != null)
-{
-    retrievedService.Description = "Updated user management API service";
-    var updatedService = await serviceManagementService.UpdateServiceAsync(retrievedService);
-    Console.WriteLine($"Updated service: {updatedService.Description}");
-}
-
-// Disable a service for maintenance
-var disabledService = await serviceManagementService.DisableServiceAsync(
-    newService.Id,
-    "Scheduled maintenance window"
-);
-Console.WriteLine($"Service disabled: {disabledService.IsEnabled}");
-
-// Re-enable a service after maintenance
-var enabledService = await serviceManagementService.EnableServiceAsync(newService.Id);
-Console.WriteLine($"Service re-enabled: {enabledService.IsEnabled}");
-
-// Get unhealthy services for monitoring
-var unhealthyServices = await serviceManagementService.GetUnhealthyServicesAsync();
-Console.WriteLine($"Unhealthy services count: {unhealthyServices.Count()}");
-
-// Calculate service success rate over the last hour
-var successRate = await serviceManagementService.GetServiceSuccessRateAsync(newService.Id, minutesBack: 60);
-Console.WriteLine($"Service success rate: {successRate}%");
-
-// Unregister/delete a service
-await serviceManagementService.UnregisterServiceAsync(newService.Id);
-Console.WriteLine("Service unregistered successfully");
 ```
 
 ## FeatureFlagService
