@@ -23,5 +23,15 @@ namespace Shared.Utilities
         {
             return DateTime.UtcNow - birthDate;
         }
+
+        public static bool IsInFuture(this DateTime dateTime)
+        {
+            return dateTime > DateTime.UtcNow;
+        }
+
+        public static bool IsInPast(this DateTime dateTime)
+        {
+            return dateTime < DateTime.UtcNow;
+        }
     }
 }
