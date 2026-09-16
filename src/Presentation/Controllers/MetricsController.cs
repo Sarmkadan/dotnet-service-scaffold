@@ -22,6 +22,11 @@ public class MetricsController : ControllerBase, IMetricsController
     private readonly IMetricsService _metricsService;
     private readonly ILogger<MetricsController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MetricsController"/> class.
+    /// </summary>
+    /// <param name="metricsService">The service used to retrieve and reset application metrics.</param>
+    /// <param name="logger">The logger used to record metrics operations.</param>
     public MetricsController(
         IMetricsService metricsService,
         ILogger<MetricsController> logger)
@@ -33,6 +38,8 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <summary>
     /// Gets all recorded metrics.
     /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing all recorded metrics.</returns>
     /// <response code="200">Returns all metrics</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet]
@@ -64,6 +71,8 @@ public class MetricsController : ControllerBase, IMetricsController
     /// Gets metrics for a specific category.
     /// </summary>
     /// <param name="category">The metric category to filter by (e.g., "http", "database", "cache")</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing the metrics in the specified category.</returns>
     /// <response code="200">Returns filtered metrics</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet(MetricsControllerConstants.CategoryRoute)]
@@ -103,6 +112,8 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <summary>
     /// Resets all metrics to zero.
     /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result indicating whether the metrics were reset successfully.</returns>
     /// <response code="204">If successfully reset</response>
     /// <response code="401">If not authenticated</response>
     [HttpPost(MetricsControllerConstants.ResetRoute)]
@@ -132,6 +143,8 @@ public class MetricsController : ControllerBase, IMetricsController
     /// <summary>
     /// Gets summary statistics of all metrics.
     /// </summary>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>An action result containing summary statistics for all metrics.</returns>
     /// <response code="200">Returns metrics summary</response>
     /// <response code="401">If not authenticated</response>
     [HttpGet(MetricsControllerConstants.SummaryRoute)]
