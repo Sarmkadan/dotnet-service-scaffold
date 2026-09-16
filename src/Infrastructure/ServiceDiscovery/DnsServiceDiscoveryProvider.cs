@@ -30,12 +30,19 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
     private readonly ILogger<DnsServiceDiscoveryProvider> _logger;
     private int _transactionSeed = Random.Shared.Next(1, ushort.MaxValue);
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the human-readable name of the DNS service discovery provider.
+    /// </summary>
     public string ProviderName => "DNS";
 
     /// <summary>
-    /// Initialises a new <see cref="DnsServiceDiscoveryProvider"/> with the supplied options.
+    /// Initializes a new instance of the <see cref="DnsServiceDiscoveryProvider"/> class.
     /// </summary>
+    /// <param name="options">The service discovery options used to configure DNS queries.</param>
+    /// <param name="logger">The logger used to record DNS discovery activity.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="options"/> or <paramref name="logger"/> is <see langword="null"/>.
+    /// </exception>
     public DnsServiceDiscoveryProvider(
         IOptions<ServiceDiscoveryOptions> options,
         ILogger<DnsServiceDiscoveryProvider> logger)
@@ -46,7 +53,22 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         _logger = logger;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Resolves IPv4 endpoints for the specified service by querying DNS SRV records and,
+    /// when necessary, falling back to an A-record lookup.
+    /// </summary>
+    /// <param name="serviceName">The logical name of the service to resolve.</param>
+    /// <param name="cancellationToken">The token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A result containing the resolved service records, an empty collection when the service has
+    /// no DNS records, or a failure result when DNS resolution fails.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="serviceName"/> is empty.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="serviceName"/> is <see langword="null"/>.
+    /// </exception>
     public async Task<Result<IReadOnlyList<ServiceDiscoveryRecord>>> ResolveAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
@@ -113,19 +135,44 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         }
     }
 
-    /// <inheritdoc/>
-    /// <remarks>DNS is a read-only backend; programmatic registration is not supported.</remarks>
+    /// <summary>
+    /// Returns a failure result because DNS does not support programmatic service registration.
+    /// </summary>
+    /// <param name="record">The service discovery record that would be registered.</param>
+    /// <param name="cancellationToken">The token used to cancel the asynchronous operation.</param>
+    /// <returns>A completed task containing a failure result that describes the unsupported operation.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="record"/> is <see langword="null"/>.
+    /// </exception>
     public Task<Result> RegisterAsync(ServiceDiscoveryRecord record, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
         return Task.FromResult(Result.Failure(DnsServiceDiscoveryProviderConstants.DnsProviderDoesNotSupportProgrammaticRegistration, DnsServiceDiscoveryProviderConstants.DnsReadOnly));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Returns a failure result because DNS does not support programmatic service deregistration.
+    /// </summary>
+    /// <param name="instanceId">The identifier of the service instance that would be deregistered.</param>
+    /// <param name="cancellationToken">The token used to cancel the asynchronous operation.</param>
+    /// <returns>A completed task containing a failure result that describes the unsupported operation.</returns>
     public Task<Result> DeregisterAsync(Guid instanceId, CancellationToken cancellationToken = default) =>
         Task.FromResult(Result.Failure(DnsServiceDiscoveryProviderConstants.DnsProviderDoesNotSupportProgrammaticDeregistration, DnsServiceDiscoveryProviderConstants.DnsReadOnly));
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Watches the specified service and yields a new snapshot when its resolved endpoint set changes.
+    /// </summary>
+    /// <param name="serviceName">The logical name of the service to watch.</param>
+    /// <param name="cancellationToken">The token used to stop watching the service.</param>
+    /// <returns>
+    /// An asynchronous sequence of service record snapshots produced when the resolved endpoints change.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="serviceName"/> is empty.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="serviceName"/> is <see langword="null"/>.
+    /// </exception>
     /// <remarks>
     /// Polls <see cref="ResolveAsync"/> at <see cref="ServiceDiscoveryOptions.RefreshInterval"/>
     /// and yields a new snapshot whenever the set of endpoint URIs changes.
@@ -229,7 +276,13 @@ public sealed class DnsServiceDiscoveryProvider : IServiceDiscoveryProvider, IDn
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Checks whether a DNS query can be sent to the configured DNS server.
+    /// </summary>
+    /// <param name="cancellationToken">The token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// <see langword="true"/> when the query is sent successfully; otherwise, <see langword="false"/>.
+    /// </returns>
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
     {
         try
