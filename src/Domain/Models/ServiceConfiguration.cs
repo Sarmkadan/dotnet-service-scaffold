@@ -132,6 +132,9 @@ public class ServiceConfiguration : IServiceConfiguration
         UpdatedByUserId = userId;
     }
 
+    /// <summary>
+    /// Returns a summary of the configuration's key fields.
+    /// </summary>
     public override string ToString()
     {
         return $"ServiceConfiguration {{ Id = {Id}, Key = {Key}, Value = {Value}, ConfigType = {ConfigType}, ServiceId = {ServiceId}, Service = {Service} }}";
