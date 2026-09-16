@@ -24,7 +24,6 @@ namespace DotnetServiceScaffold.Presentation.Middleware;
 /// </summary>
 public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
-    private const string ApiKeyHeaderName = "X-Api-Key";
     private readonly IUserService _userService;
 
     public ApiKeyAuthenticationHandler(
@@ -44,7 +43,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         // Check if API key header exists
-        if (!Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
+        if (!Request.Headers.TryGetValue(ApiKeyAuthenticationMiddlewareConstants.ApiKeyHeaderName, out var apiKeyHeaderValues))
         {
             return AuthenticateResult.NoResult();
         }
@@ -62,7 +61,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
         {
             if (string.IsNullOrWhiteSpace(headerValue) || !FixedTimeEquals(headerValue, providedApiKey))
             {
-                return AuthenticateResult.Fail("Invalid API key");
+                return AuthenticateResult.Fail(ApiKeyAuthenticationMiddlewareConstants.InvalidApiKeyError);
             }
         }
 
@@ -73,7 +72,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
             if (user is null)
             {
-                return AuthenticateResult.Fail("Invalid API key");
+                return AuthenticateResult.Fail(ApiKeyAuthenticationMiddlewareConstants.InvalidApiKeyError);
             }
 
             // Create claims for the authenticated user
@@ -92,8 +91,8 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error validating API key");
-            return AuthenticateResult.Fail("API key validation failed");
+            Logger.LogError(ex, ApiKeyAuthenticationMiddlewareConstants.ApiKeyValidationLogMessage);
+            return AuthenticateResult.Fail(ApiKeyAuthenticationMiddlewareConstants.ApiKeyValidationError);
         }
     }
 
@@ -103,12 +102,12 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
     /// </summary>
     protected override Task HandleChallengeAsync(AuthenticationProperties properties)
     {
-        Response.StatusCode = 401;
-        Response.ContentType = "application/json";
+        Response.StatusCode = ApiKeyAuthenticationMiddlewareConstants.StatusCodeUnauthorized;
+        Response.ContentType = ApiKeyAuthenticationMiddlewareConstants.JsonContentType;
         return Response.WriteAsJsonAsync(new
         {
-            error = "Unauthorized",
-            message = "API key is required. Provide it in the X-Api-Key header."
+            error = ApiKeyAuthenticationMiddlewareConstants.UnauthorizedError,
+            message = ApiKeyAuthenticationMiddlewareConstants.ApiKeyRequiredMessage
         });
     }
 
@@ -137,7 +136,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 /// </summary>
 public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
 {
-    public const string DefaultScheme = "ApiKey";
+    public const string DefaultScheme = ApiKeyAuthenticationMiddlewareConstants.DefaultScheme;
     public string Scheme => DefaultScheme;
     public string AuthenticationType = DefaultScheme;
 }
