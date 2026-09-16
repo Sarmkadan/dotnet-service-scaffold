@@ -82,6 +82,15 @@ public class MemoryHealthCheck : IHealthCheck
         _unhealthyThresholdPercent = unhealthyThresholdPercent;
     }
 
+    /// <summary>
+    /// Checks the current managed memory usage against the configured health thresholds.
+    /// </summary>
+    /// <param name="context">The context in which the health check is performed.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the health check.</param>
+    /// <returns>A task containing the health status and memory usage details.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="context"/> is <see langword="null"/>.
+    /// </exception>
     public Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
