@@ -92,6 +92,13 @@ public static class ProblemDetailsFactory
     /// <summary>
     /// Creates a Problem Details response from an exception.
     /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <param name="exception">The exception to describe.</param>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="type">A URI reference that identifies the problem type.</param>
+    /// <param name="instance">A URI reference that identifies the specific occurrence of the problem.</param>
+    /// <param name="extensions">Additional problem-specific key/value pairs.</param>
+    /// <returns>A Problem Details object ready for serialization.</returns>
     public static ProblemDetails CreateProblemDetails(
         HttpContext context,
         Exception exception,
