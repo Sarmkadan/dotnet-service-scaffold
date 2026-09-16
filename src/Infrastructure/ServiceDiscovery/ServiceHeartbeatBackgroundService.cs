@@ -11,9 +11,12 @@ using Microsoft.Extensions.Options;
 namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 
 /// <summary>
-/// Background service that periodically sends heartbeats for the current service instance.
-/// This prevents the instance from being marked as stale during eviction processing.
+/// Periodically updates the heartbeat for the current service instance.
 /// </summary>
+/// <remarks>
+/// Heartbeat updates keep the registered instance from being treated as stale during eviction processing.
+/// The service does not run when self-registration is disabled.
+/// </remarks>
 public sealed class ServiceHeartbeatBackgroundService : BackgroundService
 {
     private readonly IServiceDiscoveryService _discoveryService;
@@ -26,6 +29,10 @@ public sealed class ServiceHeartbeatBackgroundService : BackgroundService
     /// <param name="discoveryService">The discovery service for updating heartbeats.</param>
     /// <param name="options">Service discovery configuration options.</param>
     /// <param name="logger">Logger for diagnostic messages.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="discoveryService"/>, <paramref name="options"/>, the configured options value,
+    /// or <paramref name="logger"/> is <see langword="null"/>.
+    /// </exception>
     public ServiceHeartbeatBackgroundService(
         IServiceDiscoveryService discoveryService,
         IOptions<ServiceDiscoveryOptions> options,
