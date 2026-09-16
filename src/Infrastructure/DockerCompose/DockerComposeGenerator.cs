@@ -17,6 +17,10 @@ public sealed class DockerComposeGenerator : IDockerComposeGenerator
 {
     private readonly ILogger<DockerComposeGenerator> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DockerComposeGenerator"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used to record generation activity.</param>
     public DockerComposeGenerator(ILogger<DockerComposeGenerator> logger)
     {
         _logger = logger;
