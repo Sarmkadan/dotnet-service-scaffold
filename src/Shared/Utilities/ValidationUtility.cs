@@ -17,6 +17,9 @@ public static class ValidationUtility
     /// <summary>
     /// Validates that a string is not null or empty. Throws ArgumentException if invalid.
     /// </summary>
+    /// <param name="value">The string to validate.</param>
+    /// <param name="paramName">The name of the parameter represented by <paramref name="value"/>.</param>
+    /// <exception cref="ArgumentException"><paramref name="value"/> is <see langword="null"/>, empty, or consists only of white-space characters.</exception>
     public static void ValidateNotNullOrEmpty(string? value, string paramName)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -26,6 +29,13 @@ public static class ValidationUtility
     /// <summary>
     /// Validates that a value is within a specified range. Throws ArgumentException if invalid.
     /// </summary>
+    /// <typeparam name="T">The type of the value to compare.</typeparam>
+    /// <param name="value">The value to validate.</param>
+    /// <param name="min">The inclusive minimum permitted value.</param>
+    /// <param name="max">The inclusive maximum permitted value.</param>
+    /// <param name="paramName">The name of the parameter represented by <paramref name="value"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is less than <paramref name="min"/> or greater than <paramref name="max"/>.</exception>
     public static void ValidateRange<T>(T value, T min, T max, string paramName) where T : IComparable<T>
     {
         if (value is null)
@@ -38,6 +48,13 @@ public static class ValidationUtility
     /// <summary>
     /// Validates that a string length is within specified bounds.
     /// </summary>
+    /// <param name="value">The string whose length to validate.</param>
+    /// <param name="minLength">The inclusive minimum permitted length.</param>
+    /// <param name="maxLength">The inclusive maximum permitted length.</param>
+    /// <param name="paramName">The name of the parameter represented by <paramref name="value"/>.</param>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="value"/> is <see langword="null"/> or empty, or its length is outside the specified bounds.
+    /// </exception>
     public static void ValidateLength(string? value, int minLength, int maxLength, string paramName)
     {
         if (string.IsNullOrEmpty(value))
@@ -52,6 +69,11 @@ public static class ValidationUtility
     /// Validates a password meets minimum security requirements.
     /// Requires: at least 8 characters, one uppercase, one lowercase, one digit, one special char.
     /// </summary>
+    /// <param name="password">The password to validate.</param>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="password"/> meets all minimum security requirements;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool IsPasswordStrong(string? password)
     {
         if (string.IsNullOrEmpty(password))
@@ -71,6 +93,11 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a URL is properly formatted.
     /// </summary>
+    /// <param name="url">The URL to validate.</param>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="url"/> is a well-formed absolute HTTP or HTTPS URL;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool IsValidUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -91,6 +118,8 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a phone number using a simple pattern. Accepts +1-234-567-8900 format.
     /// </summary>
+    /// <param name="phone">The phone number to validate. Spaces and hyphens are ignored.</param>
+    /// <returns><see langword="true"/> if <paramref name="phone"/> matches the supported international number pattern; otherwise, <see langword="false"/>.</returns>
     public static bool IsValidPhoneNumber(string? phone)
     {
         if (string.IsNullOrWhiteSpace(phone))
@@ -103,6 +132,8 @@ public static class ValidationUtility
     /// <summary>
     /// Validates an email address using a basic pattern.
     /// </summary>
+    /// <param name="email">The email address to validate.</param>
+    /// <returns><see langword="true"/> if <paramref name="email"/> has a valid email address format; otherwise, <see langword="false"/>.</returns>
     public static bool IsValidEmail(string? email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -126,6 +157,8 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a UUID/GUID string.
     /// </summary>
+    /// <param name="value">The UUID or GUID string to validate.</param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> can be parsed as a <see cref="Guid"/>; otherwise, <see langword="false"/>.</returns>
     public static bool IsValidGuid(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -137,6 +170,8 @@ public static class ValidationUtility
     /// <summary>
     /// Validates an IP address (IPv4 or IPv6).
     /// </summary>
+    /// <param name="ip">The IPv4 or IPv6 address to validate.</param>
+    /// <returns><see langword="true"/> if <paramref name="ip"/> can be parsed as an IP address; otherwise, <see langword="false"/>.</returns>
     public static bool IsValidIpAddress(string? ip)
     {
         if (string.IsNullOrWhiteSpace(ip))
@@ -148,6 +183,8 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a JSON string can be parsed.
     /// </summary>
+    /// <param name="json">The JSON string to validate.</param>
+    /// <returns><see langword="true"/> if <paramref name="json"/> contains valid JSON; otherwise, <see langword="false"/>.</returns>
     public static bool IsValidJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -167,6 +204,10 @@ public static class ValidationUtility
     /// <summary>
     /// Validates a collection is not null or empty.
     /// </summary>
+    /// <typeparam name="T">The type of the elements in the collection.</typeparam>
+    /// <param name="collection">The collection to validate.</param>
+    /// <param name="paramName">The name of the parameter represented by <paramref name="collection"/>.</param>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> is <see langword="null"/> or contains no elements.</exception>
     public static void ValidateCollectionNotEmpty<T>(IEnumerable<T>? collection, string paramName)
     {
         if (collection is null || !collection.Any())
@@ -176,6 +217,12 @@ public static class ValidationUtility
     /// <summary>
     /// Validates that a value matches a regex pattern.
     /// </summary>
+    /// <param name="value">The string to test against <paramref name="pattern"/>.</param>
+    /// <param name="pattern">The regular expression pattern to match.</param>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="value"/> matches <paramref name="pattern"/>;
+    /// otherwise, <see langword="false"/>. Invalid patterns and matches that time out also return <see langword="false"/>.
+    /// </returns>
     public static bool MatchesPattern(string? value, string pattern)
     {
         if (string.IsNullOrEmpty(value))
