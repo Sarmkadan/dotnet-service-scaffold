@@ -99,7 +99,7 @@ public class DeploymentConfiguration : IDeploymentConfiguration, IEquatable<Depl
     /// Returns a string that represents the current object.
     /// </summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString() => $"DeploymentConfiguration {{ ServiceName = {ServiceName}, ServiceDescription = {ServiceDescription}, ServiceUser = {ServiceUser}, ApplicationPath = {ApplicationPath}, DataPath = {DataPath}, LogPath = {LogPath} }}";
+    public override string ToString() => $"DeploymentConfiguration {{ ServiceName = {ServiceName}, ServiceDescription = {ServiceDescription}, ServiceUser = {ServiceUser}, ApplicationPath = {ApplicationPath}, DataPath = {DataPath}, LogPath = {LogPath}, ServerDomain = {ServerDomain}, ApplicationPort = {ApplicationPort}, DotnetPath = {DotnetPath}, ServiceVersion = {ServiceVersion} }}";
 
     /// <summary>
     /// Equality operator.
