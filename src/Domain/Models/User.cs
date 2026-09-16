@@ -106,7 +106,7 @@ public class User : IUser, IEquatable<User>
     /// Returns a string representation of the user.
     /// </summary>
     /// <returns>A string containing the user's key properties.</returns>
-    public override string ToString() => $"User {{ Id = {Id}, Email = {Email}, FullName = {FullName}, PasswordHash = {PasswordHash}, Role = {Role}, IsActive = {IsActive} }}";
+    public override string ToString() => $"User {{ Id = {Id}, Email = {Email}, FullName = {FullName}, Role = {Role}, IsActive = {IsActive} }}";
 
     /// <summary>
     /// Validates that the user has the minimum required fields.
