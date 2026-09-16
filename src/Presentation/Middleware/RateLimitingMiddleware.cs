@@ -21,6 +21,12 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
     private readonly ILogger<RateLimitingMiddleware> _logger;
     private static readonly ConcurrentDictionary<string, TokenBucketState> _buckets = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RateLimitingMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware in the request pipeline.</param>
+    /// <param name="options">The rate limiting configuration options.</param>
+    /// <param name="logger">The logger used to record rate limiting activity.</param>
     public RateLimitingMiddleware(
         RequestDelegate next,
         RateLimitOptions options,
@@ -35,6 +41,8 @@ public class RateLimitingMiddleware : IRateLimitingMiddleware
     /// Invoke the middleware. Checks the rate limit for the client's IP and either allows
     /// the request or returns 429 Too Many Requests.
     /// </summary>
+    /// <param name="context">The HTTP context for the current request.</param>
+    /// <returns>A task that represents the asynchronous middleware operation.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         try
