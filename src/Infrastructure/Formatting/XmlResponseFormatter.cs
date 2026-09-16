@@ -15,10 +15,17 @@ namespace DotnetServiceScaffold.Infrastructure.Formatting;
 /// </summary>
 public class XmlResponseFormatter : IResponseFormatter, IXmlResponseFormatter
 {
+    /// <summary>
+    /// Gets the media type this formatter produces.
+    /// </summary>
     public string MediaType => "application/xml";
 
     private readonly XmlSerializerNamespaces _emptyNamespaces;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="XmlResponseFormatter"/> class
+    /// with empty XML namespaces to avoid xmlns attributes in output.
+    /// </summary>
     public XmlResponseFormatter()
     {
         // Use empty namespaces to avoid xmlns attributes in output
