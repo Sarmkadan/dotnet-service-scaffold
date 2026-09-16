@@ -23,6 +23,13 @@ public class ApiKeyBuilder
     private string? _description;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ApiKeyBuilder"/> class.
+    /// </summary>
+    public ApiKeyBuilder()
+    {
+    }
+
+    /// <summary>
     /// Sets the unique identifier for the API key.
     /// </summary>
     /// <param name="id">The API key identifier.</param>
