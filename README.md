@@ -161,20 +161,37 @@ Assert.Contains("# Deployment Guide for my-service", guide);
 Assert.Contains("sudo useradd -r -s /bin/false serviceuser", guide);
 ```
 
-## DockerComposeGeneratorTests
+## DockerComposeGenerator
 
-The `DockerComposeGeneratorTests` class provides comprehensive unit tests for the `DockerComposeGenerator` class, verifying that the generated `docker-compose.yml` file content correctly incorporates service configurations, health checks, reverse proxy settings (Caddy), caching (Redis), monitoring (Prometheus), and resource limits. These tests ensure the generator accurately handles various configuration scenarios, including optional features and environment variable injection, and validates the file writing functionality.
+`DockerComposeGenerator` creates Docker Compose YAML for the application service. The generated configuration includes port mapping, ASP.NET Core settings, a `/health` health check, resource limits, named volumes, and an isolated bridge network. It can also add Caddy as a reverse proxy, Redis as a cache, and a commented Prometheus scrape configuration. Use `Generate` to return the YAML as a string or `WriteToFileAsync` to write it to disk.
 
-### Usage Examples
+### Options
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `ServiceName` | `app` | Names the application service, container, and bridge network. |
+| `ImageName` | `dotnet-service-scaffold:latest` | Selects the application container image. |
+| `HostPort` | `5000` | Sets the host port mapped to the application. |
+| `ContainerPort` | `5000` | Sets the application port inside the container and the health-check target. |
+| `Environment` | `Production` | Sets `ASPNETCORE_ENVIRONMENT`. |
+| `ConnectionString` | `Data Source=/app/data/scaffold.db` | Sets `ConnectionStrings__DefaultConnection`. |
+| `EnvironmentVariables` | Empty | Adds application environment variables. |
+| `Volumes` | `app-data:/app/data`, `app-logs:/app/logs` | Defines named volumes and their container mount paths. |
+| `IncludeCaddy` | `false` | Adds a Caddy reverse-proxy service and its data/config volumes. |
+| `CaddyDomain` | `null` | Sets Caddy's `APP_DOMAIN`; blank values fall back to `localhost`. |
+| `IncludePrometheus` | `false` | Appends a commented Prometheus scrape configuration targeting `/metrics`. |
+| `IncludeRedis` | `false` | Adds a Redis service and persistent data volume. |
+| `CpuLimit` | `1` | Sets the application container CPU limit. |
+| `MemoryLimit` | `512M` | Sets the application container memory limit. |
+
+### Usage Example
 
 ```csharp
 using DotnetServiceScaffold.Infrastructure.DockerCompose;
 using Microsoft.Extensions.Logging;
-using NSubstitute;
-using Xunit;
 
-// Arrange: Initialize generator and options
-var logger = Substitute.For<ILogger<DockerComposeGenerator>>();
+using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger<DockerComposeGenerator>();
 var generator = new DockerComposeGenerator(logger);
 
 var options = new DockerComposeOptions
@@ -183,29 +200,23 @@ var options = new DockerComposeOptions
     ImageName = "my-api:1.0",
     HostPort = 8080,
     ContainerPort = 8080,
+    Environment = "Production",
     IncludeCaddy = true,
-    CaddyDomain = "example.com",
+    CaddyDomain = "api.example.com",
     IncludeRedis = true,
+    IncludePrometheus = true,
     CpuLimit = "1",
-    MemoryLimit = "512M"
+    MemoryLimit = "512M",
+    EnvironmentVariables = new Dictionary<string, string>
+    {
+        ["Redis__ConnectionString"] = "redis:6379"
+    }
 };
 
-// Act: Generate YAML and verify configuration
 var yaml = generator.Generate(options);
+Console.WriteLine(yaml);
 
-// Assert: Verify YAML content
-Assert.Contains("my-api:", yaml);
-Assert.Contains("image: my-api:1.0", yaml);
-Assert.Contains("caddy:", yaml);
-Assert.Contains("example.com", yaml);
-Assert.Contains("redis:", yaml);
-Assert.Contains("memory: 1G", yaml);
-
-// Act: Write to file and verify
-var filePath = "docker-compose.test.yml";
-await generator.WriteToFileAsync(options, filePath);
-Assert.True(File.Exists(filePath));
-File.Delete(filePath);
+await generator.WriteToFileAsync(options, "docker-compose.yml");
 ```
 
 ## JsonResponseFormatterExtensions
