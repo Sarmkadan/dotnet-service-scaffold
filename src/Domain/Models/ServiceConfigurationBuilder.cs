@@ -19,6 +19,13 @@ public class ServiceConfigurationBuilder
     private DateTime _createdAt = DateTime.UtcNow;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ServiceConfigurationBuilder"/> class.
+    /// </summary>
+    public ServiceConfigurationBuilder()
+    {
+    }
+
+    /// <summary>
     /// Sets the unique identifier for the service configuration.
     /// </summary>
     /// <param name="id">The configuration identifier.</param>
