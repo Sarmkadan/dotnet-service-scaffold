@@ -19,6 +19,13 @@ public sealed class ServiceDiscoveryRecordBuilder
     private DiscoverySource _source = DiscoverySource.Unknown;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ServiceDiscoveryRecordBuilder"/> class.
+    /// </summary>
+    public ServiceDiscoveryRecordBuilder()
+    {
+    }
+
+    /// <summary>
     /// Sets the unique identifier for this service instance.
     /// </summary>
     /// <param name="instanceId">The instance identifier.</param>
