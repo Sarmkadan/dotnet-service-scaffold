@@ -19,7 +19,7 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 /// This is a placeholder template showing how to structure auth-related endpoints.
 /// </summary>
 [ApiController]
-[Route("api/apikeys")]
+[Route(ApiKeyControllerConstants.RouteBase)]
 [Authorize]
 public class ApiKeyController : ControllerBase, IApiKeyController
 {
@@ -44,7 +44,7 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     /// </summary>
     /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
     /// <returns>An action result containing the current authentication information.</returns>
-    [HttpGet("info")]
+    [HttpGet(ApiKeyControllerConstants.GetAuthInfo)]
     public async Task<IActionResult> GetAuthInfo(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -52,7 +52,7 @@ public class ApiKeyController : ControllerBase, IApiKeyController
 
         try
         {
-            _logger.LogInformation("User {UserId} requested auth info", userId);
+            _logger.LogInformation(ApiKeyControllerConstants.LogGetAuthInfoRequested, userId);
 
             return Ok(new
             {
@@ -63,8 +63,8 @@ public class ApiKeyController : ControllerBase, IApiKeyController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving auth info for user {UserId}", userId);
-            return StatusCode(500, new { error = "Failed to retrieve authentication info" });
+            _logger.LogError(ex, ApiKeyControllerConstants.LogGetAuthInfoError, userId);
+            return StatusCode(500, new { error = ApiKeyControllerConstants.ErrorFailedToRetrieveAuthInfo });
         }
     }
 
@@ -75,7 +75,7 @@ public class ApiKeyController : ControllerBase, IApiKeyController
     /// <param name="id">The identifier of the API key to rotate.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
     /// <returns>The new secret for the API key.</returns>
-    [HttpPost("{id}/rotate")]
+    [HttpPost(ApiKeyControllerConstants.RotateApiKey)]
     public async Task<IActionResult> RotateApiKey(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -93,7 +93,7 @@ public class ApiKeyController : ControllerBase, IApiKeyController
             // Write an audit log entry using the extension method
             await _auditService.LogAsync($"User {userId} rotated API key {id}", cancellationToken);
 
-            _logger.LogInformation("User {UserId} rotated API key {ApiKeyId}", userId, id);
+            _logger.LogInformation(ApiKeyControllerConstants.LogRotateApiKey, userId, id);
 
             return Ok(new
             {
@@ -104,8 +104,8 @@ public class ApiKeyController : ControllerBase, IApiKeyController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error rotating API key {ApiKeyId} for user {UserId}", id, userId);
-            return StatusCode(500, new { error = "Failed to rotate API key" });
+            _logger.LogError(ex, ApiKeyControllerConstants.LogRotateApiKeyError, id, userId);
+            return StatusCode(500, new { error = ApiKeyControllerConstants.ErrorFailedToRotateApiKey });
         }
     }
 
