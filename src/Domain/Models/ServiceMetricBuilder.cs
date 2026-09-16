@@ -152,7 +152,8 @@ public class ServiceMetricBuilder
 
     /// <summary>
     /// Builds the <see cref="ServiceMetric"/> instance with the current values.
-    /// </returns>A fully configured <see cref="ServiceMetric"/>.</returns>
+    /// </summary>
+    /// <returns>A fully configured <see cref="ServiceMetric"/>.</returns>
     /// <exception cref="ArgumentException">Thrown when required properties are missing.</exception>
     public ServiceMetric Build()
     {
