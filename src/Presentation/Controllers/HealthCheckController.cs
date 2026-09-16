@@ -17,8 +17,8 @@ namespace DotnetServiceScaffold.Presentation.Controllers;
 /// API endpoints for health check management and service monitoring.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
-[Produces("application/json")]
+[Route(HealthCheckControllerConstants.RouteTemplate)]
+[Produces(HealthCheckControllerConstants.ResponseContentType)]
 public class HealthCheckController : ControllerBase, IHealthCheckController
 {
     private readonly IHealthCheckService _healthCheckService;
@@ -40,13 +40,13 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     /// <summary>
     /// Gets an aggregated health summary for all registered services.
     /// </summary>
-    [HttpGet("summary")]
+    [HttpGet(HealthCheckControllerConstants.SummaryRoute)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetHealthSummary(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        _logger.LogInformation("GetHealthSummary called");
+        _logger.LogInformation(HealthCheckControllerConstants.LogGetHealthSummaryCalled);
 
         try
         {
@@ -54,7 +54,7 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
                 ?? HttpContext.RequestServices.GetRequiredService<IServiceManagementService>();
             var services = (await serviceManagementService.GetAllServicesAsync(cancellationToken)).ToList();
             var latestChecks = await Task.WhenAll(services.Select(async service =>
-                (await _healthCheckService.GetServiceHealthHistoryAsync(service.Id, 1)
+                (await _healthCheckService.GetServiceHealthHistoryAsync(service.Id, HealthCheckControllerConstants.LatestHealthCheckCount)
                     .WaitAsync(cancellationToken))
                 .OrderByDescending(result => result.CheckedAt)
                 .FirstOrDefault()));
@@ -68,7 +68,7 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
                 .OrderByDescending(GetHealthStatusSeverity)
                 .FirstOrDefault();
 
-            _logger.LogInformation("GetHealthSummary completed for {ServiceCount} services", services.Count);
+            _logger.LogInformation(HealthCheckControllerConstants.LogGetHealthSummaryCompleted, services.Count);
             return Ok(new
             {
                 success = true,
@@ -85,42 +85,42 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Failed to get aggregated health summary");
+            _logger.LogError(ex, HealthCheckControllerConstants.LogGetHealthSummaryFailed);
             return StatusCode(StatusCodes.Status500InternalServerError, new
             {
                 success = false,
-                data = new { error = "Failed to retrieve health summary" }
+                data = new { error = HealthCheckControllerConstants.ErrorFailedRetrieveHealthSummary }
             });
         }
     }
 
     private static int GetHealthStatusSeverity(HealthStatus status) => status switch
     {
-        HealthStatus.Error => 5,
-        HealthStatus.Timeout => 4,
-        HealthStatus.Unhealthy => 3,
-        HealthStatus.Degraded => 2,
-        HealthStatus.Unknown => 1,
-        HealthStatus.Healthy => 0,
-        _ => 1
+        HealthStatus.Error => HealthCheckControllerConstants.ErrorSeverity,
+        HealthStatus.Timeout => HealthCheckControllerConstants.TimeoutSeverity,
+        HealthStatus.Unhealthy => HealthCheckControllerConstants.UnhealthySeverity,
+        HealthStatus.Degraded => HealthCheckControllerConstants.DegradedSeverity,
+        HealthStatus.Unknown => HealthCheckControllerConstants.UnknownSeverity,
+        HealthStatus.Healthy => HealthCheckControllerConstants.HealthySeverity,
+        _ => HealthCheckControllerConstants.UnknownSeverity
     };
 
     /// <summary>
     /// Performs an immediate health check on a service.
     /// </summary>
-    [HttpPost("{serviceId}/check")]
+    [HttpPost(HealthCheckControllerConstants.CheckRoute)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CheckServiceHealth(Guid serviceId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        _logger.LogInformation("CheckServiceHealth called with {ServiceId}", serviceId);
+        _logger.LogInformation(HealthCheckControllerConstants.LogCheckServiceHealthCalled, serviceId);
 
         try
         {
             var result = await _healthCheckService.PerformHealthCheckAsync(serviceId).WaitAsync(cancellationToken);
-            _logger.LogInformation("CheckServiceHealth completed for {ServiceId}", serviceId);
+            _logger.LogInformation(HealthCheckControllerConstants.LogCheckServiceHealthCompleted, serviceId);
             return Ok(new
             {
                 success = true,
@@ -137,32 +137,32 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (ServiceNotFoundException ex)
         {
-            _logger.LogWarning("Service not found: {ServiceId}", serviceId);
-            _logger.LogError(ex, "Failed to check health for service {ServiceId}", serviceId);
+            _logger.LogWarning(HealthCheckControllerConstants.LogServiceNotFound, serviceId);
+            _logger.LogError(ex, HealthCheckControllerConstants.LogCheckServiceHealthFailed, serviceId);
             return NotFound(new { error = ex.Message });
         }
         catch (ServiceScaffoldException ex)
         {
-            _logger.LogError(ex, "Health check error for service {ServiceId}", serviceId);
-            return StatusCode(500, new { error = ex.Message });
+            _logger.LogError(ex, HealthCheckControllerConstants.LogHealthCheckError, serviceId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
         }
     }
 
     /// <summary>
     /// Retrieves recent health check history for a service.
     /// </summary>
-    [HttpGet("{serviceId}/history")]
+    [HttpGet(HealthCheckControllerConstants.HistoryRoute)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetHealthHistory(Guid serviceId, [FromQuery] int count = 20, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetHealthHistory(Guid serviceId, [FromQuery] int count = HealthCheckControllerConstants.DefaultHistoryCount, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        _logger.LogInformation("GetHealthHistory called with {ServiceId} and {Count}", serviceId, count);
+        _logger.LogInformation(HealthCheckControllerConstants.LogGetHealthHistoryCalled, serviceId, count);
 
         try
         {
             var history = await _healthCheckService.GetServiceHealthHistoryAsync(serviceId, count).WaitAsync(cancellationToken);
-            _logger.LogInformation("GetHealthHistory completed for {ServiceId} with requested count {Count}", serviceId, count);
+            _logger.LogInformation(HealthCheckControllerConstants.LogGetHealthHistoryCompleted, serviceId, count);
             return Ok(new
             {
                 success = true,
@@ -180,8 +180,8 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (ServiceNotFoundException ex)
         {
-            _logger.LogWarning("Health history unavailable because service {ServiceId} was not found", serviceId);
-            _logger.LogError(ex, "Failed to get health history for service {ServiceId} with requested count {Count}", serviceId, count);
+            _logger.LogWarning(HealthCheckControllerConstants.LogHealthHistoryServiceNotFound, serviceId);
+            _logger.LogError(ex, HealthCheckControllerConstants.LogGetHealthHistoryFailed, serviceId, count);
             return NotFound(new { error = ex.Message });
         }
     }
@@ -189,35 +189,35 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     /// <summary>
     /// Gets the health status summary for a service.
     /// </summary>
-    [HttpGet("{serviceId}/status")]
+    [HttpGet(HealthCheckControllerConstants.StatusRoute)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHealthStatus(Guid serviceId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        _logger.LogInformation("GetHealthStatus called with {ServiceId}", serviceId);
+        _logger.LogInformation(HealthCheckControllerConstants.LogGetHealthStatusCalled, serviceId);
 
         try
         {
             var status = await _healthCheckService.GetServiceHealthStatusAsync(serviceId).WaitAsync(cancellationToken);
             var successRate = await _healthCheckService.GetServiceSuccessRateAsync(serviceId).WaitAsync(cancellationToken);
 
-            _logger.LogInformation("GetHealthStatus completed for {ServiceId}", serviceId);
+            _logger.LogInformation(HealthCheckControllerConstants.LogGetHealthStatusCompleted, serviceId);
             return Ok(new
             {
                 success = true,
                 data = new
                 {
                     status,
-                    successRate = $"{successRate:F2}%",
+                    successRate = successRate.ToString(HealthCheckControllerConstants.SuccessRateFormat) + HealthCheckControllerConstants.PercentSymbol,
                     timestamp = DateTime.UtcNow
                 }
             });
         }
         catch (ServiceNotFoundException ex)
         {
-            _logger.LogWarning("Health status unavailable because service {ServiceId} was not found", serviceId);
-            _logger.LogError(ex, "Failed to get health status for service {ServiceId}", serviceId);
+            _logger.LogWarning(HealthCheckControllerConstants.LogHealthStatusServiceNotFound, serviceId);
+            _logger.LogError(ex, HealthCheckControllerConstants.LogGetHealthStatusFailed, serviceId);
             return NotFound(new { error = ex.Message });
         }
     }
@@ -225,18 +225,18 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
     /// <summary>
     /// Retrieves failed health check results for a service.
     /// </summary>
-    [HttpGet("{serviceId}/failures")]
+    [HttpGet(HealthCheckControllerConstants.FailuresRoute)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetFailedChecks(Guid serviceId, [FromQuery] int hoursBack = 24, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetFailedChecks(Guid serviceId, [FromQuery] int hoursBack = HealthCheckControllerConstants.DefaultHoursBack, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        _logger.LogInformation("GetFailedChecks called with {ServiceId} and {HoursBack}", serviceId, hoursBack);
+        _logger.LogInformation(HealthCheckControllerConstants.LogGetFailedChecksCalled, serviceId, hoursBack);
 
         try
         {
             var failures = await _healthCheckService.GetFailedChecksAsync(serviceId, hoursBack).WaitAsync(cancellationToken);
-            _logger.LogInformation("GetFailedChecks completed for {ServiceId} with {HoursBack} hours back", serviceId, hoursBack);
+            _logger.LogInformation(HealthCheckControllerConstants.LogGetFailedChecksCompleted, serviceId, hoursBack);
             return Ok(new
             {
                 success = true,
@@ -253,8 +253,8 @@ public class HealthCheckController : ControllerBase, IHealthCheckController
         }
         catch (ServiceNotFoundException ex)
         {
-            _logger.LogWarning("Failed checks unavailable because service {ServiceId} was not found", serviceId);
-            _logger.LogError(ex, "Failed to get failed checks for service {ServiceId} with {HoursBack} hours back", serviceId, hoursBack);
+            _logger.LogWarning(HealthCheckControllerConstants.LogFailedChecksServiceNotFound, serviceId);
+            _logger.LogError(ex, HealthCheckControllerConstants.LogGetFailedChecksFailed, serviceId, hoursBack);
             return NotFound(new { error = ex.Message });
         }
     }
