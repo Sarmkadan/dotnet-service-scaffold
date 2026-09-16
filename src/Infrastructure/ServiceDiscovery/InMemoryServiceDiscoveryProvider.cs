@@ -23,18 +23,29 @@ public sealed class InMemoryServiceDiscoveryProvider : IServiceDiscoveryProvider
     private readonly ILogger<InMemoryServiceDiscoveryProvider> _logger;
     private readonly object _syncLock = new();
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the human-readable name of the in-memory service discovery provider.
+    /// </summary>
     public string ProviderName => "InMemory";
 
     /// <summary>
-    /// Initialises a new <see cref="InMemoryServiceDiscoveryProvider"/> with the supplied logger.
+    /// Initializes a new instance of the <see cref="InMemoryServiceDiscoveryProvider"/> class.
     /// </summary>
+    /// <param name="logger">The logger used to record service discovery activity.</param>
     public InMemoryServiceDiscoveryProvider(ILogger<InMemoryServiceDiscoveryProvider> logger)
     {
         _logger = logger;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Resolves the healthy instances registered for the specified service.
+    /// </summary>
+    /// <param name="serviceName">The logical name of the service to resolve.</param>
+    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    /// <returns>
+    /// A completed task containing the healthy service records, an empty collection when no instances
+    /// are registered, or a failure result when resolution fails.
+    /// </returns>
     public Task<Result<IReadOnlyList<ServiceDiscoveryRecord>>> ResolveAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
@@ -61,7 +72,15 @@ public sealed class InMemoryServiceDiscoveryProvider : IServiceDiscoveryProvider
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Registers or replaces a service instance in the in-memory registry.
+    /// </summary>
+    /// <param name="record">The service discovery record to register.</param>
+    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    /// <returns>A completed task containing the result of the registration operation.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="record"/> is <see langword="null"/>.
+    /// </exception>
     public Task<Result> RegisterAsync(
         ServiceDiscoveryRecord record,
         CancellationToken cancellationToken = default)
@@ -112,7 +131,15 @@ public sealed class InMemoryServiceDiscoveryProvider : IServiceDiscoveryProvider
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Removes a service instance from the in-memory registry.
+    /// </summary>
+    /// <param name="instanceId">The identifier of the service instance to remove.</param>
+    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    /// <returns>
+    /// A completed task containing a successful result when the instance is removed or is not registered,
+    /// or a failure result when deregistration fails.
+    /// </returns>
     public Task<Result> DeregisterAsync(
         Guid instanceId,
         CancellationToken cancellationToken = default)
@@ -151,7 +178,15 @@ public sealed class InMemoryServiceDiscoveryProvider : IServiceDiscoveryProvider
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Watches the specified service and yields a snapshot when its healthy endpoint set changes.
+    /// </summary>
+    /// <param name="serviceName">The logical name of the service to watch.</param>
+    /// <param name="cancellationToken">The token used to stop watching the service.</param>
+    /// <returns>
+    /// An asynchronous sequence of healthy service record snapshots produced when the endpoint set changes.
+    /// </returns>
+    /// <remarks>The registry is polled once per second until cancellation is requested.</remarks>
     public IAsyncEnumerable<IReadOnlyList<ServiceDiscoveryRecord>> WatchAsync(
         string serviceName,
         CancellationToken cancellationToken = default)
@@ -191,7 +226,11 @@ public sealed class InMemoryServiceDiscoveryProvider : IServiceDiscoveryProvider
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Checks whether the in-memory service discovery provider is available.
+    /// </summary>
+    /// <param name="cancellationToken">The token associated with the availability check.</param>
+    /// <returns>A completed task containing <see langword="true"/>.</returns>
     public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
     {
         // In-memory provider is always available
