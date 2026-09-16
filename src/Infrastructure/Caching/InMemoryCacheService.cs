@@ -22,7 +22,6 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     private readonly ConcurrentDictionary<string, CacheEntry> _cache;
     private readonly ILogger<InMemoryCacheService> _logger;
     private readonly Timer? _cleanupTimer;
-    private const int CleanupIntervalSeconds = 60;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryCacheService"/> class.
@@ -39,8 +38,8 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
         _cleanupTimer = new Timer(
             _ => CleanupExpiredEntries(),
             null,
-            TimeSpan.FromSeconds(CleanupIntervalSeconds),
-            TimeSpan.FromSeconds(CleanupIntervalSeconds));
+            TimeSpan.FromSeconds(InMemoryCacheServiceConstants.CleanupIntervalSeconds),
+            TimeSpan.FromSeconds(InMemoryCacheServiceConstants.CleanupIntervalSeconds));
     }
 
     /// <summary>
@@ -55,24 +54,24 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     public ValueTask<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
-        _logger.LogInformation("Getting cache entry for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.GettingCacheEntryLogMessage, key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
             if (entry.IsExpired)
             {
                 _cache.TryRemove(key, out _);
-                _logger.LogInformation("Cache entry for key {Key} has expired", key);
+                _logger.LogInformation(InMemoryCacheServiceConstants.CacheEntryExpiredLogMessage, key);
                 return ValueTask.FromResult<T?>(null);
             }
 
-            _logger.LogInformation("Cache hit for key {Key}", key);
-            _logger.LogDebug("Cache hit for key {Key}", key);
+            _logger.LogInformation(InMemoryCacheServiceConstants.CacheHitLogMessage, key);
+            _logger.LogDebug(InMemoryCacheServiceConstants.CacheHitLogMessage, key);
             return ValueTask.FromResult(entry.Value as T);
         }
 
-        _logger.LogInformation("Cache miss for key {Key}", key);
-        _logger.LogDebug("Cache miss for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.CacheMissLogMessage, key);
+        _logger.LogDebug(InMemoryCacheServiceConstants.CacheMissLogMessage, key);
         return ValueTask.FromResult<T?>(null);
     }
 
@@ -91,7 +90,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNull(value);
-        _logger.LogInformation("Setting cache entry for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.SettingCacheEntryLogMessage, key);
 
         var entry = new CacheEntry
         {
@@ -102,10 +101,10 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
 
         _cache.AddOrUpdate(key, entry, (_, _) => entry);
 
-        _logger.LogInformation("Cached value for key {Key} with expiration {ExpirationSeconds}s", key, expiration?.TotalSeconds ?? -1);
+        _logger.LogInformation(InMemoryCacheServiceConstants.CachedValueLogMessage, key, expiration?.TotalSeconds ?? InMemoryCacheServiceConstants.NoExpirationSeconds);
         _logger.LogDebug(
-            "Cached value for key {Key} with expiration {ExpirationSeconds}s",
-            key, expiration?.TotalSeconds ?? -1);
+            InMemoryCacheServiceConstants.CachedValueLogMessage,
+            key, expiration?.TotalSeconds ?? InMemoryCacheServiceConstants.NoExpirationSeconds);
 
         return ValueTask.CompletedTask;
     }
@@ -120,11 +119,11 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     public ValueTask RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
-        _logger.LogInformation("Removing cache entry for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.RemovingCacheEntryLogMessage, key);
 
         _cache.TryRemove(key, out _);
-        _logger.LogInformation("Removed cache entry for key {Key}", key);
-        _logger.LogDebug("Removed cache entry for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.RemovedCacheEntryLogMessage, key);
+        _logger.LogDebug(InMemoryCacheServiceConstants.RemovedCacheEntryLogMessage, key);
 
         return ValueTask.CompletedTask;
     }
@@ -139,21 +138,21 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     public ValueTask<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
-        _logger.LogInformation("Checking existence of cache entry for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.CheckingCacheEntryExistenceLogMessage, key);
 
         if (_cache.TryGetValue(key, out var entry))
         {
             if (entry.IsExpired)
             {
                 _cache.TryRemove(key, out _);
-                _logger.LogInformation("Cache entry for key {Key} has expired", key);
+                _logger.LogInformation(InMemoryCacheServiceConstants.CacheEntryExpiredLogMessage, key);
                 return ValueTask.FromResult(false);
             }
-            _logger.LogInformation("Cache entry for key {Key} exists", key);
+            _logger.LogInformation(InMemoryCacheServiceConstants.CacheEntryExistsLogMessage, key);
             return ValueTask.FromResult(true);
         }
 
-        _logger.LogInformation("Cache entry for key {Key} does not exist", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.CacheEntryDoesNotExistLogMessage, key);
         return ValueTask.FromResult(false);
     }
 
@@ -173,25 +172,25 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNull(factory);
-        _logger.LogInformation("Getting or setting cache entry for key {Key}", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.GettingOrSettingCacheEntryLogMessage, key);
 
         var cached = await GetAsync<T>(key, cancellationToken);
         if (cached is not null)
         {
-            _logger.LogInformation("Cache hit for key {Key} in GetOrSetAsync", key);
+            _logger.LogInformation(InMemoryCacheServiceConstants.GetOrSetCacheHitLogMessage, key);
             return cached;
         }
 
-        _logger.LogInformation("Cache miss for key {Key} in GetOrSetAsync, invoking factory", key);
+        _logger.LogInformation(InMemoryCacheServiceConstants.GetOrSetCacheMissLogMessage, key);
         var value = await factory();
         if (value is not null)
         {
             await SetAsync(key, value, expiration, cancellationToken);
-            _logger.LogInformation("Value set for key {Key} in GetOrSetAsync", key);
+            _logger.LogInformation(InMemoryCacheServiceConstants.GetOrSetValueSetLogMessage, key);
         }
         else
         {
-            _logger.LogWarning("Factory returned null for key {Key} in GetOrSetAsync", key);
+            _logger.LogWarning(InMemoryCacheServiceConstants.GetOrSetFactoryReturnedNullLogMessage, key);
         }
 
         return value;
@@ -210,17 +209,17 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
 
         try
         {
-            var regex = new Regex(pattern, RegexOptions.None, TimeSpan.FromSeconds(1.0));
+            var regex = new Regex(pattern, RegexOptions.None, TimeSpan.FromSeconds(InMemoryCacheServiceConstants.RegexTimeoutSeconds));
             var keysToRemove = _cache.Keys.Where(k => regex.IsMatch(k)).ToList();
 
             foreach (var key in keysToRemove)
                 _cache.TryRemove(key, out _);
 
-            _logger.LogDebug("Removed {Count} cache entries matching pattern {Pattern}", keysToRemove.Count, pattern);
+            _logger.LogDebug(InMemoryCacheServiceConstants.RemovedMatchingCacheEntriesLogMessage, keysToRemove.Count, pattern);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing cache entries by pattern {Pattern}", pattern);
+            _logger.LogError(ex, InMemoryCacheServiceConstants.RemoveByPatternErrorLogMessage, pattern);
         }
 
         return ValueTask.CompletedTask;
@@ -235,7 +234,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     {
         var count = _cache.Count;
         _cache.Clear();
-        _logger.LogInformation("Cleared cache ({Count} entries removed)", count);
+        _logger.LogInformation(InMemoryCacheServiceConstants.ClearedCacheLogMessage, count);
 
         return ValueTask.CompletedTask;
     }
@@ -250,8 +249,8 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
         foreach (var key in expiredKeys)
             _cache.TryRemove(key, out _);
 
-        if (expiredKeys.Count > 0)
-            _logger.LogDebug("Cleaned up {Count} expired cache entries", expiredKeys.Count);
+        if (expiredKeys.Count > InMemoryCacheServiceConstants.NoExpiredEntries)
+            _logger.LogDebug(InMemoryCacheServiceConstants.CleanedUpExpiredEntriesLogMessage, expiredKeys.Count);
     }
 
     /// <summary>
@@ -266,7 +265,7 @@ public class InMemoryCacheService : ICacheService, IDisposable, IInMemoryCacheSe
     /// Returns a string that represents the cache service and its current entry count.
     /// </summary>
     /// <returns>A string containing the number of entries currently stored in the cache.</returns>
-    public override string ToString() => $"InMemoryCacheService {{ CacheCount = {_cache.Count} }}";
+    public override string ToString() => string.Format(InMemoryCacheServiceConstants.CacheServiceDisplayFormat, _cache.Count);
 }
 
 /// <summary>
@@ -282,6 +281,6 @@ internal class CacheEntry
 
     public override string ToString()
     {
-        return $"CacheEntry {{ Value = {Value}, CreatedAt = {CreatedAt}, ExpiresAt = {ExpiresAt} }}";
+        return string.Format(InMemoryCacheServiceConstants.CacheEntryDisplayFormat, Value, CreatedAt, ExpiresAt);
     }
 }
