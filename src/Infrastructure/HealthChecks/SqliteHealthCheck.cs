@@ -18,10 +18,16 @@ public class SqliteHealthCheck : IHealthCheck
     private readonly string _databasePath;
     private readonly long _degradedDiskSpaceThresholdBytes;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqliteHealthCheck"/> class.
+    /// </summary>
     /// <param name="databasePath">Absolute or relative path to the SQLite database file.</param>
     /// <param name="degradedDiskSpaceThresholdBytes">
     /// Available disk space below which the check reports Degraded. Defaults to 512 MB.
     /// </param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="databasePath"/> is <see langword="null"/> or empty.
+    /// </exception>
     public SqliteHealthCheck(string databasePath, long degradedDiskSpaceThresholdBytes = SqliteHealthCheckConstants.DefaultDegradedDiskSpaceThresholdBytes)
     {
         ArgumentException.ThrowIfNullOrEmpty(databasePath);
@@ -29,6 +35,12 @@ public class SqliteHealthCheck : IHealthCheck
         _degradedDiskSpaceThresholdBytes = degradedDiskSpaceThresholdBytes;
     }
 
+    /// <summary>
+    /// Checks whether the SQLite database file is accessible and writable and whether its volume has sufficient free space.
+    /// </summary>
+    /// <param name="context">The context in which the health check is performed.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the health check.</param>
+    /// <returns>A task containing the SQLite database health status and diagnostic details.</returns>
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
