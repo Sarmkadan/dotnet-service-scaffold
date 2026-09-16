@@ -19,7 +19,18 @@ namespace DotnetServiceScaffold.Infrastructure.Metrics;
 /// </summary>
 public sealed class PrometheusFormatter : IPrometheusFormatter
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Formats the supplied metrics as a Prometheus text exposition document.
+    /// </summary>
+    /// <param name="metrics">
+    /// The metrics to format, keyed by metric name and containing metric data produced by
+    /// <see cref="IMetricsService"/>.
+    /// </param>
+    /// <param name="applicationName">The application name to use as the metric name prefix.</param>
+    /// <returns>A Prometheus text exposition document containing the supplied metrics.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="metrics"/> is <see langword="null"/>.
+    /// </exception>
     public string Format(Dictionary<string, object> metrics, string applicationName = "app")
     {
         ArgumentNullException.ThrowIfNull(metrics);
