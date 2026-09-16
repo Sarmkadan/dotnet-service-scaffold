@@ -20,6 +20,14 @@ public sealed class CorrelationIdMiddleware
     private readonly RequestDelegate _next;
     private readonly StructuredLoggingOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CorrelationIdMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next request delegate in the middleware pipeline.</param>
+    /// <param name="options">The structured logging options used to configure correlation IDs.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="next"/> or <paramref name="options"/> is <see langword="null"/>.
+    /// </exception>
     public CorrelationIdMiddleware(RequestDelegate next, IOptions<StructuredLoggingOptions> options)
     {
         ArgumentNullException.ThrowIfNull(next);
@@ -35,6 +43,10 @@ public sealed class CorrelationIdMiddleware
     /// </summary>
     /// <param name="context">Current HTTP context.</param>
     /// <param name="logContext">Scoped logging context service.</param>
+    /// <returns>A task that represents the asynchronous middleware operation.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="context"/> or <paramref name="logContext"/> is <see langword="null"/>.
+    /// </exception>
     public async Task InvokeAsync(HttpContext context, ILogContextService logContext)
     {
         ArgumentNullException.ThrowIfNull(context);
