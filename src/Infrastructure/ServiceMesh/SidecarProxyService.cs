@@ -68,6 +68,9 @@ public class SidecarProxyService : ISidecarProxyService
     /// <summary>
     /// Initializes a new instance with a named HTTP client, options, and logger.
     /// </summary>
+    /// <param name="httpClient">The HTTP client used to communicate with the sidecar proxy admin API.</param>
+    /// <param name="options">The service mesh configuration options.</param>
+    /// <param name="logger">The logger used to record sidecar proxy operations.</param>
     public SidecarProxyService(
         HttpClient httpClient,
         IOptions<ServiceMeshOptions> options,
@@ -78,7 +81,11 @@ public class SidecarProxyService : ISidecarProxyService
         _logger = logger;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Retrieves a snapshot of the sidecar proxy state and its upstream clusters.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task containing the current sidecar proxy information.</returns>
     public async Task<SidecarProxyInfo> GetProxyInfoAsync(CancellationToken cancellationToken = default)
     {
         var info = new SidecarProxyInfo
@@ -128,7 +135,11 @@ public class SidecarProxyService : ISidecarProxyService
         return info;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Determines whether the sidecar proxy is ready to forward traffic.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task containing <see langword="true"/> when the proxy is ready; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> CheckReadinessAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -148,7 +159,11 @@ public class SidecarProxyService : ISidecarProxyService
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Retrieves the upstream clusters currently known to the sidecar proxy.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task containing a read-only collection of upstream cluster states.</returns>
     public async Task<IReadOnlyList<UpstreamCluster>> GetUpstreamClustersAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -191,7 +206,12 @@ public class SidecarProxyService : ISidecarProxyService
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Signals the sidecar proxy to drain inbound connections and waits for the drain period to elapse.
+    /// </summary>
+    /// <param name="drainSeconds">The number of seconds to wait while existing connections drain.</param>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous drain operation.</returns>
     public async Task DrainConnectionsAsync(int drainSeconds = 10, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Initiating sidecar proxy connection drain for {DrainSeconds}s", drainSeconds);
@@ -216,7 +236,14 @@ public class SidecarProxyService : ISidecarProxyService
         _logger.LogInformation("Sidecar proxy connection drain completed");
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Determines whether service mesh integration is enabled and its sidecar proxy is ready.
+    /// </summary>
+    /// <param name="cancellationToken">A token used to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A task containing <see langword="true"/> when service mesh integration is enabled and the proxy is ready;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public async Task<bool> IsServiceMeshEnabledAsync(CancellationToken cancellationToken = default)
     {
         if (!_options.Enabled)
