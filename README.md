@@ -3450,58 +3450,39 @@ Console.WriteLine($"Gen2 collections: {perfInstance.Gen2Collections}");
 
 ## HealthCheckService
 
-The `HealthCheckService` provides comprehensive health monitoring and service status tracking for registered services in the scaffold system. It performs HTTP-based health checks against service endpoints, records results with response times and status codes, calculates success rates, and maintains historical health data for trend analysis and alerting. The service integrates with the service registry to update service status based on health check results and provides methods for retrieving historical health data, calculating success metrics, and cleaning up old results.
+`HealthCheckService` (`src/Application/Services/HealthCheckService.cs`) runs HTTP GET health checks for registered services and persists each result. It records response time and HTTP status, updates the registered service after a success or failure, and exposes health history and summary information. Disabled or unknown services are rejected; timeouts and HTTP request failures are recorded as health-check results.
 
-### Usage Examples
+### Key Methods
+
+- `PerformHealthCheckAsync` checks the configured health endpoint and records the result.
+- `GetServiceHealthHistoryAsync` returns the most recent results for a service.
+- `GetServiceSuccessRateAsync` calculates the percentage of healthy results within a time window.
+- `GetServiceHealthStatusAsync` returns the service's current status, or `"Disabled"` when monitoring is disabled.
+- `GetFailedChecksAsync` returns failures from a configurable number of recent hours.
+- `CreateHealthCheckResultAsync` records a result supplied by an external monitor or another caller.
+- `CleanupOldResultsAsync` removes results older than the configured retention period for every registered service.
+
+### Usage Example
 
 ```csharp
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DotnetServiceScaffold.Application.Services;
-using DotnetServiceScaffold.Domain.Models;
+using Microsoft.Extensions.DependencyInjection;
 
-// Initialize the health check service (typically via dependency injection)
-var healthCheckService = new HealthCheckService(
-    healthCheckRepository,
-    serviceRepository,
-    httpClient,
-    logger
-);
+// Program.cs registers IHealthCheckService as a typed HTTP client.
+var healthCheckService = serviceProvider.GetRequiredService<IHealthCheckService>();
 
-// Perform a health check on a registered service
 var serviceId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
 var healthResult = await healthCheckService.PerformHealthCheckAsync(serviceId);
 Console.WriteLine($"Health check status: {healthResult.Status} in {healthResult.ResponseTimeMs}ms");
 
-// Get recent health check history for a service
-var healthHistory = await healthCheckService.GetServiceHealthHistoryAsync(serviceId, count: 50);
+var healthHistory = await healthCheckService.GetServiceHealthHistoryAsync(serviceId);
 Console.WriteLine($"Found {healthHistory.Count()} historical health checks");
 
-// Calculate service success rate over the last hour
 var successRate = await healthCheckService.GetServiceSuccessRateAsync(serviceId, minutesBack: 60);
 Console.WriteLine($"Service success rate: {successRate}%");
-
-// Get current health status of a service
-var healthStatus = await healthCheckService.GetServiceHealthStatusAsync(serviceId);
-Console.WriteLine($"Current health status: {healthStatus}");
-
-// Get all failed health checks in the last 24 hours
-var failedChecks = await healthCheckService.GetFailedChecksAsync(serviceId, hoursBack: 24);
-Console.WriteLine($"Found {failedChecks.Count()} failed checks in last 24 hours");
-
-// Create a manual health check result (useful for testing or external monitoring)
-var manualResult = await healthCheckService.CreateHealthCheckResultAsync(
-    serviceId: serviceId,
-    statusCode: 200,
-    responseTimeMs: 150,
-    errorMessage: null
-);
-Console.WriteLine($"Manual health check created: {manualResult.Status}");
-
-// Clean up old health check results (keep 30 days of data)
-await healthCheckService.CleanupOldResultsAsync(daysToKeep: 30);
-Console.WriteLine("Old health check results cleaned up");
 ```
 
 ## ServiceManagementServiceTests
