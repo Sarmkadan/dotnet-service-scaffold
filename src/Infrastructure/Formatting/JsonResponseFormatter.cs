@@ -15,10 +15,16 @@ namespace DotnetServiceScaffold.Infrastructure.Formatting;
 /// </summary>
 public class JsonResponseFormatter : IResponseFormatter
 {
+    /// <summary>
+    /// Gets the media type that this formatter handles.
+    /// </summary>
     public string MediaType => "application/json";
 
     private readonly JsonSerializerOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the JsonResponseFormatter class with default JSON serialization options.
+    /// </summary>
     public JsonResponseFormatter()
     {
         _options = new JsonSerializerOptions
@@ -38,6 +44,10 @@ public class JsonResponseFormatter : IResponseFormatter
     /// <summary>
     /// Formats an object as JSON using standard serialization options.
     /// </summary>
+    /// <param name="data">The object to format as JSON.</param>
+    /// <returns>A task that represents the asynchronous formatting operation. The task result contains the JSON string.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when data is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when serialization fails.</exception>
     public Task<string> FormatAsync(object? data)
     {
         ArgumentNullException.ThrowIfNull(data);
@@ -55,8 +65,10 @@ public class JsonResponseFormatter : IResponseFormatter
 
     /// <summary>
     /// Determines if this formatter can handle the given media type.
-    /// Accepts: application/json, application/json+custom, etc.
     /// </summary>
+    /// <param name="mediaType">The media type to check.</param>
+    /// <returns>True if the formatter can handle the media type; otherwise, false.</returns>
+    /// <exception cref="ArgumentException">Thrown when mediaType is null, empty, or consists only of white-space characters.</exception>
     public bool CanFormat(string mediaType)
     {
         ArgumentException.ThrowIfNullOrEmpty(mediaType);
@@ -71,6 +83,13 @@ public class JsonResponseFormatter : IResponseFormatter
     /// </summary>
     private class JsonDateTimeConverter : JsonConverter<DateTime>
     {
+        /// <summary>
+        /// Reads and converts the JSON to DateTime.
+        /// </summary>
+        /// <param name="reader">The Utf8JsonReader to read from.</param>
+        /// <param name="typeToConvert">The type to convert to.</param>
+        /// <param name="options">The JsonSerializerOptions to use.</param>
+        /// <returns>The converted DateTime value.</returns>
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var stringValue = reader.GetString();
@@ -82,6 +101,12 @@ public class JsonResponseFormatter : IResponseFormatter
             throw new JsonException($"Unable to convert \"{stringValue}\" to DateTime");
         }
 
+        /// <summary>
+        /// Writes the DateTime value as JSON.
+        /// </summary>
+        /// <param name="writer">The Utf8JsonWriter to write to.</param>
+        /// <param name="value">The DateTime value to write.</param>
+        /// <param name="options">The JsonSerializerOptions to use.</param>
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
             // Ensure UTC and format as ISO 8601
