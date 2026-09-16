@@ -98,4 +98,9 @@ public class WebhookDeadLetter
         IsResolved = true;
         ResolvedAt = DateTime.UtcNow;
     }
+
+    public override string ToString()
+    {
+        return $"WebhookDeadLetter {{ Id={Id}, WebhookId={WebhookId}, WebhookUrl={WebhookUrl}, EventType={EventType ?? "(null)"}, AttemptCount={AttemptCount}, LastStatusCode={(LastStatusCode.HasValue ? LastStatusCode.Value.ToString() : "(null)")}, LastLatencyMs={LastLatencyMs}, CreatedAt={CreatedAt:O}, LastAttemptAt={LastAttemptAt:O}, IsResolved={IsResolved} }}";
+    }
 }
