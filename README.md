@@ -6409,6 +6409,49 @@ This example demonstrates how to use `ISidecarProxyService` to integrate with a 
 
 
 
+## ResilientHttpMessageHandler
+
+`ResilientHttpMessageHandler` protects outbound HTTP calls made by the registered `external-api`, `IExternalReadClient`, and `IExternalWriteClient` clients. `AddIntegrationServices()` registers the handler, binds the `Resilience` configuration section, and validates the settings when the application starts.
+
+### Retry and timeout behavior
+
+- The handler makes one initial attempt plus as many retries as `RetryCount` allows. Setting `RetryCount` to `0` disables retries.
+- HTTP 408, HTTP 429, all 5xx responses, `HttpRequestException`, and per-attempt timeouts are transient failures. Other HTTP responses are returned immediately and reset the circuit breaker's consecutive-failure count.
+- Each retry waits for a random duration from zero up to `min(BaseDelayMilliseconds * 2^(attempt - 1), MaxDelayMilliseconds)`. This full jitter helps prevent multiple clients from retrying at the same time.
+- `PerAttemptTimeoutSeconds` applies separately to each attempt. Caller cancellation is propagated and does not become a retryable timeout.
+- If every attempt returns a transient HTTP response, the final response is returned to the caller. If every attempt ends with an exception or timeout, the handler throws `HttpRequestException` with the last failure as its inner exception.
+- The request is cloned for every attempt, including buffered content, headers, and request options, so it can be sent again safely.
+
+Each transient attempt is also recorded as a circuit-breaker failure. Once the consecutive-failure threshold is reached, the circuit opens; subsequent attempts fail immediately with `BrokenCircuitException`. After the configured break duration, the first request transitions the circuit to half-open and requests are permitted again. A successful attempt closes the circuit and resets its failure count, while a failed half-open attempt opens it again for another break period. The circuit state is shared by the clients that use this handler registration, so failures through one of those clients can short-circuit the others.
+
+### Configuration options
+
+Configure the policy in the `Resilience` section of application configuration:
+
+```json
+{
+  "Resilience": {
+    "RetryCount": 3,
+    "BaseDelayMilliseconds": 200,
+    "MaxDelayMilliseconds": 30000,
+    "PerAttemptTimeoutSeconds": 10,
+    "CircuitBreakerFailureThreshold": 5,
+    "CircuitBreakerBreakDurationSeconds": 30
+  }
+}
+```
+
+| Option | Default | Valid values | Purpose |
+| --- | ---: | --- | --- |
+| `RetryCount` | `3` | `0`-`10` | Maximum retries after the initial attempt. |
+| `BaseDelayMilliseconds` | `200` | `1`-`60000` | Starting value for exponential backoff. |
+| `MaxDelayMilliseconds` | `30000` | `1`-`300000`, and at least `BaseDelayMilliseconds` | Caps the randomized retry delay. |
+| `PerAttemptTimeoutSeconds` | `10` | `1`-`300` | Timeout for each individual attempt. |
+| `CircuitBreakerFailureThreshold` | `5` | `1`-`100` | Consecutive transient attempts that open the circuit. |
+| `CircuitBreakerBreakDurationSeconds` | `30` | `1`-`3600` | Time the circuit remains open before a probe is allowed. |
+
+The handler reads retry, delay, and timeout options through `IOptionsMonitor` at the start of every request, so supported configuration reloads affect new requests. The circuit breaker's threshold and break duration are captured when its singleton state is created; restart the application to apply changes to those two settings.
+
 ## HttpClientFactory
 
 The `HttpClientFactory` provides a centralized way to create configured `HttpClient` instances with standardized settings for timeouts, headers, and authentication. It wraps the default `IHttpClientFactory` from .NET's dependency injection system and adds convenience methods for common HTTP client configurations including authenticated clients with API keys, Bearer tokens, and custom base URLs.
