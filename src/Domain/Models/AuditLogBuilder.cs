@@ -19,6 +19,13 @@ public class AuditLogBuilder
     private string? _ipAddress;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="AuditLogBuilder"/> class.
+    /// </summary>
+    public AuditLogBuilder()
+    {
+    }
+
+    /// <summary>
     /// Sets the unique identifier for the audit log.
     /// </summary>
     /// <param name="id">The audit log identifier.</param>
