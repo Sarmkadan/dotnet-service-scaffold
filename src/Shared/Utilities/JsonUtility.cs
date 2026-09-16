@@ -61,6 +61,10 @@ public static class JsonUtility
     /// <summary>
     /// Serializes an object to JSON string using default options.
     /// </summary>
+    /// <typeparam name="T">The type of the object to serialize.</typeparam>
+    /// <param name="obj">The object to serialize.</param>
+    /// <returns>A JSON string representation of <paramref name="obj"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="obj"/> is <see langword="null"/>.</exception>
     public static string Serialize<T>(T obj)
     {
         ArgumentNullException.ThrowIfNull(obj);
@@ -70,6 +74,10 @@ public static class JsonUtility
     /// <summary>
     /// Serializes an object to JSON string using web-optimized options.
     /// </summary>
+    /// <typeparam name="T">The type of the object to serialize.</typeparam>
+    /// <param name="obj">The object to serialize.</param>
+    /// <returns>A web-optimized JSON string representation of <paramref name="obj"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="obj"/> is <see langword="null"/>.</exception>
     public static string SerializeWeb<T>(T obj)
     {
         ArgumentNullException.ThrowIfNull(obj);
@@ -79,6 +87,10 @@ public static class JsonUtility
     /// <summary>
     /// Serializes an object to JSON string with pretty formatting (indented).
     /// </summary>
+    /// <typeparam name="T">The type of the object to serialize.</typeparam>
+    /// <param name="obj">The object to serialize.</param>
+    /// <returns>An indented JSON string representation of <paramref name="obj"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="obj"/> is <see langword="null"/>.</exception>
     public static string SerializePretty<T>(T obj)
     {
         ArgumentNullException.ThrowIfNull(obj);
@@ -88,6 +100,12 @@ public static class JsonUtility
     /// <summary>
     /// Deserializes a JSON string to an object.
     /// </summary>
+    /// <typeparam name="T">The type to which the JSON is deserialized.</typeparam>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>The deserialized object, or <see langword="null"/> when the JSON represents a null value.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="json"/> is not valid JSON for <typeparamref name="T"/>.</exception>
     public static T? Deserialize<T>(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -105,6 +123,11 @@ public static class JsonUtility
     /// <summary>
     /// Deserializes a JSON string to a dynamic object.
     /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>The dynamically typed JSON value, or <see langword="null"/> when the JSON represents a null value.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="json"/> is not valid JSON.</exception>
     public static dynamic? DeserializeDynamic(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -123,6 +146,15 @@ public static class JsonUtility
     /// Extracts a property value from a JSON string without fully deserializing.
     /// Useful for reading specific values from large JSON documents.
     /// </summary>
+    /// <typeparam name="T">The type to which the property value is deserialized.</typeparam>
+    /// <param name="json">The JSON string to inspect.</param>
+    /// <param name="propertyPath">The dot-delimited path of the property to retrieve.</param>
+    /// <returns>
+    /// The deserialized property value, or the default value of <typeparamref name="T"/> when the path
+    /// does not exist or the JSON cannot be parsed or deserialized.
+    /// </returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> or <paramref name="propertyPath"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json"/> or <paramref name="propertyPath"/> is <see langword="null"/>.</exception>
     public static T? GetProperty<T>(string json, string propertyPath)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -159,6 +191,12 @@ public static class JsonUtility
     /// <summary>
     /// Merges two JSON objects. Properties from the second object override those in the first.
     /// </summary>
+    /// <param name="json1">The base JSON string.</param>
+    /// <param name="json2">The JSON string whose values override values in <paramref name="json1"/>.</param>
+    /// <returns>The merged JSON string.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json1"/> or <paramref name="json2"/> is empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="json1"/> or <paramref name="json2"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">Either argument is not valid JSON.</exception>
     public static string MergeJson(string json1, string json2)
     {
         ArgumentException.ThrowIfNullOrEmpty(json1);
@@ -186,6 +224,8 @@ public static class JsonUtility
     /// <summary>
     /// Validates if a string is valid JSON.
     /// </summary>
+    /// <param name="json">The string to validate.</param>
+    /// <returns><see langword="true"/> if <paramref name="json"/> contains valid JSON; otherwise, <see langword="false"/>.</returns>
     public static bool IsValidJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -205,6 +245,8 @@ public static class JsonUtility
     /// <summary>
     /// Gets the JSON type of a value (object, array, string, number, bool, null).
     /// </summary>
+    /// <param name="json">The JSON string whose value type is identified.</param>
+    /// <returns>The inferred JSON type, or <c>unknown</c> when <paramref name="json"/> is null or empty.</returns>
     public static string GetJsonType(string json)
     {
         if (string.IsNullOrEmpty(json))
@@ -226,6 +268,10 @@ public static class JsonUtility
     /// <summary>
     /// Formats a JSON string with consistent indentation.
     /// </summary>
+    /// <param name="json">The JSON string to format.</param>
+    /// <returns>
+    /// The indented JSON string, or the original value when <paramref name="json"/> is null, empty, or cannot be parsed.
+    /// </returns>
     public static string FormatJson(string json)
     {
         if (string.IsNullOrEmpty(json))
