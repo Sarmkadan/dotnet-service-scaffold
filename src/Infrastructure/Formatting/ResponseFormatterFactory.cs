@@ -16,6 +16,10 @@ public class ResponseFormatterFactory : IResponseFormatterFactory
     private readonly Dictionary<string, IResponseFormatter> _formatters;
     private readonly IResponseFormatter _defaultFormatter;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ResponseFormatterFactory"/> class
+    /// with the built-in set of formatters (JSON, CSV, and XML) and JSON as the default.
+    /// </summary>
     public ResponseFormatterFactory()
     {
         _formatters = new Dictionary<string, IResponseFormatter>(StringComparer.OrdinalIgnoreCase)
@@ -87,8 +91,24 @@ public class ResponseFormatterFactory : IResponseFormatterFactory
 /// </summary>
 public interface IResponseFormatterFactory
 {
+    /// <summary>
+    /// Gets a formatter for the specified media type. Returns the default (JSON) formatter
+    /// if no matching formatter is found.
+    /// </summary>
     IResponseFormatter GetFormatter(string? mediaType);
+
+    /// <summary>
+    /// Registers a custom formatter for a media type.
+    /// </summary>
     void RegisterFormatter(string mediaType, IResponseFormatter formatter);
+
+    /// <summary>
+    /// Gets a list of all supported media types.
+    /// </summary>
     IEnumerable<string> GetSupportedMediaTypes();
+
+    /// <summary>
+    /// Checks if a media type is supported.
+    /// </summary>
     bool IsMediaTypeSupported(string? mediaType);
 }
