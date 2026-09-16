@@ -156,6 +156,19 @@ public static class HttpContextExtensions
     }
 
     /// <summary>
+    /// Gets the traceparent header value for distributed tracing.
+    /// Returns null if header is not present.
+    /// </summary>
+    /// <returns>The traceparent value, or null if not found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
+    public static string? GetTraceParent(this HttpContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return context.Request.Headers.FirstOrDefault(h =>
+            h.Key.Equals(HttpContextExtensionsConstants.TraceParentHeader, StringComparison.OrdinalIgnoreCase)).Value.FirstOrDefault();
+    }
+
+    /// <summary>
     /// Gets the user agent string from the request headers.
     /// </summary>
     /// <returns>The user agent string, or null if not available.</returns>

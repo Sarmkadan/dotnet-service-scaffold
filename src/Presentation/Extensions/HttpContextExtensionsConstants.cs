@@ -23,6 +23,11 @@ internal static class HttpContextExtensionsConstants
     public const string ApiKeyHeader = "X-Api-Key";
 
     /// <summary>
+    /// The traceparent header name (W3C Trace Context).
+    /// </summary>
+    public const string TraceParentHeader = "traceparent";
+
+    /// <summary>
     /// The default content type when none is specified.
     /// </summary>
     public const string DefaultContentType = "application/octet-stream";
