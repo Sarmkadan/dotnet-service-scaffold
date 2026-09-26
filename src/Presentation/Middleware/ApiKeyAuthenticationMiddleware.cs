@@ -22,11 +22,11 @@ namespace DotnetServiceScaffold.Presentation.Middleware;
 /// the X-Api-Key header and sets up user principal for authorization checks.
 /// Uses database lookup to validate keys against registered users.
 /// </summary>
-public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
+public class ApiKeyAuthenticationMiddleware : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     private readonly IUserService _userService;
 
-    public ApiKeyAuthenticationHandler(
+    public ApiKeyAuthenticationMiddleware(
         IOptionsMonitor<ApiKeyAuthenticationOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
@@ -116,12 +116,11 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
     /// (length alone is not secret); the byte comparison runs in fixed time via
     /// <see cref="CryptographicOperations.FixedTimeEquals"/> to prevent timing attacks.
     /// </summary>
-    internal static bool FixedTimeEquals(string? left, string? right)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="left"/> or <paramref name="right"/> is <see langword="null"/>.</exception>
+    public static bool FixedTimeEquals(string? left, string? right)
     {
-        if (left is null || right is null)
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
 
         var leftBytes = Encoding.UTF8.GetBytes(left);
         var rightBytes = Encoding.UTF8.GetBytes(right);

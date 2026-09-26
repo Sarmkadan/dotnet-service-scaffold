@@ -242,7 +242,7 @@ services.AddTransient<IExternalApiClient>(provider =>
         {
             options.DefaultScheme = ApiKeyAuthenticationOptions.DefaultScheme;
         })
-            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationMiddleware>(
                 ApiKeyAuthenticationOptions.DefaultScheme,
                 null);
 
