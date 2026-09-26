@@ -5,6 +5,7 @@
 // =====================================================================
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace DotnetServiceScaffold.Infrastructure.HealthChecks;
@@ -13,7 +14,7 @@ namespace DotnetServiceScaffold.Infrastructure.HealthChecks;
 /// Health check that verifies the SQLite database file is accessible and writable,
 /// and reports available disk space as a degraded warning when running low.
 /// </summary>
-public class SqliteHealthCheck : IHealthCheck
+public class SqliteHealthCheck : SafeHealthCheckBase
 {
     private readonly string _databasePath;
     private readonly long _degradedDiskSpaceThresholdBytes;
@@ -21,6 +22,7 @@ public class SqliteHealthCheck : IHealthCheck
     /// <summary>
     /// Initializes a new instance of the <see cref="SqliteHealthCheck"/> class.
     /// </summary>
+    /// <param name="logger">The logger to use for logging exception details.</param>
     /// <param name="databasePath">Absolute or relative path to the SQLite database file.</param>
     /// <param name="degradedDiskSpaceThresholdBytes">
     /// Available disk space below which the check reports Degraded. Defaults to 512 MB.
@@ -28,7 +30,11 @@ public class SqliteHealthCheck : IHealthCheck
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="databasePath"/> is <see langword="null"/> or empty.
     /// </exception>
-    public SqliteHealthCheck(string databasePath, long degradedDiskSpaceThresholdBytes = SqliteHealthCheckConstants.DefaultDegradedDiskSpaceThresholdBytes)
+    public SqliteHealthCheck(
+        ILogger<SqliteHealthCheck> logger,
+        string databasePath,
+        long degradedDiskSpaceThresholdBytes = SqliteHealthCheckConstants.DefaultDegradedDiskSpaceThresholdBytes)
+        : base(logger)
     {
         ArgumentException.ThrowIfNullOrEmpty(databasePath);
         _databasePath = databasePath;
@@ -41,7 +47,7 @@ public class SqliteHealthCheck : IHealthCheck
     /// <param name="context">The context in which the health check is performed.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the health check.</param>
     /// <returns>A task containing the SQLite database health status and diagnostic details.</returns>
-    public async Task<HealthCheckResult> CheckHealthAsync(
+    protected override async Task<HealthCheckResult> CheckHealthInternalAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
@@ -57,91 +63,39 @@ public class SqliteHealthCheck : IHealthCheck
 
         // Check disk space on the volume that holds the database directory.
         var directory = Path.GetDirectoryName(fullPath) ?? SqliteHealthCheckConstants.CurrentDirectoryIndicator;
-        try
-        {
-            var driveInfo = new DriveInfo(directory);
-            var availableBytes = driveInfo.AvailableFreeSpace;
-            data["diskAvailableBytes"] = availableBytes;
-            data["diskAvailableMB"] = availableBytes / SqliteHealthCheckConstants.BytesPerMebibyte;
+        var driveInfo = new DriveInfo(directory);
+        var availableBytes = driveInfo.AvailableFreeSpace;
+        data["diskAvailableBytes"] = availableBytes;
+        data["diskAvailableMB"] = availableBytes / SqliteHealthCheckConstants.BytesPerMebibyte;
 
-            if (availableBytes < _degradedDiskSpaceThresholdBytes)
-            {
-                return HealthCheckResult.Degraded(
-                    $"Low disk space: {availableBytes / SqliteHealthCheckConstants.BytesPerMebibyte} MB available on {driveInfo.Name}",
-                    data: data);
-            }
-        }
-        catch (Exception ex)
+        if (availableBytes < _degradedDiskSpaceThresholdBytes)
         {
-            data["diskCheckError"] = ex.Message;
+            return HealthCheckResult.Degraded(
+                $"Low disk space: {availableBytes / SqliteHealthCheckConstants.BytesPerMebibyte} MB available on {driveInfo.Name}",
+                data: data);
         }
 
         // If the database file does not exist yet (first run before migration), the
         // directory must at least be writable so the runtime can create it.
         if (!File.Exists(fullPath))
         {
-            try
-            {
-                Directory.CreateDirectory(directory);
-                var probe = Path.Combine(directory, $".write-probe-{Guid.NewGuid():N}");
-                await File.WriteAllTextAsync(probe, string.Empty, timeoutCts.Token);
-                File.Delete(probe);
-                data[SqliteHealthCheckConstants.FileExistsKey] = false;
-                return HealthCheckResult.Healthy(
-                    "SQLite database file will be created on first write; directory is writable.",
-                    data);
-            }
-            catch (OperationCanceledException)
-            {
-                return HealthCheckResult.Degraded(
-                    "Timeout while checking SQLite database directory writability.",
-                    data: data);
-            }
-            catch (Exception ex)
-            {
-                return HealthCheckResult.Unhealthy(
-                    $"SQLite database directory is not writable: {ex.Message}",
-                    ex, data);
-            }
+            Directory.CreateDirectory(directory);
+            var probe = Path.Combine(directory, $".write-probe-{Guid.NewGuid():N}");
+            await File.WriteAllTextAsync(probe, string.Empty, timeoutCts.Token);
+            File.Delete(probe);
+            data[SqliteHealthCheckConstants.FileExistsKey] = false;
+            return HealthCheckResult.Healthy(
+                "SQLite database file will be created on first write; directory is writable.",
+                data);
         }
 
         data[SqliteHealthCheckConstants.FileExistsKey] = true;
 
         // Verify the file is readable.
-        try
-        {
-            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: SqliteHealthCheckConstants.FileStreamBufferSize, useAsync: true);
-        }
-        catch (OperationCanceledException)
-        {
-            return HealthCheckResult.Degraded(
-                "Timeout while checking SQLite database file readability.",
-                data: data);
-        }
-        catch (Exception ex)
-        {
-            return HealthCheckResult.Unhealthy(
-                $"SQLite database file is not readable: {ex.Message}",
-                ex, data);
-        }
+        await using var fsRead = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: SqliteHealthCheckConstants.FileStreamBufferSize, useAsync: true);
 
         // Verify the file is writable.
-        try
-        {
-            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, bufferSize: SqliteHealthCheckConstants.FileStreamBufferSize, useAsync: true);
-        }
-        catch (OperationCanceledException)
-        {
-            return HealthCheckResult.Degraded(
-                "Timeout while checking SQLite database file writability.",
-                data: data);
-        }
-        catch (Exception ex)
-        {
-            return HealthCheckResult.Degraded(
-                $"SQLite database file is read-only: {ex.Message}",
-                ex, data);
-        }
+        await using var fsWrite = new FileStream(fullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, bufferSize: SqliteHealthCheckConstants.FileStreamBufferSize, useAsync: true);
 
         return HealthCheckResult.Healthy("SQLite database file is accessible and writable.", data);
     }
