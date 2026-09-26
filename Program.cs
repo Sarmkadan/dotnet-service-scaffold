@@ -19,6 +19,8 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Events;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -241,7 +243,7 @@ app.MapGet(ProgramConstants.MetricsRoute, async (
             var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
             var validMetricsKey = config.MetricsApiKey;
 
-            if (string.IsNullOrWhiteSpace(validMetricsKey) || !providedApiKey.Equals(validMetricsKey, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(validMetricsKey) || !DotnetServiceScaffold.Presentation.Middleware.ApiKeyAuthenticationMiddleware.FixedTimeEquals(providedApiKey, validMetricsKey))
             {
                 context.Response.StatusCode = ProgramConstants.ForbiddenStatusCode;
                 context.Response.ContentType = ProgramConstants.JsonContentType;
