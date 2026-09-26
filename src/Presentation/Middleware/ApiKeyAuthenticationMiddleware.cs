@@ -116,7 +116,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
     /// (length alone is not secret); the byte comparison runs in fixed time via
     /// <see cref="CryptographicOperations.FixedTimeEquals"/> to prevent timing attacks.
     /// </summary>
-    private static bool FixedTimeEquals(string? left, string? right)
+    internal static bool FixedTimeEquals(string? left, string? right)
     {
         if (left is null || right is null)
         {
