@@ -1,9 +1,11 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
 // ===================================================================
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using System.Runtime;
 
 namespace DotnetServiceScaffold.Infrastructure.HealthChecks;
@@ -13,7 +15,7 @@ namespace DotnetServiceScaffold.Infrastructure.HealthChecks;
 /// Reports Healthy when memory is below the configured threshold percentage,
 /// Degraded when approaching the limit, and Unhealthy when exceeding it.
 /// </summary>
-public class MemoryHealthCheck : IHealthCheck
+public class MemoryHealthCheck : SafeHealthCheckBase
 {
     private readonly double _healthyThresholdPercent;
     private readonly double _degradedThresholdPercent;
@@ -22,6 +24,7 @@ public class MemoryHealthCheck : IHealthCheck
     /// <summary>
     /// Health check that monitors memory usage with container-aware limits.
     /// </summary>
+    /// <param name="logger">The logger to use for logging exception details.</param>
     /// <param name="healthyThresholdPercent">
     /// Percentage of available memory below which the check reports Healthy.
     /// Defaults to 70% (70). Must be between 1 and 99.
@@ -38,9 +41,11 @@ public class MemoryHealthCheck : IHealthCheck
     /// Thrown when any threshold is outside valid range or thresholds are not in ascending order.
     /// </exception>
     public MemoryHealthCheck(
+        ILogger<MemoryHealthCheck> logger,
         double healthyThresholdPercent = MemoryHealthCheckConstants.DefaultHealthyThresholdPercent,
         double degradedThresholdPercent = MemoryHealthCheckConstants.DefaultDegradedThresholdPercent,
         double unhealthyThresholdPercent = MemoryHealthCheckConstants.DefaultUnhealthyThresholdPercent)
+        : base(logger)
     {
         if (healthyThresholdPercent is < MemoryHealthCheckConstants.MinThresholdPercent or > MemoryHealthCheckConstants.MaxThresholdPercent)
         {
@@ -88,10 +93,7 @@ public class MemoryHealthCheck : IHealthCheck
     /// <param name="context">The context in which the health check is performed.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the health check.</param>
     /// <returns>A task containing the health status and memory usage details.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="context"/> is <see langword="null"/>.
-    /// </exception>
-    public Task<HealthCheckResult> CheckHealthAsync(
+    protected override Task<HealthCheckResult> CheckHealthInternalAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
@@ -165,17 +167,6 @@ public class MemoryHealthCheck : IHealthCheck
             return Task.FromResult(HealthCheckResult.Degraded(
                 "Timeout while checking memory usage.",
                 data: data));
-        }
-        catch (Exception ex)
-        {
-            var data = new Dictionary<string, object>
-            {
-                ["error"] = ex.Message
-            };
-            return Task.FromResult(HealthCheckResult.Unhealthy(
-                "Error while checking memory usage.",
-                ex,
-                data));
         }
     }
 }
