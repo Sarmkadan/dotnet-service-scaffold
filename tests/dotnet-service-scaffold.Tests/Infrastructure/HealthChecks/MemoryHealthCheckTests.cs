@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DotnetServiceScaffold.Infrastructure.HealthChecks;
 using FluentAssertions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace DotnetServiceScaffold.Tests.Infrastructure.HealthChecks;
@@ -19,7 +20,7 @@ public class MemoryHealthCheckTests
     public async Task CheckHealthAsync_WithDefaultThresholds_ReturnsHealthyStatus()
     {
         // Arrange
-        var check = new MemoryHealthCheck();
+        var check = new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance);
 
         // Act
         var result = await check.CheckHealthAsync(new HealthCheckContext());
@@ -43,7 +44,7 @@ public class MemoryHealthCheckTests
     public async Task CheckHealthAsync_ReturnsDataWithMemoryMetrics()
     {
         // Arrange
-        var check = new MemoryHealthCheck();
+        var check = new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance);
 
         // Act
         var result = await check.CheckHealthAsync(new HealthCheckContext());
@@ -65,9 +66,9 @@ public class MemoryHealthCheckTests
     public void Constructor_WithValidThresholds_DoesNotThrow()
     {
         // Arrange & Act & Assert - no exception thrown
-        var check1 = new MemoryHealthCheck(healthyThresholdPercent: 10, degradedThresholdPercent: 50, unhealthyThresholdPercent: 90);
-        var check2 = new MemoryHealthCheck(healthyThresholdPercent: 70, degradedThresholdPercent: 80, unhealthyThresholdPercent: 95);
-        var check3 = new MemoryHealthCheck(healthyThresholdPercent: 1, degradedThresholdPercent: 2, unhealthyThresholdPercent: 3);
+        var check1 = new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 10, degradedThresholdPercent: 50, unhealthyThresholdPercent: 90);
+        var check2 = new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 70, degradedThresholdPercent: 80, unhealthyThresholdPercent: 95);
+        var check3 = new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 1, degradedThresholdPercent: 2, unhealthyThresholdPercent: 3);
     }
 
     /// <summary>
@@ -77,10 +78,10 @@ public class MemoryHealthCheckTests
     public void Constructor_WithInvalidThresholds_ThrowsArgumentOutOfRangeException()
     {
         // Arrange & Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(healthyThresholdPercent: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(healthyThresholdPercent: 100));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(healthyThresholdPercent: 50, degradedThresholdPercent: 40));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(healthyThresholdPercent: 50, degradedThresholdPercent: 50));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(healthyThresholdPercent: 50, degradedThresholdPercent: 99, unhealthyThresholdPercent: 99));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 100));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 50, degradedThresholdPercent: 40));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 50, degradedThresholdPercent: 50));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new MemoryHealthCheck(NullLogger<MemoryHealthCheck>.Instance, healthyThresholdPercent: 50, degradedThresholdPercent: 99, unhealthyThresholdPercent: 99));
     }
 }

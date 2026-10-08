@@ -118,7 +118,7 @@ builder.Services.AddHealthChecks()
 .AddDbContextCheck<ServiceScaffoldDbContext>(ProgramConstants.DatabaseHealthCheckName)
 .Add(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckRegistration(
     ProgramConstants.SqliteFileHealthCheckName,
-    _ => new SqliteHealthCheck(sqliteDbPath),
+    sp => new SqliteHealthCheck(sp.GetRequiredService<ILogger<SqliteHealthCheck>>(), sqliteDbPath),
     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
     tags: [ProgramConstants.DatabaseTag, ProgramConstants.SqliteTag, ProgramConstants.LiveTag]))
 .AddCheck<MemoryHealthCheck>(ProgramConstants.MemoryHealthCheckName, tags: [ProgramConstants.SystemTag, ProgramConstants.LiveTag]);
