@@ -237,10 +237,11 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
 
         // Assert
         responseBody.Should().NotBeNullOrEmpty();
-        responseBody.Should().Contain("badRequest");
-        responseBody.Should().Contain("invalidInputData");
-        responseBody.Should().Contain("ProblemDetailsFactoryTestsConstants.BadRequestUrl");
-        responseBody.Should().Contain("VALIDATION_ERROR");
+        responseBody.Should().Contain("\"type\":");
+        responseBody.Should().Contain("\"errorCode\":");
+        responseBody.Should().Contain(ProblemDetailsFactoryTestsConstants.BadRequestUrl);
+        responseBody.Should().Contain(ProblemDetailsFactoryTestsConstants.InvalidInputDataDetail);
+        responseBody.Should().Contain(ProblemDetailsFactoryTestsConstants.ValidationErrorCode);
     }
 
     /// <summary>
@@ -270,21 +271,21 @@ public class ProblemDetailsFactoryTests : IProblemDetailsFactoryTests
     }
 
     /// <summary>
-    /// Tests that ProblemDetails content type is correct.
+    /// Tests that CreateProblemDetails only builds the model; the response content type is set by the writer.
     /// </summary>
     [Fact]
-    public void ProblemDetails_ShouldHaveCorrectContentType()
+    public void ProblemDetails_CreateDoesNotSetResponseContentType()
     {
         // Arrange
         var context = CreateHttpContext();
 
         // Act
-        var problemDetails = ProblemDetailsFactory.CreateProblemDetails(
+        _ = ProblemDetailsFactory.CreateProblemDetails(
             context,
             statusCode: ProblemDetailsFactoryTestsConstants.StatusCodeBadRequest
         );
 
         // Assert
-        context.Response.ContentType.Should().Be("application/problem+json");
+        context.Response.ContentType.Should().BeNull();
     }
 }

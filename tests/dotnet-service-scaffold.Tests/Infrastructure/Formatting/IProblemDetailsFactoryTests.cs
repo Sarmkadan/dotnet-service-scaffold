@@ -25,5 +25,5 @@ public interface IProblemDetailsFactoryTests
     void CreateProblemDetails_ShouldIncludeCustomExtensions();
     Task ProblemDetails_ShouldSerializeToJsonWithCamelCase();
     void ProblemDetails_ShouldIncludeAllRequiredRfc7807Fields();
-    void ProblemDetails_ShouldHaveCorrectContentType();
+    void ProblemDetails_CreateDoesNotSetResponseContentType();
 }
