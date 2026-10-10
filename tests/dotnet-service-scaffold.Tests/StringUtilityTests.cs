@@ -31,8 +31,6 @@ public class StringUtilityTests : IStringUtilityTests
     [InlineData("")]
     public void Truncate_NullOrEmptyInput_ReturnsEmptyString(string? input)
     {
-        ArgumentException.ThrowIfNullOrEmpty(input);
-
         /// <summary>
         /// Verifies that the Truncate method returns an empty string when the input is null or empty.
         /// </summary>
@@ -47,8 +45,6 @@ public class StringUtilityTests : IStringUtilityTests
     public void ToSnakeCase_CamelCaseOrPascalInput_InsertsUnderscoresBeforeUpperCaseLetters(
         string input, string expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(input);
-        ArgumentException.ThrowIfNullOrEmpty(expected);
 
         /// <summary>
         /// Verifies that the ToSnakeCase method converts camel case or pascal case input to snake case by inserting underscores before uppercase letters.
@@ -83,8 +79,6 @@ public class StringUtilityTests : IStringUtilityTests
     public void IsValidEmail_VariousInputs_ReturnsExpectedValidationOutcome(
         string email, bool expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(email);
-
         /// <summary>
         /// Verifies that the IsValidEmail method returns the expected validation outcome for various email inputs.
         /// </summary>

@@ -187,7 +187,7 @@ public class ExternalApiClientExtensionsTests : IEquatable<ExternalApiClientExte
 
         // Assert
         await act.Should().ThrowAsync<HttpRequestException>()
-            .WithMessage(ExternalApiClientExtensionsTestsConstants.FailedAfterRetriesMessage);
+            .WithMessage(string.Format(ExternalApiClientExtensionsTestsConstants.FailedAfterRetriesMessage, ExternalApiClientExtensionsTestsConstants.DefaultRetryCount));
         _loggerMock.Object.LogInformation("Completed failed GET retry test for {Url}", url);
     }
 

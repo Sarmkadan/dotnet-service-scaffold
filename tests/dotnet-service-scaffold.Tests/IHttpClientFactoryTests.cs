@@ -21,9 +21,9 @@ public interface IHttpClientFactoryTests : IDisposable
     void CreateClientWithBaseUrl_WithTrailingSlash_HandlesCorrectly();
     void CreateBearerClient_WithNullToken_ThrowsArgumentException();
     void CreateBearerClient_WithEmptyToken_ThrowsArgumentException();
-    void CreateBearerClient_WithWhitespaceToken_ThrowsArgumentException();
+    void CreateBearerClient_WithWhitespaceToken_AcceptsToken();
     void CreateClientWithBaseUrl_WithNullBaseUrl_ThrowsArgumentNullException();
-    void CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsUriFormatException();
+    void CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsArgumentException();
     void CreateClientWithBaseUrl_WithInvalidUrl_ThrowsUriFormatException();
     void CreateClient_WithMultipleCalls_ReturnsIndependentClients();
     void CreateAuthenticatedClient_AfterCreateClient_HasBothHeaders();
