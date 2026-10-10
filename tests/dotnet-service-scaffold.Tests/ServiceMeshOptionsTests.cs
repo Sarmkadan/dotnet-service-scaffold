@@ -156,8 +156,9 @@ public class ServiceMeshOptionsTests
     {
         var type = GetMiddlewareType();
         var loggerType = typeof(NullLogger<>).MakeGenericType(type);
-        var logger = loggerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)!
-            .GetValue(null);
+        // NullLogger<T>.Instance is exposed as a static member; accept either a property or a field.
+        var logger = loggerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)
+            ?? loggerType.GetField("Instance", BindingFlags.Public | BindingFlags.Static)!.GetValue(null);
         return Activator.CreateInstance(type, next, logger!)!;
     }
 
