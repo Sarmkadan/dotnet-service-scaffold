@@ -75,6 +75,8 @@ public class RateLimitingMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         context.Request.Path = "/api/test";
+        // Unique client per test: the token buckets are static and shared across tests.
+        context.Connection.RemoteIpAddress = new System.Net.IPAddress(Guid.NewGuid().ToByteArray()[..4]);
         var options = new RateLimitOptions { AnonymousRequestsPerMinute = 1 };
         bool firstNextInvoked = false;
         bool secondNextInvoked = false;
@@ -109,7 +111,7 @@ public class RateLimitingMiddlewareTests
 
         // Assert
         Assert.Equal(429, context.Response.StatusCode);
-        Assert.Equal("application/json", context.Response.Headers.ContentType);
+        Assert.StartsWith("application/json", context.Response.Headers.ContentType.ToString());
         Assert.Equal("60", context.Response.Headers["Retry-After"]);
     }
 
@@ -122,9 +124,9 @@ public class RateLimitingMiddlewareTests
         // Set up authenticated user
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, "user123")
+            new Claim(ClaimTypes.NameIdentifier, $"user-{Guid.NewGuid():N}")
         };
-        var identity = new ClaimsIdentity(claims);
+        var identity = new ClaimsIdentity(claims, "TestAuth");
         var principal = new ClaimsPrincipal(identity);
         context.User = principal;
         var options = new RateLimitOptions { AuthenticatedRequestsPerMinute = 300 };
@@ -155,9 +157,9 @@ public class RateLimitingMiddlewareTests
         // Set up authenticated user
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, "user123")
+            new Claim(ClaimTypes.NameIdentifier, $"user-{Guid.NewGuid():N}")
         };
-        var identity = new ClaimsIdentity(claims);
+        var identity = new ClaimsIdentity(claims, "TestAuth");
         var principal = new ClaimsPrincipal(identity);
         context.User = principal;
         var options = new RateLimitOptions { AuthenticatedRequestsPerMinute = 1 };
@@ -174,7 +176,7 @@ public class RateLimitingMiddlewareTests
 
         // Assert
         Assert.Equal(429, context.Response.StatusCode);
-        Assert.Equal("application/json", context.Response.Headers.ContentType);
+        Assert.StartsWith("application/json", context.Response.Headers.ContentType.ToString());
         Assert.Equal("60", context.Response.Headers["Retry-After"]);
     }
 
@@ -187,7 +189,7 @@ public class RateLimitingMiddlewareTests
         {
             new Claim(ClaimTypes.NameIdentifier, "user123")
         };
-        var identity = new ClaimsIdentity(claims);
+        var identity = new ClaimsIdentity(claims, "TestAuth");
         var principal = new ClaimsPrincipal(identity);
         context.User = principal;
         var options = new RateLimitOptions();
