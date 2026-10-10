@@ -59,9 +59,11 @@ public class HealthCheckResultTests
     [Fact]
     public void IsResponseTimeAcceptable_RespectsCustomThreshold()
     {
-        var result = new HealthCheckResult { ResponseTimeMs = 1500 };
-        Assert.True(result.IsResponseTimeAcceptable(1000));
-        Assert.False(result.IsResponseTimeAcceptable(1000));
+        var fast = new HealthCheckResult { ResponseTimeMs = 500 };
+        Assert.True(fast.IsResponseTimeAcceptable(1000));
+
+        var slow = new HealthCheckResult { ResponseTimeMs = 1500 };
+        Assert.False(slow.IsResponseTimeAcceptable(1000));
     }
 
     [Fact]
