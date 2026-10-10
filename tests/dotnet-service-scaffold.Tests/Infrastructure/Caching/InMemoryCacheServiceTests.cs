@@ -122,39 +122,25 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     }
 
     /// <summary>
-    /// Tests that GetAsync returns null for empty key.
+    /// Tests that GetAsync throws ArgumentException for empty key.
     /// </summary>
     [Fact]
-    public async Task GetAsync_EmptyKey_ReturnsNull()
+    public void GetAsync_EmptyKey_ThrowsArgumentException()
     {
-        _loggerMock.Object.LogInformation("Starting cache lookup test for empty key");
-        _loggerMock.Object.LogWarning("Testing degraded cache lookup path for empty key");
+        Action act = () => _cache.GetAsync<string>(string.Empty);
 
-        // Arrange & Act
-        var result = await _cache.GetAsync<string>(string.Empty);
-
-        // Assert
-        result.Should().BeNull();
-
-        _loggerMock.Object.LogInformation("Completed cache lookup test for empty key");
+        act.Should().Throw<ArgumentException>();
     }
 
     /// <summary>
-    /// Tests that GetAsync returns null for null key.
+    /// Tests that GetAsync throws ArgumentNullException for null key.
     /// </summary>
     [Fact]
-    public async Task GetAsync_NullKey_ReturnsNull()
+    public void GetAsync_NullKey_ThrowsArgumentNullException()
     {
-        _loggerMock.Object.LogInformation("Starting cache lookup test for null key");
-        _loggerMock.Object.LogWarning("Testing degraded cache lookup path for null key");
+        Action act = () => _cache.GetAsync<string>(null!);
 
-        // Arrange & Act
-        var result = await _cache.GetAsync<string>(null!);
-
-        // Assert
-        result.Should().BeNull();
-
-        _loggerMock.Object.LogInformation("Completed cache lookup test for null key");
+        act.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>
@@ -308,35 +294,25 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     }
 
     /// <summary>
-    /// Tests that RemoveAsync with null key doesn't throw.
+    /// Tests that RemoveAsync with null key throws ArgumentNullException.
     /// </summary>
     [Fact]
-    public void RemoveAsync_NullKey_DoesNotThrow()
+    public void RemoveAsync_NullKey_ThrowsArgumentNullException()
     {
-        _loggerMock.Object.LogInformation("Starting cache removal test for null key");
-        _loggerMock.Object.LogWarning("Testing no-op cache removal fallback for null key");
-
-        // Act - should not throw
         Action act = () => _cache.RemoveAsync(null!);
-        act.Should().NotThrow();
 
-        _loggerMock.Object.LogInformation("Completed cache removal test for null key");
+        act.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>
-    /// Tests that RemoveAsync with empty key doesn't throw.
+    /// Tests that RemoveAsync with empty key throws ArgumentException.
     /// </summary>
     [Fact]
-    public void RemoveAsync_EmptyKey_DoesNotThrow()
+    public void RemoveAsync_EmptyKey_ThrowsArgumentException()
     {
-        _loggerMock.Object.LogInformation("Starting cache removal test for empty key");
-        _loggerMock.Object.LogWarning("Testing no-op cache removal fallback for empty key");
-
-        // Act - should not throw
         Action act = () => _cache.RemoveAsync(string.Empty);
-        act.Should().NotThrow();
 
-        _loggerMock.Object.LogInformation("Completed cache removal test for empty key");
+        act.Should().Throw<ArgumentException>();
     }
 
     /// <summary>
@@ -522,35 +498,25 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     }
 
     /// <summary>
-    /// Tests RemoveByPatternAsync with null pattern doesn't throw.
+    /// Tests RemoveByPatternAsync with null pattern throws ArgumentNullException.
     /// </summary>
     [Fact]
-    public void RemoveByPatternAsync_NullPattern_DoesNotThrow()
+    public void RemoveByPatternAsync_NullPattern_ThrowsArgumentNullException()
     {
-        _loggerMock.Object.LogInformation("Starting pattern removal test for null pattern");
-        _loggerMock.Object.LogWarning("Testing no-op pattern removal fallback for null pattern");
-
-        // Act - should not throw
         Action act = () => _cache.RemoveByPatternAsync(null!);
-        act.Should().NotThrow();
 
-        _loggerMock.Object.LogInformation("Completed pattern removal test for null pattern");
+        act.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>
-    /// Tests RemoveByPatternAsync with empty pattern doesn't throw.
+    /// Tests RemoveByPatternAsync with empty pattern throws ArgumentException.
     /// </summary>
     [Fact]
-    public void RemoveByPatternAsync_EmptyPattern_DoesNotThrow()
+    public void RemoveByPatternAsync_EmptyPattern_ThrowsArgumentException()
     {
-        _loggerMock.Object.LogInformation("Starting pattern removal test for empty pattern");
-        _loggerMock.Object.LogWarning("Testing no-op pattern removal fallback for empty pattern");
-
-        // Act - should not throw
         Action act = () => _cache.RemoveByPatternAsync(string.Empty);
-        act.Should().NotThrow();
 
-        _loggerMock.Object.LogInformation("Completed pattern removal test for empty pattern");
+        act.Should().Throw<ArgumentException>();
     }
 
     /// <summary>
@@ -677,23 +643,14 @@ public class InMemoryCacheServiceTests : IDisposable, IInMemoryCacheServiceTests
     }
 
     /// <summary>
-    /// Tests storing null values.
+    /// Tests that SetAsync throws ArgumentNullException for a null value.
     /// </summary>
     [Fact]
-    public async Task SetAsync_NullValue_StoresAndRetrievesNull()
+    public void SetAsync_NullValue_ThrowsArgumentNullException()
     {
-        _loggerMock.Object.LogInformation("Starting null value cache test for {CacheKey}", InMemoryCacheServiceTestsConstants.NullValueKey);
-        _loggerMock.Object.LogWarning("Testing null value cache fallback for {CacheKey}", InMemoryCacheServiceTestsConstants.NullValueKey);
+        Action act = () => _cache.SetAsync(InMemoryCacheServiceTestsConstants.NullValueKey, (object)null!);
 
-        // Arrange
-        // Act - store null
-        await _cache.SetAsync(InMemoryCacheServiceTestsConstants.NullValueKey, (object)null!);
-        var result = await _cache.GetAsync<string>(InMemoryCacheServiceTestsConstants.NullValueKey);
-
-        // Assert
-        result.Should().BeNull();
-
-        _loggerMock.Object.LogInformation("Completed null value cache test for {CacheKey}", InMemoryCacheServiceTestsConstants.NullValueKey);
+        act.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>
