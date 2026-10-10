@@ -76,7 +76,7 @@ namespace dotnet_service_scaffold.Tests.Infrastructure.Formatting
                 nameof(ProblemDetailsFactoryTests.CreateProblemDetails_ShouldIncludeCustomExtensions),
                 nameof(ProblemDetailsFactoryTests.ProblemDetails_ShouldSerializeToJsonWithCamelCase),
                 nameof(ProblemDetailsFactoryTests.ProblemDetails_ShouldIncludeAllRequiredRfc7807Fields),
-                nameof(ProblemDetailsFactoryTests.ProblemDetails_ShouldHaveCorrectContentType)
+                nameof(ProblemDetailsFactoryTests.ProblemDetails_CreateDoesNotSetResponseContentType)
             };
     }
 }
