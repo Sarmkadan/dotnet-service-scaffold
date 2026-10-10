@@ -40,32 +40,32 @@ internal static class DateTimeUtilityConstants
     /// <summary>
     /// Suffix for seconds in relative time formatting.
     /// </summary>
-    public const string SecondsSuffix = " seconds ";
+    public const string SecondsSuffix = " seconds";
 
     /// <summary>
     /// Suffix for minutes in relative time formatting.
     /// </summary>
-    public const string MinutesSuffix = " minutes ";
+    public const string MinutesSuffix = " minutes";
 
     /// <summary>
     /// Suffix for hours in relative time formatting.
     /// </summary>
-    public const string HoursSuffix = " hours ";
+    public const string HoursSuffix = " hours";
 
     /// <summary>
     /// Suffix for days in relative time formatting.
     /// </summary>
-    public const string DaysSuffix = " days ";
+    public const string DaysSuffix = " days";
 
     /// <summary>
     /// Suffix for weeks in relative time formatting.
     /// </summary>
-    public const string WeeksSuffix = " weeks ";
+    public const string WeeksSuffix = " weeks";
 
     /// <summary>
     /// Suffix for months in relative time formatting.
     /// </summary>
-    public const string MonthsSuffix = " months ";
+    public const string MonthsSuffix = " months";
 
     /// <summary>
     /// Suffix for future relative time ("from now").
