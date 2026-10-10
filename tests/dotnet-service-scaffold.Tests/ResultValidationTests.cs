@@ -39,14 +39,14 @@ public class ResultValidationTests
     public void Validate_FailureResult_MissingMessageOrCode_ReturnsProblems()
     {
         // Arrange
-        var result = Result.Failure(string.Empty, null!);
+        var result = Result.Failure(" ", null!);
 
         // Act
         var problems = result.Validate();
 
         // Assert
-        Assert.Contains("Failed result must have a non-empty ErrorMessage.", problems);
-        Assert.Contains("Failed result must have a non-null ErrorCode.", problems);
+        Assert.Contains("Failed result must have a non-empty error message.", problems);
+        Assert.Contains("Failed result must have a non-null error code.", problems);
         Assert.Equal(2, problems.Count);
     }
 
@@ -82,22 +82,21 @@ public class ResultValidationTests
     }
 
     [Fact]
-    public void ValidateT_SuccessResult_WithDefaultFormattableReference_ReturnsProblem()
+    public void ValidateT_SuccessResult_WithNullNullableValue_ReturnsNoProblems()
     {
-        // Using a nullable DateTime (reference type) that is default (null)
+        // Null values are explicitly allowed for successful results (see ResultValidation.Validate<T>)
         Result<DateTime?> result = Result<DateTime?>.Success(default);
         var problems = result.Validate<DateTime?>();
-        // Since DateTime? is a reference type and implements IFormattable, the default check fires
-        Assert.Contains("Successful result must not contain default value of type Nullable`1.", problems);
+        Assert.Empty(problems);
     }
 
     [Fact]
     public void ValidateT_FailureResult_MissingMessageOrCode_ReturnsProblems()
     {
-        var result = Result<int>.Failure(string.Empty, null!);
+        var result = Result<int>.Failure(" ", null!);
         var problems = result.Validate<int>();
-        Assert.Contains("Failed result must have a non-empty ErrorMessage.", problems);
-        Assert.Contains("Failed result must have a non-null ErrorCode.", problems);
+        Assert.Contains("Failed result must have a non-empty error message.", problems);
+        Assert.Contains("Failed result must have a non-null error code.", problems);
         Assert.Equal(2, problems.Count);
     }
 
@@ -122,7 +121,7 @@ public class ResultValidationTests
     [Fact]
     public void IsValid_FailureResult_WithProblems_ReturnsFalse()
     {
-        var result = Result.Failure(string.Empty, null!);
+        var result = Result.Failure(" ", null!);
         Assert.False(result.IsValid());
     }
 
@@ -136,7 +135,7 @@ public class ResultValidationTests
     [Fact]
     public void IsValidT_FailureResult_WithProblems_ReturnsFalse()
     {
-        var result = Result<string>.Failure(string.Empty, null!);
+        var result = Result<string>.Failure(" ", null!);
         Assert.False(result.IsValid<string>());
     }
 
@@ -155,10 +154,10 @@ public class ResultValidationTests
     [Fact]
     public void EnsureValid_FailureResult_WithProblems_ThrowsArgumentException()
     {
-        var result = Result.Failure(string.Empty, null!);
+        var result = Result.Failure(" ", null!);
         var ex = Assert.Throws<ArgumentException>(() => result.EnsureValid());
-        Assert.Contains("Failed result must have a non-empty ErrorMessage.", ex.Message);
-        Assert.Contains("Failed result must have a non-null ErrorCode.", ex.Message);
+        Assert.Contains("Failed result must have a non-empty error message.", ex.Message);
+        Assert.Contains("Failed result must have a non-null error code.", ex.Message);
     }
 
     [Fact]
@@ -179,10 +178,10 @@ public class ResultValidationTests
     [Fact]
     public void EnsureValidT_FailureResult_WithProblems_ThrowsArgumentException()
     {
-        var result = Result<int>.Failure(string.Empty, null!);
+        var result = Result<int>.Failure(" ", null!);
         var ex = Assert.Throws<ArgumentException>(() => result.EnsureValid<int>());
-        Assert.Contains("Failed result must have a non-empty ErrorMessage.", ex.Message);
-        Assert.Contains("Failed result must have a non-null ErrorCode.", ex.Message);
+        Assert.Contains("Failed result must have a non-empty error message.", ex.Message);
+        Assert.Contains("Failed result must have a non-null error code.", ex.Message);
     }
 
     #endregion
