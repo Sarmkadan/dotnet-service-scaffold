@@ -9,6 +9,6 @@ public interface ICsvResponseFormatterTests
     Task FormatAsync_SpecialCharacters_AreEscaped(string input, string expectedOutput);
     Task FormatAsync_EmptyCollection_ReturnsEmptyString();
     Task FormatAsync_NullPropertyValues_HandlesCorrectly();
-    Task FormatAsync_NullInput_ReturnsEmptyString();
+    Task FormatAsync_NullInput_ThrowsArgumentNullException();
     Task FormatAsync_SingleObject_ReturnsHeaderAndOneRow();
 }
