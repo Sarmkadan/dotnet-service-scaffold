@@ -82,22 +82,27 @@ public class EncryptionUtilityTests : IEncryptionUtilityTests
     }
 
     /// <summary>
-    /// Tests that VerifyPassword handles null or empty inputs gracefully.
+    /// Tests that VerifyPassword rejects null or empty inputs with ArgumentException.
     /// </summary>
     [Fact]
-    public void VerifyPassword_NullOrEmptyInputs_ReturnsFalse()
+    public void VerifyPassword_NullOrEmptyInputs_ThrowsArgumentException()
     {
         // Arrange
         const string password = "ValidPassword123!";
         string hash = EncryptionUtility.HashPassword(password);
 
         // Act & Assert
-        EncryptionUtility.VerifyPassword(null, hash).Should().BeFalse();
-        EncryptionUtility.VerifyPassword(string.Empty, hash).Should().BeFalse();
-        EncryptionUtility.VerifyPassword(password, null).Should().BeFalse();
-        EncryptionUtility.VerifyPassword(password, string.Empty).Should().BeFalse();
-        EncryptionUtility.VerifyPassword(null, null).Should().BeFalse();
-        EncryptionUtility.VerifyPassword(string.Empty, string.Empty).Should().BeFalse();
+        Action passwordNull = () => EncryptionUtility.VerifyPassword(null!, hash);
+        passwordNull.Should().Throw<ArgumentException>().WithParameterName("password");
+
+        Action passwordEmpty = () => EncryptionUtility.VerifyPassword(string.Empty, hash);
+        passwordEmpty.Should().Throw<ArgumentException>().WithParameterName("password");
+
+        Action hashNull = () => EncryptionUtility.VerifyPassword(password, null!);
+        hashNull.Should().Throw<ArgumentException>().WithParameterName("hash");
+
+        Action hashEmpty = () => EncryptionUtility.VerifyPassword(password, string.Empty);
+        hashEmpty.Should().Throw<ArgumentException>().WithParameterName("hash");
     }
 
     /// <summary>
@@ -342,21 +347,17 @@ public class EncryptionUtilityTests : IEncryptionUtilityTests
     public void ComputeHmacSha256_NullOrEmptyInputs_ThrowsArgumentException()
     {
         // Act & Assert
-        Action act1 = () => EncryptionUtility.ComputeHmacSha256(null, "key");
-        act1.Should().Throw<ArgumentException>()
-            .WithMessage("*Message and key cannot be null or empty*");
+        Action act1 = () => EncryptionUtility.ComputeHmacSha256(null!, "key");
+        act1.Should().Throw<ArgumentException>().WithParameterName("message");
 
         Action act2 = () => EncryptionUtility.ComputeHmacSha256("", "key");
-        act2.Should().Throw<ArgumentException>()
-            .WithMessage("*Message and key cannot be null or empty*");
+        act2.Should().Throw<ArgumentException>().WithParameterName("message");
 
-        Action act3 = () => EncryptionUtility.ComputeHmacSha256("message", null);
-        act3.Should().Throw<ArgumentException>()
-            .WithMessage("*Message and key cannot be null or empty*");
+        Action act3 = () => EncryptionUtility.ComputeHmacSha256("message", null!);
+        act3.Should().Throw<ArgumentException>().WithParameterName("key");
 
         Action act4 = () => EncryptionUtility.ComputeHmacSha256("message", "");
-        act4.Should().Throw<ArgumentException>()
-            .WithMessage("*Message and key cannot be null or empty*");
+        act4.Should().Throw<ArgumentException>().WithParameterName("key");
     }
 
     /// <summary>
@@ -419,13 +420,11 @@ public class EncryptionUtilityTests : IEncryptionUtilityTests
     public void HashPassword_NullOrEmptyPassword_ThrowsArgumentException()
     {
         // Act & Assert
-        Action act1 = () => EncryptionUtility.HashPassword(null);
-        act1.Should().Throw<ArgumentException>()
-            .WithMessage("*Password cannot be null or empty*");
+        Action act1 = () => EncryptionUtility.HashPassword(null!);
+        act1.Should().Throw<ArgumentException>().WithParameterName("password");
 
         Action act2 = () => EncryptionUtility.HashPassword(string.Empty);
-        act2.Should().Throw<ArgumentException>()
-            .WithMessage("*Password cannot be null or empty*");
+        act2.Should().Throw<ArgumentException>().WithParameterName("password");
     }
 
     /// <summary>

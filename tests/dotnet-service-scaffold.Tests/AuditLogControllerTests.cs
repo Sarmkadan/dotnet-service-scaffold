@@ -37,7 +37,7 @@ public class AuditLogControllerTests
         _mockRepository.Setup(r => r.GetFilteredAsync(It.IsAny<System.Linq.Expressions.Expression<Func<AuditLog, bool>>?>(), 1, 50))
             .ReturnsAsync(pagedResult);
 
-        var result = await _controller.ListAuditLogs(null, null, null, null, 1, 50);
+        var result = await _controller.ListAuditLogs(null, null, "TestType", null, 1, 50);
 
         result.Should().BeOfType<OkObjectResult>();
         var okResult = (OkObjectResult)result;

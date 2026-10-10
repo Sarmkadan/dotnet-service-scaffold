@@ -174,12 +174,11 @@ namespace DotnetServiceScaffold.Tests
         }
 
         [Fact]
-        public void RecordHistogram_WithNullBuckets_ThrowsNullReferenceException()
+        public void RecordHistogram_WithNullBuckets_ThrowsArgumentNullException()
         {
             // Act & Assert
-            // Note: The implementation throws NullReferenceException when buckets is null
-            // because it tries to access buckets.Length in the log statement.
-            Assert.Throws<NullReferenceException>(() => _sut.RecordHistogram("test", 1.0, null!));
+            // The implementation guards buckets with ArgumentNullException.ThrowIfNull.
+            Assert.Throws<ArgumentNullException>(() => _sut.RecordHistogram("test", 1.0, null!));
         }
 
         [Fact]

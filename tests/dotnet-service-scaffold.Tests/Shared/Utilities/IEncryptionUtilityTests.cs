@@ -9,7 +9,7 @@ public interface IEncryptionUtilityTests
     void HashPassword_DifferentInputs_DifferentOutputs();
     void VerifyPassword_WrongPassword_ReturnsFalse();
     void VerifyPassword_InvalidHash_ReturnsFalse();
-    void VerifyPassword_NullOrEmptyInputs_ReturnsFalse();
+    void VerifyPassword_NullOrEmptyInputs_ThrowsArgumentException();
     void EncryptAes_DecryptAes_RoundTrip_Success();
     void EncryptAes_DifferentInputs_DifferentOutputs();
     void EncryptAes_NullOrEmptyPlaintext_ThrowsArgumentException();

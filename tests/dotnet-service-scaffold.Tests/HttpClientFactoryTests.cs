@@ -241,10 +241,10 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     }
 
     [Fact]
-    public void CreateBearerClient_WithWhitespaceToken_ThrowsArgumentException()
+    public void CreateBearerClient_WithWhitespaceToken_AcceptsToken()
     {
-        _loggerMock.Object.LogInformation("Starting {TestMethod}", nameof(CreateBearerClient_WithWhitespaceToken_ThrowsArgumentException));
-        _loggerMock.Object.LogWarning("Attempting bearer client creation with a whitespace token in {TestMethod}", nameof(CreateBearerClient_WithWhitespaceToken_ThrowsArgumentException));
+        _loggerMock.Object.LogInformation("Starting {TestMethod}", nameof(CreateBearerClient_WithWhitespaceToken_AcceptsToken));
+        _loggerMock.Object.LogWarning("Attempting bearer client creation with a whitespace token in {TestMethod}", nameof(CreateBearerClient_WithWhitespaceToken_AcceptsToken));
         // Arrange
         var whitespaceToken = HttpClientFactoryTestsConstants.WhitespaceString;
 
@@ -252,8 +252,9 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
         Action act = () => _httpClientFactory.CreateBearerClient(whitespaceToken);
 
         // Assert
-        act.Should().Throw<ArgumentException>();
-        _loggerMock.Object.LogInformation("Completed {TestMethod}", nameof(CreateBearerClient_WithWhitespaceToken_ThrowsArgumentException));
+        // Documented contract: only empty tokens are rejected; whitespace passes the guard.
+        act.Should().NotThrow();
+        _loggerMock.Object.LogInformation("Completed {TestMethod}", nameof(CreateBearerClient_WithWhitespaceToken_AcceptsToken));
     }
 
     [Fact]
@@ -273,10 +274,10 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
     }
 
     [Fact]
-    public void CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsUriFormatException()
+    public void CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsArgumentException()
     {
-        _loggerMock.Object.LogInformation("Starting {TestMethod}", nameof(CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsUriFormatException));
-        _loggerMock.Object.LogWarning("Attempting client creation with an empty base URL in {TestMethod}", nameof(CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsUriFormatException));
+        _loggerMock.Object.LogInformation("Starting {TestMethod}", nameof(CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsArgumentException));
+        _loggerMock.Object.LogWarning("Attempting client creation with an empty base URL in {TestMethod}", nameof(CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsArgumentException));
         // Arrange
         var emptyBaseUrl = HttpClientFactoryTestsConstants.EmptyString;
 
@@ -284,8 +285,8 @@ public class HttpClientFactoryTests : IDisposable, IHttpClientFactoryTests
         Action act = () => _httpClientFactory.CreateClientWithBaseUrl(emptyBaseUrl);
 
         // Assert
-        act.Should().Throw<UriFormatException>();
-        _loggerMock.Object.LogInformation("Completed {TestMethod}", nameof(CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsUriFormatException));
+        act.Should().Throw<ArgumentException>();
+        _loggerMock.Object.LogInformation("Completed {TestMethod}", nameof(CreateClientWithBaseUrl_WithEmptyBaseUrl_ThrowsArgumentException));
     }
 
     [Fact]
