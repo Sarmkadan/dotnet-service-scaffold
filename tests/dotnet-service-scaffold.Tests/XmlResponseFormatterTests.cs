@@ -13,14 +13,14 @@ public class XmlResponseFormatterTests
     private readonly XmlResponseFormatter _formatter = new();
 
     // Simple POCO for happy‑path serialization
-    private sealed class SimpleModel
+    public sealed class SimpleModel
     {
         public int Id { get; set; }
         public string? Name { get; set; }
     }
 
     // Model containing an empty collection
-    private sealed class ModelWithEmptyList
+    public sealed class ModelWithEmptyList
     {
         public List<int> Numbers { get; set; } = new();
     }
@@ -49,14 +49,19 @@ public class XmlResponseFormatterTests
     [InlineData("APPLICATION/XML", true)] // case‑insensitivity
     [InlineData("application/json", false)]
     [InlineData("", false)]
-    [InlineData(null, false)]
-    public void CanFormat_ShouldRespectMediaType(string? mediaType, bool expected)
+    public void CanFormat_ShouldRespectMediaType(string mediaType, bool expected)
     {
         // Act
-        var result = _formatter.CanFormat(mediaType!);
+        var result = _formatter.CanFormat(mediaType);
 
         // Assert
         Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void CanFormat_NullMediaType_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => _formatter.CanFormat(null!));
     }
 
     [Fact]

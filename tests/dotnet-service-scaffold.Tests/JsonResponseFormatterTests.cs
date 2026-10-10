@@ -28,20 +28,25 @@ public sealed class JsonResponseFormatterTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
     [InlineData("text/plain")]
     [InlineData("application/xml")]
-    public void CanFormat_InvalidMediaTypes_ReturnsFalse(string? mediaType)
+    public void CanFormat_InvalidMediaTypes_ReturnsFalse(string mediaType)
     {
-        Assert.False(_formatter.CanFormat(mediaType ?? string.Empty));
+        Assert.False(_formatter.CanFormat(mediaType));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void CanFormat_NullOrEmptyMediaType_ThrowsArgumentException(string? mediaType)
+    {
+        Assert.ThrowsAny<ArgumentException>(() => _formatter.CanFormat(mediaType!));
     }
 
     [Fact]
-    public async Task FormatAsync_NullInput_ReturnsStringNull()
+    public async Task FormatAsync_NullInput_ThrowsArgumentNullException()
     {
-        var result = await _formatter.FormatAsync(null);
-        Assert.Equal("null", result);
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _formatter.FormatAsync(null!));
     }
 
     [Fact]

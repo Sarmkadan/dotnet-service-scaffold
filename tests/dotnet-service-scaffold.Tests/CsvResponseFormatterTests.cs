@@ -1,3 +1,4 @@
+using System;
 using Xunit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -179,17 +180,13 @@ public class CsvResponseFormatterTests : ICsvResponseFormatterTests, IEquatable<
     }
 
     /// <summary>
-    /// Verifies that formatting a null input produces an empty string.
+    /// Verifies that formatting a null input throws ArgumentNullException.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task FormatAsync_NullInput_ReturnsEmptyString()
+    public async Task FormatAsync_NullInput_ThrowsArgumentNullException()
     {
-        // Act
-        var result = await _formatter.FormatAsync(null);
-
-        // Assert
-        Assert.Equal(CsvResponseFormatterTestsConstants.EmptyString, result);
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _formatter.FormatAsync(null!));
     }
 
     /// <summary>
