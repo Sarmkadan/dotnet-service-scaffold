@@ -51,7 +51,7 @@ public class DeploymentConfigurationTests : IDeploymentConfigurationTests
         unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_Description}{_defaultOptions.ServiceDescription}");
         unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_User}{_defaultOptions.ServiceUser}");
         unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_WorkingDirectory}{_defaultOptions.ApplicationPath}");
-        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_ExecStart}{_defaultOptions.DotnetPath}{DeploymentConfigurationTestsConstants.ExecStart_Dll}");
+        unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_ExecStart}{_defaultOptions.DotnetPath} {DeploymentConfigurationTestsConstants.ExecStart_Dll}");
         unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_SyslogIdentifier}{_defaultOptions.ServiceName}");
         unitFileContent.Should().Contain($"{DeploymentConfigurationTestsConstants.Systemd_ReadWritePaths}{_defaultOptions.DataPath}");
     }

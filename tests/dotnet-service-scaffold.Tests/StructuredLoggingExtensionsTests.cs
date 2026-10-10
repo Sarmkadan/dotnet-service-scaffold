@@ -2,6 +2,7 @@
 
 using System;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -55,13 +56,14 @@ public class StructuredLoggingExtensionsTests
     {
         // Arrange
         var appMock = new Mock<IApplicationBuilder>();
-        appMock.Setup(a => a.UseMiddleware(It.IsAny<Type>(), It.IsAny<object[]>())).Returns(appMock.Object);
+        // UseMiddleware<T> is an extension method and cannot be mocked directly; it registers via IApplicationBuilder.Use.
+        appMock.Setup(a => a.Use(It.IsAny<Func<RequestDelegate, RequestDelegate>>())).Returns(appMock.Object);
 
         // Act
         var result = StructuredLoggingExtensions.UseCorrelationId(appMock.Object);
 
         // Assert
-        appMock.Verify(a => a.UseMiddleware(typeof(CorrelationIdMiddleware)), Times.Once);
+        appMock.Verify(a => a.Use(It.IsAny<Func<RequestDelegate, RequestDelegate>>()), Times.Once);
         Assert.Same(appMock.Object, result);
     }
 
