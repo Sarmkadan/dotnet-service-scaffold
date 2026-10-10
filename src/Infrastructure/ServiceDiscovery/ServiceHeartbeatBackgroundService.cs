@@ -38,9 +38,13 @@ public sealed class ServiceHeartbeatBackgroundService : BackgroundService
         IOptions<ServiceDiscoveryOptions> options,
         ILogger<ServiceHeartbeatBackgroundService> logger)
     {
-        _discoveryService = discoveryService ?? throw new ArgumentNullException(nameof(discoveryService));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(discoveryService);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _discoveryService = discoveryService;
+        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger;
     }
 
     /// <inheritdoc/>
