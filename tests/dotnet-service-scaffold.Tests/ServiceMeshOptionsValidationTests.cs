@@ -38,8 +38,17 @@ public class ServiceMeshOptionsValidationTests
         var result = options.Validate();
 
         // Assert
+        // Validation is an else-if chain: a wrong scheme is reported and the trailing-slash check is not reached.
         Assert.Contains("ServiceMesh.AdminEndpoint must use http:// or https:// scheme.", result);
-        Assert.Contains("ServiceMesh.AdminEndpoint must not end with a trailing slash.", result);
+        Assert.DoesNotContain("ServiceMesh.AdminEndpoint must not end with a trailing slash.", result);
+
+        var trailingSlashOptions = new ServiceMeshOptions
+        {
+            AdminEndpoint = "http://localhost:15000/api/",
+            ReadinessTimeoutSeconds = 30,
+            MeshName = "mesh"
+        };
+        Assert.Contains("ServiceMesh.AdminEndpoint must not end with a trailing slash.", trailingSlashOptions.Validate());
     }
 
     [Fact]
@@ -57,7 +66,7 @@ public class ServiceMeshOptionsValidationTests
         var result = options.Validate();
 
         // Assert
-        Assert.Contains("ServiceMesh.ReadinessTimeoutSeconds should not exceed 60 seconds", result);
+        Assert.Contains("ServiceMesh.ReadinessTimeoutSeconds should not exceed 60 seconds to avoid blocking application startup.", result);
         Assert.Contains("ServiceMesh.MeshName must be 50 characters or less.", result);
     }
 
