@@ -87,15 +87,21 @@ public static class PerformanceUtility
     }
 
     /// <summary>
-    /// Gets CPU usage percentage for the current process.
-    /// Requires a baseline measurement due to how Windows reports CPU usage.
+    /// Gets the average CPU usage percentage for the current process since it started,
+    /// normalized across all logical processors.
+    /// Uses the process lifetime rather than <see cref="Environment.TickCount"/>, which wraps
+    /// negative after ~24.8 days of system uptime.
     /// </summary>
     public static double GetCpuUsagePercent()
     {
         using (var process = Process.GetCurrentProcess())
         {
-            var cpuUsage = process.TotalProcessorTime.TotalMilliseconds / Environment.ProcessorCount;
-            return (cpuUsage / Environment.TickCount) * PerformanceUtilityConstants.PercentageMultiplier;
+            var lifetimeMs = (DateTime.UtcNow - process.StartTime.ToUniversalTime()).TotalMilliseconds;
+            if (lifetimeMs <= 0)
+                return 0;
+
+            var cpuMs = process.TotalProcessorTime.TotalMilliseconds;
+            return (cpuMs / (lifetimeMs * Environment.ProcessorCount)) * PerformanceUtilityConstants.PercentageMultiplier;
         }
     }
 
