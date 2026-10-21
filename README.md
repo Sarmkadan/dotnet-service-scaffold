@@ -5,6 +5,149 @@
 
 # Service Scaffold
 
+## Getting Started
+
+This section builds a minimal service on the scaffold's public API:
+
+- The host is ASP.NET Core's `WebApplication`. The scaffold does not define a separate `ServiceHost` type.
+- Metrics come from `IMetricsService` / `MetricsService` (singleton). There is no `MetricsCollector` type.
+- `HealthCheckService` (`IHealthCheckService`) checks a registered service by its `Guid` ID. "Enabling" it means registering it in DI; it does not run on its own.
+
+### 1. Create the project and add the package
+
+```bash
+dotnet new web -o MyService
+cd MyService
+dotnet add package dotnet-service-scaffold
+```
+
+If the package is not yet available on nuget.org, reference the source project instead:
+
+```bash
+dotnet add reference ../dotnet-service-scaffold/dotnet-service-scaffold.csproj
+```
+
+### 2. Program.cs
+
+Replace the generated `Program.cs` with:
+
+```csharp
+using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Infrastructure.Data;
+using DotnetServiceScaffold.Infrastructure.Data.Repository;
+using DotnetServiceScaffold.Infrastructure.Metrics;
+using DotnetServiceScaffold.Shared.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Bind the "ApplicationSettings" section from appsettings.json
+builder.Services.AddOptions<DotnetServiceScaffoldOptions>()
+    .Bind(builder.Configuration.GetSection("ApplicationSettings"))
+    .ValidateOnStart();
+
+// Persistence required by HealthCheckService (SQLite file from ConnectionStrings:DefaultConnection)
+builder.Services.AddDbContext<ServiceScaffoldDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=scaffold.db"));
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IHealthCheckRepository, HealthCheckRepository>();
+
+// Metrics (MetricsService) and health checks (HealthCheckService)
+builder.Services.AddSingleton<IMetricsService, MetricsService>();
+builder.Services.AddHttpClient<IHealthCheckService, HealthCheckService>();
+
+// Our own background worker
+builder.Services.AddHostedService<HeartbeatWorker>();
+
+var app = builder.Build();
+
+// Create the SQLite schema before the worker starts
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<ServiceScaffoldDbContext>().InitializeDatabaseAsync();
+}
+
+await app.RunAsync();
+
+public sealed class HeartbeatWorker(
+    IMetricsService metrics,
+    IOptions<DotnetServiceScaffoldOptions> options,
+    ILogger<HeartbeatWorker> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var interval = options.Value.HealthCheckInterval;
+        logger.LogInformation("Heartbeat started. Interval: {Interval}s", interval);
+
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(interval));
+        while (await timer.WaitForNextTickAsync(stoppingToken))
+        {
+            metrics.IncrementCounter("heartbeat_ticks");
+            logger.LogInformation("Heartbeat tick");
+        }
+    }
+}
+```
+
+### 3. appsettings.json
+
+Place this in the project root. `ApplicationSettings` binds to `DotnetServiceScaffoldOptions`; any property you omit keeps its default.
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=scaffold.db"
+  },
+  "ApplicationSettings": {
+    "HealthCheckInterval": 5,
+    "HealthCheckTimeout": 10,
+    "MaxConcurrentHealthChecks": 5
+  }
+}
+```
+
+### 4. Run
+
+```bash
+dotnet run
+```
+
+Expected output (captured after deleting `Properties/launchSettings.json`, so the URL is `http://localhost:5000` and the environment is `Production`; timestamps are not printed, and the `Content root path` varies by machine). Stop with Ctrl+C. The first run creates `scaffold.db` in the working directory.
+
+```text
+info: DotnetServiceScaffold.Infrastructure.Data.ServiceScaffoldDbContext[0]
+      Initializing database schema...
+info: DotnetServiceScaffold.Infrastructure.Data.ServiceScaffoldDbContext[0]
+      Configuring database model for ServiceScaffoldDbContext
+info: DotnetServiceScaffold.Infrastructure.Data.ServiceScaffoldDbContext[0]
+      Database schema initialized successfully
+info: HeartbeatWorker[0]
+      Heartbeat started. Interval: 5s
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5000
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /path/to/MyService
+info: DotnetServiceScaffold.Infrastructure.Metrics.MetricsService[0]
+      Starting IncrementCounter for metric heartbeat_ticks with value 1
+info: DotnetServiceScaffold.Infrastructure.Metrics.MetricsService[0]
+      Finished IncrementCounter for metric heartbeat_ticks
+info: HeartbeatWorker[0]
+      Heartbeat tick
+```
+
+Each further tick repeats the last three lines every 5 seconds.
+
 ## CsvResponseFormatterTests
 
 The `CsvResponseFormatterTests` class verifies that CSV formatting handles object collections, single objects, empty or null input, null property values, and characters that require escaping. Its public `Id`, `Name`, and `Value` properties can also hold representative fixture data while the asynchronous test methods exercise the formatter's expected output.
