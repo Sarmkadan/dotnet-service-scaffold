@@ -148,6 +148,223 @@ info: HeartbeatWorker[0]
 
 Each further tick repeats the last three lines every 5 seconds.
 
+## Graceful shutdown and health checks
+
+This section covers three things: how long the host waits on shutdown, how a `BackgroundService` should react to the stop signal, and how to add your own `IHealthCheck` to the `/health` endpoint. The last part shows a Dockerfile and Kubernetes manifest whose values match the defaults in the code.
+
+### Shutdown timeout
+
+When the host receives SIGTERM (or Ctrl+C), it cancels the `stoppingToken` of every hosted service and waits up to `HostOptions.ShutdownTimeout` for them to finish. The .NET default is 30 seconds, and the scaffold does not override it. `Program.cs` does not configure `HostOptions`, so `dotnet run` and the container both wait 30 seconds.
+
+To change the timeout, bind the `HostOptions` section explicitly. `appsettings.json` is not bound to `HostOptions` automatically, so the `Configure` call is required:
+
+```csharp
+// Program.cs, before builder.Build()
+builder.Services.Configure<HostOptions>(builder.Configuration.GetSection("HostOptions"));
+```
+
+```json
+{
+  "HostOptions": {
+    "ShutdownTimeout": "00:00:30"
+  }
+}
+```
+
+Keep the container's kill grace period above this value (see [Dockerfile and Kubernetes](#dockerfile-and-kubernetes)). Otherwise the runtime is killed before the host finishes shutting down.
+
+### BackgroundService and CancellationToken
+
+Every `BackgroundService` receives `stoppingToken`. Pass it to every awaited call, and end the loop when it is cancelled. The repo's `ServiceHeartbeatBackgroundService` follows this pattern. The example below runs a periodic cleanup and creates a scope per run, because the scaffold's services (including `IHealthCheckService`) are scoped while a hosted service is a singleton.
+
+```csharp
+using DotnetServiceScaffold.Application.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+public sealed class HealthResultCleanupService : BackgroundService
+{
+    private static readonly TimeSpan Interval = TimeSpan.FromHours(1);
+
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<HealthResultCleanupService> _logger;
+
+    public HealthResultCleanupService(IServiceScopeFactory scopeFactory, ILogger<HealthResultCleanupService> logger)
+    {
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var healthChecks = scope.ServiceProvider.GetRequiredService<IHealthCheckService>();
+
+                // CleanupOldResultsAsync has no CancellationToken parameter, so check the token before starting it.
+                stoppingToken.ThrowIfCancellationRequested();
+                await healthChecks.CleanupOldResultsAsync(daysToKeep: 30);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Health result cleanup failed");
+            }
+
+            try
+            {
+                await Task.Delay(Interval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+}
+```
+
+Register it in `Program.cs`:
+
+```csharp
+builder.Services.AddHostedService<HealthResultCleanupService>();
+```
+
+Rules for a hosted service:
+
+- Do not use `Thread.Sleep`, `.Result`, or `.Wait()`. They block shutdown until `ShutdownTimeout` expires.
+- Do not call `Task.Delay(interval)` without the token. Without it, the loop cannot exit until the delay finishes.
+- Catch `OperationCanceledException` only where it lets the loop end. Do not swallow it and keep going.
+
+### Custom IHealthCheck
+
+There are two health-check APIs, and they do different things:
+
+- `IHealthCheckService` / `HealthCheckService` (`src/Application/Services/HealthCheckService.cs`) probes a registered service by its `Guid` ID and stores the result. It does not accept `IHealthCheck` instances.
+- ASP.NET Core's `AddHealthChecks()` collects `IHealthCheck` instances and serves them from `/health`. Register custom checks here.
+
+Derive from `SafeHealthCheckBase` (`src/Infrastructure/HealthChecks/SafeHealthCheckBase.cs`). It logs exceptions and converts them into an `Unhealthy` result, so exception text is not returned to the client.
+
+```csharp
+using DotnetServiceScaffold.Infrastructure.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+
+public sealed class DataDirectoryHealthCheck : SafeHealthCheckBase
+{
+    private const string DataDirectory = "/app/data";
+
+    public DataDirectoryHealthCheck(ILogger<DataDirectoryHealthCheck> logger)
+        : base(logger)
+    {
+    }
+
+    protected override Task<HealthCheckResult> CheckHealthInternalAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default)
+    {
+        var result = Directory.Exists(DataDirectory)
+            ? HealthCheckResult.Healthy("Data directory is present.")
+            : HealthCheckResult.Unhealthy("Data directory is missing.");
+
+        return Task.FromResult(result);
+    }
+}
+```
+
+Add it to the existing `AddHealthChecks()` chain in `Program.cs`:
+
+```csharp
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ServiceScaffoldDbContext>(ProgramConstants.DatabaseHealthCheckName)
+    .AddCheck<DataDirectoryHealthCheck>("data-directory", tags: [ProgramConstants.SystemTag]);
+```
+
+`/health` returns HTTP 503 when any check is `Unhealthy`, and HTTP 200 for `Healthy` or `Degraded`. The response lists each check by name. Tags are recorded but not yet used to filter the response: `/health` runs every registered check, including those tagged `live`.
+
+### Dockerfile and Kubernetes
+
+Values that must agree with the code:
+
+| Setting | Value | Source |
+|---|---|---|
+| Shutdown timeout | 30 s | .NET `HostOptions.ShutdownTimeout` default |
+| Stop signal | `SIGTERM` | Docker/Kubernetes default; the app handles it by default |
+| Grace period | 35 s | Must exceed the 30 s shutdown timeout |
+| Health endpoint | `/health` on port 8080 | `ProgramConstants.HealthRoute`, `ASPNETCORE_URLS` |
+| Probe interval / timeout / retries / start | 30 s / 3 s / 3 / 10 s | Dockerfile `HEALTHCHECK` |
+
+Dockerfile (the repo's `Dockerfile` already uses exec-form `ENTRYPOINT`, so `dotnet` is PID 1 and receives SIGTERM directly):
+
+```dockerfile
+EXPOSE 8080
+
+# SIGTERM is the default; it is set explicitly so the shutdown contract is visible in the image.
+STOPSIGNAL SIGTERM
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["dotnet", "dotnet-service-scaffold.dll"]
+```
+
+Run it with a localhost-only port and a 35-second stop timeout. Docker's default `docker stop` waits only 10 seconds before killing the container.
+
+```bash
+docker build -t dotnet-scaffold:latest .
+docker run --rm --stop-timeout 35 -p 127.0.0.1:8080:8080 dotnet-scaffold:latest
+```
+
+For Compose, set `stop_grace_period: 35s` on the service. Also use `127.0.0.1:8080:8080`, because the repo's `docker-compose.yml` publishes `8080:8080` on all interfaces.
+
+Kubernetes Deployment (the Dockerfile `HEALTHCHECK` is ignored by Kubernetes, so the probes are declared here):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-service-scaffold
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dotnet-service-scaffold
+  template:
+    metadata:
+      labels:
+        app: dotnet-service-scaffold
+    spec:
+      # Kubernetes default is 30 s, which equals ShutdownTimeout and would race with SIGKILL.
+      terminationGracePeriodSeconds: 35
+      containers:
+        - name: dotnet-service-scaffold
+          image: dotnet-scaffold:latest
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10   # Dockerfile --start-period
+            periodSeconds: 30         # Dockerfile --interval
+            timeoutSeconds: 3         # Dockerfile --timeout
+            failureThreshold: 3       # Dockerfile --retries
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+```
+
+Both probes call `/health`, which runs every check. A database outage therefore makes the liveness probe fail and restarts the pod. Keep this in mind before tuning liveness separately; the `live` tag is not yet wired to a separate endpoint.
+
 ## CsvResponseFormatterTests
 
 The `CsvResponseFormatterTests` class verifies that CSV formatting handles object collections, single objects, empty or null input, null property values, and characters that require escaping. Its public `Id`, `Name`, and `Value` properties can also hold representative fixture data while the asynchronous test methods exercise the formatter's expected output.
