@@ -27,6 +27,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Options validation runs when the host starts, before any hosted service starts.
 // Keep these registrations ahead of any AddHostedService call.
 builder.Services.AddDotnetServiceScaffoldOptions(builder.Configuration);
+builder.Services.AddHealthCheckOptions(builder.Configuration);
+builder.Services.AddMetricsOptions(builder.Configuration);
 
 var structuredLoggingOptions = builder.Configuration
 .GetSection(ProgramConstants.StructuredLoggingSection)

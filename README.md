@@ -113,6 +113,40 @@ Place this in the project root. `ApplicationSettings` binds to `DotnetServiceSca
 }
 ```
 
+### Health check and metrics settings
+
+Two sections are bound and validated when the host starts. An invalid value stops startup and the error lists every broken key in that section.
+
+| Key | Type | Default | Rule |
+|-----|------|---------|------|
+| `HealthCheck:Interval` | duration (`hh:mm:ss`) | `00:01:00` | Must be greater than zero. |
+| `HealthCheck:Timeout` | duration (`hh:mm:ss`) | `00:00:10` | Must be less than `HealthCheck:Interval`. |
+| `HealthCheck:Endpoint` | string | `/health` | Must start with `/`. |
+| `Metrics:Enabled` | bool | `true` | No rule. Port and Prefix are still validated when `false`. |
+| `Metrics:Port` | int | `9464` | Must be between 1024 and 65535. |
+| `Metrics:Prefix` | string | `scaffold` | Must match `^[a-z_][a-z0-9_]*$` (end anchored with `\z`, so a trailing newline is rejected). |
+
+Durations use the .NET `TimeSpan` format, so write `00:00:30` for 30 seconds. Do not write a bare `30`: `TimeSpan` parses it as 30 days.
+
+```json
+{
+  "HealthCheck": {
+    "Interval": "00:01:00",
+    "Timeout": "00:00:10",
+    "Endpoint": "/health"
+  },
+  "Metrics": {
+    "Enabled": true,
+    "Port": 9464,
+    "Prefix": "scaffold"
+  }
+}
+```
+
+Environment variables work too, using `__` as the separator: `HealthCheck__Timeout=00:00:05`.
+
+`HealthCheck` is separate from `ApplicationSettings:HealthCheckInterval` and `ApplicationSettings:HealthCheckTimeout`, which are still read as before. The new sections are validated but not yet read by `HealthCheckService` or `MetricsService`.
+
 ### 4. Run
 
 ```bash
