@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.ComponentModel.DataAnnotations;
+
 namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 
 /// <summary>
@@ -122,6 +124,7 @@ public sealed class DnsDiscoveryOptions
     /// Gets or sets the DNS search domain appended to bare service names.
     /// For Kubernetes clusters this is typically <c>svc.cluster.local</c>.
     /// </summary>
+    [Required(ErrorMessage = "SearchDomain must not be empty.")]
     public string SearchDomain { get; set; } = "svc.cluster.local";
 
     /// <summary>Gets or sets whether SRV records are queried before falling back to A/AAAA.</summary>
@@ -131,15 +134,18 @@ public sealed class DnsDiscoveryOptions
     /// Gets or sets the IP address of the DNS server used for SRV queries.
     /// Defaults to <c>127.0.0.53</c> (systemd-resolved stub listener).
     /// </summary>
+    [Required(ErrorMessage = "DnsServerAddress must not be empty.")]
     public string DnsServerAddress { get; set; } = "127.0.0.53";
 
     /// <summary>Gets or sets the DNS server port (standard is 53).</summary>
+    [Range(1, 65535, ErrorMessage = "DnsServerPort must be between 1 and 65535.")]
     public int DnsServerPort { get; set; } = 53;
 
     /// <summary>
     /// Gets or sets the default port assigned to A-record endpoints when no SRV record
     /// supplies an explicit port number.
     /// </summary>
+    [Range(1, 65535, ErrorMessage = "DefaultPort must be between 1 and 65535.")]
     public int DefaultPort { get; set; } = 443;
 
     /// <summary>Gets or sets the URI scheme assumed for A-record-derived endpoints.</summary>
@@ -156,6 +162,8 @@ public sealed class DnsDiscoveryOptions
 public sealed class RegistryDiscoveryOptions
 {
     /// <summary>Gets or sets the base URL of the registry agent (e.g. <c>http://localhost:8500</c>).</summary>
+    [Required(ErrorMessage = "AgentEndpoint must not be empty.")]
+    [Url(ErrorMessage = "AgentEndpoint must be a valid absolute URL.")]
     public string AgentEndpoint { get; set; } = "http://localhost:8500";
 
     /// <summary>Gets or sets the ACL token sent in the <c>X-Consul-Token</c> header.</summary>
@@ -193,6 +201,7 @@ public sealed class SelfRegistrationOptions
     public string? AdvertiseHost { get; set; }
 
     /// <summary>Gets or sets the port to advertise during registration.</summary>
+    [Range(1, 65535, ErrorMessage = "AdvertisePort must be between 1 and 65535.")]
     public int AdvertisePort { get; set; } = 443;
 
     /// <summary>Gets or sets the URI scheme advertised in the registration entry.</summary>

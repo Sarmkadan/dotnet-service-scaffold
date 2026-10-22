@@ -1,12 +1,15 @@
 #nullable enable
 
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
 
 namespace DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 
 /// <summary>
-/// Validates <see cref="ServiceDiscoveryOptions"/> at startup: endpoints must be
-/// populated, ports within range, and timeouts positive and internally consistent.
+/// Validates <see cref="ServiceDiscoveryOptions"/> at startup. Property rules on the nested
+/// sections are DataAnnotations and are evaluated here, because ValidateDataAnnotations() does not
+/// descend into nested objects. This validator adds the conditional and cross-field rules:
+/// self-registration requirements, non-negative retries, positive timeouts and the eviction/stale ordering.
 /// </summary>
 public sealed class ServiceDiscoveryOptionsValidator : IValidateOptions<ServiceDiscoveryOptions>
 {
@@ -20,55 +23,34 @@ public sealed class ServiceDiscoveryOptionsValidator : IValidateOptions<ServiceD
 
         var failures = new List<string>();
 
-        ValidateEndpoints(options, failures);
-        ValidatePorts(options, failures);
+        ValidateNestedDataAnnotations(options.Dns, nameof(ServiceDiscoveryOptions.Dns), failures);
+        ValidateNestedDataAnnotations(options.Registry, nameof(ServiceDiscoveryOptions.Registry), failures);
+        ValidateSelfRegistration(options, failures);
         ValidateTimeouts(options, failures);
+
+        if (options.Dns.MaxRetries < 0)
+        {
+            failures.Add($"{nameof(ServiceDiscoveryOptions.Dns)}.{nameof(DnsDiscoveryOptions.MaxRetries)} must not be negative.");
+        }
 
         return failures.Count > 0
             ? ValidateOptionsResult.Fail(failures)
             : ValidateOptionsResult.Success;
     }
 
-    private static void ValidateEndpoints(ServiceDiscoveryOptions options, List<string> failures)
+    private static void ValidateSelfRegistration(ServiceDiscoveryOptions options, List<string> failures)
     {
-        if (string.IsNullOrWhiteSpace(options.Dns.SearchDomain))
+        if (!options.SelfRegistration.Enabled)
         {
-            failures.Add($"{nameof(ServiceDiscoveryOptions.Dns)}.{nameof(DnsDiscoveryOptions.SearchDomain)} must not be empty.");
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(options.Dns.DnsServerAddress))
-        {
-            failures.Add($"{nameof(ServiceDiscoveryOptions.Dns)}.{nameof(DnsDiscoveryOptions.DnsServerAddress)} must not be empty.");
-        }
+        var prefix = nameof(ServiceDiscoveryOptions.SelfRegistration);
+        ValidateNestedDataAnnotations(options.SelfRegistration, prefix, failures);
 
-        if (string.IsNullOrWhiteSpace(options.Registry.AgentEndpoint))
+        if (string.IsNullOrWhiteSpace(options.SelfRegistration.HealthCheckPath))
         {
-            failures.Add($"{nameof(ServiceDiscoveryOptions.Registry)}.{nameof(RegistryDiscoveryOptions.AgentEndpoint)} must not be empty.");
-        }
-
-        if (options.SelfRegistration.Enabled && string.IsNullOrWhiteSpace(options.SelfRegistration.HealthCheckPath))
-        {
-            failures.Add(
-                $"{nameof(ServiceDiscoveryOptions.SelfRegistration)}.{nameof(SelfRegistrationOptions.HealthCheckPath)} must not be empty when self-registration is enabled.");
-        }
-    }
-
-    private static void ValidatePorts(ServiceDiscoveryOptions options, List<string> failures)
-    {
-        ValidatePortInRange(options.Dns.DnsServerPort, $"{nameof(ServiceDiscoveryOptions.Dns)}.{nameof(DnsDiscoveryOptions.DnsServerPort)}", failures);
-        ValidatePortInRange(options.Dns.DefaultPort, $"{nameof(ServiceDiscoveryOptions.Dns)}.{nameof(DnsDiscoveryOptions.DefaultPort)}", failures);
-
-        if (options.SelfRegistration.Enabled)
-        {
-            ValidatePortInRange(
-                options.SelfRegistration.AdvertisePort,
-                $"{nameof(ServiceDiscoveryOptions.SelfRegistration)}.{nameof(SelfRegistrationOptions.AdvertisePort)}",
-                failures);
-        }
-
-        if (options.Dns.MaxRetries < 0)
-        {
-            failures.Add($"{nameof(ServiceDiscoveryOptions.Dns)}.{nameof(DnsDiscoveryOptions.MaxRetries)} must not be negative.");
+            failures.Add($"{prefix}.{nameof(SelfRegistrationOptions.HealthCheckPath)} must not be empty when self-registration is enabled.");
         }
     }
 
@@ -98,11 +80,18 @@ public sealed class ServiceDiscoveryOptionsValidator : IValidateOptions<ServiceD
         }
     }
 
-    private static void ValidatePortInRange(int port, string optionName, List<string> failures)
+    /// <summary>
+    /// Runs the DataAnnotations on a nested section. Each failure is prefixed with the section
+    /// name, so a message reads as "Dns.SearchDomain must not be empty.".
+    /// </summary>
+    private static void ValidateNestedDataAnnotations(object section, string prefix, List<string> failures)
     {
-        if (port is < 1 or > 65535)
+        var results = new List<ValidationResult>();
+        Validator.TryValidateObject(section, new ValidationContext(section), results, validateAllProperties: true);
+
+        foreach (var result in results)
         {
-            failures.Add($"{optionName} must be between 1 and 65535, but was '{port}'.");
+            failures.Add($"{prefix}.{result.ErrorMessage}");
         }
     }
 }

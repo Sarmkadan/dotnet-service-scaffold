@@ -24,13 +24,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure DotnetServiceScaffoldOptions with validation
-builder.Services.AddOptions<DotnetServiceScaffoldOptions>()
-.Bind(builder.Configuration.GetSection(ProgramConstants.ApplicationSettingsSection))
-.ValidateOnStart();
-
-// Startup validation for service discovery options (endpoints, ports, timeouts).
-builder.Services.AddSingleton<IValidateOptions<ServiceDiscoveryOptions>, ServiceDiscoveryOptionsValidator>();
+// Options validation runs when the host starts, before any hosted service starts.
+// Keep these registrations ahead of any AddHostedService call.
+builder.Services.AddDotnetServiceScaffoldOptions(builder.Configuration);
 
 var structuredLoggingOptions = builder.Configuration
 .GetSection(ProgramConstants.StructuredLoggingSection)

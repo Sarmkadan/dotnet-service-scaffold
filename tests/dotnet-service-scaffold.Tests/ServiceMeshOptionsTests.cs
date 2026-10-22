@@ -45,7 +45,7 @@ public class ServiceMeshOptionsTests
         var values = new Dictionary<string, string?>
         {
             ["ServiceMesh:AdminEndpoint"] = "https://mesh.example:15000",
-            ["ServiceMesh:ReadinessTimeoutSeconds"] = int.MaxValue.ToString(),
+            ["ServiceMesh:ReadinessTimeoutSeconds"] = "60",
             ["ServiceMesh:MeshName"] = "istio",
             ["ServiceMesh:Enabled"] = "false"
         };
@@ -62,7 +62,7 @@ public class ServiceMeshOptionsTests
 
         Assert.Same(services, result);
         Assert.Equal("https://mesh.example:15000", options.AdminEndpoint);
-        Assert.Equal(int.MaxValue, options.ReadinessTimeoutSeconds);
+        Assert.Equal(60, options.ReadinessTimeoutSeconds);
         Assert.Equal("istio", options.MeshName);
         Assert.False(options.Enabled);
         Assert.Equal(new Uri("https://mesh.example:15000"), client.BaseAddress);
