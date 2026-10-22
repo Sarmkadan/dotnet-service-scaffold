@@ -4,6 +4,9 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.ComponentModel.DataAnnotations;
+using DotnetServiceScaffold.Shared.Configuration;
+
 namespace DotnetServiceScaffold.Infrastructure.ServiceMesh;
 
 /// <summary>
@@ -19,18 +22,21 @@ public class ServiceMeshOptions : IServiceMeshOptions, IEquatable<ServiceMeshOpt
     /// Base URL of the sidecar proxy admin API.
     /// Defaults to the Envoy/Istio standard admin port (15000).
     /// </summary>
+    [Url(ErrorMessage = "AdminEndpoint must be a valid absolute URL.")]
     public string AdminEndpoint { get; set; } = "http://localhost:15000";
 
     /// <summary>
     /// Maximum seconds to wait when probing for sidecar readiness.
     /// Keep this short to avoid blocking application startup.
     /// </summary>
+    [Range(1, 60, ErrorMessage = "ReadinessTimeoutSeconds must be between 1 and 60 seconds.")]
     public int ReadinessTimeoutSeconds { get; set; } = 5;
 
     /// <summary>
     /// Logical name of the service mesh environment used for diagnostics and labelling.
     /// Examples: "istio", "linkerd", "consul-connect".
     /// </summary>
+    [Required(ErrorMessage = "MeshName is required.")]
     public string MeshName { get; set; } = "default";
 
     /// <summary>
@@ -121,7 +127,7 @@ public static class ServiceMeshExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.Configure<ServiceMeshOptions>(configuration.GetSection(ServiceMeshOptions.SectionName));
+        services.AddValidatedOptions<ServiceMeshOptions>(configuration, ServiceMeshOptions.SectionName);
 
         var adminEndpoint = configuration[$"{ServiceMeshOptions.SectionName}:{nameof(ServiceMeshOptions.AdminEndpoint)}"]
             ?? ServiceMeshOptionsConstants.DefaultAdminEndpoint;

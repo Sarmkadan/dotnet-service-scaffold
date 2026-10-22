@@ -4,6 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Logging;
 
 namespace DotnetServiceScaffold.Infrastructure.Logging;
@@ -15,6 +16,7 @@ namespace DotnetServiceScaffold.Infrastructure.Logging;
 public sealed class StructuredLoggingOptions : IStructuredLoggingOptions, IEquatable<StructuredLoggingOptions>
 {
     /// <summary>Name of the application included in every log entry.</summary>
+    [Required(ErrorMessage = "ApplicationName is required.")]
     public string ApplicationName { get; set; } = "DotnetServiceScaffold";
 
     /// <summary>Whether to include the machine/host name in every log entry.</summary>
@@ -27,12 +29,14 @@ public sealed class StructuredLoggingOptions : IStructuredLoggingOptions, IEquat
     public bool EnableCorrelationId { get; set; } = true;
 
     /// <summary>HTTP header name used to read or propagate the correlation ID.</summary>
+    [Required(ErrorMessage = "CorrelationIdHeader is required.")]
     public string CorrelationIdHeader { get; set; } = "X-Correlation-Id";
 
     /// <summary>Whether to log enriched request context (method, path, status, duration).</summary>
     public bool EnrichWithRequestContext { get; set; } = true;
 
     /// <summary>Minimum log level for the structured logging pipeline override.</summary>
+    [Required(ErrorMessage = "MinimumLevel is required.")]
     public string MinimumLevel { get; set; } = "Information";
 
     /// <summary>

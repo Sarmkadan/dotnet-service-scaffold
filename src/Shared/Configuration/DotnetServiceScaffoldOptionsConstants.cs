@@ -111,4 +111,7 @@ internal static class DotnetServiceScaffoldOptionsConstants
     public const string DefaultMetricsProtectionMode = "ApiKey";
     public const string DefaultMetricsApiKey = "";
     public const string MetricsApiKeyRegexPattern = @"^[a-zA-Z0-9_]+$";
+    public const string MetricsProtectionModeDisabled = "Disabled";
+    public const string MetricsProtectionModeApiKey = "ApiKey";
+    public const string MetricsProtectionModeLocalhostOnly = "LocalhostOnly";
 }

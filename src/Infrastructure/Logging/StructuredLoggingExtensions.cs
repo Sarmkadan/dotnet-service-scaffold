@@ -4,8 +4,10 @@
 // CTO & Software Architect
 // =============================================================================
 
+using DotnetServiceScaffold.Shared.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace DotnetServiceScaffold.Infrastructure.Logging;
@@ -30,8 +32,10 @@ public static class StructuredLoggingExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.Configure<StructuredLoggingOptions>(
-            configuration.GetSection(StructuredLoggingExtensionsConstants.StructuredLoggingSectionName));
+        services.AddValidatedOptions<StructuredLoggingOptions>(
+            configuration,
+            StructuredLoggingExtensionsConstants.StructuredLoggingSectionName);
+        services.AddSingleton<IValidateOptions<StructuredLoggingOptions>, StructuredLoggingOptionsValidator>();
 
         services.AddScoped<ILogContextService, LogContextService>();
 

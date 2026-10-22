@@ -14,6 +14,7 @@ using DotnetServiceScaffold.Infrastructure.Logging;
 using DotnetServiceScaffold.Infrastructure.Middleware;
 using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
 using DotnetServiceScaffold.Presentation.Middleware;
+using DotnetServiceScaffold.Shared.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -188,8 +189,8 @@ services.AddTransient<IExternalApiClient>(provider =>
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.Configure<ServiceDiscoveryOptions>(
-            configuration.GetSection(ServiceDiscoveryOptions.SectionName));
+        services.AddValidatedOptions<ServiceDiscoveryOptions>(configuration, ServiceDiscoveryOptions.SectionName);
+        services.AddSingleton<IValidateOptions<ServiceDiscoveryOptions>, ServiceDiscoveryOptionsValidator>();
 
         services.AddHttpClient(RegistryServiceDiscoveryProvider.HttpClientName, (sp, client) =>
         {

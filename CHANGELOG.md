@@ -5,6 +5,15 @@ All notable changes to dotnet-service-scaffold are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Startup validation for bound options: DataAnnotations plus `ValidateOnStart()` for `ApplicationSettings`, `StructuredLogging`, `ServiceMesh` and `ServiceDiscovery`. Invalid configuration fails host start before any hosted service starts, and the error lists every failing property.
+- Cross-field rules for `ApplicationSettings`: `HealthCheckTimeout` must be less than `HealthCheckInterval`, `DefaultPageSize` must not exceed `MaxPageSize`, and `MetricsApiKey` is required in `ApiKey` mode. `MetricsProtectionMode` now rejects unknown values.
+
+### Changed
+- `ApplicationSettings:JwtSecret` and `ApplicationSettings:MetricsApiKey` are now required at startup; `ServiceMesh:ReadinessTimeoutSeconds` is limited to 1-60.
+
 ## [2.0.2] - 2026-05-21
 
 ### Fixed
