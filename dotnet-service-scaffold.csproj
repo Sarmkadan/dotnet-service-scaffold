@@ -8,8 +8,16 @@
     <PackageId>dotnet-service-scaffold</PackageId>
     <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <Description>This package provides a robust, scalable foundation for building .NET microservices with integrated health checks, metrics, and service discovery.</Description>
-    <PackageTags>dotnet service scaffold microservices infrastructure</PackageTags>
+    <Description>A scaffold for ASP.NET Core (.NET 10) microservices that provides a configured host, health checks, Prometheus metrics, validated configuration binding, and background workers that shut down gracefully.</Description>
+    <PackageTags>dotnet;service;scaffold;microservices;aspnetcore;health-checks;prometheus;metrics;configuration;infrastructure</PackageTags>
+    <IsPackable>true</IsPackable>
+    <Copyright>Copyright (c) 2026 Vladyslav Zaiets</Copyright>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageProjectUrl>https://github.com/sarmkadan/dotnet-service-scaffold</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sarmkadan/dotnet-service-scaffold</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -49,9 +57,12 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Host configuration and tooling files are not part of the library package. -->
+    <Content Update="appsettings.json;appsettings.example.json;global.json" Pack="false" />
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
