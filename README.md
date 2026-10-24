@@ -7888,3 +7888,7 @@ public class EncryptionUtilityTestsDemo
 ```
 
 This example shows how the test fixture is constructed and how each of its public test methods is invoked to verify the encryption utility's behavior under various conditions.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
