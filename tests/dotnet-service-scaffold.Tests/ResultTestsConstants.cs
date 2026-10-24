@@ -1,6 +1,5 @@
-namespace DotnetServiceScaffold.Tests
+namespace DotnetServiceScaffold.Tests;
+
+internal static class ResultTestsConstants
 {
-    internal static class ResultTestsConstants
-    {
-    }
 }

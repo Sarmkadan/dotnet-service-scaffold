@@ -119,7 +119,7 @@ public interface IDomainEventPublisher
     /// Logs any exceptions from handlers but continues publishing to other handlers.
     /// </summary>
     /// <typeparam name="TEvent">The type of the domain event to publish.</typeparam>
-    /// <param name="@event">The domain event to publish.</param>
+    /// <param name="event">The domain event to publish.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous publish operation.</returns>
     Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : IDomainEvent;

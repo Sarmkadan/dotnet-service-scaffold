@@ -12,6 +12,6 @@ internal static class ResponseFormatterFactoryExtensionsConstants
 
     /// <summary>
     /// Prefix for the list of available media types.
-    /// </>
+    /// </summary>
     public const string AvailableMediaTypesMessage = "Available media types: ";
 }

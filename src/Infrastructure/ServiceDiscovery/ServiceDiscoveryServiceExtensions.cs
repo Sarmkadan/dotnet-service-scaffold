@@ -186,6 +186,7 @@ public static class ServiceDiscoveryServiceExtensions
     /// Gets the total count of registered services.
     /// </summary>
     /// <param name="service">The service discovery service.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>Count of registered services.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/>.</exception>
     public static async Task<int> GetRegisteredServicesCountAsync(

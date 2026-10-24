@@ -153,7 +153,7 @@ public class EncryptionUtilityTests : IEncryptionUtilityTests
         byte[] key = EncryptionUtility.GenerateRandomBytes(32);
 
         // Act & Assert
-        Action act1 = () => EncryptionUtility.EncryptAes(null, key);
+        Action act1 = () => EncryptionUtility.EncryptAes(null!, key);
         act1.Should().Throw<ArgumentException>()
             .WithMessage("*Plaintext cannot be null or empty*");
 
@@ -193,7 +193,7 @@ public class EncryptionUtilityTests : IEncryptionUtilityTests
         byte[] key = EncryptionUtility.GenerateRandomBytes(32);
 
         // Act & Assert
-        Action act5 = () => EncryptionUtility.DecryptAes(null, key);
+        Action act5 = () => EncryptionUtility.DecryptAes(null!, key);
         act5.Should().Throw<ArgumentException>()
             .WithMessage("*Ciphertext cannot be null or empty*");
 
@@ -404,7 +404,7 @@ public class EncryptionUtilityTests : IEncryptionUtilityTests
     public void ComputeSha256_NullOrEmptyInput_ThrowsArgumentException()
     {
         // Act & Assert
-        Action act1 = () => EncryptionUtility.ComputeSha256(null);
+        Action act1 = () => EncryptionUtility.ComputeSha256(null!);
         act1.Should().Throw<ArgumentException>()
             .WithMessage("*Input cannot be null or empty*");
 

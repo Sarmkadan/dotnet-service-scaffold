@@ -78,8 +78,6 @@ public class RateLimitingMiddlewareTests
         // Unique client per test: the token buckets are static and shared across tests.
         context.Connection.RemoteIpAddress = new System.Net.IPAddress(Guid.NewGuid().ToByteArray()[..4]);
         var options = new RateLimitOptions { AnonymousRequestsPerMinute = 1 };
-        bool firstNextInvoked = false;
-        bool secondNextInvoked = false;
         RequestDelegate next = _ =>
         {
             // This tracks if the delegate was called for each request
@@ -224,6 +222,6 @@ public class RateLimitingMiddlewareTests
         var method = obj.GetType().GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         if (method == null)
             throw new MissingMethodException($"Method {methodName} not found on {obj.GetType()}");
-        return (TResult)method.Invoke(obj, parameters);
+        return (TResult)method.Invoke(obj, parameters)!;
     }
 }

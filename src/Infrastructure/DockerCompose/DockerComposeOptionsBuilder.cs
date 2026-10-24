@@ -183,7 +183,7 @@ public class DockerComposeOptionsBuilder
     /// Builds the <see cref="DockerComposeOptions"/> instance.
     /// </summary>
     /// <returns>A configured <see cref="DockerComposeOptions"/> instance.</returns>
-    /// <exception cref="ArgumentException">Thrown when <see cref="IncludeCaddy"/> is true and <see cref="CaddyDomain"/> is null, empty, or consists only of white-space.</exception>
+    /// <exception cref="ArgumentException">Thrown when <c>IncludeCaddy</c> is true and <c>CaddyDomain</c> is null, empty, or consists only of white-space.</exception>
     public DockerComposeOptions Build()
     {
         if (_options.IncludeCaddy && string.IsNullOrWhiteSpace(_options.CaddyDomain))

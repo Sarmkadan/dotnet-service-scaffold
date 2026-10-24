@@ -6,7 +6,7 @@ namespace DotnetServiceScaffold.Infrastructure.Http;
 
 /// <summary>
 /// Options controlling the retry, circuit-breaker, and per-attempt timeout policy
-/// applied to outbound HTTP calls made by <see cref="ExternalApiClient"/>-style clients.
+/// applied to outbound HTTP calls made by <c>ExternalApiClient</c>-style clients.
 /// </summary>
 public class ResilienceOptions
 {

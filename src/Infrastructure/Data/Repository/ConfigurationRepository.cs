@@ -39,7 +39,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is canceled.</exception>
     public async Task<ServiceConfiguration?> GetByKeyAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("GetByKeyAsync called with {Key}={Key}, {ServiceId}={ServiceId}", key, serviceId);
+        _logger.LogInformation("GetByKeyAsync called with {Key}, {ServiceId}", key, serviceId);
         ArgumentException.ThrowIfNullOrEmpty(key);
         cancellationToken.ThrowIfCancellationRequested();
         try
@@ -63,7 +63,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is canceled.</exception>
     public async Task<IEnumerable<ServiceConfiguration>> GetByServiceIdAsync(Guid serviceId, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("GetByServiceIdAsync called with {ServiceId}={ServiceId}", serviceId);
+        _logger.LogInformation("GetByServiceIdAsync called with {ServiceId}", serviceId);
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -95,7 +95,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is canceled.</exception>
     public async Task<bool> KeyExistsAsync(string key, Guid? serviceId = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("KeyExistsAsync called with {Key}={Key}, {ServiceId}={ServiceId}", key, serviceId);
+        _logger.LogInformation("KeyExistsAsync called with {Key}, {ServiceId}", key, serviceId);
         ArgumentException.ThrowIfNullOrEmpty(key);
         cancellationToken.ThrowIfCancellationRequested();
         try
@@ -121,7 +121,7 @@ public class ConfigurationRepository : Repository<ServiceConfiguration>, IConfig
     /// <exception cref="ArgumentException"><paramref name="key"/> is <see langword="null"/> or empty.</exception>
     public async Task DeleteByKeyAsync(string key, Guid? serviceId = null)
     {
-        _logger.LogInformation("DeleteByKeyAsync called with {Key}={Key}, {ServiceId}={ServiceId}", key, serviceId);
+        _logger.LogInformation("DeleteByKeyAsync called with {Key}, {ServiceId}", key, serviceId);
         ArgumentException.ThrowIfNullOrEmpty(key);
         try
         {

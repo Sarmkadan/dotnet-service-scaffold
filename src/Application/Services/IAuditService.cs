@@ -28,6 +28,7 @@ public interface IAuditService
     /// Retrieves an audit log by ID.
     /// </summary>
     /// <param name="logId">The ID of the audit log</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The audit log if found, otherwise null</returns>
     Task<AuditLog?> GetAuditLogAsync(Guid logId, CancellationToken cancellationToken = default);
 
