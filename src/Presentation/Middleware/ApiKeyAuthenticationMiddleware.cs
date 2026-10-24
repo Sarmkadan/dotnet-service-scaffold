@@ -11,6 +11,8 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using DotnetServiceScaffold.Application.Services;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Presentation.Authorization;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -19,21 +21,31 @@ namespace DotnetServiceScaffold.Presentation.Middleware;
 
 /// <summary>
 /// Custom authentication handler for API key validation. Validates API keys from
-/// the X-Api-Key header and sets up user principal for authorization checks.
-/// Uses database lookup to validate keys against registered users.
+/// the X-Api-Key header via <see cref="IApiKeyService"/> and sets up a principal carrying the user
+/// and the key's scopes for authorization checks.
 /// </summary>
 public class ApiKeyAuthenticationMiddleware : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
-    private readonly IUserService _userService;
+    private readonly IApiKeyService _apiKeyService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiKeyAuthenticationMiddleware"/> class.
+    /// </summary>
+    /// <param name="options">The authentication scheme options monitor.</param>
+    /// <param name="logger">The logger factory used by the authentication base class.</param>
+    /// <param name="encoder">The URL encoder used by the authentication base class.</param>
+    /// <param name="apiKeyService">The service that validates presented API keys.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="apiKeyService"/> is <see langword="null"/>.</exception>
     public ApiKeyAuthenticationMiddleware(
         IOptionsMonitor<ApiKeyAuthenticationOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        IUserService userService)
+        IApiKeyService apiKeyService)
         : base(options, logger, encoder)
     {
-        _userService = userService;
+        ArgumentNullException.ThrowIfNull(apiKeyService);
+
+        _apiKeyService = apiKeyService;
     }
 
     /// <summary>
@@ -67,21 +79,29 @@ public class ApiKeyAuthenticationMiddleware : AuthenticationHandler<ApiKeyAuthen
 
         try
         {
-            // Validate the API key against the database
-            var user = await _userService.ValidateApiKeyAsync(providedApiKey);
+            var validation = await _apiKeyService.ValidateAsync(
+                providedApiKey,
+                Context.Connection.RemoteIpAddress?.ToString(),
+                Context.RequestAborted);
 
-            if (user is null)
+            // Every failure reason maps to the same client-facing error; the specific reason is logged by the service.
+            if (!validation.IsValid || validation.User is null || validation.ApiKey is null)
             {
                 return AuthenticateResult.Fail(ApiKeyAuthenticationMiddlewareConstants.InvalidApiKeyError);
             }
 
-            // Create claims for the authenticated user
-            var claims = new[]
+            var user = validation.User;
+            var apiKey = validation.ApiKey;
+
+            // Create claims for the authenticated user, plus one scope claim per granted scope
+            var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Email) // Changed from user.Username to user.Email
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Name, user.Email), // Changed from user.Username to user.Email
+                new(ApiKeyClaimTypes.ApiKeyId, apiKey.Id.ToString())
             };
+            claims.AddRange(ParseScopes(apiKey).Select(scope => new Claim(ApiKeyClaimTypes.Scope, scope)));
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
@@ -110,6 +130,15 @@ public class ApiKeyAuthenticationMiddleware : AuthenticationHandler<ApiKeyAuthen
             message = ApiKeyAuthenticationMiddlewareConstants.ApiKeyRequiredMessage
         });
     }
+
+    /// <summary>
+    /// Splits a key's stored scope list into individual scopes.
+    /// </summary>
+    /// <param name="apiKey">The key whose scopes to read.</param>
+    /// <returns>The granted scopes, or an empty sequence when the key has none.</returns>
+    private static IEnumerable<string> ParseScopes(ApiKey apiKey) =>
+        (apiKey.AllowedScopes ?? string.Empty)
+            .Split(ApiKeyAuthenticationMiddlewareConstants.ScopeSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     /// <summary>
     /// Constant-time comparison of two API key strings. Length is compared first

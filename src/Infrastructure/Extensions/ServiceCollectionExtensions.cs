@@ -13,9 +13,12 @@ using DotnetServiceScaffold.Infrastructure.Integration;
 using DotnetServiceScaffold.Infrastructure.Logging;
 using DotnetServiceScaffold.Infrastructure.Middleware;
 using DotnetServiceScaffold.Infrastructure.ServiceDiscovery;
+using DotnetServiceScaffold.Domain.Models;
+using DotnetServiceScaffold.Presentation.Authorization;
 using DotnetServiceScaffold.Presentation.Middleware;
 using DotnetServiceScaffold.Shared.Configuration;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -248,6 +251,14 @@ services.AddTransient<IExternalApiClient>(provider =>
             AnonymousRequestsPerMinute = 60,
             AuthenticatedRequestsPerMinute = 300
         });
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(ApiKeyPolicies.Read, policy => policy.AddRequirements(new ApiKeyScopeRequirement(ApiKeyScopes.Read)));
+            options.AddPolicy(ApiKeyPolicies.Register, policy => policy.AddRequirements(new ApiKeyScopeRequirement(ApiKeyScopes.Register)));
+            options.AddPolicy(ApiKeyPolicies.Admin, policy => policy.AddRequirements(new ApiKeyScopeRequirement(ApiKeyScopes.Admin)));
+        });
+        services.AddSingleton<IAuthorizationHandler, ApiKeyScopeHandler>();
 
         return services;
     }

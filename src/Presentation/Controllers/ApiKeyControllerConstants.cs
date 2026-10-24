@@ -10,7 +10,15 @@ public static class ApiKeyControllerConstants
     // Routes
     public const string RouteBase = "api/apikeys";
     public const string GetAuthInfo = "info";
+    public const string ListApiKeys = "";
+    public const string CreateApiKey = "";
+    public const string RevokeApiKey = "{id}";
     public const string RotateApiKey = "{id}/rotate";
+
+    // Audit messages
+    public const string AuditKeyCreated = "User {0} created API key {1}";
+    public const string AuditKeyRevoked = "User {0} revoked API key {1}";
+    public const string AuditKeyRotated = "User {0} rotated API key {1} into {2}";
 
     // Log messages
     public const string LogGetAuthInfoRequested = "User {UserId} requested auth info";

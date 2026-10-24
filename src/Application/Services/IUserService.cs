@@ -120,15 +120,6 @@ public interface IUserService
     Task<User?> GetUserWithApiKeysAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Validates an API key and retrieves its associated user.
-    /// </summary>
-    /// <param name="apiKey">The API key to validate.</param>
-    /// <returns>A task whose result is the associated user, or <see langword="null"/> if the API key is invalid or expired.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="apiKey"/> is null or whitespace.</exception>
-    /// <exception cref="DataAccessException">Thrown when an error occurs while validating the API key.</exception>
-    Task<User?> ValidateApiKeyAsync(string apiKey);
-
-    /// <summary>
     /// Searches for users whose details match the specified query.
     /// </summary>
     /// <param name="query">The search query.</param>

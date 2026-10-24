@@ -6,6 +6,9 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography;
+using System.Text;
+using DotnetServiceScaffold.Domain.Enums;
 
 namespace DotnetServiceScaffold.Domain.Models;
 
@@ -30,6 +33,10 @@ public sealed class ApiKey : IApiKey, IEquatable<ApiKey>
     [StringLength(ApiKeyConstants.KeyHashMaxLength)]
     public required string KeyHash { get; set; }
 
+    /// <summary>
+    /// Public key-id used to locate the key during authentication. It is not secret and is safe to log
+    /// (in truncated form). The secret itself is never stored.
+    /// </summary>
     [Required]
     [StringLength(ApiKeyConstants.KeyPrefixMaxLength)]
     public required string KeyPrefix { get; set; }
@@ -112,6 +119,32 @@ public sealed class ApiKey : IApiKey, IEquatable<ApiKey>
     }
 
     /// <summary>
+    /// Evaluates whether a presented secret, from the given source address, may authenticate with this key.
+    /// The secret hash is checked first so that callers holding a wrong secret learn nothing about the key's state.
+    /// </summary>
+    /// <param name="secretHash">The lowercase hexadecimal SHA-256 digest of the presented secret.</param>
+    /// <param name="sourceIp">The remote address of the request, or <see langword="null"/> when it is unknown.</param>
+    /// <returns>The outcome of the evaluation.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="secretHash"/> is <see langword="null"/> or empty.</exception>
+    public ApiKeyValidationStatus Evaluate(string secretHash, string? sourceIp)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(secretHash);
+
+        if (!SecretHashMatches(secretHash, KeyHash))
+            return ApiKeyValidationStatus.SecretMismatch;
+
+        if (!IsActive)
+            return ApiKeyValidationStatus.Inactive;
+
+        if (IsExpired())
+            return ApiKeyValidationStatus.Expired;
+
+        return IsIpAllowed(sourceIp ?? string.Empty)
+            ? ApiKeyValidationStatus.Valid
+            : ApiKeyValidationStatus.IpNotAllowed;
+    }
+
+    /// <summary>
     /// Records that the API key was used successfully.
     /// </summary>
     public void RecordUsage()
@@ -126,6 +159,17 @@ public sealed class ApiKey : IApiKey, IEquatable<ApiKey>
     public void Revoke()
     {
         IsActive = false;
+    }
+
+    /// <summary>
+    /// Compares two lowercase hexadecimal digests in constant time.
+    /// </summary>
+    private static bool SecretHashMatches(string presentedHash, string storedHash)
+    {
+        var presentedBytes = Encoding.UTF8.GetBytes(presentedHash);
+        var storedBytes = Encoding.UTF8.GetBytes(storedHash);
+
+        return CryptographicOperations.FixedTimeEquals(presentedBytes, storedBytes);
     }
 
     public bool Equals(ApiKey? other)
