@@ -76,6 +76,7 @@ builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 // IHealthCheckService is registered below via AddHttpClient<IHealthCheckService, HealthCheckService>,
 // which supplies the HttpClient the implementation requires. Do not also register it as a plain
 // scoped service: that descriptor cannot resolve HttpClient and breaks IEnumerable<IHealthCheckService>.

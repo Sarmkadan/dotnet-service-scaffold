@@ -2008,11 +2008,15 @@ if (userWithKeys != null)
     Console.WriteLine($"User has {userWithKeys.ApiKeys.Count} API keys");
 }
 
+// Issue a scoped API key (the plaintext is returned once; only its SHA-256 secret hash is stored)
+var issued = await apiKeyService.CreateAsync(newUser.Id, "reporting", new[] { ApiKeyScopes.Read });
+Console.WriteLine($"Store this key now, it cannot be retrieved later: {issued.PlaintextKey}");
+
 // Validate API key authentication
-var apiKeyUser = await userService.ValidateApiKeyAsync("sk_live_abc123xyz789");
-if (apiKeyUser != null)
+var validation = await apiKeyService.ValidateAsync(issued.PlaintextKey, sourceIp: "203.0.113.10");
+if (validation.IsValid)
 {
-    Console.WriteLine($"API key authenticated user: {apiKeyUser.Email}");
+    Console.WriteLine($"API key authenticated user: {validation.User!.Email}");
 }
 
 // Delete a user account

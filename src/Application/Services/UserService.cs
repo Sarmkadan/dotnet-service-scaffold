@@ -390,54 +390,6 @@ public class UserService : IUserService
     }
 
     /// <summary>
-    /// Validates the specified API key and returns the associated user.
-    /// </summary>
-    /// <param name="apiKey">The API key to validate.</param>
-    /// <returns>The user associated with the API key if valid, otherwise null.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when apiKey is null or whitespace.</exception>
-    /// <exception cref="DataAccessException">Thrown when an error occurs while validating the API key.</exception>
-    public async Task<User?> ValidateApiKeyAsync(string apiKey)
-    {
-        if (string.IsNullOrWhiteSpace(apiKey))
-            throw new ArgumentNullException(nameof(apiKey), "API key is required");
-
-        try
-        {
-            if (apiKey.Length < 8) // API keys should be long enough to have a prefix
-            {
-                return null;
-            }
-
-            var keyPrefix = apiKey.Substring(0, Math.Min(8, apiKey.Length)); // Use a reasonable prefix length
-            var apiKeyEntity = await _apiKeyRepository.GetByKeyPrefixAsync(keyPrefix);
-
-            if (apiKeyEntity is null || !apiKeyEntity.IsValid())
-            {
-                _logger.LogWarning("Invalid or expired API key attempt with prefix: {KeyPrefix}", keyPrefix);
-                return null;
-            }
-
-            if (!BCrypt.Net.BCrypt.Verify(apiKey, apiKeyEntity.KeyHash))
-            {
-                _logger.LogWarning("API key verification failed for prefix: {KeyPrefix}", keyPrefix);
-                return null;
-            }
-
-            // Key is valid, update usage stats
-            apiKeyEntity.RecordUsage();
-            await _apiKeyRepository.UpdateAsync(apiKeyEntity);
-
-            // Fetch the user associated with the API key, including their API keys if needed by other parts of the system
-            return await _userRepository.GetWithApiKeysAsync(apiKeyEntity.UserId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error validating API key");
-            throw new DataAccessException("Error validating API key", ex);
-        }
-    }
-
-    /// <summary>
     /// Hashes the specified password using BCrypt.
     /// </summary>
     /// <param name="password">The password to hash.</param>

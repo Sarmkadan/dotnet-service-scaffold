@@ -13,6 +13,7 @@ internal static class ApiKeyAuthenticationMiddlewareConstants
     public const string UnauthorizedError = "Unauthorized";
     public const string ApiKeyRequiredMessage = "API key is required. Provide it in the X-Api-Key header.";
     public const string DefaultScheme = "ApiKey";
+    public const char ScopeSeparator = ',';
 
     public const int StatusCodeUnauthorized = 401;
 }
