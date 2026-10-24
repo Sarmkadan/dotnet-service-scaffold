@@ -57,4 +57,7 @@ internal static class WebhookClientConstants
 
     /// <summary>Default value for unknown error message in logging.</summary>
     public const string UnknownErrorMessage = "unknown error";
+
+    /// <summary>Default page size when listing dead-lettered webhook deliveries.</summary>
+    public const int DefaultDeadLetterPageSize = 100;
 }
