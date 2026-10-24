@@ -92,13 +92,7 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<ResilienceOptions>, ResilienceOptionsValidator>();
-        services.AddSingleton(provider =>
-        {
-            var options = provider.GetRequiredService<IOptions<ResilienceOptions>>().Value;
-            return new CircuitBreakerState(
-                options.CircuitBreakerFailureThreshold,
-                TimeSpan.FromSeconds(options.CircuitBreakerBreakDurationSeconds));
-        });
+        services.AddSingleton<CircuitBreakerRegistry>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddTransient<ResilientHttpMessageHandler>();
             services.AddTransient<CorrelationIdDelegatingHandler>();

@@ -18,9 +18,10 @@ public enum CircuitBreakerPhase
 }
 
 /// <summary>
-/// Thread-safe circuit-breaker state shared across all attempts made through a resilient
-/// HTTP message handler. Trips to <see cref="CircuitBreakerPhase.Open"/> after a configured
-/// number of consecutive transient failures and resets after a cool-down period.
+/// Thread-safe circuit-breaker state for a single upstream target. Trips to
+/// <see cref="CircuitBreakerPhase.Open"/> after a configured number of consecutive transient
+/// failures, and after a cool-down period admits exactly one probe request while
+/// <see cref="CircuitBreakerPhase.HalfOpen"/>.
 /// </summary>
 public sealed class CircuitBreakerState
 {
@@ -31,6 +32,7 @@ public sealed class CircuitBreakerState
     private int _consecutiveFailures;
     private CircuitBreakerPhase _phase = CircuitBreakerPhase.Closed;
     private DateTimeOffset _openedAt;
+    private bool _probeInFlight;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CircuitBreakerState"/> class.
@@ -51,22 +53,39 @@ public sealed class CircuitBreakerState
     }
 
     /// <summary>
-    /// Determines whether a new attempt is currently permitted, transitioning the circuit
-    /// from <see cref="CircuitBreakerPhase.Open"/> to <see cref="CircuitBreakerPhase.HalfOpen"/>
-    /// once the break duration has elapsed.
+    /// Determines whether a new attempt is currently permitted. When the break duration has
+    /// elapsed, the first caller is granted the half-open probe; all other callers are rejected
+    /// until that probe reports an outcome or is released.
     /// </summary>
+    /// <param name="isProbe">
+    /// <see langword="true"/> when the granted attempt is the half-open probe and must be
+    /// concluded with <see cref="RecordSuccess"/>, <see cref="RecordFailure"/>, or <see cref="ReleaseProbe"/>.
+    /// </param>
     /// <returns><see langword="true"/> if the caller may proceed with an attempt.</returns>
-    public bool TryEnter()
+    public bool TryEnter(out bool isProbe)
     {
         lock (_sync)
         {
-            if (_phase != CircuitBreakerPhase.Open)
-                return true;
+            isProbe = false;
 
-            if (DateTimeOffset.UtcNow - _openedAt < _breakDuration)
-                return false;
+            switch (_phase)
+            {
+                case CircuitBreakerPhase.Closed:
+                    return true;
 
-            _phase = CircuitBreakerPhase.HalfOpen;
+                case CircuitBreakerPhase.Open when DateTimeOffset.UtcNow - _openedAt < _breakDuration:
+                    return false;
+
+                case CircuitBreakerPhase.Open:
+                    _phase = CircuitBreakerPhase.HalfOpen;
+                    break;
+
+                case CircuitBreakerPhase.HalfOpen when _probeInFlight:
+                    return false;
+            }
+
+            _probeInFlight = true;
+            isProbe = true;
             return true;
         }
     }
@@ -79,6 +98,7 @@ public sealed class CircuitBreakerState
         lock (_sync)
         {
             _consecutiveFailures = 0;
+            _probeInFlight = false;
             _phase = CircuitBreakerPhase.Closed;
         }
     }
@@ -103,10 +123,25 @@ public sealed class CircuitBreakerState
         }
     }
 
+    /// <summary>
+    /// Releases the half-open probe slot after a probe attempt ended without a verdict
+    /// (for example, the caller cancelled it), so that another request may probe the target.
+    /// Has no effect when the circuit is not half-open.
+    /// </summary>
+    public void ReleaseProbe()
+    {
+        lock (_sync)
+        {
+            if (_phase == CircuitBreakerPhase.HalfOpen)
+                _probeInFlight = false;
+        }
+    }
+
     private void Trip()
     {
         _phase = CircuitBreakerPhase.Open;
         _openedAt = DateTimeOffset.UtcNow;
+        _probeInFlight = false;
     }
 
     /// <summary>
