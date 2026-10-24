@@ -5,9 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-service-scaffold", "dotnet-service-scaffold.csproj", "{D5CC03BF-6BB4-4749-815F-52BAA7BBE1D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-service-scaffold.Tests", "tests\dotnet-service-scaffold.Tests\dotnet-service-scaffold.Tests.csproj", "{5F27289D-F5BD-4E44-AA21-565235F50C85}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-service-scaffold.Benchmarks", "benchmarks\dotnet-service-scaffold.Benchmarks\dotnet-service-scaffold.Benchmarks.csproj", "{C4D5E6F7-A8B9-4C0D-BE2F-3A4B5C6D7E8F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-service-scaffold.Tests", "tests\dotnet-service-scaffold.Tests\dotnet-service-scaffold.Tests.csproj", "{5F27289D-F5BD-4E44-AA21-565235F50C85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,5 +32,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5F27289D-F5BD-4E44-AA21-565235F50C85} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
