@@ -13,7 +13,7 @@ internal static class HttpUtilityConstants
 
     // Query string separators
     public const string Ampersand = "&";
-    public const string Equals = "=";
+    public new const string Equals = "=";
     public const string QuestionMark = "?";
 
     // Content-Type separators

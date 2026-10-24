@@ -70,6 +70,7 @@ public static class HttpContextExtensions
     /// <summary>
     /// Gets a claim value by type. Returns null if claim is not found.
     /// </summary>
+    /// <param name="context">The HTTP context.</param>
     /// <param name="claimType">The type of the claim to retrieve.</param>
     /// <returns>The claim value, or null if the claim is not found.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="claimType"/> is null.</exception>
@@ -82,6 +83,7 @@ public static class HttpContextExtensions
     /// <summary>
     /// Checks if the user has a specific claim with a given value.
     /// </summary>
+    /// <param name="context">The HTTP context.</param>
     /// <param name="claimType">The type of the claim to check.</param>
     /// <param name="claimValue">The value to match against.</param>
     /// <returns>True if the claim exists with the specified value, false otherwise.</returns>
@@ -221,6 +223,7 @@ public static class HttpContextExtensions
     /// <summary>
     /// Sets a response header, replacing existing value if present.
     /// </summary>
+    /// <param name="context">The HTTP context.</param>
     /// <param name="name">The header name.</param>
     /// <param name="value">The header value.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="name"/> or <paramref name="value"/> is null.</exception>
@@ -236,6 +239,7 @@ public static class HttpContextExtensions
     /// <summary>
     /// Adds a response header, preserving existing values.
     /// </summary>
+    /// <param name="context">The HTTP context.</param>
     /// <param name="name">The header name.</param>
     /// <param name="value">The header value.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="name"/> or <paramref name="value"/> is null.</exception>
@@ -251,6 +255,7 @@ public static class HttpContextExtensions
     /// <summary>
     /// Sets the response content type.
     /// </summary>
+    /// <param name="context">The HTTP context.</param>
     /// <param name="contentType">The content type to set.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="contentType"/> is null.</exception>
     public static void SetResponseContentType(this HttpContext context, string contentType)

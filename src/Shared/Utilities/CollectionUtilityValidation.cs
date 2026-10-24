@@ -287,6 +287,7 @@ public static class CollectionUtilityValidation
     /// </summary>
     /// <param name="source">The source collection to validate.</param>
     /// <param name="chunkSize">The chunk size to validate.</param>
+    /// <param name="isChunkValidation">Whether chunk-specific validation applies.</param>
     /// <exception cref="ArgumentException">Thrown if validation fails with detailed error messages.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void EnsureValid<T>(

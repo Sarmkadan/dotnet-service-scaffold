@@ -138,12 +138,14 @@ services.AddHttpClient<IExternalWriteClient, ExternalApiClient>(client =>
 .AddHttpMessageHandler<ResilientHttpMessageHandler>();
 
 // Register the deprecated composite interface for backward compatibility
+#pragma warning disable CS0618 // IExternalApiClient and ExternalApiClientAdapter are deprecated but still registered until removal
 services.AddTransient<IExternalApiClient>(provider =>
 {
     var readClient = provider.GetRequiredService<IExternalReadClient>();
     var writeClient = provider.GetRequiredService<IExternalWriteClient>();
     return new ExternalApiClientAdapter(readClient, writeClient);
 });
+#pragma warning restore CS0618
 
 
         services.AddHttpClient<IWebhookClient, WebhookClient>(client =>

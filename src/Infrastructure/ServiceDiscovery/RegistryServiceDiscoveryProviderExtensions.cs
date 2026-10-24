@@ -57,7 +57,7 @@ public static class RegistryServiceDiscoveryProviderExtensions
             return result;
         }
 
-        if (result.Value.Count == 0)
+        if ((result.Value?.Count ?? 0) == 0)
         {
             return Result<IReadOnlyList<ServiceDiscoveryRecord>>.Failure(
                 new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"No instances found for service '{serviceName}'")));

@@ -30,6 +30,7 @@ public interface IAuditLogRepository : IRepository<AuditLog>
     /// <param name="predicate">Optional filter predicate</param>
     /// <param name="page">Page number (1-based)</param>
     /// <param name="pageSize">Number of records per page</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     Task<PagedResult<AuditLog>> GetFilteredAsync(
         Expression<Func<AuditLog, bool>>? predicate = null,
         int page = IAuditLogRepositoryConstants.DefaultPageNumber,
@@ -43,6 +44,7 @@ public interface IAuditLogRepository : IRepository<AuditLog>
     /// <param name="to">Filter logs to this date (inclusive)</param>
     /// <param name="page">Page number (1-based)</param>
     /// <param name="pageSize">Number of records per page</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     Task<PagedResult<AuditLog>> GetByDateRangeAsync(
         DateTimeOffset from,
         DateTimeOffset to,
@@ -56,6 +58,7 @@ public interface IAuditLogRepository : IRepository<AuditLog>
     /// <param name="entityType">Entity type to filter by</param>
     /// <param name="page">Page number (1-based)</param>
     /// <param name="pageSize">Number of records per page</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     Task<PagedResult<AuditLog>> GetByEntityTypeAsync(
         string entityType,
         int page = IAuditLogRepositoryConstants.DefaultPageNumber,
@@ -68,6 +71,7 @@ public interface IAuditLogRepository : IRepository<AuditLog>
     /// <param name="userId">User ID to filter by</param>
     /// <param name="page">Page number (1-based)</param>
     /// <param name="pageSize">Number of records per page</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     Task<PagedResult<AuditLog>> GetByUserIdPagedAsync(
         Guid userId,
         int page = IAuditLogRepositoryConstants.DefaultPageNumber,

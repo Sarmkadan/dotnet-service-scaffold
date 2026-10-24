@@ -9,7 +9,7 @@ internal static class PerformanceUtilityConstants
 {
     /// <summary>
     /// Number of milliseconds in a second.
-    /// </>
+    /// </summary>
     public const double MillisecondsPerSecond = 1000.0;
 
     /// <summary>

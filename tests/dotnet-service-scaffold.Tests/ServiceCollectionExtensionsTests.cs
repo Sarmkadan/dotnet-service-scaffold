@@ -61,7 +61,9 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(services, result);
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IExternalReadClient));
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IExternalWriteClient));
+#pragma warning disable CS0618 // Verifies the deprecated composite registration is kept for backward compatibility
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IExternalApiClient));
+#pragma warning restore CS0618
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IWebhookClient));
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IResponseFormatterFactory) &&
