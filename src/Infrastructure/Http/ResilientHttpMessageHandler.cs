@@ -10,8 +10,8 @@ namespace DotnetServiceScaffold.Infrastructure.Http;
 /// Delegating handler that wraps outbound HTTP calls with a resilience pipeline:
 /// a per-attempt timeout, exponential backoff with jitter for transient failures
 /// (5xx responses, HTTP 408, and network-level <see cref="HttpRequestException"/>s),
-/// and a circuit breaker that short-circuits requests once a target is consistently
-/// unavailable.
+/// and a circuit breaker per upstream origin that short-circuits requests once that target is
+/// consistently unavailable.
 /// </summary>
 /// <remarks>
 /// The current <see cref="ResilienceOptions"/> value is read for each request, allowing
@@ -20,31 +20,30 @@ namespace DotnetServiceScaffold.Infrastructure.Http;
 public class ResilientHttpMessageHandler : DelegatingHandler
 {
     private readonly IOptionsMonitor<ResilienceOptions> _optionsMonitor;
-    private readonly CircuitBreakerState _circuitBreaker;
+    private readonly CircuitBreakerRegistry _circuitBreakers;
     private readonly ILogger<ResilientHttpMessageHandler> _logger;
-    private readonly Random _random = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResilientHttpMessageHandler"/> class.
     /// </summary>
     /// <param name="optionsMonitor">Live-reloadable resilience configuration.</param>
-    /// <param name="circuitBreaker">Shared circuit-breaker state for the wrapped client.</param>
+    /// <param name="circuitBreakers">Registry providing the circuit breaker for each upstream origin.</param>
     /// <param name="logger">Logger used to record retry and circuit-breaker events.</param>
     /// <exception cref="ArgumentNullException">
-    /// Any of <paramref name="optionsMonitor"/>, <paramref name="circuitBreaker"/>, or
+    /// Any of <paramref name="optionsMonitor"/>, <paramref name="circuitBreakers"/>, or
     /// <paramref name="logger"/> is <see langword="null"/>.
     /// </exception>
     public ResilientHttpMessageHandler(
         IOptionsMonitor<ResilienceOptions> optionsMonitor,
-        CircuitBreakerState circuitBreaker,
+        CircuitBreakerRegistry circuitBreakers,
         ILogger<ResilientHttpMessageHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(optionsMonitor);
-        ArgumentNullException.ThrowIfNull(circuitBreaker);
+        ArgumentNullException.ThrowIfNull(circuitBreakers);
         ArgumentNullException.ThrowIfNull(logger);
 
         _optionsMonitor = optionsMonitor;
-        _circuitBreaker = circuitBreaker;
+        _circuitBreakers = circuitBreakers;
         _logger = logger;
     }
 
@@ -54,16 +53,19 @@ public class ResilientHttpMessageHandler : DelegatingHandler
     /// <param name="request">The outbound HTTP request.</param>
     /// <param name="cancellationToken">Cancellation token for the overall operation.</param>
     /// <returns>The final <see cref="HttpResponseMessage"/> once a successful or non-retryable outcome is reached.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="request"/> is <see langword="null"/>.</exception>
-    /// <exception cref="BrokenCircuitException">The circuit breaker is currently open.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="request"/> or its <see cref="HttpRequestMessage.RequestUri"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="request"/> does not have an absolute <see cref="HttpRequestMessage.RequestUri"/>.</exception>
+    /// <exception cref="BrokenCircuitException">The circuit breaker for the request's origin is currently open.</exception>
     /// <exception cref="HttpRequestException">All retry attempts were exhausted with a transient failure.</exception>
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.RequestUri);
 
         var options = _optionsMonitor.CurrentValue;
+        var circuitBreaker = _circuitBreakers.GetFor(request.RequestUri);
         var attempt = 0;
         Exception? lastException = null;
         HttpResponseMessage? lastResponse = null;
@@ -72,14 +74,15 @@ public class ResilientHttpMessageHandler : DelegatingHandler
         {
             attempt++;
 
-            if (!_circuitBreaker.TryEnter())
+            if (!circuitBreaker.TryEnter(out var isProbe))
             {
                 throw new BrokenCircuitException(
-                    $"Circuit breaker is open for {request.RequestUri}; request rejected without attempting the call.");
+                    $"Circuit breaker is open for {request.RequestUri.GetLeftPart(UriPartial.Authority)}; request rejected without attempting the call.");
             }
 
             using var attemptCts = new CancellationTokenSource(TimeSpan.FromSeconds(options.PerAttemptTimeoutSeconds));
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, attemptCts.Token);
+            var verdictRecorded = false;
 
             try
             {
@@ -88,7 +91,8 @@ public class ResilientHttpMessageHandler : DelegatingHandler
 
                 if (IsTransientStatusCode(response.StatusCode))
                 {
-                    _circuitBreaker.RecordFailure();
+                    circuitBreaker.RecordFailure();
+                    verdictRecorded = true;
                     lastResponse?.Dispose();
                     lastResponse = response;
 
@@ -99,13 +103,15 @@ public class ResilientHttpMessageHandler : DelegatingHandler
                     continue;
                 }
 
-                _circuitBreaker.RecordSuccess();
+                circuitBreaker.RecordSuccess();
+                verdictRecorded = true;
                 return response;
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
                 // Per-attempt timeout fired, not the caller's own cancellation token.
-                _circuitBreaker.RecordFailure();
+                circuitBreaker.RecordFailure();
+                verdictRecorded = true;
                 lastException = new TimeoutException(
                     $"Attempt {attempt} to {request.RequestUri} exceeded the per-attempt timeout of {options.PerAttemptTimeoutSeconds}s.");
 
@@ -120,7 +126,8 @@ public class ResilientHttpMessageHandler : DelegatingHandler
             }
             catch (HttpRequestException ex)
             {
-                _circuitBreaker.RecordFailure();
+                circuitBreaker.RecordFailure();
+                verdictRecorded = true;
                 lastException = ex;
 
                 if (attempt > options.RetryCount)
@@ -132,6 +139,13 @@ public class ResilientHttpMessageHandler : DelegatingHandler
                     attempt, request.RequestUri);
 
                 await DelayBeforeRetryAsync(options, attempt, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                // A half-open probe that ended without a verdict (caller cancelled, or an unexpected
+                // exception) must free the probe slot, otherwise the circuit would stay blocked.
+                if (isProbe && !verdictRecorded)
+                    circuitBreaker.ReleaseProbe();
             }
         }
 
@@ -154,11 +168,11 @@ public class ResilientHttpMessageHandler : DelegatingHandler
     /// <summary>
     /// Computes an exponential backoff delay with full jitter and waits before the next attempt.
     /// </summary>
-    private Task DelayBeforeRetryAsync(ResilienceOptions options, int attempt, CancellationToken cancellationToken)
+    private static Task DelayBeforeRetryAsync(ResilienceOptions options, int attempt, CancellationToken cancellationToken)
     {
         var exponential = options.BaseDelayMilliseconds * Math.Pow(2, attempt - 1);
         var capped = Math.Min(exponential, options.MaxDelayMilliseconds);
-        var jittered = _random.NextDouble() * capped;
+        var jittered = Random.Shared.NextDouble() * capped;
         return Task.Delay(TimeSpan.FromMilliseconds(jittered), cancellationToken);
     }
 
