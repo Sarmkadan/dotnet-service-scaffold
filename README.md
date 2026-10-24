@@ -5,6 +5,8 @@
 
 # Service Scaffold
 
+[![CI](https://github.com/sarmkadan/dotnet-service-scaffold/actions/workflows/ci.yml/badge.svg)](https://github.com/sarmkadan/dotnet-service-scaffold/actions/workflows/ci.yml)
+
 ## Getting Started
 
 This section builds a minimal service on the scaffold's public API:
