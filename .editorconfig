@@ -19,6 +19,11 @@ root = true
 # ============================================================================
 
 [*]
+charset = utf-8
+
+# Unix line endings
+end_of_line = lf
+
 # Insert a new line at the end of files
 insert_final_newline = true
 
@@ -38,9 +43,27 @@ indent_size = 4
 # Newlines
 end_of_line = lf
 
+# File-level copyright header (applied by IDE0073 when enabled)
+file_header_template = Copyright (c) Vladyslav Zaiets
+
 # ============================================================================
 # C# Code Style Rules
 # ============================================================================
+
+# Namespaces and usings
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_sort_system_directives_first = true
+
+# Implicit typing ('var')
+csharp_style_var_for_built_in_types = false
+csharp_style_var_when_type_is_apparent = true
+csharp_style_var_elsewhere = false
+
+# Braces are required on all control-flow blocks
+csharp_prefer_braces = true
+
+# Members: no 'this.' qualification for fields
+dotnet_style_qualification_for_field = false
 
 # New line preferences
 csharp_new_line_before_open_brace = all
@@ -81,7 +104,6 @@ csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
 
 # Code block preferences
-csharp_prefer_braces = true:suggestion
 csharp_prefer_simple_using_statement = true:suggestion
 
 # Pattern matching preferences
@@ -246,3 +268,7 @@ end_of_line = lf
 indent_style = space
 indent_size = 2
 charset = utf-8
+
+# Structured data and project files
+[*.{json,yml,yaml,props,targets,csproj}]
+indent_size = 2
