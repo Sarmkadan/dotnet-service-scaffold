@@ -28,7 +28,9 @@ public static class CollectionUtility
     {
         ArgumentNullException.ThrowIfNull(source); // Fix: handle null source collection
         if (batchSize <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(batchSize), batchSize, "Batch size must be positive.");
+        }
 
         var batch = new List<T>(batchSize);
 
@@ -44,7 +46,9 @@ public static class CollectionUtility
         }
 
         if (batch.Count > 0)
+        {
             yield return batch;
+        }
     }
 
     /// <summary>
@@ -60,7 +64,9 @@ public static class CollectionUtility
     {
         ArgumentNullException.ThrowIfNull(source); // Fix: handle null source collection
         if (chunkSize <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(chunkSize), chunkSize, "Chunk size must be positive.");
+        }
 
         var result = new List<List<T>>();
         var chunk = new List<T>(chunkSize);
@@ -77,7 +83,9 @@ public static class CollectionUtility
         }
 
         if (chunk.Count > 0)
+        {
             result.Add(chunk);
+        }
 
         return result;
     }
@@ -95,27 +103,37 @@ public static class CollectionUtility
     public static bool ContainsSameElements<T>(this IEnumerable<T>? first, IEnumerable<T>? second) where T : notnull
     {
         if (first is null && second is null)
+        {
             return true;
+        }
 
         if (first is null || second is null)
+        {
             return false;
+        }
 
         var firstList = first.ToList();
         var secondList = second.ToList();
 
         if (firstList.Count != secondList.Count)
+        {
             return false;
+        }
 
         var firstGrouped = firstList.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
         var secondGrouped = secondList.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
 
         if (firstGrouped.Count != secondGrouped.Count)
+        {
             return false;
+        }
 
         foreach (var kvp in firstGrouped)
         {
             if (!secondGrouped.ContainsKey(kvp.Key) || secondGrouped[kvp.Key] != kvp.Value)
+            {
                 return false;
+            }
         }
 
         return true;
@@ -189,7 +207,9 @@ public static class CollectionUtility
         foreach (var item in source)
         {
             if (seen.Add(item))
+            {
                 yield return item;
+            }
         }
     }
 
@@ -212,7 +232,9 @@ public static class CollectionUtility
             var key = keySelector(item);
 
             if (!result.ContainsKey(key))
+            {
                 result[key] = new List<T>();
+            }
 
             result[key].Add(item);
         }
@@ -241,9 +263,13 @@ public static class CollectionUtility
         foreach (var item in source)
         {
             if (predicate(item))
+            {
                 matching.Add(item);
+            }
             else
+            {
                 notMatching.Add(item);
+            }
         }
 
         return (matching, notMatching);
@@ -282,7 +308,9 @@ public static class CollectionUtility
     public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
     {
         foreach (var item in source)
+        {
             action(item);
+        }
     }
 
     /// <summary>
