@@ -78,7 +78,8 @@ public static class StringUtility
         // Count uppercase chars after position 0 to know the exact output length upfront.
         int extraChars = 0;
         for (int i = 1; i < text.Length; i++)
-            if (char.IsUpper(text[i])) extraChars++;
+            if (char.IsUpper(text[i]))
+                extraChars++;
 
         if (extraChars == 0)
             return text.ToLowerInvariant();
