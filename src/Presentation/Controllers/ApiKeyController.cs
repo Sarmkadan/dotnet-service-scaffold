@@ -6,8 +6,8 @@
 
 using System;
 using System.Threading.Tasks;
-using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Application.Extensions;
+using DotnetServiceScaffold.Application.Services;
 using DotnetServiceScaffold.Presentation.Authorization;
 using DotnetServiceScaffold.Shared.Utilities;
 using Microsoft.AspNetCore.Authorization;
