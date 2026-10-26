@@ -46,7 +46,9 @@ public class ServiceController : ControllerBase, IServiceController
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> RegisterService([FromBody] RegisterServiceRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> RegisterService(
+        [FromBody] RegisterServiceRequest request,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
@@ -215,7 +217,10 @@ public class ServiceController : ControllerBase, IServiceController
     [HttpPost("{serviceId}/disable")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DisableService(Guid serviceId, [FromBody] DisableServiceRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DisableService(
+        Guid serviceId,
+        [FromBody] DisableServiceRequest request,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
